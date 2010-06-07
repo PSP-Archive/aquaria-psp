@@ -1172,7 +1172,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 
 
-	loadBit(0.1);
+	loadBit(0.01);  // Total 0.01
 
 	debugLog("Loading Particle Bank...");
 	{
@@ -1181,7 +1181,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	}
 	debugLog("OK");
 
-	loadBit(0.1);
+	loadBit(0.05);  // Total 0.06
 
 	
 
@@ -1189,7 +1189,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 		sound->loadSoundCache();
 	debugLog("OK");
 
-	loadBit(0.1);
+	loadBit(0.46);  // Total 0.46
 
 
 	user.load();
@@ -1200,7 +1200,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	loadFonts();
 
-	loadBit(0.1);
+	loadBit(0.01);  // Total 0.47
 
 	setTexturePointers();
 
@@ -1340,7 +1340,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	debugLog("3");
 
-	loadBit(0.1);
+	loadBit(0.01);  // Total 0.48
 
 	debugLog("4");
 
@@ -1437,7 +1437,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	debugLog("8");
 
-	loadBit(0.1);
+	loadBit(0.01);  // Total 0.49
 
 	debugLog("9");
 
@@ -1478,7 +1478,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	setTexturePointers();
 
-	loadBit(0.1);
+	loadBit(0.30);  // Total 0.79
 
 	int i = 0;
 
