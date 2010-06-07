@@ -840,7 +840,7 @@ void loadBit(float amount)
 
 unsigned int soundsLoaded = 0;
 const unsigned int soundsExpected = 195;
-const float soundsProgressAmount = 0.4;
+const float soundsProgressAmount = 0.45;
 void loadBitForSoundCache()
 {
 	if (soundsLoaded > 0 && soundsLoaded < soundsExpected)
@@ -855,7 +855,7 @@ void loadBitForSoundCache()
 
 unsigned int texturesLoaded = 0;
 const unsigned int texturesExpected = 652;
-const float texturesProgressAmount = 0.3;
+const float texturesProgressAmount = 0.35;
 void loadBitForTexPrecache()
 {
 	if (texturesLoaded > 0 && texturesLoaded < texturesExpected)
@@ -1218,7 +1218,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 		sound->loadSoundCache("sfx/cache/", ".ogg", loadBitForSoundCache);
 	debugLog("OK");
 
-	loadingProgress = 0.06f + soundsProgressAmount;  // Total 0.46
+	loadingProgress = 0.06f + soundsProgressAmount;  // Total 0.51
 	loadBit(0);
 
 
@@ -1230,7 +1230,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	loadFonts();
 
-	loadBit(0.01);  // Total 0.47
+	loadBit(0.01);  // Total 0.52
 
 	setTexturePointers();
 
@@ -1370,7 +1370,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	debugLog("3");
 
-	loadBit(0.01);  // Total 0.48
+	loadBit(0.01);  // Total 0.53
 
 	debugLog("4");
 
@@ -1467,7 +1467,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	debugLog("8");
 
-	loadBit(0.01);  // Total 0.49
+	loadBit(0.01);  // Total 0.54
 
 	debugLog("9");
 
@@ -1508,7 +1508,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	setTexturePointers();
 
-	loadingProgress = 0.49f + texturesProgressAmount;  // Total 0.79
+	loadingProgress = 0.54f + texturesProgressAmount;  // Total 0.89
 	loadBit(0);
 
 	int i = 0;
