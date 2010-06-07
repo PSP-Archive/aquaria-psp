@@ -262,7 +262,7 @@ void Shader::load(const std::string &file, const std::string &fragFile)
 		vertexShaderStrings[0] = (char*)vertexShaderAssembly;
 		glShaderSourceARB( g_vertexShader, 1, vertexShaderStrings, NULL );
 		glCompileShaderARB( g_vertexShader);
-		delete vertexShaderAssembly;
+		delete[] vertexShaderAssembly;
 
 		glGetObjectParameterivARB( g_vertexShader, GL_OBJECT_COMPILE_STATUS_ARB, 
 								&bVertCompiled );
@@ -288,7 +288,7 @@ void Shader::load(const std::string &file, const std::string &fragFile)
 		fragmentShaderStrings[0] = (char*)fragmentShaderAssembly;
 		glShaderSourceARB( g_fragmentShader, 1, fragmentShaderStrings, NULL );
 		glCompileShaderARB( g_fragmentShader );
-		delete fragmentShaderAssembly;
+		delete[] fragmentShaderAssembly;
 
 		glGetObjectParameterivARB( g_fragmentShader, GL_OBJECT_COMPILE_STATUS_ARB, 
 								&bFragCompiled );

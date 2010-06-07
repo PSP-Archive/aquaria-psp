@@ -26,6 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <time.h>
 
 #ifdef BBGE_BUILD_UNIX
+#include <limits.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -828,19 +829,16 @@ void Core::errorLog(const std::string &s)
 	debugLog(s);
 }
 
+#if defined(BBGE_BUILD_MACOSX)
+void cocoaMessageBox(const std::string &title, const std::string &msg);
+#endif
+
 void Core::messageBox(const std::string &title, const std::string &msg)
 {
 #ifdef BBGE_BUILD_WINDOWS
 	MessageBox (0,msg.c_str(),title.c_str(),MB_OK);
 #elif defined(BBGE_BUILD_MACOSX)
-	DialogRef theItem;
-	DialogItemIndex itemIndex;
-	CFStringRef str1 = CFStringCreateWithCString (0, title.c_str(), 0);
-	CFStringRef str2 = CFStringCreateWithCString (0, msg.c_str(), 0);
-	CreateStandardAlert(kAlertStopAlert, str1, str2, NULL, &theItem);
-	RunStandardAlert (theItem, NULL, &itemIndex);
-	CFRelease(str1);
-	CFRelease(str2);
+    cocoaMessageBox(title, msg);
 #elif defined(BBGE_BUILD_UNIX)
 	// !!! FIXME: probably don't want the whole GTK+ dependency in here...
 	fprintf(stderr, "%s: %s\n", title.c_str(), msg.c_str());
@@ -1756,7 +1754,7 @@ void Core::setSDLGLAttributes()
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 }
 
-#ifdef BBGE_BUILD_UNIX
+#if (defined (BBGE_BUILD_UNIX) || defined (BBGE_BUILD_WINDOWS))
 #ifdef GLAPIENTRY
 #undef GLAPIENTRY
 #endif

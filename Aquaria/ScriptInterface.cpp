@@ -46,8 +46,23 @@ bool throwLuaErrors = false;
 // S C R I P T  C O M M A N D S
 //============================================================================================
 
+void luaPushPointer(lua_State *L, void *ptr)
+{
+	// All the scripts do this:
+	//    x = getFirstEntity()
+	//    while x =~ 0 do x = getNextEntity() end
+	// The problem is this is now a pointer ("light user data"), so in
+	//  Lua, it's never equal to 0 (or nil!), even if it's NULL.
+	// So we push an actual zero when we get a NULL to keep the existing
+	//  scripts happy.  --ryan.
+	if (ptr != NULL)
+		lua_pushlightuserdata(L, ptr);
+	else
+		lua_pushnumber(L, 0);
+}
+
 #define luaf(func)		int l_##func(lua_State *L) {
-#define luad(num)		lua_pushnumber(L, num); return 1; }
+#define luap(ptr)		luaPushPointer(L, ptr); return 1; }
 #define luab(bool)		lua_pushboolean(L, bool); return 1; }
 
 #define luar(func)		lua_register(*L, #func, l_##func);
@@ -129,7 +144,7 @@ int l_setActivePet(lua_State *L)
 {
 	Entity *e = dsq->game->setActivePet(lua_tonumber(L, 1));
 
-	lua_pushnumber(L, int(e));
+	luaPushPointer(L, e);
 	return 1;
 }
 
@@ -271,7 +286,7 @@ int l_setStory(lua_State *L)
 inline
 ScriptedEntity *scriptedEntity(lua_State *L, int s = 1)
 {
-	ScriptedEntity *se = (ScriptedEntity*)int(lua_tonumber(L, s));
+	ScriptedEntity *se = (ScriptedEntity*)lua_touserdata(L, s);
 	if (!se)
 		debugLog("ScriptedEntity invalid pointer.");
 	return se;
@@ -280,7 +295,7 @@ ScriptedEntity *scriptedEntity(lua_State *L, int s = 1)
 inline
 CollideEntity *collideEntity(lua_State *L, int s = 1)
 {
-	CollideEntity *ce = (CollideEntity*)int(lua_tonumber(L, s));
+	CollideEntity *ce = (CollideEntity*)lua_touserdata(L, s);
 	if (!ce)
 		debugLog("CollideEntity invalid pointer.");
 	return ce ;
@@ -290,7 +305,7 @@ inline
 RenderObject *object(lua_State *L, int s=1)
 {
 	//RenderObject *obj = dynamic_cast<RenderObject*>((RenderObject*)(int(lua_tonumber(L, s))));
-	RenderObject *obj = static_cast<RenderObject*>((void*)(lua_tointeger(L, s)));
+	RenderObject *obj = static_cast<RenderObject*>(lua_touserdata(L, s));
 	if (!obj)
 		debugLog("RenderObject invalid pointer");
 	return obj;
@@ -299,7 +314,7 @@ RenderObject *object(lua_State *L, int s=1)
 inline
 Beam *beam(lua_State *L, int s = 1)
 {
-	Beam *b = (Beam*)int(lua_tonumber(L, s));
+	Beam *b = (Beam*)lua_touserdata(L, s);
 	if (!b)
 		debugLog("Beam invalid pointer.");
 	return b;
@@ -319,22 +334,14 @@ std::string getString(lua_State *L, int s = 1)
 inline
 Shot *getShot(lua_State *L, int s = 1)
 {
-	Shot *shot = 0;
-	if (lua_isnumber(L, s))
-	{
-		shot = (Shot*)lua_tointeger(L, s);
-	}
+	Shot *shot = (Shot*)lua_touserdata(L, s);
 	return shot;
 }
 
 inline
 Web *getWeb(lua_State *L, int s = 1)
 {
-	Web *web = 0;
-	if (lua_isnumber(L, s))
-	{
-		web = (Web*)lua_tointeger(L, s);
-	}
+	Web *web = (Web*)lua_touserdata(L, s);
 	return web;
 }
 
@@ -351,7 +358,7 @@ int l_createWeb(lua_State *L)
 {
 	Web *web = new Web();
 	dsq->game->addRenderObject(web, LR_PARTICLES);
-	lua_pushnumber(L, int(web));
+	luaPushPointer(L, web);
 	return 1;
 }
 
@@ -363,7 +370,7 @@ int l_createSpore(lua_State *L)
 	{
 		Spore *spore = new Spore(pos);
 		dsq->game->addRenderObject(spore, LR_ENTITIES);
-		lua_pushnumber(L, int(spore));
+		luaPushPointer(L, spore);
 	}
 	else
 		lua_pushnumber(L, 0);
@@ -530,11 +537,7 @@ int l_shot_setNice(lua_State *L)
 inline
 Ingredient *getIng(lua_State *L, int s = 1)
 {
-	if (lua_isnumber(L, s))
-	{
-		return (Ingredient*)lua_tointeger(L, 1);
-	}
-	return 0;
+	return (Ingredient*)lua_touserdata(L, 1);
 }
 
 inline
@@ -558,7 +561,7 @@ bool getBool(lua_State *L, int s = 1)
 inline
 Entity *entity(lua_State *L, int s = 1)
 {
-	Entity *ent = (Entity*)int(lua_tonumber(L, s));
+	Entity *ent = (Entity*)lua_touserdata(L, s);
 	if (!ent)
 	{
 		luaErrorMsg(L, "Entity Invalid Pointer");
@@ -577,7 +580,7 @@ Vector getVector(lua_State *L, int s = 1)
 inline
 Bone *bone(lua_State *L, int s = 1)
 {
-	Bone *b = (Bone*)int(lua_tonumber(L, s));
+	Bone *b = (Bone*)lua_touserdata(L, s);
 	if (!b)
 	{
 		luaErrorMsg(L, "Bone Invalid Pointer");
@@ -601,7 +604,7 @@ Path *pathFromName(lua_State *L, int slot = 1)
 inline
 Path *path(lua_State *L, int slot = 1)
 {
-	Path *p = (Path*)(lua_tointeger(L, slot));
+	Path *p = (Path*)lua_touserdata(L, slot);
 	return p;
 }
 
@@ -615,11 +618,6 @@ RenderObject *boneToRenderObject(lua_State *L, int i = 1)
 {
 	Bone *b = bone(L, i);
 	return dynamic_cast<RenderObject*>(b);
-}
-
-int getPathInt(Path *p)
-{
-	return int(p);
 }
 
 int l_entity_addIgnoreShotDamageType(lua_State *L)
@@ -679,14 +677,14 @@ int l_entity_velTowards(lua_State *L)
 int l_entity_getBoneLockEntity(lua_State *L)
 {
 	Entity *e = entity(L);
-	int ent = 0;
+	Entity *ent = NULL;
 	if (e)
 	{
 		BoneLock *b = e->getBoneLock();
-		ent = (int)b->entity;
-		//ent = (int)e->boneLock.entity;
+		ent = b->entity;
+		//ent = e->boneLock.entity;
 	}
-	lua_pushnumber(L, ent);
+	luaPushPointer(L, ent);
 	return 1;
 }
 
@@ -870,7 +868,7 @@ int l_entity_setRiding(lua_State *L)
 {
 	Entity *e = entity(L);
 	Entity *e2 = 0;
-	if (lua_isnumber(L, 2) && lua_tonumber(L, 2) != 0)
+	if (lua_touserdata(L, 2) != NULL)
 		e2 = entity(L, 2);
 	if (e)
 	{
@@ -898,7 +896,7 @@ int l_entity_getRiding(lua_State *L)
 	Entity *ret = 0;
 	if (e)
 		ret = e->getRiding();
-	lua_pushnumber(L, (int)ret);
+	luaPushPointer(L, ret);
 	return 1;
 }
 
@@ -1045,8 +1043,7 @@ int l_getNearestNodeByType(lua_State *L)
 	int y = lua_tonumber(L, 2);
 	int type = lua_tonumber(L, 3);
 
-	int p = int(dsq->game->getNearestPath(Vector(x,y), (PathType)type));
-	lua_pushnumber(L, p);
+	luaPushPointer(L, dsq->game->getNearestPath(Vector(x,y), (PathType)type));
 	return 1;
 }
 
@@ -1059,7 +1056,7 @@ int l_getNearestNode(lua_State *L)
 		s = lua_tostring(L, 2);
 	}
 	Path *p = path(L);
-	lua_pushnumber(L, getPathInt(dsq->game->getNearestPath(p, s)));
+	luaPushPointer(L, dsq->game->getNearestPath(p, s));
 	return 1;
 }
 
@@ -1072,13 +1069,13 @@ int l_fadeOutMusic(lua_State *L)
 
 int l_getNode(lua_State *L)
 {
-	lua_pushinteger(L, getPathInt(pathFromName(L)));
+	luaPushPointer(L, pathFromName(L));
 	return 1;
 }
 
 int l_getNodeToActivate(lua_State *L)
 {
-	lua_pushinteger(L, (int)dsq->game->avatar->pathToActivate);
+	luaPushPointer(L, dsq->game->avatar->pathToActivate);
 	return 1;
 }
 
@@ -1181,7 +1178,7 @@ int l_entity_findNearestEntityOfType(lua_State *L)
 			nearest = closest;
 		}
 	}
-	lua_pushnumber(L, (int)nearest);
+	luaPushPointer(L, nearest);
 	return 1;
 }
 
@@ -1190,7 +1187,7 @@ int l_createShot(lua_State *L)
 	std::string shotData = lua_tostring(L, 1);
 	Entity *e = entity(L,2);
 	Entity *t = 0;
-	if (lua_isnumber(L, 3) && lua_tonumber(L, 3) != 0)
+	if (lua_touserdata(L, 3) != NULL)
 		t = entity(L,3);
 	Shot *s = 0;
 	Vector pos, aim;
@@ -1202,7 +1199,7 @@ int l_createShot(lua_State *L)
 
 	s = dsq->game->fireShot(shotData, e, t, pos, aim);
 
-	lua_pushnumber(L, (int)s);
+	luaPushPointer(L, s);
 	return 1;
 }
 
@@ -1216,7 +1213,7 @@ int l_entity_fireShot(lua_State *L)
 		int homing = lua_tonumber(L, 6);
 		int maxSpeed = lua_tonumber(L, 7);
 		Entity *e2 = 0;
-		if (lua_isnumber(L, 2) && lua_tonumber(L, 2) != 0)
+		if (lua_touserdata(L, 2) != NULL)
 		{
 			e2 = entity(L,2);
 		}
@@ -1227,7 +1224,7 @@ int l_entity_fireShot(lua_State *L)
 		}
 		s = dsq->game->fireShot(e, particle, e->position, lua_tointeger(L, 3), Vector(lua_tonumber(L, 4),lua_tonumber(L, 5),0), e2, homing, maxSpeed);
 	}
-	lua_pushnumber(L, (int)s);
+	luaPushPointer(L, s);
 	return 1;
 }
 
@@ -1903,8 +1900,8 @@ int l_isInConversation(lua_State *L)
 
 int l_loadSound(lua_State *L)
 {
-	int handle = core->sound->loadLocalSound(getString(L, 1));
-	lua_pushnumber(L, handle);
+	void *handle = core->sound->loadLocalSound(getString(L, 1));
+	luaPushPointer(L, handle);
 	return 1;
 }
 
@@ -2013,16 +2010,16 @@ int l_spawnIngredient(lua_State *L)
 	int times = lua_tonumber(L, 4);
 	if (times == 0) times = 1;
 	bool out = getBool(L, 5);
-	Entity *e = (Entity*)dsq->game->spawnIngredient(getString(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), times, out);
+	Entity *e = dsq->game->spawnIngredient(getString(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), times, out);
 	
-	lua_pushnumber(L, int(e));
+	luaPushPointer(L, e);
 	return 1;
 }
 
 int l_getNearestIngredient(lua_State *L)
 {
 	Ingredient *i = dsq->game->getNearestIngredient(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)), lua_tonumber(L, 3));
-	lua_pushnumber(L, (int)i);
+	luaPushPointer(L, i);
 	return 1;
 }
 
@@ -2673,7 +2670,7 @@ int l_cam_toNode(lua_State *L)
 
 int l_cam_toEntity(lua_State *L)
 {
-	if (lua_tonumber(L, 1) == 0)
+	if (lua_touserdata(L, 1) == NULL)
 	{
 		Vector *pos = 0;
 		dsq->game->setCameraFollow(pos);
@@ -2971,7 +2968,7 @@ int l_createBeam(lua_State *L)
 		dsq->game->addRenderObject(b, LR_PARTICLES);
 	else
 		dsq->game->addRenderObject(b, LR_ENTITIES_MINUS2);
-	lua_pushnumber(L, (int)b);
+	luaPushPointer(L, b);
 	return 1;
 }
 
@@ -3124,7 +3121,7 @@ int l_createEntity(lua_State *L)
 		e = dsq->game->createEntity(idx, 0, Vector(x,y), 0, false, name, ET_ENEMY, BT_NORMAL, 0, 0, true);
 	}
 	*/
-	lua_pushnumber(L, int(e));
+	luaPushPointer(L, e);
 	return 1;
 }
 // moveEntity(name, x, y, time, ease)
@@ -3849,7 +3846,7 @@ int l_entity_collideSkeletalVsCircle(lua_State *L)
 	{
 		b = dsq->game->collideSkeletalVsCircle(e,e2);
 	}
-	lua_pushinteger(L, int(b));
+	luaPushPointer(L, b);
 	return 1;
 }
 
@@ -3867,7 +3864,7 @@ int l_entity_collideSkeletalVsLine(lua_State *L)
 	{
 		b = dsq->game->collideSkeletalVsLine(e, Vector(x1, y1), Vector(x2, y2), sz);
 	}
-	lua_pushinteger(L, int(b));
+	luaPushPointer(L, b);
 	return 1;
 }
 
@@ -4181,9 +4178,8 @@ int l_entity_watchEntity(lua_State *L)
 {
 	Entity *e = entity(L);
 	Entity *e2 = 0;
-	if (lua_isnumber(L, 2))
-		if (lua_tonumber(L, 2)!=0)
-			e2 = entity(L, 2);
+	if (lua_touserdata(L, 2) != NULL)
+		e2 = entity(L, 2);
 
 	if (e)
 	{
@@ -4381,7 +4377,7 @@ int l_entity_flipVertical(lua_State* L)
 
 PauseQuad *getPauseQuad(lua_State *L, int n=1)
 {
-	PauseQuad *q = (PauseQuad*)lua_tointeger(L, n);
+	PauseQuad *q = (PauseQuad*)lua_touserdata(L, n);
 	if (q)
 		return q;
 	else
@@ -4400,7 +4396,7 @@ int l_createQuad(lua_State *L)
 		layer = (LR_PARTICLES+1) - LR_ELEMENTS1;
 	dsq->game->addRenderObject(q, LR_ELEMENTS1+(layer-1));
 
-	lua_pushnumber(L, (int)q);
+	luaPushPointer(L, q);
 	return 1;
 }
 
@@ -4834,13 +4830,13 @@ int l_getScreenCenter(lua_State *L)
 
 int l_getNodeFromEntity(lua_State *L)
 {
-	int nodePtr = 0;
+	Path *nodePtr = 0;
 	Entity *e = entity(L);
 	if (e)
 	{
-		nodePtr = (int)e->getNode();
+		nodePtr = e->getNode();
 	}
-	lua_pushnumber(L, nodePtr);
+	luaPushPointer(L, nodePtr);
 	return 1;
 }
 
@@ -4909,11 +4905,9 @@ int l_entity_setTarget(lua_State *L)
 	Entity *e = entity(L);
 	Entity *t = 0;
 	int tv=0;
-	if (lua_isnumber(L, 2))
+	if (lua_touserdata(L, 2) != NULL)
 	{
-		tv = lua_tonumber(L, 2);
-		if (tv != 0)
-			t = entity(L, 2);
+		t = entity(L, 2);
 	}
 	if (e)
 	{
@@ -5117,7 +5111,7 @@ int l_entity_fireAtTarget(lua_State* L)
 		dsq->game->addRenderObject(shot, LR_PROJECTILES);
 	}
 		//addRenderObject(shot);
-		lua_pushnumber(L, int(shot));
+		luaPushPointer(L, shot);
 	*/
 
 	{
@@ -5142,7 +5136,7 @@ int l_entity_getBoneByIdx(lua_State *L)
 			b = e->skeletalSprite.getBoneByIdx(n);
 		}
 	}
-	lua_pushnumber(L, (int)b);
+	luaPushPointer(L, b);
 	return 1;
 }
 
@@ -5165,7 +5159,7 @@ int l_entity_getBoneByName(lua_State *L)
 		}
 	}
 	*/
-	lua_pushnumber(L, (int)b);
+	luaPushPointer(L, b);
 	return 1;
 }
 
@@ -5540,11 +5534,9 @@ int l_entity_followEntity(lua_State* L)
 {
 	Entity *e1 = entity(L);
 	Entity *e2 = 0;
-	if (lua_isnumber(L, 2))
+	if (lua_touserdata(L, 2) != NULL)
 	{
-		int v = lua_tonumber(L, 2);
-		if (v != 0)
-			e2 = entity(L, 2);
+		e2 = entity(L, 2);
 	}
 	if (e1)
 	{
@@ -5836,23 +5828,23 @@ int l_playSfx(lua_State *L)
 	sfx.freq = freq;
 	sfx.loops = loops;
 
-	int handle = 0;
+	void *handle = NULL;
 	
 	if (!dsq->isSkippingCutscene())
 		handle = core->sound->playSfx(sfx);
 	
-	lua_pushnumber(L, handle);
+	luaPushPointer(L, handle);
 	return 1;
 }
 
 int l_fadeSfx(lua_State *L)
 {
-	int header = lua_tointeger(L, 1);
+	void *header = lua_touserdata(L, 1);
 	float ft = lua_tonumber(L, 2);
 
 	core->sound->fadeSfx(header, SFT_OUT, ft);
 
-	lua_pushnumber(L, header);
+	luaPushPointer(L, header);
 	return 1;
 }
 
@@ -6526,9 +6518,9 @@ int l_entity_isRidingOnEntity(lua_State *L)
 {
 	Entity *e = entity(L);
 	if (e)
-		lua_pushinteger(L, int(e->ridingOnEntity));
+		luaPushPointer(L, e->ridingOnEntity);
 	else
-		lua_pushinteger(L, 0);
+		luaPushPointer(L, NULL);
 	return 1;
 }
 //entity_setProperty(me, EP_SOLID, true)
@@ -6726,23 +6718,13 @@ int l_randVector(lua_State *L)
 
 int l_getNaija(lua_State *L)
 {
-	if (!dsq->game->avatar)
-	{
-		lua_pushnumber(L, 0);
-	}
-	else
-		lua_pushnumber(L, (int)dsq->game->avatar);
+	luaPushPointer(L, dsq->game->avatar);
 	return 1;
 }
 
 int l_getLi(lua_State *L)
 {
-	if (!dsq->game->li)
-	{
-		lua_pushnumber(L, 0);
-	}
-	else
-		lua_pushnumber(L, (int)dsq->game->li);
+	luaPushPointer(L, dsq->game->li);
 	return 1;
 }
 
@@ -6908,7 +6890,7 @@ int l_getEntityInGroup(lua_State *L)
 {
 	int gid = lua_tonumber(L, 1);
 	int iter = lua_tonumber(L, 2);
-	lua_pushnumber(L, (int)dsq->game->getEntityInGroup(gid, iter));
+	luaPushPointer(L, dsq->game->getEntityInGroup(gid, iter));
 	return 1;
 }
 
@@ -6975,7 +6957,7 @@ int l_getEntityByID(lua_State *L)
 	{
 		debugLog("entity ID was 0");
 	}
-	lua_pushnumber(L, (int)found);
+	luaPushPointer(L, found);
 	return 1;
 }
 
@@ -7001,7 +6983,7 @@ int l_node_activate(lua_State *L)
 {
 	Path *p = path(L);
 	Entity *e = 0;
-	if (lua_isnumber(L, 2) && lua_tonumber(L, 2) != 0)
+	if (lua_touserdata(L, 2) != NULL)
 		e = entity(L, 2);
 	if (p)
 	{
@@ -7097,7 +7079,7 @@ int l_node_getNearestEntity(lua_State *L)
 			}
 		}
 	}
-	lua_pushnumber(L, (int)closest);
+	luaPushPointer(L, closest);
 	return 1;
 }
 
@@ -7128,7 +7110,7 @@ int l_node_getNearestNode(lua_State *L)
 			}
 		}
 	}
-	lua_pushnumber(L, (int)closest);
+	luaPushPointer(L, closest);
 	return 1;
 }
 
@@ -7151,7 +7133,7 @@ int l_entity_getNearestBoneToPosition(lua_State *L)
 			}
 		}
 	}
-	lua_pushnumber(L, (int)closest);
+	luaPushPointer(L, closest);
 	return 1;
 }
 
@@ -7184,7 +7166,7 @@ int l_entity_getNearestNode(lua_State *L)
 			}
 		}
 	}
-	lua_pushnumber(L, (int)closest);
+	luaPushPointer(L, closest);
 	return 1;
 }
 
@@ -7244,7 +7226,7 @@ int l_entity_getNearestEntity(lua_State *L)
 			}
 		}
 	}
-	lua_pushnumber(L, (int)closest);
+	luaPushPointer(L, closest);
 	return 1;
 }
 
@@ -7282,11 +7264,11 @@ int l_toggleVersionLabel(lua_State *L)
 
 luaf(setVersionLabelText)
 	dsq->setVersionLabelText();
-luad(0)
+luap(NULL)
 
 luaf(setCutscene)
 	dsq->setCutscene(getBool(L, 1), getBool(L, 2));
-luad(0)
+luap(NULL)
 
 luaf(isInCutscene)
 luab(dsq->isInCutscene())
@@ -7304,10 +7286,10 @@ luaf(toggleSteam)
 luab(on)
 
 luaf(getFirstEntity)
-luad(int(dsq->getFirstEntity()))
+luap(dsq->getFirstEntity())
 
 luaf(getNextEntity)
-luad(int(dsq->getNextEntity()))
+luap(dsq->getNextEntity())
 
 luaf(getEntity)
 	Entity *ent =0;
@@ -7322,7 +7304,7 @@ luaf(getEntity)
 		std::string s = lua_tostring(L, 1);
 		ent = dsq->getEntityByName(s);
 	}
-luad(int(ent))
+luap(ent)
 
 int _alpha(lua_State *L, RenderObject *r)
 {
@@ -7667,13 +7649,13 @@ int l_entity_getPositionY(lua_State* L)
 int l_entity_getTarget(lua_State *L)
 {
 	Entity *e = entity(L);
-	int retEnt = 0;
+	Entity *retEnt = NULL;
 	if (e)
 	{
-		retEnt = (int)e->getTargetEntity(lua_tonumber(L, 2));
+		retEnt = e->getTargetEntity(lua_tonumber(L, 2));
 		//e->activate();
 	}
-	lua_pushnumber(L, retEnt);
+	luaPushPointer(L, retEnt);
 	return 1;
 }
 

@@ -829,7 +829,7 @@ enum RLType
 
 typedef std::vector <RenderObject*> RenderObjects;
 typedef std::list <RenderObject*> RenderObjectList;
-typedef std::map <int, RenderObject*> RenderObjectMap;
+typedef std::map <intptr_t, RenderObject*> RenderObjectMap;
 
 class RenderObjectLayer
 {

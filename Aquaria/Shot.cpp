@@ -325,7 +325,7 @@ Shot::Shot() : Quad(), Segmented(0,0)
 	shots.push_back(this);
 }
 
-void loadShotCallback(const std::string &filename, int param)
+void loadShotCallback(const std::string &filename, intptr_t param)
 {
 	ShotData shotData;
 

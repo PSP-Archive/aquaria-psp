@@ -260,7 +260,7 @@ Buffer SoundManager::getBuffer(const std::string &name)
 {
 	std::string n = name;
 	stringToLower(n);
-	return (int)soundMap[n];
+	return soundMap[n];
 }
 
 void SoundManager::getStats(int *curAlloc, int *maxAlloc)
@@ -486,7 +486,7 @@ float SoundManager::getVoxFader()
 	return voxVol.y;
 }
 
-void SoundManager::setChannelVolume(int chan, float v)
+void SoundManager::setChannelVolume(void *chan, float v)
 {
 	// is this now unused?
 }
@@ -1060,7 +1060,7 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 	return true;
 }
 
-void SoundManager::updateChannelVolume(int ch, float v)
+void SoundManager::updateChannelVolume(void *ch, float v)
 {
 }
 
@@ -1080,7 +1080,7 @@ float SoundManager::getVoiceTime()
 	return 0;
 }
 
-int SoundManager::playSfx(const PlaySfx &play)
+void *SoundManager::playSfx(const PlaySfx &play)
 {
 	if (!enabled) return 0;
 
@@ -1132,14 +1132,14 @@ int SoundManager::playSfx(const PlaySfx &play)
 	result = channel->setPaused(false);
 	checkError();
 
-	return (int)channel;
+	return channel;
 #endif
 
 
 	return 0;
 }
 
-int SoundManager::playSfx(const std::string &name, float vol, float pan, float freq)
+void *SoundManager::playSfx(const std::string &name, float vol, float pan, float freq)
 {
 	PlaySfx play;
 	play.name = name;
@@ -1149,7 +1149,7 @@ int SoundManager::playSfx(const std::string &name, float vol, float pan, float f
 	return playSfx(play);
 }
 
-int SoundManager::playSfx(int handle, float vol, float pan, float freq)
+void *SoundManager::playSfx(int handle, float vol, float pan, float freq)
 {
 	PlaySfx play;
 	play.handle = handle;
@@ -1382,7 +1382,7 @@ void SoundManager::stopMusic()
 	lastMusic = "";
 }
 
-void SoundManager::stopSfx(int channel)
+void SoundManager::stopSfx(void *channel)
 {
 #ifdef BBGE_BUILD_FMODEX
 	if (!channel) return;
@@ -1396,7 +1396,7 @@ void SoundManager::stopSfx(int channel)
 #endif
 }
 
-void SoundManager::fadeSfx(int channel, SoundFadeType sft, float t)
+void SoundManager::fadeSfx(void *channel, SoundFadeType sft, float t)
 {
 #ifdef BBGE_BUILD_FMODEX
 	if (!channel) return;
@@ -1451,7 +1451,7 @@ void SoundManager::stopAllVoice()
 	stopVoice();
 }
 
-void loadCacheSoundsCallback (const std::string &filename, int param)
+void loadCacheSoundsCallback (const std::string &filename, intptr_t param)
 {
 	SoundManager *sm;
 	sm = (SoundManager*)param;
@@ -1476,7 +1476,7 @@ void loadCacheSoundsCallback (const std::string &filename, int param)
 
 void SoundManager::loadSoundCache(const std::string &path, const std::string &ftype)
 {
-	forEachFile(path, ftype, loadCacheSoundsCallback, (int)this);
+	forEachFile(path, ftype, loadCacheSoundsCallback, (intptr_t)this);
 }
 
 Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::string &path, const std::string &format, SoundLoadType slt)
@@ -1526,7 +1526,7 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 	FMOD::Sound * sound = SoundCore::soundMap[name];
 
 	if (sound)
-		return (int)sound;
+		return sound;
 
 	FMOD_MODE mode = FMOD_DEFAULT | FMOD_LOWMEM;
 	if (loop)
@@ -1547,7 +1547,7 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 		localSounds.push_back(name);
 	}
 
-	return (int)sound;
+	return sound;
 #endif
 
 #ifdef BBGE_BUILD_FMODEX
@@ -1557,7 +1557,7 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 	return Buffer();
 }
 
-int SoundManager::loadLocalSound(const std::string &filename)
+Buffer SoundManager::loadLocalSound(const std::string &filename)
 {
 	Buffer b = loadSoundIntoBank(filename, localSoundPath, fileType, SFXLOAD_LOCAL);
 

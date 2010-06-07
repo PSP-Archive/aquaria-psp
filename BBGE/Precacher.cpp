@@ -69,7 +69,7 @@ void Precacher::loadTextureRange(const std::string &file, const std::string &typ
 	}
 }
 
-void precacherCallback(const std::string &file, int param)
+void precacherCallback(const std::string &file, intptr_t param)
 {
 	Precacher *p = (Precacher*)param;
 	p->precacheTex(file);
@@ -101,7 +101,7 @@ void Precacher::precacheTex(const std::string &tex)
 		std::string path  = tex.substr(0, loc);
 		std::string type = tex.substr(loc+1, tex.size());
 		path = core->getBaseTextureDirectory() + path;
-		forEachFile(path, type, precacherCallback, (int)this);
+		forEachFile(path, type, precacherCallback, (intptr_t)this);
 		return;
 	}
 	else

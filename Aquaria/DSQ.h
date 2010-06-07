@@ -763,7 +763,13 @@ struct SFXLoops
 	void updateVolume();
 	void stopAll();
 
-	int bg, bg2, roll, charge, shield, current, trip;
+	void *bg;
+	void *bg2;
+	void *roll;
+	void *charge;
+	void *shield;
+	void *current;
+	void *trip;
 };
 
 class GameplayVariables

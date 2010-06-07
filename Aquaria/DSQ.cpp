@@ -2069,7 +2069,7 @@ void DSQ::toggleMuffleSound(bool toggle)
 	*/
 }
 
-void loadModsCallback(const std::string &filename, int param)
+void loadModsCallback(const std::string &filename, intptr_t param)
 {
 	//errorLog(filename);
 	int pos = filename.find_last_of('/')+1;
@@ -2173,7 +2173,7 @@ void DSQ::playPositionalSfx(const std::string &sfx, const Vector &position, floa
 			*/
 
 
-			int c = sound->playSfx(sfx, vol, pan, f);
+			void *c = sound->playSfx(sfx, vol, pan, f);
 
 			if (fadeOut != 0)
 			{

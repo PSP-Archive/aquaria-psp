@@ -93,7 +93,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#include "DSQ.h"
 
 #ifdef BBGE_BUILD_WINDOWS
-	#include "ShellApi.h"
+	#include <shellapi.h>
 #endif
 
 

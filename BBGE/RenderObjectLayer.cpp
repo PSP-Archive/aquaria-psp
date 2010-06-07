@@ -291,7 +291,7 @@ void RenderObjectLayer::add(RenderObject* r)
 		renderObjectList.push_back(r);
 	break;
 	case RLT_MAP:
-		renderObjectMap[int(r)] = r;
+		renderObjectMap[intptr_t(r)] = r;
 	break;
 	}
 }
@@ -328,7 +328,7 @@ void RenderObjectLayer::remove(RenderObject* r)
 		renderObjectList.remove(r);
 	break;
 	case RLT_MAP:
-		renderObjectMap[int(r)] = 0;
+		renderObjectMap[intptr_t(r)] = 0;
 	break;
 	}
 }

@@ -114,7 +114,7 @@ void ScriptedEntity::message(const std::string &msg, int v)
 	{
 		bool fail=false;
 		lua_getfield(L, LUA_GLOBALSINDEX, "msg");
-		lua_pushnumber(L, int(this));
+		luaPushPointer(L, this);
 		lua_pushstring(L, msg.c_str());
 		lua_pushnumber(L, v);
 		fail = lua_pcall(L, 3, 0, 0);
@@ -134,7 +134,7 @@ void ScriptedEntity::init()
 	{
 		bool fail=false;
 		lua_getfield(L, LUA_GLOBALSINDEX, "init");
-		lua_pushnumber(L, int(this));
+		luaPushPointer(L, this);
 		fail = lua_pcall(L, 1, 0, 0);
 		if (fail)	luaDebugMsg("init", lua_tostring(L, -1));
 	}
@@ -156,7 +156,7 @@ void ScriptedEntity::postInit()
 	{
 		bool fail=false;
 		lua_getfield(L, LUA_GLOBALSINDEX, "postInit");
-		lua_pushnumber(L, int(this));
+		luaPushPointer(L, this);
 		fail = lua_pcall(L, 1, 0, 0);
 		if (fail)	luaDebugMsg("postInit", lua_tostring(L, -1));
 	}
@@ -605,7 +605,7 @@ void ScriptedEntity::destroy()
 void ScriptedEntity::song(SongType songType)
 {
 	lua_getfield(L, LUA_GLOBALSINDEX, "song");
-	lua_pushnumber(L, int(this));
+	luaPushPointer(L, this);
 	lua_pushnumber(L, int(songType));
 	int fail = lua_pcall(L, 2, 0, 0);
 	if (fail)	debugLog(name + " : " + lua_tostring(L, -1));
@@ -614,7 +614,7 @@ void ScriptedEntity::song(SongType songType)
 void ScriptedEntity::shiftWorlds(WorldType lastWorld, WorldType worldType)
 {
 	lua_getfield(L, LUA_GLOBALSINDEX, "shiftWorlds");
-	lua_pushnumber(L, int(this));
+	luaPushPointer(L, this);
 	lua_pushnumber(L, int(lastWorld));
 	lua_pushnumber(L, int(worldType));
 	int fail = lua_pcall(L, 3, 0, 0);
@@ -664,7 +664,7 @@ void ScriptedEntity::startPull()
 void ScriptedEntity::sporesDropped(const Vector &pos, int type)
 {
 	lua_getfield(L, LUA_GLOBALSINDEX, "sporesDropped");
-	lua_pushnumber(L, int(this));
+	luaPushPointer(L, this);
 	lua_pushnumber(L, pos.x);
 	lua_pushnumber(L, pos.y);
 	lua_pushnumber(L, type);
@@ -687,7 +687,7 @@ void ScriptedEntity::onUpdate(float dt)
 	if (preUpdateFunc)
 	{
 		lua_getfield(L, LUA_GLOBALSINDEX, "preUpdate");
-		lua_pushnumber(L, int(this));
+		luaPushPointer(L, this);
 		lua_pushnumber(L, dt);
 		int fail = lua_pcall(L, 2, 0, 0);
 		if (fail)
@@ -739,7 +739,7 @@ void ScriptedEntity::onUpdate(float dt)
 		return;
 	}
 	lua_getfield(L, LUA_GLOBALSINDEX, "update");
-	lua_pushnumber(L, int(this));
+	luaPushPointer(L, this);
 	lua_pushnumber(L, dt);
 	int fail = lua_pcall(L, 2, 0, 0);
 	if (fail)
@@ -776,7 +776,7 @@ void ScriptedEntity::stopTimer()
 void ScriptedEntity::onExitTimer()
 {
 	lua_getfield(L, LUA_GLOBALSINDEX, "exitTimer");
-	lua_pushnumber(L, int(this));
+	luaPushPointer(L, this);
 	int fail = lua_pcall(L, 1, 0, 0);
 	if (fail)	debugLog(this->name + " : " + std::string(lua_tostring(L, -1)) + " exitTimer");
 }
@@ -786,7 +786,7 @@ void ScriptedEntity::onAnimationKeyPassed(int key)
 	if (animKeyFunc)
 	{
 		lua_getfield(L, LUA_GLOBALSINDEX, "animationKey");
-		lua_pushnumber(L, int(this));
+		luaPushPointer(L, this);
 		lua_pushnumber(L, key);
 		int fail = lua_pcall(L, 2, 0, 0);
 		if (fail)
@@ -804,7 +804,7 @@ void ScriptedEntity::lightFlare()
 	if (!isEntityDead())
 	{
 		lua_getfield(L, LUA_GLOBALSINDEX, "lightFlare");
-		lua_pushnumber(L, int(this));
+		luaPushPointer(L, this);
 		//int fail = 
 		lua_pcall(L, 1, 1, 0);
 	}
@@ -816,14 +816,14 @@ bool ScriptedEntity::damage(const DamageData &d)
 	bool doDefault = true;
 	lua_getfield(L, LUA_GLOBALSINDEX, "damage");
 	//(me, attacker, bone, spellType, dmg)
-	lua_pushnumber(L, int(this));
-	lua_pushnumber(L, int(d.attacker));
-	lua_pushnumber(L, int(d.bone));
+	luaPushPointer(L, this);
+	luaPushPointer(L, d.attacker);
+	luaPushPointer(L, d.bone);
 	lua_pushnumber(L, int(d.damageType));
 	lua_pushnumber(L, d.damage);
 	lua_pushnumber(L, d.hitPos.x);
 	lua_pushnumber(L, d.hitPos.y);
-	lua_pushnumber(L, int(d.shot));
+	luaPushPointer(L, d.shot);
 	//float mult = 0;
 	int fail = lua_pcall(L, 8, 1, 0);
 	if (fail)
@@ -864,9 +864,9 @@ void ScriptedEntity::onHitEntity(const CollideData &c)
 
 	lua_getfield(L, LUA_GLOBALSINDEX, "hitEntity");
 	//(me, attacker, bone, spellType, dmg)
-	lua_pushnumber(L, int(this));
-	lua_pushnumber(L, int(c.entity));
-	lua_pushnumber(L, int(c.bone));
+	luaPushPointer(L, this);
+	luaPushPointer(L, c.entity);
+	luaPushPointer(L, c.bone);
 	int fail = lua_pcall(L, 3, 1, 0);
 	if (fail)
 	{
@@ -884,7 +884,7 @@ void ScriptedEntity::songNote(int note)
 	if (songNoteFunction)
 	{
 		lua_getfield(L, LUA_GLOBALSINDEX, "songNote");
-		lua_pushnumber(L, int(this));
+		luaPushPointer(L, this);
 		lua_pushnumber(L, note);
 		int fail = lua_pcall(L, 2, 0, 0);
 		if (fail)
@@ -901,7 +901,7 @@ void ScriptedEntity::songNoteDone(int note, float len)
 	if (songNoteDoneFunction)
 	{
 		lua_getfield(L, LUA_GLOBALSINDEX, "songNoteDone");
-		lua_pushnumber(L, int(this));
+		luaPushPointer(L, this);
 		lua_pushnumber(L, note);
 		lua_pushnumber(L, len);
 		int fail = lua_pcall(L, 3, 0, 0);
@@ -996,7 +996,7 @@ void ScriptedEntity::onHitWall()
 
 
 	lua_getfield(L, LUA_GLOBALSINDEX, "hitSurface");
-	lua_pushnumber(L, int(this));
+	luaPushPointer(L, this);
 	int fail = lua_pcall(L, 1, 0, 0);
 	if (fail)	debugLog(this->name + " : " + std::string(lua_tostring(L, -1)) + " hitSurface");
 }
@@ -1029,7 +1029,7 @@ void ScriptedEntity::activate()
 	dsq->conversationDelay = 1.5;
 	if (!dsq->scriptInterface.setCurrentEntity(this)) return;
 	lua_getfield(L, LUA_GLOBALSINDEX, "activate");
-	lua_pushnumber(L, int(this));
+	luaPushPointer(L, this);
 	int fail = lua_pcall(L, 1, 0, 0);
 	if (fail)	luaDebugMsg("activate", lua_tostring(L, -1));
 	runningActivation = false;
@@ -1040,10 +1040,10 @@ void ScriptedEntity::shotHitEntity(Entity *hit, Shot *shot, Bone *bone)
 	Entity::shotHitEntity(hit, shot, bone);
 
 	lua_getfield(L, LUA_GLOBALSINDEX, "shotHitEntity");
-	lua_pushnumber(L, int(this));
-	lua_pushnumber(L, int(hit));
-	lua_pushnumber(L, int(shot));
-	lua_pushnumber(L, int(bone));
+	luaPushPointer(L, this);
+	luaPushPointer(L, hit);
+	luaPushPointer(L, shot);
+	luaPushPointer(L, bone);
 	lua_pcall(L, 4, 0, 0);
 }
 
@@ -1052,8 +1052,8 @@ void ScriptedEntity::entityDied(Entity *e)
 	CollideEntity::entityDied(e);
 
 	lua_getfield(L, LUA_GLOBALSINDEX, "entityDied");
-	lua_pushnumber(L, int(this));
-	lua_pushnumber(L, int(e));
+	luaPushPointer(L, this);
+	luaPushPointer(L, e);
 	//int fail = 
 	lua_pcall(L, 2, 0, 0);
 	//if (fail)	luaDebugMsg("entityDied", lua_tostring(L, -1));
@@ -1068,7 +1068,7 @@ void ScriptedEntity::onDieNormal()
 {
 	Entity::onDieNormal();
 	lua_getfield(L, LUA_GLOBALSINDEX, "dieNormal");
-	lua_pushnumber(L, int(this));
+	luaPushPointer(L, this);
 	int fail = lua_pcall(L, 1, 0, 0);
 }
 
@@ -1076,7 +1076,7 @@ void ScriptedEntity::onDieEaten()
 {
 	Entity::onDieEaten();
 	lua_getfield(L, LUA_GLOBALSINDEX, "dieEaten");
-	lua_pushnumber(L, int(this));
+	luaPushPointer(L, this);
 	int fail = lua_pcall(L, 1, 0, 0);
 }
 
@@ -1086,7 +1086,7 @@ void ScriptedEntity::onEnterState(int action)
 	
 	//if (!dsq->scriptInterface.setCurrentEntity(this)) return;
 	lua_getfield(L, LUA_GLOBALSINDEX, "enterState");
-	lua_pushnumber(L, int(this));
+	luaPushPointer(L, this);
 	int fail = lua_pcall(L, 1, 0, 0);
 	if (fail) luaDebugMsg("enterState", lua_tostring(L, -1));
 	switch(action)
@@ -1132,7 +1132,7 @@ void ScriptedEntity::onExitState(int action)
 	
 	if (!dsq->scriptInterface.setCurrentEntity(this)) return;
 	lua_getfield(L, LUA_GLOBALSINDEX, "exitState");
-	lua_pushnumber(L, int(this));
+	luaPushPointer(L, this);
 	int fail = lua_pcall(L, 1, 0, 0);
 	if (fail)	luaDebugMsg("exitState", lua_tostring(L, -1));
 

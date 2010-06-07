@@ -30,7 +30,7 @@ typedef float    FTGL_FLOAT;
 
     #ifndef __gl_h_
         #include <GL/gl.h>
-        #include <GL/glu.h>
+        //#include <GL/glu.h>
     #endif
 
 #else

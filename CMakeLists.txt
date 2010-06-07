@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(Aquaria)
 
 INCLUDE(CheckCCompilerFlag)
@@ -25,7 +25,26 @@ SET(BBGEDIR ${CMAKE_CURRENT_SOURCE_DIR}/BBGE)
 SET(SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/Aquaria)
 SET(LUADIR ${CMAKE_CURRENT_SOURCE_DIR}/Aquaria/lua-5.1.4)
 SET(LUASRCDIR ${LUADIR}/src)
-SET(SDL12DIR ${BBGEDIR}/SDL12)
+
+# Find SDL or use the included library if applicable
+find_package(SDL REQUIRED)
+if (NOT SDL_FOUND)
+    if(MACOSX)
+        set(SDLDIR "${BBGEDIR}/SDL12")
+        set(SDL_INCLUDE_DIR "${SDLDIR}/include")
+        message(STATUS "Using internal copy of SDL")
+        set(SDL_LIBRARY "${SDLDIR}/lib/macosx/libSDL-1.2.0.dylib ${SDLDIR}/lib/macosx/libSDLmain.a")
+    else(MACOSX)
+        message(ERROR "We don't have a prebuilt SDL for this platform.")
+    endif(MACOSX)
+endif (NOT SDL_FOUND)
+
+# Find OpenAL or use the included library if applicable
+find_package(OpenAL REQUIRED)
+if (NOT OPENAL_FOUND)
+    message(ERROR "We don't have a prebuilt OpenAL for this platform.")
+endif (NOT OPENAL_FOUND)
+
 SET(FTGLDIR ${BBGEDIR}/FTGL)
 SET(FTGLSRCDIR ${FTGLDIR}/src)
 SET(FREETYPE2DIR ${BBGEDIR}/freetype2)
@@ -37,11 +56,11 @@ INCLUDE_DIRECTORIES(${BBGEDIR})
 INCLUDE_DIRECTORIES(${BBGEDIR}/GL)
 INCLUDE_DIRECTORIES(${BBGEDIR}/glpng/zlib)
 INCLUDE_DIRECTORIES(${SRCDIR})
-INCLUDE_DIRECTORIES(${SDL12DIR}/include)
+INCLUDE_DIRECTORIES(${SDL_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${LUASRCDIR})
 INCLUDE_DIRECTORIES(${FTGLDIR}/include)
 INCLUDE_DIRECTORIES(${FREETYPE2DIR}/include)
-INCLUDE_DIRECTORIES(${BBGEDIR}/AL/include)
+INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${LIBOGGDIR}/include)
 INCLUDE_DIRECTORIES(${LIBVORBISDIR}/include)
 
@@ -70,16 +89,18 @@ IF(MACOSX)
     ADD_DEFINITIONS(-DBBGE_BUILD_MACOSX=1)
 ENDIF(MACOSX)
 
-IF(MSVC)
+IF(WIN32)
     ADD_DEFINITIONS(-DBBGE_BUILD_WINDOWS=1)
-ENDIF(MSVC)
+ENDIF(WIN32)
 
 
 # Build Lua with Unix _setjmp/_longjmp support.
-ADD_DEFINITIONS(-DLUA_USE_ULONGJMP=1)
+IF(UNIX)
+    ADD_DEFINITIONS(-DLUA_USE_ULONGJMP=1)
+ENDIF(UNIX)
 
 IF(CMAKE_COMPILER_IS_GNUCC)
-    ADD_DEFINITIONS(-pipe -fsigned-char)
+    ADD_DEFINITIONS(-pipe -fsigned-char -g)
     #ADD_DEFINITIONS(-Wall)
 
     # See if -fno-stack-protector is available to us.
@@ -169,6 +190,10 @@ SET(AQUARIA_SRCS_UNUSED
     ${SRCDIR}/StarRenderer.cpp
 )
 
+IF(MACOSX)
+    SET(COCOA_SRCS "${BBGEDIR}/Cocoa.mm")
+ENDIF(MACOSX)
+
 # Bit Blot Game Engine sources...
 SET(BBGE_SRCS
     ${BBGEDIR}/glfont2/glfont2.cpp
@@ -249,6 +274,7 @@ SET(BBGE_SRCS
     ${BBGEDIR}/TTFFont.cpp
     ${BBGEDIR}/Vector.cpp
     ${BBGEDIR}/FmodOpenALBridge.cpp
+    ${COCOA_SRCS}
 )
 
 # Apparently not used at the moment. Listed here just for completeness.
@@ -389,25 +415,16 @@ ADD_EXECUTABLE(aquaria
 )
 
 IF(MACOSX)
-    ADD_DEFINITIONS(-arch i386)
-    ADD_DEFINITIONS(-arch ppc)
-    ADD_DEFINITIONS(-isysroot /Developer/SDKs/MacOSX10.4u.sdk)
-    ADD_DEFINITIONS(-DMAC_OS_X_VERSION_MIN_REQUIRED=1040)
-    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-mmacosx-version-min=10.4 -arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.4u.sdk")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework Carbon")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework Cocoa")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework OpenGL")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework OpenAL")
-    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "${SDL12DIR}/lib/macosx/libSDL-1.2.0.dylib")
-    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "${SDL12DIR}/lib/macosx/libSDLmain.a")
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "${SDL_LIBRARY}")
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "${OPENAL_LIBRARY}")
     TARGET_LINK_LIBRARIES(aquaria ${OPTIONAL_LIBS})
+ELSE(MACOSX)
+    TARGET_LINK_LIBRARIES(aquaria ${SDL_LIBRARY} ${OPENAL_LIBRARY})
 ENDIF(MACOSX)
-
-IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    # !!! FIXME: amd64 someday?
-    TARGET_LINK_LIBRARIES(aquaria ${SDL12DIR}/lib/linux-x86/libSDL-1.2.so.0 ${BBGEDIR}/AL/lib/linux-x86/libopenal.so.1)
-    SET_TARGET_PROPERTIES(aquaria PROPERTIES LINK_FLAGS "-Wl,-rpath,$ORIGIN")
-ENDIF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 
 # end of CMakeLists.txt ...
 

@@ -111,9 +111,9 @@ AfterEffectManager::~AfterEffectManager()
 		int i;
 		for (i = 0; i < xDivs; i++)
 		{
-			delete drawGrid[i];
+			delete[] drawGrid[i];
 		}	
-		delete drawGrid;
+		delete[] drawGrid;
 	}
 	deleteEffects();
 }

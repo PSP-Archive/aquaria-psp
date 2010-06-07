@@ -7433,7 +7433,7 @@ void Game::onCook()
 			float ft = 0.8;
 			float nt = 0.1;
 			float nt2 = 0.2;
-			int handle = 0;
+			void *handle = NULL;
 
 			/*
 			if (!longAnim)

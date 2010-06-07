@@ -243,7 +243,7 @@ void Path::song(SongType songType)
 	if (hasScript() && songFunc)
 	{
 		lua_getfield(L, LUA_GLOBALSINDEX, "song");
-		lua_pushnumber(L, int(this));
+		luaPushPointer(L, this);
 		lua_pushnumber(L, int(songType));
 		int fail = lua_pcall(L, 2, 0, 0);
 		if (fail)
@@ -259,7 +259,7 @@ void Path::songNote(int note)
 	if (hasScript() && songNoteFunc)
 	{
 		lua_getfield(L, LUA_GLOBALSINDEX, "songNote");
-		lua_pushnumber(L, int(this));
+		luaPushPointer(L, this);
 		lua_pushnumber(L, note);
 		int fail = lua_pcall(L, 2, 0, 0);
 		if (fail)
@@ -275,7 +275,7 @@ void Path::songNoteDone(int note, float len)
 	if (hasScript() && songNoteDoneFunc)
 	{
 		lua_getfield(L, LUA_GLOBALSINDEX, "songNoteDone");
-		lua_pushnumber(L, int(this));
+		luaPushPointer(L, this);
 		lua_pushnumber(L, note);
 		lua_pushnumber(L, len);
 		int fail = lua_pcall(L, 3, 0, 0);
@@ -534,7 +534,7 @@ void Path::init()
 	if (L)
 	{
 		lua_getfield(L, LUA_GLOBALSINDEX, "init");
-		lua_pushnumber(L, int(this));
+		luaPushPointer(L, this);
 		int fail = lua_pcall(L, 1, 0, 0);
 		if (fail)
 		{
@@ -560,7 +560,7 @@ void Path::update(float dt)
 		if (L && updateFunction)
 		{
 			lua_getfield(L, LUA_GLOBALSINDEX, "update");
-			lua_pushnumber(L, int(this));
+			luaPushPointer(L, this);
 			lua_pushnumber(L, dt);
 			int fail = lua_pcall(L, 2, 0, 0);
 			if (fail)
@@ -711,7 +711,7 @@ bool Path::action(int id, int state)
 	{
 		bool dontRemove = true;
 		lua_getfield(L, LUA_GLOBALSINDEX, "action");
-		lua_pushnumber(L, int(this));
+		luaPushPointer(L, this);
 		lua_pushnumber(L, id);
 		lua_pushnumber(L, int(state));
 		int fail = lua_pcall(L, 3, 1, 0);
@@ -731,8 +731,8 @@ void Path::activate(Entity *e)
 	if (L && activateFunction)
 	{
 		lua_getfield(L, LUA_GLOBALSINDEX, "activate");
-		lua_pushnumber(L, int(this));
-		lua_pushnumber(L, int(e));
+		luaPushPointer(L, this);
+		luaPushPointer(L, e);
 		int fail = lua_pcall(L, 2, 0, 0);
 		if (fail)
 		{

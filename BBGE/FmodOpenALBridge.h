@@ -21,6 +21,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef _INCL_FMOD_OPENAL_BRIDGE_H_
 #define _INCL_FMOD_OPENAL_BRIDGE_H_
 
+#ifdef _WIN32
+#include <malloc.h>
+#endif
+
 typedef enum
 {
     FMOD_OK = 0,

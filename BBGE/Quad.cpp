@@ -451,8 +451,8 @@ void Quad::renderGrid()
 			else
 				baseY = upperLeftTextureCoordinates.y;
 #else
-			baseX = min(lowerRightTextureCoordinates.x, upperLeftTextureCoordinates.x);
-			baseY = min(lowerRightTextureCoordinates.y, upperLeftTextureCoordinates.y);
+			baseX = MIN(lowerRightTextureCoordinates.x, upperLeftTextureCoordinates.x);
+			baseY = MIN(lowerRightTextureCoordinates.y, upperLeftTextureCoordinates.y);
 #endif
 
 		}

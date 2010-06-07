@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
 #ifdef BBGE_BUILD_WINDOWS
-	#include "Shellapi.h"
+	#include <shellapi.h>
 #endif
 
 const int minSelectionSize = 64;

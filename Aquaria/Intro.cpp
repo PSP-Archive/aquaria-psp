@@ -303,7 +303,7 @@ void Intro::update(float dt)
 		play.loops = -1;
 		play.time = 40;
 		play.vol = 0.7;
-		int drone = dsq->sound->playSfx(play);
+		void *drone = dsq->sound->playSfx(play);
 
 
 		PlaySfx play2;
@@ -312,7 +312,7 @@ void Intro::update(float dt)
 		play2.loops = -1;
 		play2.time = 20;
 		play2.vol = 0.9;
-		int windLoop = dsq->sound->playSfx(play2);
+		void *windLoop = dsq->sound->playSfx(play2);
 
 		dsq->main(3);
 
@@ -445,7 +445,7 @@ void Intro::update(float dt)
 		play3.loops = -1;
 		play3.time = 10;
 		play3.vol = 0.7;
-		int propLoop = dsq->sound->playSfx(play3);
+		void *propLoop = dsq->sound->playSfx(play3);
 
 		dsq->overlay->alpha.interpolateTo(0, 1);
 
@@ -706,7 +706,7 @@ void Intro::update(float dt)
 		pScreaming.loops = -1;
 		pScreaming.time = 8;
 		pScreaming.vol = 1.0;
-		int screaming = dsq->sound->playSfx(pScreaming);
+		void *screaming = dsq->sound->playSfx(pScreaming);
 
 		eric->alpha = 1;
 		eric->offset.interpolateTo(Vector(150, 0), 1);
@@ -813,7 +813,7 @@ void Intro::update(float dt)
 		play4.loops = -1;
 		play4.time = 1;
 		play4.fade = SFT_IN; 
-		int bgLoop = dsq->sound->playSfx(play4);
+		void *bgLoop = dsq->sound->playSfx(play4);
 
 		if (waitQuit(3)) return;
 

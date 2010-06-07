@@ -90,7 +90,7 @@ protected:
 	float len;
 	float ptimer;
 	void spawnParticles(float dt);
-	int channel;
+	void *channel;
 	float delay, counter, minTime;
 	bool cursorIsIn;
 	void onUpdate(float dt);

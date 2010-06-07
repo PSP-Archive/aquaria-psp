@@ -73,5 +73,6 @@ protected:
 };
 extern ScriptInterface *si;
 
+void luaPushPointer(lua_State *L, void *ptr);
 
 

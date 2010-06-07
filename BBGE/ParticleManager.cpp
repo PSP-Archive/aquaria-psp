@@ -406,7 +406,7 @@ Particle *ParticleManager::getFreeParticle(Emitter *emitter)
 	return p;
 }
 
-void loadParticleCallback(const std::string &filename, int param)
+void loadParticleCallback(const std::string &filename, intptr_t param)
 {
 	ParticleEffect *e = new ParticleEffect();
 

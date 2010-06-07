@@ -209,7 +209,7 @@ float sqr(float x);
 bool exists(const std::string &f, bool makeFatal = false);
 void errorLog(const std::string &s);
 void debugLog(const std::string &s);
-void forEachFile(std::string path, std::string type, void callback(const std::string &filename, int param), int param);
+void forEachFile(std::string path, std::string type, void callback(const std::string &filename, intptr_t param), intptr_t param);
 std::string stripEndlineForUnix(const std::string &in);
 std::vector<std::string> getFileList(std::string path, std::string type, int param);
 int nocasecmp(const std::string & s1, const std::string& s2);
@@ -251,7 +251,7 @@ void msgVector(const std::string &name, const Vector &vec);
 
 void fatalError(const std::string &message);
 
-unsigned long hash(const std::string &string);
+unsigned hash(const std::string &string);
 
 inline
 float sqr(float x)

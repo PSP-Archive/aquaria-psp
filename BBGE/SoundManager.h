@@ -53,7 +53,7 @@ namespace SoundCore
 #if defined(BBGE_BUILD_OPENALOGG)
 	//struct Buffer;
 #elif defined(BBGE_BUILD_FMODEX)
-	typedef int Buffer;
+	typedef void *Buffer;
 #endif
 }
 
@@ -124,7 +124,7 @@ public:
 
 	void stopAll();
 
-	void setChannelVolume(int chan, float v);
+	void setChannelVolume(void *chan, float v);
 
 	void loadSoundCache(const std::string &spath="sfx/cache/", const std::string &ftype=".ogg");
 
@@ -134,13 +134,13 @@ public:
 
 	void setVoicePath2(const std::string &voicePath2) { this->voicePath2 = voicePath2; }
 
-	int loadLocalSound(const std::string &sound);
+	SoundCore::Buffer loadLocalSound(const std::string &sound);
 	SoundCore::Buffer loadSoundIntoBank(const std::string &filename, const std::string &path, const std::string &format, SoundLoadType = SFXLOAD_CACHE);
 	SoundCore::Buffer getBuffer(const std::string &name);
 
-	int playSfx(const PlaySfx &play);
-	int playSfx(const std::string &name, float vol=1, float pan=0, float freq=1);
-	int playSfx(int handle, float vol=1, float pan=0, float freq=1);
+	void *playSfx(const PlaySfx &play);
+	void *playSfx(const std::string &name, float vol=1, float pan=0, float freq=1);
+	void *playSfx(int handle, float vol=1, float pan=0, float freq=1);
 
 	bool playMod(const std::string &name);
 	bool playMusic(const std::string &name, SoundLoopType=SLT_NORMAL, SoundFadeType sft=SFT_NONE, float trans=0, SoundConditionType sct=SCT_NORMAL);
@@ -167,9 +167,9 @@ public:
 	void stopVoice();
 	void stopAllVoice();
 	void stopMusic();
-	void stopSfx(int channel);
+	void stopSfx(void *channel);
 
-	void fadeSfx(int channel, SoundFadeType sft=SFT_OUT, float t=0.8);
+	void fadeSfx(void *channel, SoundFadeType sft=SFT_OUT, float t=0.8);
 
 	void fadeMusic(SoundFadeType sft=SFT_OUT, float t=1);
 
@@ -188,7 +188,7 @@ public:
 
 	float getSfxVol();
 
-	void updateChannelVolume(int ch, float v=1);
+	void updateChannelVolume(void *ch, float v=1);
 
 	void pause();
 	void resume();

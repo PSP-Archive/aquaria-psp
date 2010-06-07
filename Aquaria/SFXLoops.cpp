@@ -36,7 +36,7 @@ void SFXLoops::updateVolume()
 	core->sound->updateChannelVolume(trip);
 }
 
-void stopLoop(int *loop)
+void stopLoop(void **loop)
 {
 	if (*loop != BBGE_AUDIO_NOCHANNEL)
 	{

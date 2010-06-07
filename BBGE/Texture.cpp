@@ -316,7 +316,7 @@ void Texture::load(std::string file)
 
 	bool check = true;
 
-	int pos = file.find_last_of('.');
+	size_t pos = file.find_last_of('.');
 	if ((pos != std::string::npos) && (pos >= 0))
 	{
 		// make sure this didn't catch the '.' in /home/username/.Aquaria/*  --ryan.
@@ -629,7 +629,7 @@ typedef uint16_t WORD;
 
 static int fread_int(FILE *file, int size)
 {
-	int buffer;
+	int buffer = 0;
 	
 	//input.read((char *)&buffer, 4);
 	fread(&buffer, size, 1, file);
