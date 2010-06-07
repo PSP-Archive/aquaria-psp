@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 Precacher::Precacher()
 {
+	loadProgressCallback = NULL;
 	cleaned = true;
 }
 
@@ -106,6 +107,8 @@ void Precacher::precacheTex(const std::string &tex)
 	}
 	else
 	{
+		if (loadProgressCallback)
+			loadProgressCallback();
 		std::string t = tex;
 		if (tex.find(core->getBaseTextureDirectory()) != std::string::npos)
 		{
@@ -119,8 +122,9 @@ void Precacher::precacheTex(const std::string &tex)
 	}
 }
 
-void Precacher::precacheList(const std::string &list)
+void Precacher::precacheList(const std::string &list, void progressCallback())
 {
+	loadProgressCallback = progressCallback;
 	std::ifstream in(list.c_str());
 	std::string t;
 	while (std::getline(in, t))
@@ -137,5 +141,6 @@ void Precacher::precacheList(const std::string &list)
 		}
 	}
 	in.close();
+	loadProgressCallback = NULL;
 }
 

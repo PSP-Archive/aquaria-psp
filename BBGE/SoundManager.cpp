@@ -283,6 +283,8 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 	sfxVol = 1;
 	voiceFader = 1;
 
+	loadProgressCallback = NULL;
+
 #ifdef BBGE_BUILD_FMODEX
 
 	int channels	= 128;
@@ -1474,13 +1476,18 @@ void loadCacheSoundsCallback (const std::string &filename, intptr_t param)
 	}
 }
 
-void SoundManager::loadSoundCache(const std::string &path, const std::string &ftype)
+void SoundManager::loadSoundCache(const std::string &path, const std::string &ftype, void progressCallback())
 {
+	loadProgressCallback = progressCallback;
 	forEachFile(path, ftype, loadCacheSoundsCallback, (intptr_t)this);
+	loadProgressCallback = NULL;
 }
 
 Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::string &path, const std::string &format, SoundLoadType slt)
 {
+	if (loadProgressCallback)
+		loadProgressCallback();
+
 	std::string f = filename, name;
 
 	// WARNING: local sounds should go here!
