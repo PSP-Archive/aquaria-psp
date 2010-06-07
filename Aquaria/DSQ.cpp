@@ -838,6 +838,35 @@ void loadBit(float amount)
 	core->showBuffer();
 }
 
+unsigned int soundsLoaded = 0;
+const unsigned int soundsExpected = 195;
+const float soundsProgressAmount = 0.4;
+void loadBitForSoundCache()
+{
+	if (soundsLoaded > 0 && soundsLoaded < soundsExpected)
+	{
+		// Only update every 4 sounds so we don't waste too much
+		// time waiting for vsync.
+		if (soundsLoaded % 4 == 0)
+			loadBit((4.0f / soundsExpected) * soundsProgressAmount);
+	}
+	soundsLoaded++;
+}
+
+unsigned int texturesLoaded = 0;
+const unsigned int texturesExpected = 652;
+const float texturesProgressAmount = 0.3;
+void loadBitForTexPrecache()
+{
+	if (texturesLoaded > 0 && texturesLoaded < texturesExpected)
+	{
+		if (texturesLoaded % 16 == 0)
+			loadBit((16.0f / texturesExpected) * texturesProgressAmount);
+	}
+	texturesLoaded++;
+}
+
+
 void DSQ::setVersionLabelText() {
 	std::ostringstream os;
 	os << "Aquaria";
@@ -1186,10 +1215,11 @@ This build is not yet final, and as such there are a couple things lacking. They
 	
 
 	debugLog("Loading Sound Cache...");
-		sound->loadSoundCache();
+		sound->loadSoundCache("sfx/cache/", ".ogg", loadBitForSoundCache);
 	debugLog("OK");
 
-	loadBit(0.46);  // Total 0.46
+	loadingProgress = 0.06f + soundsProgressAmount;  // Total 0.46
+	loadBit(0);
 
 
 	user.load();
@@ -1474,11 +1504,12 @@ This build is not yet final, and as such there are a couple things lacking. They
 		fpsText->alpha = 0;
 	}
 
-	precacher.precacheList("data/precache.txt");
+	precacher.precacheList("data/precache.txt", loadBitForTexPrecache);
 
 	setTexturePointers();
 
-	loadBit(0.30);  // Total 0.79
+	loadingProgress = 0.49f + texturesProgressAmount;  // Total 0.79
+	loadBit(0);
 
 	int i = 0;
 

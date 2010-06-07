@@ -126,7 +126,7 @@ public:
 
 	void setChannelVolume(void *chan, float v);
 
-	void loadSoundCache(const std::string &spath="sfx/cache/", const std::string &ftype=".ogg");
+	void loadSoundCache(const std::string &spath="sfx/cache/", const std::string &ftype=".ogg", void progressCallback()=NULL);
 
 	void stopAllSfx();
 	
@@ -244,8 +244,9 @@ private:
 	float sfxVol;
 	float voiceFader, sfxFader;
 
-
 	std::queue<std::string> voxQueue;
+
+	void (*loadProgressCallback)();
 };
 
 extern SoundManager *sound;
