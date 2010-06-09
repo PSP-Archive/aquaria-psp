@@ -8539,7 +8539,11 @@ void Avatar::onUpdate(float dt)
 					else
 					{
 						// stop movement
-						if (addVec.isLength2DIn(STOP_DISTANCE))
+						// For joystick/keyboard control, don't stop unless
+						// the Swim (primary action) button is pressed with
+						// no movement input.  --achurch
+						if ((dsq->inputMode == INPUT_MOUSE || isActing(ACTION_PRIMARY))
+							&& addVec.isLength2DIn(STOP_DISTANCE))
 						{
 							vel *= 0.9;
 							if (!rolling)
