@@ -633,7 +633,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 			}
 			else
 			{
-				for (int i = ActionMapper::JOY1_BUTTON_0; i <= ActionMapper::JOY1_BUTTON_12; i++)
+				for (int i = ActionMapper::JOY1_BUTTON_0; i <= ActionMapper::JOY1_BUTTON_16; i++)
 				{
 					if (dsq->game->getKeyState(i))
 					{

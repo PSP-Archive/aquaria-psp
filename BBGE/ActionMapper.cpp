@@ -316,7 +316,7 @@ bool ActionMapper::getKeyState(int k)
 	{
 		keyState = (core->mouse.buttons.middle == DOWN);
 	}			
-	else if (k >= JOY1_BUTTON_0 && k <= JOY1_BUTTON_12)
+	else if (k >= JOY1_BUTTON_0 && k <= JOY1_BUTTON_16)
 	{
 		int v = k - JOY1_BUTTON_0;
 		

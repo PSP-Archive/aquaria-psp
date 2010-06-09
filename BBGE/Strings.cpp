@@ -102,7 +102,7 @@ void initInputCodeMap()
 	inputCodeMap["MOUSE_BUTTON_RIGHT"] = ActionMapper::MOUSE_BUTTON_RIGHT;
 	inputCodeMap["MOUSE_BUTTON_MIDDLE"] = ActionMapper::MOUSE_BUTTON_MIDDLE;
 
-	for (int i = 0; i < 12; i++)
+	for (int i = 0; i < 17; i++)
 	{
 		std::ostringstream os;
 		os << "JOY_BUTTON_" << i;
