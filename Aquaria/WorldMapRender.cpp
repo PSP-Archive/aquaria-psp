@@ -951,6 +951,21 @@ void WorldMapRender::onUpdate(float dt)
 			}	
 		}
 
+		if (core->joystickEnabled)
+		{
+			if (isActing(ACTION_SECONDARY))
+			{
+				if (core->joystick.position.y >= 0.6f)
+					scale.interpolateTo(scale / 1.2f, 0.1f);
+				else if (core->joystick.position.y <= -0.6f)
+					scale.interpolateTo(scale * 1.2f, 0.1f);
+			}
+			else
+			{
+				internalOffset += core->joystick.position * (400*dt / scale.x);
+			}
+		}
+
 		if (activeTile && activeTile->layer == 1)
 		{
 			zoomMax = interiorZoomMax;
