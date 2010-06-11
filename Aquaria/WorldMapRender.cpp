@@ -551,6 +551,8 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	activeTile = 0;
 	activeQuad = 0;
 
+	lastMousePosition = core->mouse.position;
+
 	bg = 0;
 
 	/*
@@ -904,7 +906,13 @@ void WorldMapRender::onUpdate(float dt)
 
 		if (core->mouse.buttons.middle || core->mouse.buttons.right)
 		{
-			internalOffset += core->mouse.change;
+			// FIXME: For some reason, not all mouse movement events reach
+			// this handler (at least under Linux/SDL), so when moving the
+			// mouse quickly, the world map scrolling tends to lag behind.
+			// We work around this by keeping our own "last position" vector
+			// and calculating the mouse movement from that.  --achurch
+			Vector mouseChange = core->mouse.position - lastMousePosition;
+			internalOffset += mouseChange / scale.x;
 		}
 
 		
@@ -943,6 +951,21 @@ void WorldMapRender::onUpdate(float dt)
 			}	
 		}
 
+		if (core->joystickEnabled)
+		{
+			if (isActing(ACTION_SECONDARY))
+			{
+				if (core->joystick.position.y >= 0.6f)
+					scale.interpolateTo(scale / 1.2f, 0.1f);
+				else if (core->joystick.position.y <= -0.6f)
+					scale.interpolateTo(scale * 1.2f, 0.1f);
+			}
+			else
+			{
+				internalOffset += core->joystick.position * (400*dt / scale.x);
+			}
+		}
+
 		if (activeTile && activeTile->layer == 1)
 		{
 			zoomMax = interiorZoomMax;
@@ -955,7 +978,15 @@ void WorldMapRender::onUpdate(float dt)
 		float scrollAmount = 0.2;//0.25;
 
 		if (core->mouse.scrollWheelChange)
-			scale.interpolateTo(scale + Vector(scrollAmount, scrollAmount)*core->mouse.scrollWheelChange, 0.1);
+		{
+			Vector target = scale;
+			int changeLeft = core->mouse.scrollWheelChange;
+			for (; changeLeft > 0; changeLeft--)
+				target *= 1 + scrollAmount;
+			for (; changeLeft < 0; changeLeft++)
+				target /= 1 + scrollAmount;
+			scale.interpolateTo(target, 0.1);
+		}
 
 		if (scale.x < zoomMin)
 		{
@@ -1067,6 +1098,8 @@ void WorldMapRender::onUpdate(float dt)
 		}
 #endif
 	}
+
+	lastMousePosition = core->mouse.position;
 }
 
 Vector WorldMapRender::getAvatarWorldMapPosition()

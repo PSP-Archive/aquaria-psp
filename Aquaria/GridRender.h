@@ -98,6 +98,7 @@ protected:
 	void onRender();
 	Quad *bg;
 	bool mb;
+	Vector lastMousePosition; // See FIXME in WorldMapRender.cpp  --achurch
 };
 
 class PathRender : public RenderObject
