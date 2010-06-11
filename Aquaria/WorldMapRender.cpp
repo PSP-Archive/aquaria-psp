@@ -904,7 +904,7 @@ void WorldMapRender::onUpdate(float dt)
 
 		if (core->mouse.buttons.middle || core->mouse.buttons.right)
 		{
-			internalOffset += core->mouse.change;
+			internalOffset += core->mouse.change / scale.x;
 		}
 
 		
