@@ -551,6 +551,8 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	activeTile = 0;
 	activeQuad = 0;
 
+	lastMousePosition = core->mouse.position;
+
 	bg = 0;
 
 	/*
@@ -904,7 +906,13 @@ void WorldMapRender::onUpdate(float dt)
 
 		if (core->mouse.buttons.middle || core->mouse.buttons.right)
 		{
-			internalOffset += core->mouse.change / scale.x;
+			// FIXME: For some reason, not all mouse movement events reach
+			// this handler (at least under Linux/SDL), so when moving the
+			// mouse quickly, the world map scrolling tends to lag behind.
+			// We work around this by keeping our own "last position" vector
+			// and calculating the mouse movement from that.  --achurch
+			Vector mouseChange = core->mouse.position - lastMousePosition;
+			internalOffset += mouseChange / scale.x;
 		}
 
 		
@@ -1067,6 +1075,8 @@ void WorldMapRender::onUpdate(float dt)
 		}
 #endif
 	}
+
+	lastMousePosition = core->mouse.position;
 }
 
 Vector WorldMapRender::getAvatarWorldMapPosition()
