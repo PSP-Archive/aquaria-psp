@@ -963,7 +963,15 @@ void WorldMapRender::onUpdate(float dt)
 		float scrollAmount = 0.2;//0.25;
 
 		if (core->mouse.scrollWheelChange)
-			scale.interpolateTo(scale + Vector(scrollAmount, scrollAmount)*core->mouse.scrollWheelChange, 0.1);
+		{
+			Vector target = scale;
+			int changeLeft = core->mouse.scrollWheelChange;
+			for (; changeLeft > 0; changeLeft--)
+				target *= 1 + scrollAmount;
+			for (; changeLeft < 0; changeLeft++)
+				target /= 1 + scrollAmount;
+			scale.interpolateTo(target, 0.1);
+		}
 
 		if (scale.x < zoomMin)
 		{
