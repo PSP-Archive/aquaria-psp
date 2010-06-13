@@ -209,7 +209,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 		remove("ran");
 #endif
 
-		DSQ core("");
+		std::string fileSystem = "";
+
+#ifdef BBGE_BUILD_UNIX
+		const char *envPath = getenv("AQUARIA_DATA_PATH");
+		if (envPath != NULL)
+			fileSystem = envPath;
+#endif
+
+		DSQ core(fileSystem);
 #endif	 
 		{			
 			core.init();
