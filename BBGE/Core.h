@@ -888,8 +888,8 @@ public:
 		NO_DESTROY
 	};
 	// init
-	Core(const std::string &fileystem, int numRenderLayers, const std::string &appName="BBGE", int particleSize=1024, std::string userDataSubFolder="");
-	void initPlatform();
+	Core(const std::string &filesystem, int numRenderLayers, const std::string &appName="BBGE", int particleSize=1024, std::string userDataSubFolder="");
+	void initPlatform(const std::string &filesystem);
 	~Core();
 
 	virtual void init();

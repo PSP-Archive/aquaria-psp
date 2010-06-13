@@ -981,12 +981,13 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
 
 	initRenderObjectLayers(numRenderLayers);
 
-	initPlatform();
+	initPlatform(filesystem);
 }
 
-void Core::initPlatform()
+void Core::initPlatform(const std::string &filesystem)
 {
 #if defined(BBGE_BUILD_MACOSX) && !defined(BBGE_BUILD_MACOSX_NOBUNDLEPATH)
+	// FIXME: filesystem not handled
 	CFBundleRef mainBundle = CFBundleGetMainBundle();
 	//CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(mainBundle);
 	CFURLRef resourcesURL = CFBundleCopyBundleURL(mainBundle);
@@ -1000,6 +1001,13 @@ void Core::initPlatform()
 	debugLog(path);
 	chdir(path);
 #elif defined(BBGE_BUILD_UNIX)
+	if (!filesystem.empty())
+	{
+		if (chdir(filesystem.c_str()) == 0)
+			return;
+		else
+			debugLog("Failed to chdir to filesystem path" + filesystem);
+	}
 	char path[PATH_MAX];
 	// always a symlink to this process's binary, on modern Linux systems.
 	const ssize_t rc = readlink("/proc/self/exe", path, sizeof (path));
@@ -1021,6 +1029,7 @@ void Core::initPlatform()
 	}
 #endif
 #ifdef BBGE_BUILD_WINDOWS
+	// FIXME: filesystem not handled
 #endif
 }
 
