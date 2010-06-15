@@ -224,6 +224,7 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	inputMode = INPUT_MOUSE;
 	overlay = 0;
 	recentSaveSlot = -1;
+	arialFontData = 0;
 
 #ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
 	achievement_text = 0;
@@ -538,6 +539,7 @@ void DSQ::destroyFonts()
 	fontArialBig.destroy();
 	fontArialSmall.destroy();
 	fontArialSmallest.destroy();
+	delete[] arialFontData;
 
 	debugLog("done destroyFonts");
 }
@@ -574,9 +576,13 @@ void DSQ::loadFonts()
 	goldFont.overrideTexture = core->addTexture("font");
 
 	debugLog("ttf...");
-		fontArialSmall.load("data/font.ttf",		12);
-		fontArialBig.load("data/font.ttf",			18);
-		fontArialSmallest.load("data/font.ttf",		10);
+	arialFontData = (unsigned char *)readFile("data/font.ttf", &arialFontDataSize);
+	if (arialFontData)
+	{
+		fontArialSmall   .create(arialFontData, arialFontDataSize, 12);
+		fontArialBig     .create(arialFontData, arialFontDataSize, 18);
+		fontArialSmallest.create(arialFontData, arialFontDataSize, 10);
+	}
 	debugLog("done loadFonts");
 
 	/*

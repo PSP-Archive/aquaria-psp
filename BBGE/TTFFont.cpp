@@ -50,6 +50,12 @@ void TTFFont::load(const std::string &str, int sz)
 	font->FaceSize(sz);
 }
 
+void TTFFont::create(const unsigned char *data, unsigned long datalen, int sz)
+{
+	font = new FTGLTextureFont(data, datalen);
+	font->FaceSize(sz);
+}
+
 TTFText::TTFText(TTFFont *font) : RenderObject(), font(font)
 {
 	align = ALIGN_LEFT;
