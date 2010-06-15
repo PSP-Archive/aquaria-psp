@@ -78,28 +78,6 @@ float SimpleSpline( float value )
 	return (3 * valueSquared - 2 * valueSquared * value);
 }
 
-void VectorPath::addPathNode(Vector v, float p)
-{
-	VectorPathNode node;
-	node.value = v;
-	node.percent = p;
-	pathNodes.push_back(node);
-}
-
-const Vector Vector::unitVector3D() const
-{
-    return (*this) / getLength3D();
-}
-
-const scalar_t Vector::getLength3D() const
-{
-    return (scalar_t)sqrtf(x*x + y*y + z*z);
-}
-
-const scalar_t Vector::getLength2D() const
-{
-    return (scalar_t)sqrtf(x*x + y*y);
-}
 
 void Vector::rotate2D360(int angle)
 {
@@ -117,38 +95,13 @@ void Vector::rotate2DRad(float rad)
 	y = sinf(rad)*ox + cosf(rad)*oy;
 }
 
-void Vector::capRotZ360()
-{
-	while (z > 360)
-		z -= 360;
-	while (z < 0)
-		z += 360;
-}
 
-void Vector::normalize3D()
+void VectorPath::addPathNode(Vector v, float p)
 {
-	if (x == 0 && y == 0 && z == 0)
-	{
-		debugLog("Normalizing 0 vector");
-		x = y = z = 0;
-	}
-	else
-	{
-		(*this) /= getLength3D();
-	}
-}
-
-void Vector::normalize2D()
-{
-	if (x == 0 && y == 0)
-	{
-		debugLog("Normalizing 0 vector");
-		x = y = z= 0;
-	}
-	else
-	{
-		(*this) /= getLength2D();
-	}
+	VectorPathNode node;
+	node.value = v;
+	node.percent = p;
+	pathNodes.push_back(node);
 }
 
 void VectorPath::flip()
@@ -185,71 +138,6 @@ float VectorPath::getSubSectionLength(int startIncl, int endIncl)
 		len += diff.getLength2D();
 	}
 	return len;
-}
-
-
-void Vector::capLength2D(const float l)
-{
-	if (!isLength2DIn(l))	setLength2D(l);
-}
-
-const void Vector::setZero()
-{
-	this->x = 0;
-	this->y = 0;
-	this->z = 0;
-}
-
-const bool Vector::isLength2DIn(float radius) const
-{
-	return (x*x + y*y) <= (radius*radius);
-}
-
-const bool Vector::isZero() const
-{
-	return x==0 && y==0 && z==0;
-}
-
-const bool Vector::isNan() const
-{
-#ifdef BBGE_BUILD_WINDOWS
-	return _isnan(x) || _isnan(y) || _isnan(z);
-#elif defined(BBGE_BUILD_UNIX)
-	return isnan(x) || isnan(y) || isnan(z);
-#else
-	return false;
-#endif
-}
-
-void Vector::setLength2D(const float l)
-{
-	float len = getLength2D();
-	if (len == 0)
-	{
-		//debugLog("divide by zero!");
-	}
-	else
-	{
-		this->x *= (l/len);
-		this->y *= (l/len);
-	}
-	//this->z = 0;
-}
-
-void Vector::setLength3D(const float l)
-{
-	// IGNORE !!
-	if (l == 0)
-	{
-		debugLog("setLength3D divide by 0");
-	}
-	else
-	{
-		float len = getLength3D();
-		this->x *= (l/len);
-		this->y *= (l/len);
-		this->z *= (l/len);
-	}
 }
 
 float VectorPath::getLength()

@@ -40,13 +40,13 @@ public:
      Vector(const Vector &vec) : x(vec.x), y(vec.y), z(vec.z) {}
 
 
-     float *getv(float *v)
+     float inline *getv(float *v) const
 	 {
 		 v[0] = x; v[1] = y; v[2] = z;
 		 return v;
 	 }
 
-	 float *getv4(float *v, float param)
+	 float inline *getv4(float *v, float param) const
 	 {
 		 v[0] = x; v[1] = y; v[2] = z; v[3] = param;
 		 return v;
@@ -184,8 +184,8 @@ public:
      {
           return Vector(vec.x*s, vec.y*s, vec.z*s);
      }
-
-*/   // divecide by scalar
+*/
+   // divecide by scalar
      const Vector operator/(scalar_t s) const
      {
           s = 1/s;
@@ -200,12 +200,12 @@ public:
           return Vector(y*vec.z - z*vec.y, z*vec.x - x*vec.z, x*vec.y - y*vec.x);
      }
 
-	 Vector getPerpendicularLeft()
+	 Vector inline getPerpendicularLeft()
 	 {
 		 return Vector(-y, x);
 	 }
 
- 	 Vector getPerpendicularRight()
+ 	 Vector inline getPerpendicularRight()
 	 {
 		 return Vector(y, -x);
 	 }
@@ -217,12 +217,12 @@ public:
      }
 
      // dot product
-     const scalar_t dot(const Vector &vec) const
+     const scalar_t inline dot(const Vector &vec) const
      {
           return x*vec.x + y*vec.y + z*vec.z;
      }
 
-	 const scalar_t dot2D(const Vector &vec) const
+	 const scalar_t inline dot2D(const Vector &vec) const
 	 {
 		 return x*vec.x + y*vec.y;
 	 }
@@ -235,15 +235,46 @@ public:
 
 
      // length of vector
-     const scalar_t getLength3D() const;
-     const scalar_t getLength2D() const;
+     const scalar_t inline getLength3D() const
+     {
+          return (scalar_t)sqrtf(x*x + y*y + z*z);
+     }
+     const scalar_t inline getLength2D() const
+     {
+          return (scalar_t)sqrtf(x*x + y*y);
+     }
 
      // return the unit vector
-	 const Vector unitVector3D() const;
+	 const Vector inline unitVector3D() const
+	 {
+		return (*this) * (1/getLength3D());
+	 }
 
      // normalize this vector
-     void normalize3D();
-	 void normalize2D();
+	 void inline normalize3D()
+	 {
+		if (x == 0 && y == 0 && z == 0)
+		{
+			//debugLog("Normalizing 0 vector");
+			x = y = z = 0;
+		}
+		else
+		{
+			(*this) *= 1/getLength3D();
+		}
+	 }
+	 void inline normalize2D()
+	 {
+		if (x == 0 && y == 0)
+		{
+			//debugLog("Normalizing 0 vector");
+			x = y = z= 0;
+		}
+		else
+		{
+			(*this) *= 1/getLength2D();
+		}
+	 }
 
      const scalar_t operator!() const
      {
@@ -265,29 +296,41 @@ public:
      }
 	 */
 
-	 void setLength3D(const float l);
-	 void setLength2D(const float l);
+	 void inline setLength3D(const float l)
+	 {
+		// IGNORE !!
+		if (l == 0)
+		{
+			//debugLog("setLength3D divide by 0");
+		}
+		else
+		{
+			float len = getLength3D();
+			this->x *= (l/len);
+			this->y *= (l/len);
+			this->z *= (l/len);
+		}
+	 }
+	 void inline setLength2D(const float l)
+	 {
+		float len = getLength2D();
+		if (len == 0)
+		{
+			//debugLog("divide by zero!");
+		}
+		else
+		{
+			this->x *= (l/len);
+			this->y *= (l/len);
+		}
+		//this->z = 0;
+	 }
 
      // return angle between two vectors
      const float inline Angle(const Vector& normal) const
      {
           return acosf(*this % normal);
      }
-
-	 /*
-	 const scalar_t inline getCheatLength3D() const;
-	 const scalar_t inline cheatLen2D() const;
-	 */
-	 const bool isLength2DIn(float radius) const;
-
-     // reflect this vector off surface with normal vector
-	 /*
-     const Vector inline Reflection(const Vector& normal) const
-     {    
-          const Vector vec(*this | 1);     // normalize this vector
-          return (vec - normal * 2.0f * (vec % normal)) * !*this;
-     }
-	 */
 
 	 /*
 	 const scalar_t inline cheatLen() const
@@ -298,16 +341,58 @@ public:
 	 {
 		 return (x*x + y*y);
 	 }
+	 const scalar_t inline getCheatLength3D() const;
 	 */
 
-	 const void setZero();
-	 const float getSquaredLength2D() const;
-	 const bool isZero() const;
+	 const bool inline isLength2DIn(float radius) const
+	 {
+		return (x*x + y*y) <= (radius*radius);
+	 }
 
-	 const bool isNan() const;
+     // reflect this vector off surface with normal vector
+	 /*
+     const Vector inline Reflection(const Vector& normal) const
+     {    
+          const Vector vec(*this | 1);     // normalize this vector
+          return (vec - normal * 2.0f * (vec % normal)) * !*this;
+     }
+	 */
 
-	 void capLength2D(const float l);
-	 void capRotZ360();
+	 const void inline setZero()
+	 {
+		this->x = this->y = this->z = 0;
+	 }
+	 const float inline getSquaredLength2D() const
+	 {
+		return (x*x) + (y*y);
+	 }
+	 const bool inline isZero() const
+	 {
+		return x==0 && y==0 && z==0;
+	 }
+
+	 const bool inline isNan() const
+	 {
+#ifdef BBGE_BUILD_WINDOWS
+		return _isnan(x) || _isnan(y) || _isnan(z);
+#elif defined(BBGE_BUILD_UNIX)
+		return isnan(x) || isnan(y) || isnan(z);
+#else
+		return false;
+#endif
+	 }
+
+	 void inline capLength2D(const float l)
+	 {
+		if (!isLength2DIn(l))	setLength2D(l);
+	 }
+	 void inline capRotZ360()
+	 {
+		while (z > 360)
+			z -= 360;
+		while (z < 0)
+			z += 360;
+	 }
 
 #ifdef BBGE_BUILD_DIRECTX
 	 const D3DCOLOR getD3DColor(float alpha)
@@ -319,11 +404,6 @@ public:
 	 void rotate2D360(int angle);
 };
 
-inline
-const float Vector::getSquaredLength2D() const
-{
-	return (x*x) + (y*y);
-}
 
 class VectorPathNode
 {
