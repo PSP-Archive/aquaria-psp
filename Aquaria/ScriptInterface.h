@@ -53,6 +53,7 @@ public:
 	ParticleData *getCurrentParticleData() { return currentParticleData; }
 	lua_State *L;
 	void initLuaVM(lua_State **L);
+	void closeLuaVM(lua_State *L);
 	bool runScript(const std::string &script, const std::string &func);
 	bool runScriptNum(const std::string &script, const std::string &func, int num);
 	typedef std::map<std::string, ParticleEffectScript> ParticleEffectScripts;

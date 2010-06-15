@@ -597,7 +597,7 @@ void ScriptedEntity::destroy()
 	*/
 	if (L)
 	{
-		lua_close(L);
+		dsq->scriptInterface.closeLuaVM(L);
 		L = 0;
 	}
 }
