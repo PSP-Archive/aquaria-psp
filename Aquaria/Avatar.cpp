@@ -1496,7 +1496,7 @@ BOOL CALLBACK recordCallback(HRECORD handle, const void *buf, DWORD len, DWORD u
 	largest = -1;
 	// find the next largest
 
-	float dt = (double(curTime-lastTick)/double(freq));
+	float dt = (float(curTime-lastTick)/float(freq));
 	lastTick = curTime;
 	int posMicNote=-1;
 	if (c != 0)

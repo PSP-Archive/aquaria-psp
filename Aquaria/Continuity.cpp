@@ -2191,17 +2191,17 @@ PetData *Continuity::getPetData(int idx)
 	return &petData[idx];
 }
 
-bool Continuity::isStory(double v)
+bool Continuity::isStory(float v)
 {
 	return (story == v);
 }
 
-double Continuity::getStory()
+float Continuity::getStory()
 {
 	return story;
 }
 
-void Continuity::setStory(double v)
+void Continuity::setStory(float v)
 {
 	story = v;
 }

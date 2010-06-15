@@ -1177,7 +1177,7 @@ public:
 	int flipMouseButtons;
 	void initFrameBuffer();
 	FrameBuffer frameBuffer;
-	void updateRenderObjects(double dt);
+	void updateRenderObjects(float dt);
 	bool joystickAsMouse;
 	virtual void prepScreen(bool t){}
 
@@ -1281,7 +1281,7 @@ protected:
 	std::vector<float> avgFPS;
 	float sortTimer;
 	bool sortFlag;
-	virtual void modifyDt(double &dt){}
+	virtual void modifyDt(float &dt){}
 	void setPixelScale(int pixelScaleX, int pixelScaleY);
 	
 

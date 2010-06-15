@@ -10318,7 +10318,7 @@ void Game::update(float dt)
 	updateInGameMenu(dt);
 	if (avatar && grad && bg && bg2)
 	{
-		double d = avatar->position.y / double(40000.0);
+		float d = avatar->position.y / float(40000.0);
 
 		/*
 		Vector top1(0.6, 0.8, 0.65);
@@ -11101,8 +11101,8 @@ Vector Game::getClosestPointOnLine(Vector a, Vector b, Vector p)
 	Vector c = p - a;
    Vector V = b-a;
    V.normalize2D();
-   double d = (a-b).getLength2D();
-   double t = V.dot(c);
+   float d = (a-b).getLength2D();
+   float t = V.dot(c);
 
    // Check to see if t is beyond the extents of the line segment
 

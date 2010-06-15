@@ -1436,9 +1436,9 @@ void RenderObject::setTexture(const std::string &n)
 	setTexturePointer(t, NO_ADD_REF);
 }
 
-double RenderObject::getSortDepth()
+float RenderObject::getSortDepth()
 {
-	return double(position.y);
+	return position.y;
 }
 
 void RenderObject::addChild(RenderObject *r, ParentManaged pm, RenderBeforeParent rbp, ChildOrder order)

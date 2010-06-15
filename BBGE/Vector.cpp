@@ -93,12 +93,12 @@ const Vector Vector::unitVector3D() const
 
 const scalar_t Vector::getLength3D() const
 {
-    return (scalar_t)sqrt((double)(x*x + y*y + z*z));
+    return (scalar_t)sqrt(x*x + y*y + z*z);
 }
 
 const scalar_t Vector::getLength2D() const
 {
-    return (scalar_t)sqrt((double)(x*x + y*y));
+    return (scalar_t)sqrt(x*x + y*y);
 }
 
 void Vector::rotate2D360(int angle)

@@ -2281,10 +2281,10 @@ bool Core::createWindow(int width, int height, int bits, bool fullscreen, std::s
 #endif
 
 static void
-bbgePerspective(double fovy, double aspect, double zNear, double zFar)
+bbgePerspective(float fovy, float aspect, float zNear, float zFar)
 {
-    double sine, cotangent, deltaZ;
-    double radians = fovy / 2.0f * M_PI / 180.0f;
+    float sine, cotangent, deltaZ;
+    float radians = fovy / 2.0f * M_PI / 180.0f;
 
     deltaZ = zFar - zNear;
     sine = sin(radians);
@@ -2420,26 +2420,26 @@ void Core::enable2DWide(int rx, int ry)
 	float aspect = float(rx) / float(ry);
 	if (aspect >= 1.3f)
 	{
-		int vw = int(double(baseVirtualHeight) * (double(rx)/double(ry)));
+		int vw = int(float(baseVirtualHeight) * (float(rx)/float(ry)));
 		//vw = MAX(vw, baseVirtualWidth);
 		core->enable2D(vw, baseVirtualHeight, 1);
 	}
 	else
 	{
-		int vh = int(double(baseVirtualWidth) * (double(ry)/double(rx)));
+		int vh = int(float(baseVirtualWidth) * (float(ry)/float(rx)));
 		//vh = MAX(vh, baseVirtualHeight);
 		core->enable2D(baseVirtualWidth, vh, 1);
 	}
 
 	//else
 	//{
-	//	int vh = int(double(baseVirtualWidth) * (double(ry)/double(rx)));
+	//	int vh = int(float(baseVirtualWidth) * (float(ry)/float(rx)));
 	//	vh = MAX(vh, baseVirtualHeight);
 	//	core->enable2D(baseVirtualWidth, vh, 1);
 	//}
 }
 
-static void bbgeOrtho2D(double left, double right, double bottom, double top)
+static void bbgeOrtho2D(float left, float right, float bottom, float top)
 {
     glOrtho(left, right, bottom, top, -1.0, 1.0);
 }
@@ -2482,12 +2482,12 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 	//int offx=0,offy=0;
 	// hackish
 
-	//double vw = double((viewPort[2] * baseVirtualHeight)) / double(viewPort[3]);
-	//double vw = double(aspectX * viewPort[3]) / double(aspectY);
+	//float vw = float((viewPort[2] * baseVirtualHeight)) / float(viewPort[3]);
+	//float vw = float(aspectX * viewPort[3]) / float(aspectY);
 	//- baseVirtualWidth;
-	//offx = double(vw)*0.1;
+	//offx = float(vw)*0.1f;
 
-	double vw=0,vh=0;
+	float vw=0,vh=0;
 
 	viewOffX = viewOffY = 0;
 
@@ -2495,26 +2495,23 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 
 	if (aspect >= 1.4f)
 	{
-		vw = double(baseVirtualWidth * viewPort[3]) / double(baseVirtualHeight);
+		vw = float(baseVirtualWidth * viewPort[3]) / float(baseVirtualHeight);
 
-		viewOffX = viewPort[2] - vw;
-		viewOffX *= 0.5;
+		viewOffX = (viewPort[2] - vw) * 0.5f;
 	}
 	else if (aspect < 1.3f)
 	{
-		vh = double(baseVirtualHeight * viewPort[2]) / double(baseVirtualWidth);
+		vh = float(baseVirtualHeight * viewPort[2]) / float(baseVirtualWidth);
 
-		viewOffY = viewPort[3] - vh;
-		viewOffY *= 0.5;
+		viewOffY = (viewPort[3] - vh) * 0.5f;
 	}
 
 
 
 	/*
-	vh = double(baseVirtualHeight * viewPort[2]) / double(baseVirtualWidth);
+	vh = float(baseVirtualHeight * viewPort[2]) / float(baseVirtualWidth);
 
-	viewOffY = viewPort[3] - vh;
-	viewOffY *= 0.5;
+	viewOffY = (viewPort[3] - vh) * 0.5f;
 	*/
 	
 
@@ -2531,7 +2528,7 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 
 	if (aspect < 1.3f)
 	{
-		viewOffX *= 0.5;
+		viewOffX *= 0.5f;
 	}
 	*/
 
@@ -2768,7 +2765,7 @@ void Core::setMousePosition(const Vector &p)
 	float px = p.x + virtualOffX;
 	float py = p.y;// + virtualOffY;
 
-	SDL_WarpMouse( px * (double(width)/double(virtualWidth)), py * (double(height)/double(virtualHeight)));
+	SDL_WarpMouse( px * (float(width)/float(virtualWidth)), py * (float(height)/float(virtualHeight)));
 
 	/*
 	ignoreNextMouse = true;
@@ -2784,7 +2781,7 @@ void Core::setMousePosition(const Vector &p)
 }
 
 // used to update all render objects either uniformly or as part of a time sliced update process
-void Core::updateRenderObjects(double dt)
+void Core::updateRenderObjects(float dt)
 {
 	//HACK: we may not always be assuming virtual 800x600
 	Vector cameraC = core->cameraPos + Vector(400,300);
@@ -2872,11 +2869,11 @@ void Core::main(float runTime)
 
 	//QueryPerformanceCounter((LARGE_INTEGER*)&lastTime);
 	//QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
-	double dt;
+	float dt;
 	float counter = 0;
 	int frames = 0;
 	bool wasInactive = false;
-	double real_dt = 0;
+	float real_dt = 0;
 	//std::ofstream out("debug.log");
 
 #ifdef BBGE_BUILD_GLFW
@@ -2946,9 +2943,9 @@ void Core::main(float runTime)
 		newTicks = GetTickCount();
 		*/
 		QueryPerformanceCounter((LARGE_INTEGER*)&timerEnd);
-		dt = (double(timerEnd-timerStart)/double(freq));
+		dt = (float(timerEnd-timerStart)/float(freq));
 		timerStart = timerEnd;
-//		dt = double(newTicks)/1000.0;
+//		dt = float(newTicks)/1000.0f;
 		//dt = float(newTicks - ticks)/1000.0f;
 		//ticks = newTicks;
 #endif
@@ -3193,7 +3190,7 @@ void Core::main(float runTime)
 			static float avg_diff=0;
 			static int avg_diff_count=0;
 
-			double diff = (1.0/double(fixedFPS)) - real_dt;
+			float diff = (1.0f/float(fixedFPS)) - real_dt;
 
 			avg_diff_count++;
 			avg_diff += diff;
@@ -3471,8 +3468,8 @@ void Core::pollEvents()
 				{
 					mouse.lastPosition = mouse.position;
 
-					mouse.position.x = ((event.motion.x) * (double(virtualWidth)/double(getWindowWidth()))) - getVirtualOffX();
-					mouse.position.y = event.motion.y * (double(virtualHeight)/double(getWindowHeight()));
+					mouse.position.x = ((event.motion.x) * (float(virtualWidth)/float(getWindowWidth()))) - getVirtualOffX();
+					mouse.position.y = event.motion.y * (float(virtualHeight)/float(getWindowHeight()));
 
 					mouse.change = mouse.position - mouse.lastPosition;
 

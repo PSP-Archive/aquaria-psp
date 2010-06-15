@@ -93,7 +93,7 @@ void CurrentRender::onRender()
 					totalLength += (p->nodes[n+1].position - p->nodes[n].position).getLength2D();
 				}
 
-				double texScale = totalLength/256.0f;
+				float texScale = totalLength/256.0f;
 
 				Vector p1, p2, diff, pl, pr;
 				for (int n = 0; n < sz; n++)

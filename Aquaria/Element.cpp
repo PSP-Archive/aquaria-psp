@@ -438,7 +438,7 @@ bool Element::isActive()
 	return true;
 }
 
-double Element::getSortDepth()
+float Element::getSortDepth()
 {
 	return Quad::getSortDepth() - bgLayer*0.01f;
 }

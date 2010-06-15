@@ -4793,16 +4793,16 @@ void DSQ::addElement(Element *e)
 	elements.push_back(e);
 }
 
-void DSQ::modifyDt(double &dt)
+void DSQ::modifyDt(float &dt)
 {
 	if (isDeveloperKeys())
 	{
 		if (core->getKeyState(KEY_G))
-			dt = 0.075;
+			dt = 0.075f;
 		else if (core->getKeyState(KEY_F))
 			dt*=0.6f;
 		else if (core->getKeyState(KEY_H))
-			dt = 0.04;
+			dt = 0.04f;
 		else
 		{
 			// frame cap
@@ -4819,7 +4819,7 @@ void DSQ::modifyDt(double &dt)
 	}
 
 	if (skippingCutscene)
-		dt = 0.07;
+		dt = 0.07f;
 	
 	gameSpeed.update(dt);
 	dt *= gameSpeed.x;

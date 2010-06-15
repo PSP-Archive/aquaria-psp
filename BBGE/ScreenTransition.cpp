@@ -144,8 +144,8 @@ void ScreenTransition::onRender()
 	int width2 = width/2;
 	int height2 = height/2;
 	
-	const float pw = (float) (double(windowWidth)/double(textureWidth));
-	const float ph = (float) (double(windowHeight)/double(textureHeight));
+	const float pw = float(windowWidth)/float(textureWidth);
+	const float ph = float(windowHeight)/float(textureHeight);
 	
 	/*
 	std::ostringstream os;

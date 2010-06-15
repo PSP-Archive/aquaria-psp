@@ -6463,7 +6463,7 @@ int l_entity_pullEntities(lua_State *L)
 				if (diff.isLength2DIn(range))
 				{
 					Vector pull = pos - ent->position;
-					pull.setLength2D(double(len) * dt);
+					pull.setLength2D(float(len) * dt);
 					ent->vel2 += pull;
 					/*
 					std::ostringstream os;

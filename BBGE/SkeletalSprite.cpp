@@ -1205,7 +1205,7 @@ void SkeletalSprite::loadSkin(const std::string &fn)
 				/*
 				if (boneXml->Attribute("a"))
 				{
-					double alpha = 0;
+					float alpha = 0;
 					boneXml->Attribute("a", &alpha);
 					b->alpha = alpha;
 				}
