@@ -132,6 +132,10 @@ protected:
 	void resetGrid();
 	void updateGrid(float dt);
 	void renderGrid();
+	void renderSingle();
+#ifdef BBGE_BUILD_PSP
+	void renderRepeatForPSP();  // See comments in Quad.cpp.
+#endif
 	
 
 	float drawGridOffsetX;

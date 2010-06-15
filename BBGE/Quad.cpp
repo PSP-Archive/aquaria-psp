@@ -531,6 +531,222 @@ void Quad::renderGrid()
 #endif
 }
 
+void Quad::renderSingle()
+{
+	// Get texture and vertex coordinates
+	float s0 = upperLeftTextureCoordinates.x;
+	float s1 = lowerRightTextureCoordinates.x;
+	float t0, t1;
+	if (Quad::flipTY)
+	{
+		t0 = 1 - upperLeftTextureCoordinates.y;
+		t1 = 1 - lowerRightTextureCoordinates.y;
+	}
+	else
+	{
+		t0 = upperLeftTextureCoordinates.y;
+		t1 = lowerRightTextureCoordinates.y;
+	}
+	float x0 = -_w2, y0 = +_h2;
+	float x1 = +_w2, y1 = -_h2;
+
+	// Remove empty areas of the texture (if we have one)
+	if (texture)
+	{
+		float offset;
+		if ((offset = texture->getLeftOffset()) > 0)
+		{
+			if (s0 == 0)
+			{
+				s0 += offset;
+				x0 += offset * width;
+			}
+			else if (s1 == 0)
+			{
+				s1 += offset;
+				x1 -= offset * width;
+			}
+		}
+		if ((offset = texture->getRightOffset()) > 0)
+		{
+			if (s0 == 1)
+			{
+				s0 -= offset;
+				x0 += offset * width;
+			}
+			else if (s1 == 1)
+			{
+				s1 -= offset;
+				x1 -= offset * width;
+			}
+		}
+		if ((offset = texture->getTopOffset()) > 0)
+		{
+			if (t0 == 0)
+			{
+				t0 += offset;
+				y0 -= offset * height;
+			}
+			else if (t1 == 0)
+			{
+				t1 += offset;
+				y1 += offset * height;
+			}
+		}
+		if ((offset = texture->getBottomOffset()) > 0)
+		{
+			if (t0 == 1)
+			{
+				t0 -= offset;
+				y0 -= offset * height;
+			}
+			else if (t1 == 1)
+			{
+				t1 -= offset;
+				y1 += offset * height;
+			}
+		}
+	}
+
+	// Draw the quad
+	glBegin(GL_QUADS);
+	{
+		glTexCoord2f(s0, t0);
+		glVertex2f(x0, y0);
+		glTexCoord2f(s1, t0);
+		glVertex2f(x1, y0);
+		glTexCoord2f(s1, t1);
+		glVertex2f(x1, y1);
+		glTexCoord2f(s0, t1);
+		glVertex2f(x0, y1);
+	}
+	glEnd();
+}
+
+#ifdef BBGE_BUILD_PSP
+
+// The PSP is only capable of handling polygons whose final screen
+// coordinates fall in the range [-2048,+2048); if even a single vertex
+// lies outside that range, the entire polygon is clipped.  That causes
+// problems for us because some tiled backgrounds (normally drawn as a
+// single, repeating-texture quad) extend over 10,000 virtual pixels, or
+// over 5,000 native pixels -- easily enough to hit the hard-clip limit.
+// To get around this, we break such repeating quads down into smaller
+// pieces at the texture edges such that no piece has a displayed size
+// larger than the offscreen boundary area, i.e. 2048 - 480/2 native
+// pixels wide or 2048 - 272/2 high.
+
+void Quad::renderRepeatForPSP()
+{
+	float m[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, m);
+	const float finalScaleX = m[0];
+	const float finalScaleY = m[5];
+	if (finalScaleX == 0 || finalScaleY == 0)
+	{
+		// Should be impossible, but avoid division by zero later.
+		return renderSingle();
+	}
+	if (finalScaleX * width  < 2048 - 480/2
+	 && finalScaleY * height < 2048 - 272/2)
+	{
+		// No need for the hack, so just draw it normally.
+		return renderSingle();
+	}
+
+	// Get the texture coordinates, and calculate the texture's size in
+	// texture units.
+	float s0 = upperLeftTextureCoordinates.x;
+	float s1 = lowerRightTextureCoordinates.x;
+	float t0, t1;
+	if (Quad::flipTY)
+	{
+		t0 = 1 - upperLeftTextureCoordinates.y;
+		t1 = 1 - lowerRightTextureCoordinates.y;
+	}
+	else
+	{
+		t0 = upperLeftTextureCoordinates.y;
+		t1 = lowerRightTextureCoordinates.y;
+	}
+	const float texCoordWidth  = fabsf(s1 - s0);
+	const float texCoordHeight = fabsf(t1 - t0);
+	if (texCoordWidth == 0 || texCoordHeight == 0)  // Avoid division by 0.
+	{
+		return renderSingle();
+	}
+
+	// Find the largest number of repetitions of the texture which will
+	// fit within the boundary area.  (float -> int conversions truncate,
+	// so this code is safe.)
+	const float textureSizeX = (finalScaleX * width ) / texCoordWidth;
+	const float textureSizeY = (finalScaleY * height) / texCoordHeight;
+	const int maxRepetitionsX = int((2048 - 480/2) / textureSizeX);
+	const int maxRepetitionsY = int((2048 - 272/2) / textureSizeY);
+	const int maxRepetitions = (maxRepetitionsX < maxRepetitionsY) ? maxRepetitionsX : maxRepetitionsY;
+
+	// Figure out how many subdivisions we need to draw in each direction.
+	int numColumns, numRows;
+	float ds, dt;  // Increments in each direction
+	if (s1 > s0)
+	{
+		ds = maxRepetitions;
+		numColumns = int(ceilf((s1 - floorf(s0)) / maxRepetitions));
+	}
+	else
+	{
+		ds = -maxRepetitions;
+		numColumns = int(ceilf((s0 - floorf(s1)) / maxRepetitions));
+	}
+	if (t1 > t0)
+	{
+		dt = maxRepetitions;
+		numRows = int(ceilf((t1 - floorf(t0)) / maxRepetitions));
+	}
+	else
+	{
+		dt = -maxRepetitions;
+		numRows = int(ceilf((t0 - floorf(t1)) / maxRepetitions));
+	}
+
+	// Iterate over the texture coordinate range, drawing quads.
+	const float x0 = -width/2, y0 = +height/2;
+	const float recip_texCoordWidth  = 1/texCoordWidth;
+	const float recip_texCoordHeight = 1/texCoordHeight;
+	float t = t0, nextT;
+
+	glBegin(GL_QUADS);
+	for (int row = 0; row < numRows; row++, t = nextT)
+	{
+		nextT = (dt > 0 ? floorf(t) : ceilf(t)) + dt;
+		if ((dt > 0 && nextT > t1) || (dt < 0 && nextT < t1))
+			nextT = t1;
+		const float y = y0 - (fabsf(t - t0) * recip_texCoordHeight) * height;
+		const float nextY = y0 - (fabsf(nextT - t0) * recip_texCoordHeight) * height;
+		float s = s0, nextS;
+		for (int column = 0; column < numColumns; column++, s = nextS)
+		{
+			nextS = (ds > 0 ? floorf(s) : ceilf(s)) + ds;
+			if ((ds > 0 && nextS > s1) || (ds < 0 && nextS < s1))
+				nextS = s1;
+			const float x = x0 + (fabsf(s - s0) * recip_texCoordWidth) * width;
+			const float nextX = x0 + (fabsf(nextS - s0) * recip_texCoordWidth) * width;
+			glTexCoord2f(s, t);
+			glVertex2f(x, y);
+			glTexCoord2f(nextS, t);
+			glVertex2f(nextX, y);
+			glTexCoord2f(nextS, nextT);
+			glVertex2f(nextX, nextY);
+			glTexCoord2f(s, nextT);
+			glVertex2f(x, nextY);
+		}
+	}
+	glEnd();
+}
+
+#endif  // BBGE_BUILD_PSP
+
+
 Vector oldQuadColor;
 
 void Quad::render()
@@ -627,94 +843,12 @@ void Quad::onRender()
 		{
 			if (!drawGrid)
 			{
-				// Get texture and vertex coordinates
-				float s0 = upperLeftTextureCoordinates.x;
-				float s1 = lowerRightTextureCoordinates.x;
-				float t0, t1;
-				if (Quad::flipTY)
-				{
-					t0 = 1 - upperLeftTextureCoordinates.y;
-					t1 = 1 - lowerRightTextureCoordinates.y;
-				}
+#ifdef BBGE_BUILD_PSP
+				if (repeatingTextureToFill)
+					renderRepeatForPSP();
 				else
-				{
-					t0 = upperLeftTextureCoordinates.y;
-					t1 = lowerRightTextureCoordinates.y;
-				}
-				float x0 = -_w2, y0 = +_h2;
-				float x1 = +_w2, y1 = -_h2;
-
-				// Remove empty areas of the texture (if we have one)
-				if (texture)
-				{
-					float offset;
-					if ((offset = texture->getLeftOffset()) > 0)
-					{
-						if (s0 == 0)
-						{
-							s0 += offset;
-							x0 += offset * width;
-						}
-						else if (s1 == 0)
-						{
-							s1 += offset;
-							x1 -= offset * width;
-						}
-					}
-					if ((offset = texture->getRightOffset()) > 0)
-					{
-						if (s0 == 1)
-						{
-							s0 -= offset;
-							x0 += offset * width;
-						}
-						else if (s1 == 1)
-						{
-							s1 -= offset;
-							x1 -= offset * width;
-						}
-					}
-					if ((offset = texture->getTopOffset()) > 0)
-					{
-						if (t0 == 0)
-						{
-							t0 += offset;
-							y0 -= offset * height;
-						}
-						else if (t1 == 0)
-						{
-							t1 += offset;
-							y1 += offset * height;
-						}
-					}
-					if ((offset = texture->getBottomOffset()) > 0)
-					{
-						if (t0 == 1)
-						{
-							t0 -= offset;
-							y0 -= offset * height;
-						}
-						else if (t1 == 1)
-						{
-							t1 -= offset;
-							y1 += offset * height;
-						}
-					}
-				}
-
-				// Draw the quad
-				glBegin(GL_QUADS);
-				{
-					glTexCoord2f(s0, t0);
-					glVertex2f(x0, y0);
-					glTexCoord2f(s1, t0);
-					glVertex2f(x1, y0);
-					glTexCoord2f(s1, t1);
-					glVertex2f(x1, y1);
-					glTexCoord2f(s0, t1);
-					glVertex2f(x0, y1);
-				}
-				glEnd();
+#endif
+				renderSingle();
 			}
 			else
 			{
