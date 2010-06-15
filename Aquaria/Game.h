@@ -84,7 +84,11 @@ class DebugButton;
 class WorldMapRender;
 
 const float boxElementZ = -0.1f;
+#ifdef BBGE_BUILD_PSP
+const int MAX_GRID = 1280;  // FIXME: Is this enough?
+#else
 const int MAX_GRID = 2222;
+#endif
 
 const char CHAR_DOWN		= 'd';
 const char CHAR_UP			= 'u';
@@ -106,6 +110,8 @@ class ToolTip;
 
 #ifdef BBGE_BUILD_WINDOWS
 	typedef __int8 SmallInt;
+#elif defined(BBGE_BUILD_PSP)
+	typedef uint8_t SmallInt;
 #else
 	typedef int SmallInt;
 #endif
