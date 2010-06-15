@@ -310,6 +310,60 @@ void readIntAtt(TiXmlElement *xml, std::string att, int *toChange)
 
 void UserSettings::loadDefaults(bool doApply)
 {
+#ifdef BBGE_BUILD_PSP
+	// For the PSP, we set up reasonable defaults so the game is
+	// still playable even if the defaults file is missing.
+	video.resx = 480;
+	video.resy = 272;
+	video.fbuffer = 0;
+	video.darkfbuffer = 0;
+	video.darkbuffersize = 128;
+	audio.subtitles = 1;
+	control.joystickEnabled = 1;
+	control.s1ax = 0;
+	control.s1ay = 1;
+	control.s2ax = 2;
+	control.s2ay = 3;
+	demo.intro = 1;
+	ActionInput *ai;
+#if INP_MSESIZE != 1 || INP_KEYSIZE != 2
+# error Please fix number of 0s in input strings!
+#endif
+	// Cross    => left mouse button equivalent; primary action
+	ai = control.actionSet.addActionInput("lmb");
+	ai->fromString("0 0 0 JOY_BUTTON_14");
+	ai = control.actionSet.addActionInput("PrimaryAction");
+	ai->fromString("MOUSE_BUTTON_LEFT 0 0 0");
+	// Circle   => right mouse button equivalent; secondary action
+	ai = control.actionSet.addActionInput("rmb");
+	ai->fromString("0 0 0 JOY_BUTTON_13");
+	ai = control.actionSet.addActionInput("SecondaryAction");
+	ai->fromString("MOUSE_BUTTON_RIGHT 0 0 0");
+	// Square   => revert
+	ai = control.actionSet.addActionInput("Revert");
+	ai->fromString("0 0 0 JOY_BUTTON_15");
+	// Triangle => world map
+	ai = control.actionSet.addActionInput("WorldMap");
+	ai->fromString("0 0 0 JOY_BUTTON_12");
+	// Start    => in-game menu, cutscene pause
+	ai = control.actionSet.addActionInput("Escape");
+	ai->fromString("0 0 0 JOY_BUTTON_3");
+	// L/R      => previous/next page
+	ai = control.actionSet.addActionInput("PrevPage");
+	ai->fromString("0 0 0 JOY_BUTTON_8");
+	ai = control.actionSet.addActionInput("NextPage");
+	ai->fromString("0 0 0 JOY_BUTTON_9");
+	// Select   => cook food
+	ai = control.actionSet.addActionInput("CookFood");
+	ai->fromString("0 0 0 JOY_BUTTON_0");
+	// Square   => food to cooking slots
+	ai = control.actionSet.addActionInput("FoodRight");
+	ai->fromString("0 0 0 JOY_BUTTON_15");
+	// Triangle => remove from cooking slots
+	ai = control.actionSet.addActionInput("FoodLeft");
+	ai->fromString("0 0 0 JOY_BUTTON_12");
+#endif  // BBGE_BUILD_PSP
+
 	std::ostringstream os;
 	os << "default-" << VERSION_USERSETTINGS << ".xml";
 	load(doApply, os.str());
@@ -327,30 +381,32 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	else
 		doc.LoadFile(userSettingsFilename);
 #elif defined(BBGE_BUILD_PSP)
+	bool loaded = false;
+	if (!overrideFile.empty())
+		loaded = doc.LoadFile(overrideFile);
 # ifdef AQUARIA_ALLOW_PSP_SETTINGS_OVERRIDE
-	if (exists(userSettingsFilename, false))
-		doc.LoadFile(userSettingsFilename);
-	else
-	{
+	if (!loaded)
+		loaded = doc.LoadFile(userSettingsFilename);
 # endif
-	const uint32_t size = 100000;  // Waaay more than enough.
-	char *buffer = new char[size];
-	if (savefile_load(SAVE_FILE_CONFIG, buffer, size-1, NULL))
+	if (!loaded)
 	{
-		int32_t bytesRead;
-		while (!savefile_status(&bytesRead)) {
-			sys_time_delay(0.01);
-		}
-		if (bytesRead > 0)
+		const uint32_t size = 100000;  // Waaay more than enough.
+		char *buffer = new char[size];
+		if (savefile_load(SAVE_FILE_CONFIG, buffer, size-1, NULL))
 		{
-			buffer[bytesRead] = 0;
-			doc.Parse(buffer);
+			int32_t bytesRead;
+			while (!savefile_status(&bytesRead)) {
+				sys_time_delay(0.01);
+			}
+			if (bytesRead > 0)
+			{
+				buffer[bytesRead] = 0;
+				doc.Parse(buffer);
+				loaded = true;
+			}
 		}
-	}
-	delete[] buffer;
-# ifdef AQUARIA_ALLOW_PSP_SETTINGS_OVERRIDE
-	}
-# endif
+		delete[] buffer;
+		}
 #endif
 	
 	version.settingsVersion = 0;
@@ -361,6 +417,9 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		xml_version->Attribute("settingsVersion", &version.settingsVersion);
 	}
 
+#ifdef BBGE_BUILD_PSP  // Don't delete the default buttons if there's no file.
+	if (loaded)
+#endif
 	control.actionSet.clearActions();
 	//initInputCodeMap();
 

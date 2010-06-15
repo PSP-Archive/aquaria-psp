@@ -1383,7 +1383,11 @@ This build is not yet final, and as such there are a couple things lacking. They
 	addRenderObject(cutscene_text, LR_SUBTITLES);
 
 	cutscene_text2 = new BitmapText(&dsq->smallFont);
+#ifdef BBGE_BUILD_PSP
+	cutscene_text2->setText("Press SELECT to Skip");
+#else
 	cutscene_text2->setText("Press 'S' to Skip");
+#endif
 	cutscene_text2->position = Vector(400,300+10);
 	cutscene_text2->alpha.x = 0;
 	cutscene_text2->followCamera = 1;
@@ -4157,6 +4161,7 @@ void DSQ::onUpdate(float dt)
 			while (isCutscenePaused())
 			{
 				pollEvents();
+				core->joystick.update(sec);
 				ActionMapper::onUpdate(sec);
 #ifdef BBGE_BUILD_SDL
 				SDL_Delay(int(sec*1000));
@@ -4169,7 +4174,13 @@ void DSQ::onUpdate(float dt)
 				showBuffer();
 				resetTimer();
 
-				if (_canSkipCutscene && core->getKeyState(KEY_S))
+				if (_canSkipCutscene
+#ifdef BBGE_BUILD_PSP
+					&& core->joystick.buttons[0]
+#else
+					&& core->getKeyState(KEY_S)
+#endif
+				)
 				{
 					skippingCutscene = true;
 					settings.renderOn = false;

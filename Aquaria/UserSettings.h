@@ -93,7 +93,23 @@ public:
 
 	struct Video
 	{
-		Video() { numParticles=2048; parallaxOn0=parallaxOn1=parallaxOn2=1; saveSlotScreens=1; shader= 0; blur=1; noteEffects=0; fpsSmoothing=30; resx=800; resy=600; full=1; fbuffer=1; darkfbuffer=1; bits=32; vsync=1; darkbuffersize=256;}
+		Video() {
+			numParticles = 2048;
+			parallaxOn0 = parallaxOn1 = parallaxOn2 = 1;
+			saveSlotScreens = 1;
+			shader = 0;
+			blur = 1;
+			noteEffects = 0;
+			fpsSmoothing = 30;
+			resx = 800;
+			resy = 600;
+			full = 1;
+			fbuffer = 1;
+			darkfbuffer = 1;
+			bits = 32;
+			vsync = 1;
+			darkbuffersize = 256;
+		}
 		int shader;
 		int blur;
 		int noteEffects;
@@ -106,7 +122,20 @@ public:
 
 	struct Control
 	{
-		Control() { toolTipsOn=1; autoAim=1; targeting=1; joyCursorSpeed=4.0; flipInputButtons=0; s1ax=0; s1ay=0; s2ax=0; s2ay=0; s1dead=0.3; s2dead=0.3; joystickEnabled=0;}
+		Control() {
+			toolTipsOn = 1;
+			autoAim = 1;
+			targeting = 1;
+			joyCursorSpeed = 4.0;
+			flipInputButtons = 0;
+			s1ax = 0;
+			s1ay = 0;
+			s2ax = 0;
+			s2ay = 0;
+			s1dead = 0.3;
+			s2dead = 0.3;
+			joystickEnabled = 0;
+		}
 		int joystickEnabled;
 		int autoAim;
 		int targeting;
