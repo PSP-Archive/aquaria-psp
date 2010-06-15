@@ -213,6 +213,7 @@ float sqr(float x);
 bool exists(const std::string &f, bool makeFatal = false);
 void errorLog(const std::string &s);
 void debugLog(const std::string &s);
+void debugLog(const char *s);
 void forEachFile(std::string path, std::string type, void callback(const std::string &filename, intptr_t param), intptr_t param);
 std::string stripEndlineForUnix(const std::string &in);
 std::vector<std::string> getFileList(std::string path, std::string type, int param);
@@ -283,11 +284,15 @@ enum LerpType
 float lerp(const float &v1, const float &v2, float dt, int lerpType);
 
 
+#ifndef BBGE_BUILD_PSP  // This algorithm isn't used in current Aquaria code.
 void crunchFile(const std::string &file, const std::string &out, bool deleteOriginal=false);
 void uncrunchFile(const std::string &file, const std::string &out);
+#endif
 
+#ifndef BBGE_BUILD_PSP  // We don't allow arbitrary file writes on the PSP.
 int packFile(const std::string &sourcef, const std::string &destf, int level);
 int unpackFile(const std::string &sourcef, const std::string &destf);
+#endif
 
 void openURL(const std::string &url);
 

@@ -854,8 +854,31 @@ void Core::debugLog(const std::string &s)
 {
 	if (debugLogActive)
 	{
+#ifdef BBGE_BUILD_PSP
+# ifdef DEBUG
+		do_DMSG("%s\n", s.c_str());
+# endif
+#else
 		static std::ofstream out((debugLogPath + "debug.log").c_str());
-		out << s << std::endl;	
+		out << s << std::endl;
+#endif
+	}
+}
+
+/* We include a "char *" version for faster processing on the PSP when the
+ * message is a constant string. */
+void Core::debugLog(const char *s)
+{
+	if (debugLogActive)
+	{
+#ifdef BBGE_BUILD_PSP
+# ifdef DEBUG
+		do_DMSG("%s\n", s);
+# endif
+#else
+		static std::ofstream out((debugLogPath + "debug.log").c_str());
+		out << s << std::endl;
+#endif
 	}
 }
 

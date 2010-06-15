@@ -1352,7 +1352,10 @@ public:
 
 	int getEntityTypeIndexByName(std::string s);
 	void screenMessage(const std::string &msg);
+#ifdef AQUARIA_BUILD_CONSOLE  // No need to override them otherwise.
 	void debugLog(const std::string &s);
+	void debugLog(const char *s) {debugLog(std::string(s));}
+#endif
 	void toggleConsole();
 	void toggleEffects();
 	void debugMenu();

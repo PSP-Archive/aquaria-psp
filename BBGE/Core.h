@@ -1138,6 +1138,7 @@ public:
 	int keys[KEY_MAXARRAY];
 	Flags flags;
 	virtual void debugLog(const std::string &s);
+	virtual void debugLog(const char *s);
 	virtual void errorLog(const std::string &s);
 	void messageBox(const std::string &title, const std::string &msg);
 	bool getShiftState();

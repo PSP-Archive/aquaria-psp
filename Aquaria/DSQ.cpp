@@ -2071,11 +2071,9 @@ void DSQ::toggleConsole()
 		}
 	}
 }
-#endif
 
 void DSQ::debugLog(const std::string &s)
 {
-#ifdef AQUARIA_BUILD_CONSOLE
 	consoleLines.push_back(s);
 	if (consoleLines.size() > MAX_CONSOLELINES)
 	{
@@ -2095,9 +2093,9 @@ void DSQ::debugLog(const std::string &s)
 		}
 		console->setText(text);
 	}
-#endif
 	Core::debugLog(s);
 }
+#endif  // AQUARIA_BUILD_CONSOLE
 
 int DSQ::getEntityTypeIndexByName(std::string s)
 {

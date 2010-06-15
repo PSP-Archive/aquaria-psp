@@ -444,6 +444,16 @@ void debugLog(const std::string &s)
 	}
 }
 
+void debugLog(const char *s)
+{
+	if (core)
+		core->debugLog(s);
+	else
+	{
+		//MessageBox(0, s, "DebugLog (Core Not Initalized)", MB_OK);
+	}
+}
+
 
 /*
 void pForEachFile(std::string path, std::string type, void callback(const std::string &filename, int param), int param)
@@ -822,6 +832,8 @@ float lerp(const float &v1, const float &v2, float dt, int lerpType)
 }
 
 
+#ifndef BBGE_BUILD_PSP  // We don't allow arbitrary file writes on the PSP.
+
 #include <zlib.h>
 #include <assert.h>
 
@@ -967,6 +979,10 @@ int unpackFile(const std::string &sourcef, const std::string &destf)
     return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
 }
 
+#endif  // !BBGE_BUILD_PSP
+
+#ifndef BBGE_BUILD_PSP  // This algorithm isn't used in current Aquaria code.
+
 int encode[8] = {16, 32, 8, 4, 2, 1, 3, 5 };
 
 void crunchFile(const std::string &file, const std::string &out, bool deleteOriginal)
@@ -1042,6 +1058,8 @@ void uncrunchFile(const std::string &file, const std::string &out)
 	if (f) fclose(f);
 	if (o) fclose(o);
 }
+
+#endif  // !BBGE_BUILD_PSP
 
 void openURL(const std::string &url)
 {

@@ -397,6 +397,7 @@ void Texture::load(std::string file)
 		{
 			loadBMP(file);
 		}
+#ifndef BBGE_BUILD_PSP  // We don't allow arbitrary file writes on the PSP.
 		else if (post == "zga")
 		{
 			if (core->getUserDataFolder().empty())
@@ -413,6 +414,7 @@ void Texture::load(std::string file)
 			}
 
 		}
+#endif  // !BBGE_BUILD_PSP
 		else if (post == "tga")
 		{
 			loadTGA(file);
