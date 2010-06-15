@@ -58,7 +58,11 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 		addChild(result, PM_POINTER);
 		
 		BitmapText *text = new BitmapText(&dsq->smallFont);
+#ifdef BBGE_BUILD_PSP
+		text->scale = Vector(0.8, 0.8);
+#else
 		text->scale = Vector(0.7, 0.7);
+#endif
 		text->color = 0;
 		text->position = result->position + Vector(0, 18);
 		
@@ -96,7 +100,11 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 				addChild(ing[c], PM_POINTER);
 				
 				BitmapText *text = new BitmapText(&dsq->smallFont);
+#ifdef BBGE_BUILD_PSP
+				text->scale = Vector(0.8, 0.8);
+#else
 				text->scale = Vector(0.7, 0.7);
+#endif
 				text->color = 0;
 				text->position = ing[c]->position + Vector(0, 18);
 				text->setText(processFoodName(data->name));
@@ -420,7 +428,11 @@ void RecipeMenu::createPage(int p)
 
 	description = new BitmapText(&dsq->smallFont);
 	description->followCamera = 1;
+#ifdef BBGE_BUILD_PSP
+	description->scale = Vector(0.8, 0.8);
+#else
 	description->scale = Vector(0.7, 0.7);
+#endif
 	description->setAlign(ALIGN_LEFT);
 	description->position = Vector(364, 334); //most recent: (364, 334) //348, 328 
 	description->color = Vector(0,0,0);//Vector(0.7,0,0);

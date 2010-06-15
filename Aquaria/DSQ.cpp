@@ -1333,7 +1333,11 @@ This build is not yet final, and as such there are a couple things lacking. They
 	//versionLabel->position = Vector(10 - core->getVirtualOffX(), 575);
 	versionLabel->followCamera = 1;
 	versionLabel->setAlign(ALIGN_LEFT);
+#ifdef BBGE_BUILD_PSP  // 70% is just a bit too small to be legible.
+	versionLabel->scale = Vector(0.9, 0.9);
+#else
 	versionLabel->scale = Vector(0.7, 0.7);
+#endif
 	versionLabel->alphaMod = 0.75;
 	versionLabel->alpha = 0;
 	}
@@ -1356,6 +1360,9 @@ This build is not yet final, and as such there are a couple things lacking. They
 	subtext->followCamera = 1;
 	subtext->alpha = 0;
 	subtext->setFontSize(14);
+#ifdef BBGE_BUILD_PSP  // Just a bit too small otherwise.
+	subtext->scale = Vector(1.2, 1.2);
+#endif
 	subtext->setWidth(800);
 	subtext->setAlign(ALIGN_CENTER);
 	//subtext->setFontSize(12);

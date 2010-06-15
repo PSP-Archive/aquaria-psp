@@ -4122,7 +4122,11 @@ void Game::createInGameMenu()
 		foodLabel->followCamera = 1;
 		foodLabel->setFontSize(20);
 		foodLabel->position = center - Vector(0, 16) + Vector(0,-32);
+#ifdef BBGE_BUILD_PSP
+		foodLabel->scale = Vector(1.25, 1.25);
+#else
 		foodLabel->scale = Vector(1, 1);
+#endif
 	}
 	menuBg->addChild(foodLabel, PM_POINTER);
 
@@ -4132,7 +4136,11 @@ void Game::createInGameMenu()
 		foodDescription->setAlign(ALIGN_CENTER);
 		foodDescription->followCamera = 1;
 		foodDescription->position = center + Vector(0, 8) + Vector(0,-32);
+#ifdef BBGE_BUILD_PSP
+		foodDescription->scale = Vector(1.0, 1.0);
+#else
 		foodDescription->scale = Vector(0.8, 0.8);
+#endif
 
 		foodDescription->setWidth(240);
 	}
@@ -4170,7 +4178,11 @@ void Game::createInGameMenu()
 		treasureLabel->followCamera = 1;
 		treasureLabel->setFontSize(20);
 		treasureLabel->position = center - Vector(0, 16);
+#ifdef BBGE_BUILD_PSP
+		treasureLabel->scale = Vector(1.25, 1.25);
+#else
 		treasureLabel->scale = Vector(1, 1);
+#endif
 	}
 	menuBg->addChild(treasureLabel, PM_POINTER);
 
@@ -6529,7 +6541,11 @@ void Game::applyState()
 
 		controlHint_text->setAlign(ALIGN_LEFT);
 		controlHint_text->followCamera = 1;
+#ifdef BBGE_BUILD_PSP
+		controlHint_text->scale = Vector(1.1, 1.1);
+#else
 		controlHint_text->scale = Vector(0.9, 0.9);
+#endif
 		//controlHint_text->setFontSize(14);
 	}
 	addRenderObject(controlHint_text, LR_HELP);
@@ -7793,6 +7809,9 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 	
 	controlHint_text->position.x = 400 - controlHint_text->getSetWidth()/2 + 25;
 		//400 - controlHint_bg->getWidth()/2 + 25;
+#ifdef BBGE_BUILD_PSP  // Adjust this since we scaled it up.
+	controlHint_text->position.x -= 50;
+#endif
 	controlHint_text->setAlign(ALIGN_LEFT);
 
 	if (!left && !right && !middle)

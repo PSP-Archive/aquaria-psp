@@ -671,6 +671,22 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	areaLabel3->alpha = 0;
 	dsq->game->addRenderObject(areaLabel3, LR_WORLDMAPHUD);
 
+#ifdef BBGE_BUILD_PSP  // Need to make these much bigger to be legible.
+	const float pspScale = 1.25f;
+	const float fontScale = pspScale * 1.2f;
+	tophud->position.y *= pspScale;
+	tophud->scale *= pspScale;
+	areaLabel->position *= pspScale;
+	areaLabel->position.x -= 400*(pspScale-1);
+	areaLabel->scale *= fontScale;
+	areaLabel2->position *= pspScale;
+	areaLabel2->position.x -= 400*(pspScale-1);
+	areaLabel2->scale *= fontScale;
+	areaLabel3->position *= pspScale;
+	areaLabel3->position.x -= 400*(pspScale-1);
+	areaLabel3->scale *= fontScale;
+#endif
+
 	if (activeTile)
 	{
 		areaLabel2->setText(dsq->continuity.stringBank.get(activeTile->stringIndex));
