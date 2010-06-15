@@ -493,7 +493,7 @@ std::string Continuity::getIEString(IngredientData *data, int i)
 			std::ostringstream os;
 			os << dsq->continuity.stringBank.get(200) << " ";
 			os << dsq->continuity.stringBank.get(101) << " ";
-			os << fabs(fx.magnitude);
+			os << fabsf(fx.magnitude);
 			return os.str();
 		}
 	break;

@@ -2287,11 +2287,11 @@ bbgePerspective(float fovy, float aspect, float zNear, float zFar)
     float radians = fovy / 2.0f * M_PI / 180.0f;
 
     deltaZ = zFar - zNear;
-    sine = sin(radians);
+    sine = sinf(radians);
     if ((deltaZ == 0.0f) || (sine == 0.0f) || (aspect == 0.0f)) {
         return;
     }
-    cotangent = cos(radians) / sine;
+    cotangent = cosf(radians) / sine;
 
     GLfloat m[4][4] = {
         { 1.0f, 0.0f, 0.0f, 0.0f },
@@ -2382,7 +2382,7 @@ void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
 	virtualWidth = pixelScaleX;
 	//MAX(virtualWidth, 800);
 	virtualHeight = pixelScaleY;//int((pixelScale*aspectY)/aspectX);					//assumes 4:3 aspect ratio
-	this->baseCullRadius = sqrt(sqr(getVirtualWidth()/2) + sqr(getVirtualHeight()/2));
+	this->baseCullRadius = sqrtf(sqr(getVirtualWidth()/2) + sqr(getVirtualHeight()/2));
 
 	std::ostringstream os;
 	os << "virtual(" << virtualWidth << ", " << virtualHeight << ")";

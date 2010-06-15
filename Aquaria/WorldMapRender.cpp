@@ -210,8 +210,8 @@ protected:
 				float r = (rand()%100)/100.0f;
 				float radius = r * 2*PI;
 				float len = (rand()%lenRange);
-				int x = sin(radius)*len;
-				int y = cos(radius)*len;
+				int x = sinf(radius)*len;
+				int y = cosf(radius)*len;
 
 				//truePosition +
 				float t = 0.75;

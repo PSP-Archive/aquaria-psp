@@ -87,7 +87,7 @@ void Beam::trace()
 	float angle = MathFunctions::toRadians(this->angle);
 		//(float(-this->angle)/180.0f)*PI;
 	//float angle = rotation.z;
-	Vector mov(sin(angle), cos(angle));
+	Vector mov(sinf(angle), cosf(angle));
 	TileVector t(position);
 	Vector startTile(t.x, t.y);
 

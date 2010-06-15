@@ -31,7 +31,7 @@ namespace MathFunctions
 		// 180 is up
 		// 270 is right
 		// 360 is down 
-		solutionAngle = atan(dist.y/fabs(dist.x));
+		solutionAngle = atan2f(dist.y, fabsf(dist.x));
 		solutionAngle  = (solutionAngle /PI)*180;
 		if (dist.x < 0)
 			solutionAngle = 180-solutionAngle;
@@ -55,7 +55,7 @@ namespace MathFunctions
 	{
 		Vector dist = vector1 - vector2;		
 		
-		solutionAngle = atanf(dist.y/fabs(dist.x));
+		solutionAngle = atan2f(dist.y, fabsf(dist.x));
 		
 		if (dist.x < 0)
 			solutionAngle = PI - solutionAngle;
@@ -74,12 +74,12 @@ namespace MathFunctions
 		vector1.normalize2D();
 		vector2.normalize2D();
 
-		solutionAngle = cos((vector1.x*vector2.x + vector2.y*vector2.y));
+		solutionAngle = cosf((vector1.x*vector2.x + vector2.y*vector2.y));
 		*/
 		
 
-		 //solutionAngle = acos(vector1.dot(vector2) / (sqrt(vector1.dot(vector1) * vector2.dot(vector2))));
-		//solutionAngle = acos(vector1.dot(vector2) / (vector1.getLength2D() * vector2.getLength2D()));
+		 //solutionAngle = acosf(vector1.dot(vector2) / (sqrt(vector1.dot(vector1) * vector2.dot(vector2))));
+		//solutionAngle = acosf(vector1.dot(vector2) / (vector1.getLength2D() * vector2.getLength2D()));
 		/*
 		solutionAngle  = (solutionAngle /PI)*180;
 		if (dist.x < 0)

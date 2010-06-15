@@ -178,11 +178,11 @@ void SchoolFish::updateVelocity(Vector &accumulator)
 
 	vel.capLength2D(getMaxSpeed() * maxSpeedLerp.x);
 	vel.z = 0;
-	if (fabs(vel.y) > fabs(vel.x))
+	if (fabsf(vel.y) > fabsf(vel.x))
 	{
 		/*
-		float sign = vel.y / fabs(vel.y);
-		vel.y = fabs(vel.x) * sign;
+		float sign = vel.y / fabsf(vel.y);
+		vel.y = fabsf(vel.x) * sign;
 		*/
 		//std::swap(vel.x, vel.y);
 		// going up 
@@ -619,7 +619,7 @@ void SchoolFish::onUpdate(float dt)
 				const float amt = 0;
 				/*
 
-				if (fabs(dir.x) > fabs(dir.y))
+				if (fabsf(dir.x) > fabsf(dir.y))
 				{
 					if (dir.x > amt && !isfh())
 					{
@@ -646,7 +646,11 @@ void SchoolFish::onUpdate(float dt)
 
 			//rotateToVec(accumulator, 5, 90);
 
-			float angle = atan(dir.y/dir.x);
+			// FIXME: Changed to atan2f() to avoid potential
+			// division by zero, but kept X positive to keep
+			// the angle within [-90,90].  Can the logic change
+			// to deal with angles in [-180,180]?  --achurch
+			float angle = atan2f(dir.x<0 ? -dir.y : dir.y, fabsf(dir.x));
 			angle = ((angle*180)/PI);
 
 			if (angle > 45)

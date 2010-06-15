@@ -104,11 +104,11 @@ CollisionResult CollisionShape::findOverlap(CollisionShape &collisionShape)
 			float tyw = collisionShape.yw;
 							
 			Vector d = position - collisionShape.position;//tile->obj delta
-			int px = (txw + radius) - fabs(d.x);//penetration depth in x
+			int px = (txw + radius) - fabsf(d.x);//penetration depth in x
 
 			if(0 < px)
 			{
-				int py = (tyw + radius) - fabs(d.y);//pen depth in y
+				int py = (tyw + radius) - fabsf(d.y);//pen depth in y
 								
 				if(0 < py)
 				{
@@ -362,7 +362,7 @@ CollisionResult CollisionShape::collideCircleWithAABB(CollisionShape &collisionS
 		float dx = position.x - vx - 1;//calc vert->circle vector		
 		float dy = position.y - vy - 1;
 		
-		float len = sqrt(dx*dx + dy*dy);
+		float len = sqrtf(dx*dx + dy*dy);
 		float pen = radius - len;
 		if(0 < pen)
 		{

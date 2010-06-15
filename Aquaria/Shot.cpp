@@ -793,7 +793,7 @@ void Shot::onUpdate(float dt)
 	if (shotData->waveMag)
 	{
 		waveTimer += shotData->waveSpeed * dt;
-		float off = sin(waveTimer)*shotData->waveMag;
+		float off = sinf(waveTimer)*shotData->waveMag;
 		Vector side = velocity.getPerpendicularLeft();
 		side.setLength2D(off);
 		offset = side;

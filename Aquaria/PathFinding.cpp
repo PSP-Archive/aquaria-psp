@@ -380,7 +380,7 @@ void PathFinding::molestPath(VectorPath &path)
 		*/
 		int sample = 20;
 		float maxDist = sample * TILE_SIZE;
-		//sqrt(sqr(sample*TILE_SIZE)+sqr(sample*TILE_SIZE));
+		//sqrtf(sqr(sample*TILE_SIZE)+sqr(sample*TILE_SIZE));
 		
 		//if (coverage < 0.6f)
 		{

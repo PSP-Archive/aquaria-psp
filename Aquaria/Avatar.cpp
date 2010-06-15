@@ -965,7 +965,7 @@ void Avatar::updateHair(float dt)
 
 		Vector diff3 = position - headPos;
 
-		if (state.lockedToWall && wallPushVec.y < 0 && (fabs(wallPushVec.y) > fabs(wallPushVec.x)))
+		if (state.lockedToWall && wallPushVec.y < 0 && (fabsf(wallPushVec.y) > fabsf(wallPushVec.x)))
 		{
 			if (isfh())
 			{
@@ -1514,7 +1514,7 @@ BOOL CALLBACK recordCallback(HRECORD handle, const void *buf, DWORD len, DWORD u
 
 	posMicNote = dsq->fftnotes.getNoteFromFFT(v, octave);
 
-	//if (lastLargest<largest || fabs(largest-lastLargest) < 0.05f)
+	//if (lastLargest<largest || fabsf(largest-lastLargest) < 0.05f)
 	if (true)
 	{
 		lastLargest = largest;
@@ -2326,7 +2326,7 @@ void Avatar::setSongIconPositions()
 	float rad = 0;
 	for (int i = 0; i < songIcons.size(); i++)
 	{
-		songIcons[i]->position = Vector(400,300)+/*this->position + */Vector(sin(rad)*singingInterfaceRadius, cos(rad)*singingInterfaceRadius);
+		songIcons[i]->position = Vector(400,300)+/*this->position + */Vector(sinf(rad)*singingInterfaceRadius, cosf(rad)*singingInterfaceRadius);
 		rad += radIncr;
 	}
 }
@@ -4336,7 +4336,7 @@ void Avatar::lockToWall()
 			wallPushVec *= 2000;
 			wallPushVec.z = 0;
 			skeletalSprite.stopAllAnimations();
-			if (wallPushVec.y < 0 && (fabs(wallPushVec.y) > fabs(wallPushVec.x)))
+			if (wallPushVec.y < 0 && (fabsf(wallPushVec.y) > fabsf(wallPushVec.x)))
 			{
 				skeletalSprite.transitionAnimate("wallLookUp", 0.2, -1);
 			}
@@ -6313,7 +6313,7 @@ void Avatar::updateAura(float dt)
 		{
 		case AURA_SHIELD:
 		{
-			//shieldPosition = position + Vector(cos(auraTimer*4)*100, sin(auraTimer*4)*100);
+			//shieldPosition = position + Vector(cosf(auraTimer*4)*100, sinf(auraTimer*4)*100);
 			shieldPosition = position;
 			/*
 			float a = ((rotation.z)*PI)/180.0f + PI*0.5f;
@@ -7583,7 +7583,7 @@ void Avatar::onUpdate(float dt)
 
 	/*
 	bobTimer += dt*2;
-	offset.y = sin(bobTimer)*5 - 2.5f;
+	offset.y = sinf(bobTimer)*5 - 2.5f;
 	*/
 
 	if (isEntityDead())
@@ -8273,7 +8273,7 @@ void Avatar::onUpdate(float dt)
 		float angle = PI - ((rotation.z/180)*PI);
 		int height = 25;
 		*/
-		//hair->hairNodes[0].position = position + Vector(sin(angle)*height, cos(angle)*height);
+		//hair->hairNodes[0].position = position + Vector(sinf(angle)*height, cosf(angle)*height);
 
 
 		if (biteTimer < biteTimerMax)
@@ -8603,7 +8603,7 @@ void Avatar::onUpdate(float dt)
 				float jpos[2];
 				glfwGetJoystickPos(GLFW_JOYSTICK_1, jpos, 2);
 				const float deadZone = 0.1;
-				if (fabs(jpos[0]) > deadZone || fabs(jpos[1]) > deadZone)
+				if (fabsf(jpos[0]) > deadZone || fabsf(jpos[1]) > deadZone)
 					addVec = Vector(jpos[0]*a, -jpos[1]*a);
 			}
 			*/
@@ -9038,7 +9038,7 @@ void Avatar::onUpdate(float dt)
 		}
 		else
 		{
-			if (dsq->game->waterLevel.x > 0 && fabs(avatar->position.y - dsq->game->waterLevel.x) < 800)
+			if (dsq->game->waterLevel.x > 0 && fabsf(avatar->position.y - dsq->game->waterLevel.x) < 800)
 			{
 				float time = 0.5;
 				if (!myZoom.interpolating || (core->globalScale.target != zoomSurface && myZoom.timePeriod != time))

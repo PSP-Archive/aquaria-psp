@@ -563,9 +563,9 @@ void ScriptedEntity::updateStrands(float dt)
 	{
 		float diff = (i-sz)*strandSpacing;
 		if (diff < 0)
-			strands[i]->position = position - Vector(sin(angle)*fabs(diff), cos(angle)*fabs(diff));
+			strands[i]->position = position - Vector(sinf(angle)*fabsf(diff), cosf(angle)*fabsf(diff));
 		else
-			strands[i]->position = position + Vector(sin(angle)*diff, cos(angle)*diff);
+			strands[i]->position = position + Vector(sinf(angle)*diff, cosf(angle)*diff);
 		if (dt > 0)
 			strands[i]->update(dt);
 	}

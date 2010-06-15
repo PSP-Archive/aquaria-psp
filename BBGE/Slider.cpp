@@ -69,7 +69,7 @@ void Slider::onUpdate(float dt)
 
 	if (alpha.x != 1) return;	
 	
-	bool b = (core->mouse.buttons.left || core->mouse.buttons.right) && fabs(core->mouse.position.y-position.y) < grabRadius;
+	bool b = (core->mouse.buttons.left || core->mouse.buttons.right) && fabsf(core->mouse.position.y-position.y) < grabRadius;
 	if (!b && inSlider)
 		inSlider = false;
 

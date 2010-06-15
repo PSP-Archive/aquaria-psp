@@ -2881,7 +2881,7 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 		else
 			q->collisionMaskRadius = h2*2;
 		*/
-		//q->collisionMaskRadius = sqrt(sqr(w2)+sqr(h2));
+		//q->collisionMaskRadius = sqrtf(sqr(w2)+sqr(h2));
 		q->collisionMaskRadius = 512;
 
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -6729,23 +6729,23 @@ void Game::applyState()
 				case CHAR_RIGHT:
 					go = (p->warpType == CHAR_LEFT);
 					pushOut = Vector(1,0);
-					dist = fabs(fromPosition.y - pos.y);
+					dist = fabsf(fromPosition.y - pos.y);
 					doFlip = true;
 				break;
 				case CHAR_LEFT:
 					go = (p->warpType == CHAR_RIGHT);
 					pushOut = Vector(-1,0);
-					dist = fabs(fromPosition.y - pos.y);
+					dist = fabsf(fromPosition.y - pos.y);
 				break;
 				case CHAR_UP:
 					go = (p->warpType == CHAR_DOWN);
 					pushOut = Vector(0, -1);
-					dist = fabs(fromPosition.x - pos.x);
+					dist = fabsf(fromPosition.x - pos.x);
 				break;
 				case CHAR_DOWN:
 					go = (p->warpType == CHAR_UP);
 					pushOut = Vector(0, 1);
-					dist = fabs(fromPosition.x - pos.x);
+					dist = fabsf(fromPosition.x - pos.x);
 				break;
 				}
 				if (go)
@@ -8352,8 +8352,8 @@ bool Game::collideCircleVsLineAngle(Entity *ent, float angle, int startLen, int 
 	int smallestDist = -1;
 	bool collision = false;
 	float rads = MathFunctions::toRadians(angle);
-	float sinv = sin(rads);
-	float cosv = cos(rads);
+	float sinv = sinf(rads);
+	float cosv = cosf(rads);
 	Vector start=Vector(sinv,cosv)*startLen + basePos;
 	Vector end=Vector(sinv,cosv)*endLen + basePos;
 	if (isTouchingLine(start, end, ent->position, radius+ent->collideRadius, &lastCollidePosition))
@@ -11163,7 +11163,7 @@ bool Game::collideCircleWithGrid(Vector position, int r, Vector *fill)
 
 					if (position.x > rx-hsz && position.x < rx+hsz)
 					{
-						if (fabs(ry - position.y) < r+hsz)
+						if (fabsf(ry - position.y) < r+hsz)
 						{
 							return true;
 						}
@@ -11172,7 +11172,7 @@ bool Game::collideCircleWithGrid(Vector position, int r, Vector *fill)
 
 					if (position.y > ry-hsz && position.y < ry+hsz)
 					{
-						if (fabs(rx - position.x) < r+hsz)
+						if (fabsf(rx - position.x) < r+hsz)
 						{
 							return true;
 						}

@@ -120,7 +120,7 @@ void AquariaGuiElement::updateMovement(float dt)
 			Vector p = core->joystick.position;
 			if (!p.isLength2DIn(0.4))
 			{
-				if (fabs(p.x) > fabs(p.y))
+				if (fabsf(p.x) > fabsf(p.y))
 				{
 					if (p.x > 0)
 						dir = DIR_RIGHT;
@@ -199,7 +199,7 @@ void AquariaGuiElement::updateMovement(float dt)
 
 						if (dir == DIR_DOWN)
 						{
-							if (fabs(p1.x - p2.x) < ch)
+							if (fabsf(p1.x - p2.x) < ch)
 							{
 								if (p2.y > p1.y) go = 1;
 								p1.x = p2.x = 0;
@@ -207,7 +207,7 @@ void AquariaGuiElement::updateMovement(float dt)
 						}
 						else if (dir == DIR_UP)
 						{
-							if (fabs(p1.x - p2.x) < ch)
+							if (fabsf(p1.x - p2.x) < ch)
 							{
 								if (p2.y < p1.y) go = 1;
 								p1.x = p2.x = 0;
@@ -215,7 +215,7 @@ void AquariaGuiElement::updateMovement(float dt)
 						}
 						else if (dir == DIR_RIGHT)
 						{
-							if (fabs(p1.y - p2.y) < ch)
+							if (fabsf(p1.y - p2.y) < ch)
 							{
 								if (p2.x > p1.x) go = 1;
 								p1.y = p2.y = 0;
@@ -223,7 +223,7 @@ void AquariaGuiElement::updateMovement(float dt)
 						}
 						else if (dir == DIR_LEFT)
 						{
-							if (fabs(p1.y - p2.y) < ch)
+							if (fabsf(p1.y - p2.y) < ch)
 							{
 								if (p2.x < p1.x) go = 1;
 								p1.y = p2.y = 0;

@@ -217,7 +217,7 @@ bool Entity::setBoneLock(const BoneLock &boneLock)
 				this->boneLock.offRot -= PI;
 			while (this->boneLock.offRot < 0)
 				this->boneLock.offRot += PI;
-			//this->boneLock.offRot = atan(this->boneLock.circleOffset.y / this->boneLock.circleOffset.x);
+			//this->boneLock.offRot = atanf(this->boneLock.circleOffset.y / this->boneLock.circleOffset.x);
 			//
 			//this->boneLock.localOffset = boneLock.bone->getOriginCollidePosition(this->boneLock.localOffset);
 			*/
@@ -2448,7 +2448,7 @@ void Entity::detachEntity(Entity *e)
 	}
 }
 
-//if (fabs(rotation.z - angle) > 180)
+//if (fabsf(rotation.z - angle) > 180)
 //{
 //	rotation.z += 360;
 //}
@@ -2491,7 +2491,7 @@ void Entity::rotateToVec(Vector addVec, float time, int offsetAngle)
 		*/
 
 		/*
-		if (fabs(angle - rotation.z) > 180)
+		if (fabsf(angle - rotation.z) > 180)
 		{
 			// something's wrong
 			rotation.z += 360;
@@ -3532,7 +3532,7 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, i
 	TileVector t(position);
 	TileVector useTile;
 
-	float totalDist = sqrt(float(sqr((search*2)*TILE_SIZE)+sqr((search*2)*TILE_SIZE)));
+	float totalDist = sqrtf(float(sqr((search*2)*TILE_SIZE)+sqr((search*2)*TILE_SIZE)));
 	for (int x = -search; x <= search; x++)
 	{
 		for (int y = -search; y <= search; y++)

@@ -31,9 +31,9 @@ float Bias( float x, float biasAmt )
 	static float lastExponent = 0;
 	if( lastAmt != biasAmt )
 	{
-		lastExponent = log( biasAmt ) * -1.4427f; // (-1.4427 = 1 / log(0.5))
+		lastExponent = logf( biasAmt ) * -1.4427f; // (-1.4427 = 1 / log(0.5))
 	}
-	return pow( x, lastExponent );
+	return powf( x, lastExponent );
 }
 
 
@@ -49,7 +49,7 @@ float Gain( float x, float biasAmt )
 
 float SmoothCurve( float x )
 {
-	return (1 - cos( x * PI )) * 0.5f;
+	return (1 - cosf( x * PI )) * 0.5f;
 }
 
 
@@ -93,12 +93,12 @@ const Vector Vector::unitVector3D() const
 
 const scalar_t Vector::getLength3D() const
 {
-    return (scalar_t)sqrt(x*x + y*y + z*z);
+    return (scalar_t)sqrtf(x*x + y*y + z*z);
 }
 
 const scalar_t Vector::getLength2D() const
 {
-    return (scalar_t)sqrt(x*x + y*y);
+    return (scalar_t)sqrtf(x*x + y*y);
 }
 
 void Vector::rotate2D360(int angle)
@@ -469,7 +469,7 @@ Vector VectorPath::getValue(float percent)
 			float dist = (target->value - p).getLength2D();
 			if (dist > 0)
 			{
-				float bulge = sin(perc * PI);
+				float bulge = sinf(perc * PI);
 				perp |= dist;
 				perp *= bulge;
 			}
@@ -831,7 +831,7 @@ Vector lerp(const Vector &v1, const Vector &v2, float dt, int lerpType)
 		case LERP_EASE:
 		{
 			// ease in and out
-			return v1*(2*pow(dt, 3)-3*pow(dt,2)+1) + v2*(3*pow(dt,2) - 2*pow(dt,3));
+			return v1*(2*(dt*dt*dt)-3*sqr(dt)+1) + v2*(3*sqr(dt) - 2*(dt*dt*dt));
 		}
 		case LERP_EASEIN:
 		{

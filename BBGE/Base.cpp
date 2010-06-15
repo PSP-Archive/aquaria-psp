@@ -312,7 +312,7 @@ void drawCircle(float radius, int stepSize)
 	{
 		for(int i=0;i < 360; i+=stepSize) {
 			const float degInRad = i*PI/180.0f;
-			glVertex3f(cos(degInRad)*radius, sin(degInRad)*radius,0.0);
+			glVertex3f(cosf(degInRad)*radius, sinf(degInRad)*radius,0.0);
 		}
 	}
 	glEnd();
@@ -853,8 +853,11 @@ GLuint generateEmptyTexture(int quality)											// Create An Empty Texture
 
 Vector randVector(int mag)
 {
+	// FIXME: Is this really what you wanted?  I'd suggest:
+	//     float angle = (rand() / (float)RAND_MAX) * PI;
+        // --achurch
 	float angle = (rand()&314);
-	float x = sin(angle), y = cos(angle);
+	float x = sinf(angle), y = cosf(angle);
 	return Vector(x*mag, y*mag);
 }
 
@@ -865,7 +868,7 @@ float lerp(const float &v1, const float &v2, float dt, int lerpType)
 		case LERP_EASE:
 		{
 			// ease in and out
-			return v1*(2*pow(dt, 3)-3*pow(dt,2)+1) + v2*(3*pow(dt,2) - 2*pow(dt,3));
+			return v1*(2*(dt*dt*dt)-3*sqr(dt)+1) + v2*(3*sqr(dt) - 2*(dt*dt*dt));
 		}
 		case LERP_EASEIN:
 		{

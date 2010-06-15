@@ -201,7 +201,7 @@ void Hair::updateWaveTimer(float dt)
 	waveTimer += dt;
 	for (int i = 1; i < hairNodes.size(); i++)
 	{
-		hairNodes[i].defaultPosition = hairNodes[i].originalPosition + Vector(cos(waveTimer+i)*waveAmount*hairNodes[i].percent, 0, 0);
+		hairNodes[i].defaultPosition = hairNodes[i].originalPosition + Vector(cosf(waveTimer+i)*waveAmount*hairNodes[i].percent, 0, 0);
 	}
 }
 
@@ -291,7 +291,7 @@ void Hair::updatePositions()
 			MathFunctions::calculateAngleBetweenVectorsInRadians(d2, Vector(0,0,0), a2);
 			float a = a2 - a1;
 			hairNodes[i].angleDiff = a;
-			if (fabs(a) > maxAngle)
+			if (fabsf(a) > maxAngle)
 			{
 
 				float len = d2.getLength2D();
@@ -405,7 +405,7 @@ void Hair::updatePositions()
 			}
 			if (adjust)
 			{
-				Vector add(sin(d), cos(d));
+				Vector add(sinf(d), cosf(d));
 				add.setLength2D(d2.getLength2D());
 				hairNodes[i].position = hairNodes[i-1].position + add;
 			}

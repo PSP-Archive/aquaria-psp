@@ -599,7 +599,7 @@ void ShockEffect::update(float dt, Vector ** drawGrid, int xDivs, int yDivs)
 			{
 				//drawGrid[i][j].x += rand()%50;
 				//drawGrid[i][j].y += rand()%50;
-				drawGrid[i][j].x += adjAmplitude*sinf(-tDist/adjWaveLength+currentDistance)*.75;
+				drawGrid[i][j].x += adjAmplitude*sinf(-tDist/adjWaveLength+currentDistance)*.75f;
 				drawGrid[i][j].y += adjAmplitude*cosf(-tDist/adjWaveLength+currentDistance);
 			}
 		}

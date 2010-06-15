@@ -165,7 +165,7 @@ void ScreenTransition::onRender()
 #if 0 //def BBGE_BUILD_MACOSX
 	float aspect = float(core->width) / float(core->height);
 	float checkAspect = 16.0f/10.0f;
-	if (fabs(aspect - checkAspect) < 0.01f)
+	if (fabsf(aspect - checkAspect) < 0.01f)
 	{
 		glTranslatef(0.5f,0.0f,0.0f);
 	}

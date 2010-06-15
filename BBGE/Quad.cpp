@@ -329,8 +329,8 @@ int Quad::getCullRadius()
 
 bool Quad::isCoordinateInside(Vector coord, int minSize)
 {
-	int hw = fabs((width)*getRealScale().x)*0.5f;
-	int hh = fabs((height)*getRealScale().y)*0.5f;
+	int hw = fabsf((width)*getRealScale().x)*0.5f;
+	int hh = fabsf((height)*getRealScale().y)*0.5f;
 	if (hw < minSize)
 		hw = minSize;
 	if (hh < minSize)
@@ -348,8 +348,8 @@ bool Quad::isCoordinateInside(Vector coord, int minSize)
 
 bool Quad::isCoordinateInsideWorld(const Vector &coord, int minSize)
 {
-	int hw = fabs((width)*getRealScale().x)*0.5f;
-	int hh = fabs((height)*getRealScale().y)*0.5f;
+	int hw = fabsf((width)*getRealScale().x)*0.5f;
+	int hh = fabsf((height)*getRealScale().y)*0.5f;
 	if (hw < minSize)
 		hw = minSize;
 	if (hh < minSize)
@@ -438,8 +438,8 @@ void Quad::renderGrid()
 		}
 		else
 		{
-			percentX = fabs(this->lowerRightTextureCoordinates.x - this->upperLeftTextureCoordinates.x);
-			percentY = fabs(this->upperLeftTextureCoordinates.y - this->lowerRightTextureCoordinates.y);
+			percentX = fabsf(this->lowerRightTextureCoordinates.x - this->upperLeftTextureCoordinates.x);
+			percentY = fabsf(this->upperLeftTextureCoordinates.y - this->lowerRightTextureCoordinates.y);
 #if defined(BBGE_BUILD_UNIX) || defined(BBGE_BUILD_PSP)
 			if (lowerRightTextureCoordinates.x < upperLeftTextureCoordinates.x)
 				baseX = lowerRightTextureCoordinates.x;
@@ -870,7 +870,7 @@ void Quad::refreshRepeatTextureToFill()
 	}
 	else
 	{
-		if (fabs(lowerRightTextureCoordinates.x) > 1 || fabs(lowerRightTextureCoordinates.y)>1)
+		if (fabsf(lowerRightTextureCoordinates.x) > 1 || fabsf(lowerRightTextureCoordinates.y)>1)
 			lowerRightTextureCoordinates = Vector(1,1);
 	}
 }

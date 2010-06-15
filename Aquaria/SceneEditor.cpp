@@ -2172,11 +2172,11 @@ void SceneEditor::generateLevel()
 					bool p1, p2, p3;
 					p1=p2=p3=false;
 					int diff;
-					diff = fabs((colorVects[i].x*255) - rawinfo.Data[c]);
+					diff = fabsf((colorVects[i].x*255) - rawinfo.Data[c]);
 					p1 = (diff < 5);
-					diff = fabs((colorVects[i].y*255) - rawinfo.Data[c+1]);
+					diff = fabsf((colorVects[i].y*255) - rawinfo.Data[c+1]);
 					p2 = (diff < 5);
-					diff = fabs((colorVects[i].z*255) - rawinfo.Data[c+2]);
+					diff = fabsf((colorVects[i].z*255) - rawinfo.Data[c+2]);
 					p3 = (diff < 5);
 					/*
 					p1 = (colorVects[i].x == 1 && rawinfo.Data[c] > 200);
@@ -2669,7 +2669,7 @@ void createEntityPage()
 			type = j;
 		}
 
-		int bit = int(floor(float(c/rowSize)));
+		int bit = int(floorf(float(c/rowSize)));  // FIXME: Not float(c)/rowSize?  --achurch
 		std::string prevGfx = ent.gfx;
 		if (prevGfx.empty() && ec)
 			prevGfx = ec->prevGfx;

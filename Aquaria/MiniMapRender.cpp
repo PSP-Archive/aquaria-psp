@@ -382,7 +382,7 @@ void MiniMapRender::onRender()
 			for (int y = t.y-sz2*2; y < t.y + sz2*2; y+=skip)
 			{
 				int rowStart = -1;
-				float out = sin((float(y-(t.y-sz2*2))/float(sz2*4)) * PI);
+				float out = sinf((float(y-(t.y-sz2*2))/float(sz2*4)) * PI);
 				int x1= t.x-int(sz2*2*out) - skip, x2 = t.x+int(sz2*2*out) + skip;
 
 				for (int x = x1; x < x2; x+=skip)
@@ -416,9 +416,9 @@ void MiniMapRender::onRender()
 
 						glTranslatef(rp.x, rp.y, 0);
 
-						float v = sin(waterSin +  (tt.x + tt.y*sz2*2)*0.001f + sqr(tt.x+tt.y)*0.00001f);
+						float v = sinf(waterSin +  (tt.x + tt.y*sz2*2)*0.001f + sqr(tt.x+tt.y)*0.00001f);
 						
-						int sz = 20 + fabs(v)*20;
+						int sz = 20 + fabsf(v)*20;
 
 						if (bright)
 							sz = 10;			
@@ -464,7 +464,7 @@ void MiniMapRender::onRender()
 					
 					Vector rp = Vector(d)*Vector(1.0f/1600.0f, 1.0f/1600.0f)*sz2*0.5f;
 
-					extraSize = sin(game->getTimer()*PI)*6 + 14;
+					extraSize = sinf(game->getTimer()*PI)*6 + 14;
 
 					switch(p->pathType)
 					{
@@ -662,8 +662,8 @@ void MiniMapRender::onRender()
 	{
 		c = gc;
 
-		x = sin(angle)*rad+2;
-		y = cos(angle)*rad;
+		x = sinf(angle)*rad+2;
+		y = cosf(angle)*rad;
 
 		// !!! FIXME: loop invariant.
 		glColor4f(c.x, c.y, c.z, 0.6);
@@ -698,13 +698,13 @@ void MiniMapRender::onRender()
 		c = gc;
 
 
-		x = sin(angle)*rad+2;
-		y = cos(angle)*rad;
+		x = sinf(angle)*rad+2;
+		y = cosf(angle)*rad;
 
 		if (jump == 0)
 		{
 			// !!! FIXME: loop invariant.
-			glColor4f(c.x, c.y, c.z, fabs(cos(angle-incr))*0.3f + 0.2f);
+			glColor4f(c.x, c.y, c.z, fabsf(cosf(angle-incr))*0.3f + 0.2f);
 
 			glBegin(GL_QUADS);
 				glTexCoord2f(0, 1);
@@ -733,8 +733,8 @@ void MiniMapRender::onRender()
 
 	texMarker->apply();
 
-	x = sin(eangle2)*rad+2;
-	y = cos(eangle2)*rad;
+	x = sinf(eangle2)*rad+2;
+	y = cosf(eangle2)*rad;
 
 	glBegin(GL_QUADS);
 		glTexCoord2f(0, 1);

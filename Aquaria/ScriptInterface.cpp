@@ -2300,8 +2300,8 @@ int l_entity_isNearGround(lua_State *L)
 		Vector v = dsq->game->getWallNormal(e->position, sampleArea);
 		if (!v.isZero())
 		{
-			//if (v.y < -0.5f && fabs(v.x) < 0.4f)
-			if (v.y < 0 && fabs(v.x) < 0.6f)
+			//if (v.y < -0.5f && fabsf(v.x) < 0.4f)
+			if (v.y < 0 && fabsf(v.x) < 0.6f)
 			{
 				value = true;
 			}
@@ -2950,7 +2950,7 @@ int l_spawnAroundEntity(lua_State *L)
 		{
 			float angle = i*((2*PI)/float(num));
 
-			e = dsq->game->createEntity(idx, 0, pos + Vector(sin(angle)*radius, cos(angle)*radius), 0, false, name);
+			e = dsq->game->createEntity(idx, 0, pos + Vector(sinf(angle)*radius, cosf(angle)*radius), 0, false, name);
 		}
 	}
 	lua_pushnumber(L, 0);

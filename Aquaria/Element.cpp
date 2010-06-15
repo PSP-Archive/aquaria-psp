@@ -168,7 +168,7 @@ void Element::updateEffects(float dt)
 						weight = 1.0f-weight;
 					if (weight < 0.125f)
 						weight *= 0.5f;
-					wavy[i].x = sin(wavyAngleOffset + (float(i)/float(wavy.size()))*PI)*float(wavyMagnitude*wavyMagMult)*weight;
+					wavy[i].x = sinf(wavyAngleOffset + (float(i)/float(wavy.size()))*PI)*float(wavyMagnitude*wavyMagMult)*weight;
 					if (!wavySave.empty())
 					{
 						if (wavyLerpIn < 1)
