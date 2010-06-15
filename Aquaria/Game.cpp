@@ -7450,9 +7450,14 @@ void Game::onRecipes()
 
 void Game::onKeyConfig()
 {
+#ifdef BBGE_BUILD_PSP
+	// FIXME: This currently crashes on the PSP, so don't try opening it.
+	// Should probably make a simpler menu more suited to the PSP anyway.
+#else
 	dsq->screenTransition->capture();
 	toggleKeyConfigMenu(true);
 	dsq->screenTransition->transition(MENUPAGETRANSTIME);
+#endif
 }
 
 #define DEBUG_COOK
@@ -7931,6 +7936,13 @@ void Game::onToggleHelpScreen()
 
 void Game::toggleHelpScreen(bool on, const std::string &label)
 {
+#ifdef BBGE_BUILD_PSP
+	// FIXME: This currently crashes on the PSP, so don't try opening it.
+	// It looks like FTGL wants to render one quad per character, which
+	// massively overflows the memory we have available for display and
+	// vertex lists.
+	return;
+#endif
 	if (dsq->game->sceneEditor.isOn()) return;
 
 	if (inHelpScreen == on) return;
