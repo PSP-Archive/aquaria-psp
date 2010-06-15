@@ -459,7 +459,7 @@ public:
 		pendingInterpolation = false;
 		followingPath = false;
 		loopType = 0;
-		fakeTimePassed = 0;
+		//fakeTimePassed = 0;
 		ease = false;
 		timePassed = timePeriod = 0;
 	}
@@ -479,7 +479,7 @@ public:
 		pendingInterpolation = false;
 		followingPath = false;
 		loopType = 0;
-		fakeTimePassed = 0;
+		//fakeTimePassed = 0;
 		ease = false;
 		timePassed = timePeriod = 0;
 	}
@@ -489,7 +489,7 @@ public:
 	float interpolateTo (Vector vec, float timePeriod, int loopType = 0, bool pingPong = false, bool ease = false, InterpolateToFlag flag = NONE);
 	void update(float dt);
 
-	inline bool isInterpolating()
+	inline bool isInterpolating() const
 	{
 		return interpolating;
 	}
@@ -516,32 +516,32 @@ public:
 	EventPtr endOfPathEvent;
 
 	VectorPath path;
-
 	float pathTimer, pathTime;
+	float pathSpeed;
+	int currentPathNode;
+	float pathTimeMultiplier;
+
 	float timePassed, timePeriod;
 	Vector target;
 	Vector from;
 
 	float getPercentDone();
 
-	bool isFollowingPath()
+	inline bool isFollowingPath() const
 	{
 		return followingPath;
 	}
 
 	// for faking a single value
-	float getValue()
+	inline float getValue() const
 	{
 		return x;
 	}
 
-	float pathSpeed;
-	int currentPathNode;
-	float pathTimeMultiplier;
 protected:
 	
 	float timeSpeedMultiplier, timeSpeedEase;
-	float fakeTimePassed;
+	//float fakeTimePassed;
 	bool speedPath;
 	bool ease;
 	bool followingPath;

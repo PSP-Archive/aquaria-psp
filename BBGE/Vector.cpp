@@ -385,7 +385,7 @@ float InterpolatedVector::interpolateTo(Vector vec, float timePeriod, int loopTy
 
 	this->ease = ease;
 	timePassed = 0;
-	fakeTimePassed = 0;
+	//fakeTimePassed = 0;
 	if (timePeriod < 0)
 	{
 		timePeriod = -timePeriod;
