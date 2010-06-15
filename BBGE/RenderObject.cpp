@@ -54,11 +54,6 @@ int RenderObject::getTopLayer()
 	return layer;
 }
 
-RenderObject *RenderObject::getParent()
-{
-	return parent;
-}
-
 void RenderObject::applyBlendType()
 {
 #ifdef BBGE_BUILD_OPENGL
@@ -216,6 +211,7 @@ RenderObject::RenderObject()
 	life = maxLife = 1;
 	decayRate = 0;
 	_dead = false;
+	_hidden = false;
 	fadeAlphaWithLife = false;
 	blendType = 0;
 	lifeAlphaFadeMultiplier = 1;
@@ -553,6 +549,8 @@ bool RenderObject::hasRenderPass(const int pass)
 
 void RenderObject::render()
 {
+	if (isHidden()) return;
+
 	/// new (breaks anything?)
 	if (alpha.x == 0 || alphaMod == 0) return;
 
@@ -1209,10 +1207,13 @@ void RenderObject::update(float dt)
 	{
 		dt = core->get_old_dt();
 	}
-	if (!_dead)
+	if (!isDead())
 	{
 		dt *= updateMultiplier;
 		onUpdate(dt);
+
+		if (isHidden())
+			return;
 
 		for (Children::iterator i = children.begin(); i != children.end(); i++)
 		{
@@ -1308,6 +1309,10 @@ void RenderObject::onUpdate(float dt)
 	if (isDead()) return;
 	//collisionShape.updatePosition(position);
 	updateLife(dt);
+
+	// FIXME: We might not need to do lifetime checks either; I just
+	// left that above for safety since I'm not certain.  --achurch
+	if (isHidden()) return;
 
 	/*
 	width.update(dt);

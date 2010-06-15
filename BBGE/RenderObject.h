@@ -99,7 +99,13 @@ public:
 	void matrixChain();
 
 	virtual void update(float dt);
-	bool isDead() {return _dead;}
+	bool isDead() const {return _dead;}
+	bool isHidden() const {return _hidden || (parent && parent->isHidden());}
+
+	// Set whether the object is hidden.  If hidden, no updates (except
+	// lifetime checks) or render operations will be performed, and no
+	// child objects will be updated or rendered.
+	void setHidden(bool hidden) {_hidden = hidden;}
 
 	InterpolatedVector position, scale, color, alpha, rotation;
 	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;
@@ -258,7 +264,7 @@ public:
 
 	void lookAt(const Vector &pos, float t, float minAngle, float maxAngle, float offset=0);
 	bool ignoreUpdate;
-	RenderObject *getParent();
+	RenderObject *getParent() const {return parent;}
 	void applyBlendType();
 	void fhTo(bool fh);
 	void addDeathNotify(RenderObject *r);
@@ -328,6 +334,7 @@ protected:
 	float decayRate;
 	float maxLife;
 	bool _dead;
+	bool _hidden;
 	static InterpolatedVector savePosition;
 };
 

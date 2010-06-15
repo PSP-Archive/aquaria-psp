@@ -1401,6 +1401,44 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 		menuBg->scale = menuBgScale*0.5f;
 		menuBg->scale.interpolateTo(menuBgScale, t);
 		menuBg->alpha.interpolateTo(1, t*0.5f);
+		menuBg->setHidden(false);
+
+		// FIXME: This gets a little verbose because of all the
+		// individual non-child objects.  Is there a reason they
+		// can't all be children of menuBg?  --achurch
+		opt_save->setHidden(false);
+		opt_cancel->setHidden(false);
+		options->setHidden(false);
+		keyConfigButton->setHidden(false);
+		cook->setHidden(false);
+		foodSort->setHidden(false);
+		recipes->setHidden(false);
+		use->setHidden(false);
+		prevFood->setHidden(false);
+		nextFood->setHidden(false);
+		prevTreasure->setHidden(false);
+		nextTreasure->setHidden(false);
+		circlePageNum->setHidden(false);
+		previewRecipe->setHidden(false);
+		showRecipe->setHidden(false);
+		recipeMenu.scroll->setHidden(false);
+		recipeMenu.scrollEnd->setHidden(false);
+		recipeMenu.header->setHidden(false);
+		recipeMenu.page->setHidden(false);
+		recipeMenu.prevPage->setHidden(false);
+		recipeMenu.nextPage->setHidden(false);
+		menuDescription->setHidden(false);
+		eAre->setHidden(false);
+		eYes->setHidden(false);
+		eNo->setHidden(false);
+		menuIconGlow->setHidden(false);
+		for (int i = 0; i < menu.size(); i++)
+			menu[i]->setHidden(false);
+		for (int i = 0; i < treasureSlots.size(); i++)
+			treasureSlots[i]->setHidden(false);
+		treasureDescription->setHidden(false);
+		for (int i = 0; i < foodSlots.size(); i++)
+			foodSlots[i]->setHidden(false);
 
 
 		if (dsq->game->miniMapRender)
@@ -1638,6 +1676,41 @@ void Game::hideInGameMenu(bool effects)
 
 		dsq->routeShoulder = true;
 	}
+
+	menuBg->setHidden(true);
+	opt_save->setHidden(true);
+	opt_cancel->setHidden(true);
+	options->setHidden(true);
+	keyConfigButton->setHidden(true);
+	cook->setHidden(true);
+	foodSort->setHidden(true);
+	recipes->setHidden(true);
+	use->setHidden(true);
+	prevFood->setHidden(true);
+	nextFood->setHidden(true);
+	prevTreasure->setHidden(true);
+	nextTreasure->setHidden(true);
+	circlePageNum->setHidden(true);
+	previewRecipe->setHidden(true);
+	showRecipe->setHidden(true);
+	recipeMenu.scroll->setHidden(true);
+	recipeMenu.scrollEnd->setHidden(true);
+	recipeMenu.header->setHidden(true);
+	recipeMenu.page->setHidden(true);
+	recipeMenu.prevPage->setHidden(true);
+	recipeMenu.nextPage->setHidden(true);
+	menuDescription->setHidden(true);
+	eAre->setHidden(true);
+	eYes->setHidden(true);
+	eNo->setHidden(true);
+	menuIconGlow->setHidden(true);
+	for (int i = 0; i < menu.size(); i++)
+		menu[i]->setHidden(true);
+	for (int i = 0; i < treasureSlots.size(); i++)
+		treasureSlots[i]->setHidden(true);
+	treasureDescription->setHidden(true);
+	for (int i = 0; i < foodSlots.size(); i++)
+		foodSlots[i]->setHidden(true);
 }
 
 void Game::onLeftMouseButton()
@@ -3646,6 +3719,7 @@ void Game::createInGameMenu()
 	group_keyConfig->shareAlphaWithChildren = 1;
 	group_keyConfig->followCamera = 1;
 	group_keyConfig->alpha = 0;
+	group_keyConfig->setHidden(true);
 
 	group_keyConfig->position = Vector(0, -40);
 
@@ -9426,6 +9500,7 @@ void Game::toggleKeyConfigMenu(bool f)
 
 		keyConfigMenu = true;
 
+		group_keyConfig->setHidden(false);
 		group_keyConfig->alpha = 1;
 
 		dsq->user_bcontrol = dsq->user;
@@ -9465,6 +9540,7 @@ void Game::toggleKeyConfigMenu(bool f)
 		keyConfigMenu = false;
 
 		group_keyConfig->alpha = 0;
+		group_keyConfig->setHidden(true);
 
 		opt_cancel->alpha = 0;
 		opt_save->alpha = 0;
