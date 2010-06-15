@@ -1,0 +1,256 @@
+About the Aquaria PSP port
+==========================
+
+This is an unofficial, work-in-progress port of Aquaria to the Sony PSP.
+At present, it is marginally playable through the first few areas, but
+still runs very slowly.
+
+
+Important notice (limitations of this version)
+----------------------------------------------
+Due to Aquaria's memory requirements, the game will only run on a PSP-2000
+("Slim") or later.  Aquaria will _not_ run on a PSP-1000 ("Phat").  Sorry!
+
+Also due to memory limitations, the world map will not show which areas
+you have already visited or not yet visited.  If you're daring, see the
+note in Aquaria/DSQ.h and define AQUARIA_BUILD_MAPVIS at your own risk.
+
+Save early and often!  Aquaria seems to have a few memory leaks or
+fragmentation issues which would be unnoticeable on a PC, but which
+quickly run the PSP out of resources, leading to a crash.  Sometimes it
+helps to exit the game (to the PSP's menu) after saving, then restart and
+reload your game.
+
+At present, it is just barely possible to advance to the Home Waters area
+if the sound cache is disabled (see the DISABLE_SOUND_CACHE option in the
+Makefile); with the sound cache enabled, the game crashes due to a lack of
+memory.  The major culprit seems to be Lua, which requires 100k+ of memory
+per state object, and Aquaria allocates a new state object for every
+script it executes (potentially dozens or even hundreds).
+
+Other issues:
+   - The Key Config menu and Help screen crash the game, so they have been
+     disabled for the PSP.  (The most likely cause seems to be that the
+     rendering method used by the FTGL library is too inefficient for use
+     on the PSP; it might be necessary to use prerendered screens.)
+
+
+Build prerequisites
+-------------------
+The PSP port of Aquaria uses the unofficial PSP SDK from ps2dev.org; the
+author builds using Subversion revision 2494 of that SDK.  You will
+naturally need a cross-compiler as well; the code assumes GCC, and was
+built using GCC 4.4.3.
+
+In order to build Aquaria for PSP, you should also have the following
+packages prebuilt and installed for the PSP cross-compiling environment:
+    libpng
+    zlib
+    freetype (optional)
+    libogg (optional)
+    libvorbis (optional)
+    lua (optional)
+If you don't have one or more of the optional packages installed, you can
+set the appropriate Makefile variable to zero to use the version included
+in the Aquaria source code distribution (see "Building the source" below).
+
+Gentoo Linux users can download a Portage overlay from
+http://achurch.org/cgi-bin/hg/portage-psp/ which includes ebuilds for all
+of the above packages.  To install them:
+    emerge psp-binutils psp-gcc pspsdk
+    emerge -1 psp-gcc pspsdk  # to install the C++ portions
+    emerge psp-zlib psp-libpng psp-libogg psp-libvorbis psp-lua psp-freetype
+If you have the "layman" tool installed, add the URL:
+    http://achurch.org/portage-psp-layman.xml
+to your layman configuration file, then run "layman -f" followed by
+"layman -a psp-devel" to add the Portage overlay to your system.
+
+
+Building the source
+-------------------
+The PSP port of Aquaria uses a traditional Makefile rather than the CMake
+build system (mostly because CMake is poorly suited to cross-compiling).
+To build Aquaria for PSP, simply run "make" in the "PSP" directory.  You
+will probably need GNU Make (http://www.gnu.org/software/make/) to build
+correctly; this is installed by default on all modern Linux distributions,
+but you may need to install it yourself on other systems.
+
+If you have the PSP SDK and other libraries installed in a location other
+than /usr/psp, you can pass the "PSPROOT=/path/to/psp/root" and
+"PSPSDK=/path/to/psp/sdk" options on the "make" command line.  For
+example, if you have headers and libraries installed in /usr/local/psp
+and the SDK in /usr/local/psp/sdk, run: "make PSPROOT=/usr/local/psp" to
+build.
+
+For some packages, you can choose between the version of the package
+installed on your system (if any) and the version included in the Aquaria
+source code distribution.  For example, by passing "USE_INSTALLED_LUA=0"
+on the "make" command line, the build will use the version of Lua
+included under the "Aquaria" source directory rather than any version you
+may have already built for the PSP on your system.  See the top of the
+Makefile for a full list of such packages.  (Note that the build process
+does _not_ autodetect whether you have the packages installed, and will
+attempt to use preinstalled libraries for all packages unless you specify
+otherwise.)
+
+The Makefile normally prints a single concise line for each build action,
+such as compiling a source file.  To see the actual commands being
+executed, pass "V=1" on the "make" command line.
+
+If you get a "multiple definition of 'strtof'" error during the final
+link, either:
+    1) do a "make clean", then re-run "make" with "CAN_OVERRIDE_STRTOF=0"
+       on the command line; or
+    2) patch the "newlib" library to allow the strtof() function to be
+       overridden, rebuild and reinstall newlib, then run "make" to
+       repeat the final link of Aquaria.
+See the Makefile for details.  For Gentoo Linux users, the "pspsdk"
+package in the Portage overlay at http://achurch.org includes an
+appropriate newlib patch.
+
+If you want the game and the system save files (settings and achievements)
+to have custom icons, set the ICON0_* variables appropriately in the
+Makefile.  The default setting uses the Aquaria title logo from the
+commercial distribution, which is not included with this source code.
+You will need the Netpbm package installed to generate the icon file.
+
+Running "make clean" will remove the executable, object code, and related
+files.  "make spotless" will remove those files as well as the dependency
+control files used by the Makefile itself, and should give you a pristine
+source tree.
+
+
+Installing
+----------
+To install Aquaria, create a directory on your PSP's Memory Stick under
+/PSP/GAME, perhaps /PSP/GAME/AQUARIA, and copy into that directory:
+
+    EBOOT.PBP (created by the build)
+    ICON0.PNG (created by the build if you specified an icon file)
+
+    _Either:_
+        The following directories from the commercial Aquaria distribution:
+            data, gfx, mus, scripts, sfx, vox
+    _Or:_
+        aquaria.dat (see "Using a package file" below)
+
+    Optionally, the _mods directory from the commercial distribution,
+        along with any user-created mods you want to install (however,
+        mods that require a mouse, such as editors, may not work properly)
+
+However, see the "Converting data files" and "Using a package file"
+sections below for important notes regarding the data files.
+
+
+Default controls
+----------------
+The default controls for PSP are as follows:
+
+Analog pad      -- move Naija
+Directional pad -- select options in menus
+L/R triggers    -- change page in menus
+Cross    -- swim faster; select menu option (left mouse button equivalent)
+Circle   -- interact with object, other actions (right mouse button equiv.)
+Square   -- revert to normal form; select food for cooking
+Triangle -- display world map; remove food from cooking slot
+Start    -- open/close in-game menu; pause cutscene
+Select   -- cook food; skip cutscene when paused
+
+In the world map, use the analog pad to scroll, or hold Circle while
+moving the analog pad up or down to zoom.
+
+
+Save files
+----------
+Aquaria for PSP saves all of its data, both saved games and system data,
+using the PSP's native save data system.  The save files will show up on
+the PSP's save data menu just like save data from other games.  Saved
+game files use a screenshot from the game as the save file image, just
+like the in-game load/save menu; system data files (user settings and
+achievements) use the same icon as the game itself, if you created one
+when you built the program (see above).
+
+One side effect of using the PSP's save data system is that the user
+settings file cannot be edited outside of Aquaria, since the PSP
+automatically checksums and encrypts all save files.  For normal play
+this should not be a problem, but if the Makefile variable
+ALLOW_SETTINGS_OVERRIDE is set to 1, Aquaria will attempt to load a
+"usersettings.xml" file on startup, and will use that file if it exists
+rather than loading the PSP save file.  However, settings changed in the
+in-game options menu are saved _only_ to the PSP save file, so those
+changes will not appear when the game is restarted unless the
+"usersettings.xml" file is removed or renamed.
+
+
+Converting data files
+---------------------
+While Aquaria for PSP will run with the stock data files distributed
+with the commercial version of the game, it will run very slowly.  This
+is due to the significant cost of decompressing and shrinking (because
+the PSP can't handle textures larger than 512x512 pixels) all of the PNG
+textures on load, and the extreme effort required to decode Ogg Vorbis
+audio on the PSP (a single stereo stream consumes around 50% CPU time,
+even at the highest possible CPU clock speed).
+
+To address this problem, there are two tools in the "tools" subdirectory:
+"pngtotex" and "oggtomp3".  The former converts PNG textures to half-size,
+uncompressed ".tex" data files which the PSP can read in quickly, while
+the latter converts Ogg Vorbis audio to MP3, which the PSP can decode on
+a separate processor to save time.  It is _very_ strongly recommended
+that you use these tools to convert all of the Aquaria data files before
+running Aquaria on the PSP.
+
+When loading textures or sound files, the PSP port will automatically
+look for ".tex" and ".mp3" files with the same name and in the same
+directory as the file being loaded, and will use those files if they
+exist.  However (as of the present version), you must keep the original
+PNG and Ogg files as well for Aquaria to work correctly.
+
+To build the tools, run "make tools" from the "PSP" directory.  You will
+need the zlib, libpng, libogg, libvorbis, and lame packages installed
+(on your native system, of course).
+
+There is also a script in the "tools" directory, "convert-all-data.sh",
+which you can use to convert all PNG and Ogg files in one go.  Run the
+script without any command line parameters for documentation.
+
+
+Using a package file
+--------------------
+Aquaria for PSP has the ability to load its data files from a "package
+file", which is a single file containing all of the data used by Aquaria.
+The use of a package file can improve load times dramatically; in one
+early test, the time taken on the initial loading screen dropped from
+460 seconds (nearly eight minutes!) to just 14 seconds.
+
+The package file format used by the PSP port of Aquaria is called "PKG",
+for lack of a better name, and is generated by the "build-pkg" tool in
+the "PSP/tools" directory.  There is also a script, "create-package.sh",
+which will save you the time of writing the "build-pkg" control file
+needed to create the package file for Aquaria.
+
+One caveat to keep in mind is that any directory included in the package
+file will _not_ be searched on the Memory Stick when looking for files.
+For example, if you include a "_mods" directory in the package file, you
+will not later be able to add mods by creating a "_mods" subdirectory in
+the Aquaria installation directory on your Memory Stick.
+
+
+Notes on the source code
+------------------------
+Much of the PSP port's source code was taken from an engine I developed
+for another game.  There is a fair amount of code which is unused by
+Aquaria, but which I included because it was simpler than going through
+and determining which parts to cut and paste.  Also be aware that much of
+the source code documentation is in Japanese, which is the comment
+language I used for that engine.
+
+
+Author/copyright
+----------------
+Aquaria was ported to the PSP by Andrew Church <achurch@achurch.org>.
+Unless noted otherwise in the specific source file, all source code in
+the "PSP" directory tree is copyright (C) 2010 Andrew Church, and may be
+redistributed under the terms of the GNU General Public License version 2
+or later.  See COPYING.txt in the top directory of the Aquaria source
+distribution for a copy of version 2 of the GPL.
