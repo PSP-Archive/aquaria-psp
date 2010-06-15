@@ -193,7 +193,7 @@ RenderObject::RenderObject()
 	_fv = false;
 	_fh = false;
 	updateCull = -1;
-	rotateFirst = true;
+	//rotateFirst = true;
 	layer = LR_NONE;
 	cull = true;
 
@@ -201,27 +201,27 @@ RenderObject::RenderObject()
 
 	positionSnapTo = 0;
 
-	updateMultiplier = 1;
+	//updateMultiplier = 1;
 	blendEnabled = true;
 	texture = 0;
 	scale = Vector(1,1,1);
 	color = Vector(1,1,1);
 	alpha.x = 1;
-	mode = 0;
+	//mode = 0;
 	life = maxLife = 1;
 	decayRate = 0;
 	_dead = false;
 	_hidden = false;
 	fadeAlphaWithLife = false;
-	blendType = 0;
-	lifeAlphaFadeMultiplier = 1;
+	blendType = BLEND_DEFAULT;
+	//lifeAlphaFadeMultiplier = 1;
 	followCamera = 0;
 	stateData = 0;
 	parent = 0;
-	useColor = true;
+	//useColor = true;
 	renderBeforeParent = false;
-	followXOnly = false;
-	renderOrigin = false;
+	//followXOnly = false;
+	//renderOrigin = false;
 	shareAlphaWithChildren = false;
 	shareColorWithChildren = false;
 	touchDamage = 0;	
@@ -829,6 +829,7 @@ void RenderObject::renderCall()
 
 
 		//glDisable(GL_CULL_FACE);
+		/* Never set anywhere.  --achurch
 		if (renderOrigin)
 		{
 #ifdef BBGE_BUILD_OPENGL
@@ -850,6 +851,7 @@ void RenderObject::renderCall()
 			glEnd();
 #endif
 		}
+		*/
 	}
 
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
@@ -859,7 +861,7 @@ void RenderObject::renderCall()
 	}
 
 
-	if (useColor)
+	//if (useColor)
 	{
 #ifdef BBGE_BUILD_OPENGL
 		if (rlayer && (rlayer->color.x != 1.0f || rlayer->color.y != 1.0f || rlayer->color.z != 1.0f))
@@ -1209,7 +1211,7 @@ void RenderObject::update(float dt)
 	}
 	if (!isDead())
 	{
-		dt *= updateMultiplier;
+		//dt *= updateMultiplier;
 		onUpdate(dt);
 
 		if (isHidden())
@@ -1249,7 +1251,7 @@ void RenderObject::safeKill()
 	alpha = 0;
 	life = 0;
 	onEndOfLife();
-	deathEvent.call();
+	//deathEvent.call();
 	for (RenderObjectList::iterator i = deathNotifications.begin(); i != deathNotifications.end(); i++)
 	{
 		(*i)->deathNotify(this);

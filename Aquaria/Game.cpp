@@ -2888,7 +2888,7 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 
 		q->collisionMaskRadius = 0;
 
-		q->collisionMaskHalfVector = Vector(q->getWidth()/2, q->getHeight()/2);
+		Vector collisionMaskHalfVector = Vector(q->getWidth()/2, q->getHeight()/2);
 
 		for (int tx = 0; tx < (q->getWidth()*q->scale.x); tx+=TILE_SIZE)
 		{
@@ -2931,7 +2931,7 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 					obs.push_back(tile);
 
 					// + Vector(0,TILE_SIZE)
-					q->collisionMask.push_back(tile.worldVector() - q->collisionMaskHalfVector);
+					q->collisionMask.push_back(tile.worldVector() - collisionMaskHalfVector);
 				}
 			}
 		}

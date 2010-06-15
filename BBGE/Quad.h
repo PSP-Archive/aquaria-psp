@@ -59,21 +59,10 @@ public:
 	Quad();	
 	void createGrid(int x, int y);
 	void destroy();
-	InterpolatedVector llalpha, lralpha, ulalpha, uralpha;
 	bool isCoordinateInside(Vector coord, int minSize=0);
 	bool isCoordinateInsideWorld(const Vector &coord, int minSize=0);
 	bool isCoordinateInsideWorldRect(const Vector &coord, int w, int h);
-	bool oriented;
-	InterpolatedVector upperLeftTextureCoordinates, lowerRightTextureCoordinates;
-	InterpolatedVector upperLeftColor, upperRightColor, lowerLeftColor, lowerRightColor;
 
-	enum GridType
-	{
-		GRID_WAVY	= 0,
-		GRID_SET	= 1
-	};
-	GridType gridType;
-	
 	int getCullRadius();
 
 	void flipVertical();
@@ -90,33 +79,48 @@ public:
 	
 	void setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);	
 	void setDrawGridAlpha(int x, int y, float alpha);
-	bool quadLighting;
 	void calculateQuadLighting();
 	void render();
-	bool renderQuad, renderBorder, renderCenter;
 	void repeatTextureToFill(bool on);
 	void refreshRepeatTextureToFill();
-	bool isRepeatingTextureToFill() { return repeatingTextureToFill; }
+	bool isRepeatingTextureToFill() const { return repeatingTextureToFill; }
 	void setGridPoints(bool vert, const std::vector<Vector> &points);
 	void setStrip(const std::vector<Vector> &strip);
 	virtual void createStrip(bool stripVert, int num);
 	float getStripSegmentSize();
-	std::vector<Vector>strip;
 	void resetStrip();
-	bool stripVert;
 	Vector ** getDrawGrid() { return drawGrid; }
-	Vector texOff;
 
 	static bool flipTY;
 	
 	void reloadDevice();
 
-	int autoWidth, autoHeight;
-
 	void deleteGrid();
+
+
+	InterpolatedVector upperLeftTextureCoordinates, lowerRightTextureCoordinates;
+	//InterpolatedVector upperLeftColor, upperRightColor, lowerLeftColor, lowerRightColor;
+	//InterpolatedVector llalpha, lralpha, ulalpha, uralpha;
+	//bool oriented;
+
+	enum GridType
+	{
+		GRID_WAVY	= 0,
+		GRID_SET	= 1
+	};
+	unsigned char gridType;  // unsigned char to save space
+
+	char autoWidth, autoHeight;  // char to save space
+	
+	bool quadLighting;
+	bool renderQuad, renderBorder, renderCenter;
+	bool stripVert;
+	std::vector<Vector>strip;
+	Vector texOff;
 
 	float borderAlpha;
 	Vector repeatToFillScale;
+
 protected:
 	float width, height;
 	bool repeatingTextureToFill;
@@ -124,6 +128,7 @@ protected:
 	float gridTimer;
 	int xDivs, yDivs;
 	Vector ** drawGrid;
+
 	void resetGrid();
 	void updateGrid(float dt);
 	void renderGrid();

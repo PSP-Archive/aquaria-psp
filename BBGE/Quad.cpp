@@ -278,11 +278,11 @@ void Quad::initQuad()
 	renderBorder = false;
 	renderCenter = true;
 	width = 2; height = 2;
-	llalpha = Vector(1);
-	lralpha = Vector(1);
-	ulalpha = Vector(1);
-	uralpha = Vector(1);
-	oriented = false;
+	//llalpha = Vector(1);
+	//lralpha = Vector(1);
+	//ulalpha = Vector(1);
+	//uralpha = Vector(1);
+	//oriented = false;
 	upperLeftTextureCoordinates = Vector(0,0);
 	lowerRightTextureCoordinates = Vector(1,1);
 	renderQuad = true;
