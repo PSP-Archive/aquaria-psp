@@ -98,8 +98,10 @@ public:
 	typedef std::map<std::string, ShotData> ShotBank;
 	static ShotBank shotBank;
 
+	static void (*loadProgressCallback)();
 
-	static void loadShotBank(const std::string &bank1, const std::string &bank2);
+
+	static void loadShotBank(const std::string &bank1, const std::string &bank2, void progressCallback() = NULL);
 	static void clearShotBank();
 	static ShotData* getShotData(const std::string &ident);
 	static void loadBankShot(const std::string &ident, Shot *shot);

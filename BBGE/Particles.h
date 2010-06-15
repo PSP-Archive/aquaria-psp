@@ -197,7 +197,7 @@ class ParticleManager
 public:
 	ParticleManager(int size);
 	void setSize(int size);
-	void loadParticleBank(const std::string &bank1, const std::string &bank2);
+	void loadParticleBank(const std::string &bank1, const std::string &bank2, void progressCallback() = NULL);
 	void clearParticleBank();
 
 	Particle *getFreeParticle(Emitter *emitter);
@@ -226,6 +226,8 @@ public:
 	Vector *getSuckPosition(int idx);
 
 	static std::string particleBankPath;
+
+	void (*loadProgressCallback)();
 
 protected:
 

@@ -30,6 +30,8 @@ Shot::ShotBank Shot::shotBank;
 
 std::string Shot::shotBankPath = "";
 
+void (*Shot::loadProgressCallback)() = NULL;
+
 ShotData::ShotData()
 {
 	avatarKickBack= 0;
@@ -327,6 +329,9 @@ Shot::Shot() : Quad(), Segmented(0,0)
 
 void loadShotCallback(const std::string &filename, intptr_t param)
 {
+	if (Shot::loadProgressCallback)
+		Shot::loadProgressCallback();
+
 	ShotData shotData;
 
 	std::string ident;
@@ -338,8 +343,10 @@ void loadShotCallback(const std::string &filename, intptr_t param)
 	Shot::shotBank[ident] = shotData;
 }
 
-void Shot::loadShotBank(const std::string &bank1, const std::string &bank2)
+void Shot::loadShotBank(const std::string &bank1, const std::string &bank2, void progressCallback())
 {
+	loadProgressCallback = progressCallback;
+
 	clearShotBank();
 
 	shotBankPath = bank1;
@@ -352,6 +359,8 @@ void Shot::loadShotBank(const std::string &bank1, const std::string &bank2)
 	}
 
 	shotBankPath = "";
+
+	loadProgressCallback = NULL;
 }
 
 void Shot::clearShotBank()

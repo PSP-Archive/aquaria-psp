@@ -41,6 +41,8 @@ ParticleManager::ParticleManager(int size)
 
 	numActive = 0;
 
+	loadProgressCallback = NULL;
+
 	setSize(size);
 }
 
@@ -408,6 +410,12 @@ Particle *ParticleManager::getFreeParticle(Emitter *emitter)
 
 void loadParticleCallback(const std::string &filename, intptr_t param)
 {
+	ParticleManager *pm;
+	pm = (ParticleManager*)param;
+
+	if (pm->loadProgressCallback)
+		pm->loadProgressCallback();
+
 	ParticleEffect *e = new ParticleEffect();
 
 	std::string ident;
@@ -420,20 +428,24 @@ void loadParticleCallback(const std::string &filename, intptr_t param)
 	particleBank[ident] = e;
 }
 
-void ParticleManager::loadParticleBank(const std::string &bank1, const std::string &bank2)
+void ParticleManager::loadParticleBank(const std::string &bank1, const std::string &bank2, void progressCallback())
 {
+	loadProgressCallback = progressCallback;
+
 	clearParticleBank();
 
 	particleBankPath = bank1;
-	forEachFile(bank1, ".txt", loadParticleCallback, 0);
+	forEachFile(bank1, ".txt", loadParticleCallback, (intptr_t)this);
 
 	if (!bank2.empty())
 	{
 		particleBankPath = bank2;
-		forEachFile(bank2, ".txt", loadParticleCallback, 0);
+		forEachFile(bank2, ".txt", loadParticleCallback, (intptr_t)this);
 	}
 
 	particleBankPath = "";
+
+	loadProgressCallback = NULL;
 }
 
 void ParticleManager::loadParticleEffectFromBank(const std::string &name, ParticleEffect *load)

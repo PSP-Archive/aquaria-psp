@@ -848,7 +848,11 @@ static const float loadingProgressTable[] = {
 	#define LOAD_GRAPHICS2	5  // After creating more graphics resources
 	#define LOAD_TEXTURES	6  // After loading textures to be precached
 	#define LOAD_FINISHED	7  // All done!
+#ifdef BBGE_BUILD_PSP
+	0.01, 0.11, 0.55, 0.58, 0.59, 0.60, 0.89, 1.00,
+#else
 	0.01, 0.06, 0.51, 0.52, 0.53, 0.54, 0.89, 1.00,
+#endif
 };
 
 void loadBit(int index, float perc = 1)
@@ -897,6 +901,24 @@ void loadBitForTexPrecache()
 	}
 	texturesLoaded++;
 }
+
+#ifdef BBGE_BUILD_PSP
+// FIXME: This is currently very slow on the PSP, so we need a callback.
+unsigned int particlesLoaded = 0;
+const unsigned int particlesExpected = 353;
+void loadBitForParticles()
+{
+	if (particlesLoaded > 0 && particlesLoaded < particlesExpected)
+	{
+		if (particlesLoaded % 10 == 0)
+		{
+			loadBit(LOAD_PARTICLES,
+					(float)particlesLoaded / particlesExpected);
+		}
+	}
+	particlesLoaded++;
+}
+#endif
 
 
 void DSQ::setVersionLabelText() {
@@ -1239,8 +1261,13 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	debugLog("Loading Particle Bank...");
 	{
+#ifdef BBGE_BUILD_PSP
+		core->particleManager->loadParticleBank(particleBank1, particleBank2, loadBitForParticles);
+		Shot::loadShotBank(shotBank1, shotBank2, loadBitForParticles);
+#else
 		core->particleManager->loadParticleBank(particleBank1, particleBank2);
 		Shot::loadShotBank(shotBank1, shotBank2);
+#endif
 	}
 	debugLog("OK");
 
