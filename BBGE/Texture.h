@@ -52,6 +52,13 @@ public:
 
 	int getPixelWidth();
 	int getPixelHeight();
+
+	// Get the portion of each side of the texture which is completely
+	// transparent, as a fraction of the texture width or height.
+	float getLeftOffset() const   {return leftOffset;}
+	float getRightOffset() const  {return rightOffset;}
+	float getTopOffset() const    {return topOffset;}
+	float getBottomOffset() const {return bottomOffset;}
 	
 	void destroy();
 	
@@ -91,8 +98,9 @@ protected:
 	
 	void loadBMP(const std::string &file);
 
-	int ow,oh;
-	
+	int ow, oh;
+
+	float leftOffset, rightOffset, topOffset, bottomOffset;
 };
 
 #define UNREFTEX(x) if (x) {x->removeRef(); x=0;}

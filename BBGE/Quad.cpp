@@ -627,42 +627,94 @@ void Quad::onRender()
 		{
 			if (!drawGrid)
 			{
+				// Get texture and vertex coordinates
+				float s0 = upperLeftTextureCoordinates.x;
+				float s1 = lowerRightTextureCoordinates.x;
+				float t0, t1;
 				if (Quad::flipTY)
 				{
-					glBegin(GL_QUADS);
-					{
-						glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
-						glVertex2f(-_w2, +_h2);
-
-						glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
-						glVertex2f(+_w2, +_h2);
-
-						glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
-						glVertex2f(+_w2, -_h2);
-
-						glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
-						glVertex2f(-_w2, -_h2);
-					}
-					glEnd();
+					t0 = 1 - upperLeftTextureCoordinates.y;
+					t1 = 1 - lowerRightTextureCoordinates.y;
 				}
 				else
 				{
-					glBegin(GL_QUADS);
-					{
-						glTexCoord2f(upperLeftTextureCoordinates.x, upperLeftTextureCoordinates.y);
-						glVertex2f(-_w2, +_h2);
-
-						glTexCoord2f(lowerRightTextureCoordinates.x, upperLeftTextureCoordinates.y);
-						glVertex2f(+_w2, +_h2);
-
-						glTexCoord2f(lowerRightTextureCoordinates.x, lowerRightTextureCoordinates.y);
-						glVertex2f(+_w2, -_h2);
-
-						glTexCoord2f(upperLeftTextureCoordinates.x, lowerRightTextureCoordinates.y);
-						glVertex2f(-_w2, -_h2);
-					}
-					glEnd();
+					t0 = upperLeftTextureCoordinates.y;
+					t1 = lowerRightTextureCoordinates.y;
 				}
+				float x0 = -_w2, y0 = +_h2;
+				float x1 = +_w2, y1 = -_h2;
+
+				// Remove empty areas of the texture (if we have one)
+				if (texture)
+				{
+					float offset;
+					if ((offset = texture->getLeftOffset()) > 0)
+					{
+						if (s0 == 0)
+						{
+							s0 += offset;
+							x0 += offset * width;
+						}
+						else if (s1 == 0)
+						{
+							s1 += offset;
+							x1 -= offset * width;
+						}
+					}
+					if ((offset = texture->getRightOffset()) > 0)
+					{
+						if (s0 == 1)
+						{
+							s0 -= offset;
+							x0 += offset * width;
+						}
+						else if (s1 == 1)
+						{
+							s1 -= offset;
+							x1 -= offset * width;
+						}
+					}
+					if ((offset = texture->getTopOffset()) > 0)
+					{
+						if (t0 == 0)
+						{
+							t0 += offset;
+							y0 -= offset * height;
+						}
+						else if (t1 == 0)
+						{
+							t1 += offset;
+							y1 += offset * height;
+						}
+					}
+					if ((offset = texture->getBottomOffset()) > 0)
+					{
+						if (t0 == 1)
+						{
+							t0 -= offset;
+							y0 -= offset * height;
+						}
+						else if (t1 == 1)
+						{
+							t1 -= offset;
+							y1 += offset * height;
+						}
+					}
+				}
+
+				// Draw the quad
+				glBegin(GL_QUADS);
+				{
+					glTexCoord2f(s0, t0);
+					glVertex2f(x0, y0);
+					glTexCoord2f(s1, t0);
+					glVertex2f(x1, y0);
+					glTexCoord2f(s1, t1);
+					glVertex2f(x1, y1);
+					glTexCoord2f(s0, t1);
+					glVertex2f(x0, y1);
+				}
+				glEnd();
 			}
 			else
 			{

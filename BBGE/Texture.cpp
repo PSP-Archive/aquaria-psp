@@ -73,7 +73,9 @@ Texture::Texture() : Resource()
 	imageData = 0;
 	layer = 0;
 
-	ow=oh=-1;
+	ow = oh = -1;
+
+	leftOffset = rightOffset = topOffset = bottomOffset = 0;
 }
 
 Texture::~Texture()
@@ -495,6 +497,10 @@ void Texture::loadPNG(const std::string &file)
 			width = psptex->width;
 			height = psptex->height;
 		}
+		leftOffset   = (float)psptex->empty_l / (float)psptex->width;
+		rightOffset  = (float)psptex->empty_r / (float)psptex->width;
+		topOffset    = (float)psptex->empty_t / (float)psptex->height;
+		bottomOffset = (float)psptex->empty_b / (float)psptex->height;
 		glGenTextures(1, &textures[0]);
 		glBindTexture(GL_TEXTURE_2D, textures[0]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
