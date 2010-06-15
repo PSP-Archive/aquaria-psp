@@ -672,8 +672,8 @@ void AquariaKeyConfig::onUpdate(float dt)
 	Vector p = getWorldPosition();
 
 	if (waitingForInput == this || (!waitingForInput &&
-		(core->mouse.position.x > (p.x - bg->getWidth()*0.5) && core->mouse.position.x < (p.x + bg->getWidth()*0.5)
-		 && core->mouse.position.y > (p.y - bg->getHeight()*0.5) && core->mouse.position.y < (p.y + bg->getHeight()*0.5)
+		(core->mouse.position.x > (p.x - bg->getWidth()*0.5f) && core->mouse.position.x < (p.x + bg->getWidth()*0.5f)
+		 && core->mouse.position.y > (p.y - bg->getHeight()*0.5f) && core->mouse.position.y < (p.y + bg->getHeight()*0.5f)
 		 )))
 	{
 		if (waitingForInput != this)
@@ -925,8 +925,8 @@ bool AquariaMenuItem::isCursorInMenuItem()
 		hw = 64;
 	if (glow)
 	{
-		hw = glow->getWidth()/2.0;
-		hh = glow->getHeight()/2.0;
+		hw = glow->getWidth()/2.0f;
+		hh = glow->getHeight()/2.0f;
 	}
 	if (rotation.z == 90)
 	{

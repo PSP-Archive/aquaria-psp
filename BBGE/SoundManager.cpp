@@ -657,7 +657,7 @@ void SoundManager::update(float dt)
 	{
 		// fader value
 		
-		result = musicChannel->setVolume(musVol.y*1.0);
+		result = musicChannel->setVolume(musVol.y*1.0f);
 		checkError();
 		
 
@@ -1119,7 +1119,7 @@ void *SoundManager::playSfx(const PlaySfx &play)
 		FadeCh fade;
 		fade.c = channel;
 		fade.v = 0;
-		fade.s = 1.0/play.time;
+		fade.s = 1.0f/play.time;
 		fade.d = 1;
 		fade.to = play.vol;
 

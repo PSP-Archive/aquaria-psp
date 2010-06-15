@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 void prof_print(float x, float y, char *str)
 {
-	core->print(x, y-1.5*4, str, 6);
+	core->print(x, y-1.5f*4, str, 6);
 
 	//Prof_set_report_mode(Prof_HIERARCHICAL_TIME);
 	/*
@@ -39,7 +39,7 @@ float prof_width(char *str)
 	while (str[c] != '\0')
 	{
 		c++;
-		x += 1.2;
+		x += 1.2f;
 	}
 	x *= 6;
 	return x;

@@ -438,7 +438,7 @@ Element *DSQ::getSolidElementNear(Vector pos, int rad)
 
 Vector DSQ::getCameraCenter()
 {
-	return cameraPos; //+ Vector(400*(1.0/core->globalScale.x),300*(1.0/core->globalScale.x));
+	return cameraPos; //+ Vector(400*(1.0f/core->globalScale.x),300*(1.0f/core->globalScale.x));
 }
 
 void DSQ::doScript(const std::string &script)
@@ -471,7 +471,7 @@ void DSQ::centerMessage(const std::string &text, float y, int type)
 	t->alpha.path.addPathNode(0, 1);
 	t->alpha.startPath(time);
 	t->followCamera = 1;
-	t->setLife(time + 0.5);
+	t->setLife(time + 0.5f);
 	t->setDecayRate(1);
 	t->setText(text);
 	t->offset.interpolateTo(Vector(0, -40), 2, 0, 0, 1);
@@ -488,7 +488,7 @@ void DSQ::centerText(const std::string &text)
 	s->position = pos;
 	s->offset = Vector(1,1);
 	s->setText(text);
-	s->setLife(time + 0.5);
+	s->setLife(time + 0.5f);
 	s->setDecayRate(1);
 	s->followCamera = 1;
 	s->alpha.path.addPathNode(0, 0);
@@ -513,7 +513,7 @@ void DSQ::centerText(const std::string &text)
 	t->scale.interpolateTo(Vector(1, 1), 6);
 	*/
 	t->followCamera = 1;
-	t->setLife(time + 0.5);
+	t->setLife(time + 0.5f);
 	t->setDecayRate(1);
 	//t->scrollText(text, 0.1);
 	t->setText(text);
@@ -1016,7 +1016,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	float asp = float(user.video.resx)/float(user.video.resy);
 
 	
-	if (asp >= 1.0 && asp < 1.8)
+	if (asp >= 1.0f && asp < 1.8f)
 	{
 	}
 	else
@@ -1175,7 +1175,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	Vector loadShift(2, 0);
 
 	
-	Vector sz(800.0/1024.0, 600.0/768.0);
+	Vector sz(800.0f/1024.0f, 600.0f/768.0f);
 
 
 
@@ -2225,10 +2225,10 @@ void DSQ::playPositionalSfx(const std::string &sfx, const Vector &position, floa
 
 			int dist = diff.getLength2D();
 			// HACK: grr
-			int vol = 1.0 - int((dist*1.0) / 2000.0);
+			int vol = 1.0f - int((dist*1.0f) / 2000.0f);
 			//int vol = 1;
 			//int vol = 255;
-			int pan = (diff.x)/1024.0;
+			int pan = (diff.x)/1024.0f;
 			if (pan < -1)
 				pan = -1;
 			if (pan > 1)
@@ -2892,10 +2892,10 @@ void DSQ::createSaveSlots(SaveSlotMode ssm)
 
 
 	menu[1] = new Quad("gui/save-menu", Vector(400,300));
-	savesz = Vector(750.0/1024.0, 750.0/1024.0);
+	savesz = Vector(750.0f/1024.0f, 750.0f/1024.0f);
 	menu[1]->alpha = 0;
 	menu[1]->alpha.interpolateTo(1, t);
-	menu[1]->scale = savesz * 0.5;
+	menu[1]->scale = savesz * 0.5f;
 	menu[1]->scale.interpolateTo(savesz, t);
 	menu[1]->followCamera = 1;
 	addRenderObject(menu[1], LR_MENU);
@@ -3019,7 +3019,7 @@ void DSQ::createSaveSlotPage()
 			saveSlots[i]->position.y ++;
 
 		if (i == 1 || i == 3)
-			saveSlots[i]->position.y -= 0.5;
+			saveSlots[i]->position.y -= 0.5f;
 
 		addRenderObject(saveSlots[i], LR_FILEMENU);
 	}
@@ -3127,7 +3127,7 @@ void DSQ::clearSaveSlots(bool trans)
 		}
 		if (menu.size() >= 2)
 		{
-			menu[1]->scale.interpolateTo(savesz*0.5, t);
+			menu[1]->scale.interpolateTo(savesz*0.5f, t);
 			menu[1]->alpha.interpolateTo(0, t);
 			watch(t);
 		}
@@ -3293,7 +3293,7 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 	bgLabel->followCamera = 1;
 	bgLabel->alpha = 0;
 	bgLabel->alpha.interpolateTo(1, t);
-	//bgLabel->setWidthHeight(512*0.9, 256*0.9);
+	//bgLabel->setWidthHeight(512*0.9f, 256*0.9f);
 	bgLabel->scale = Vector(0.5, 0.5);
 	bgLabel->scale.interpolateTo(Vector(1,1), t);
 	addRenderObject(bgLabel, LR_CONFIRM);
@@ -3472,7 +3472,7 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 	bool delDown = false;
 	bool escDown = false;
 
-	float dt = 1.0/60.0;
+	float dt = 1.0f/60.0f;
 	float blinkTimer = 0;
 	bool blink = false;
 
@@ -3546,7 +3546,7 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 		}
 
 		blinkTimer += dt;
-		if (blinkTimer > 0.2)
+		if (blinkTimer > 0.2f)
 		{
 			blink = !blink;
 			blinkTimer = 0;
@@ -3662,7 +3662,7 @@ void DSQ::updateVoiceVolume()
 {
 	if (streamingVoice)
 	{
-		BASS_ChannelSlideAttributes(stream, -1, user.audio.voxvol*100.0, -101, 100);
+		BASS_ChannelSlideAttributes(stream, -1, user.audio.voxvol*100.0f, -101, 100);
 	}
 }
 */
@@ -3745,7 +3745,7 @@ Vector DSQ::getUserInputDirection(std::string labelText)
 
 	while (core->getKeyState(KEY_RETURN))
 	{
-		core->main(1.0/30.0);
+		core->main(1.0f/30.0f);
 	}
 	Vector v;
 	while (1)
@@ -3757,7 +3757,7 @@ Vector DSQ::getUserInputDirection(std::string labelText)
 		if (core->getKeyState(KEY_DOWN))		v.y = 1;
 		if (core->getKeyState(KEY_RETURN))
 			break;
-		core->main(1.0/30.0);
+		core->main(1.0f/30.0f);
 	}
 	label->alpha = 0;
 	label->safeKill();
@@ -4063,7 +4063,7 @@ void DSQ::watch(float t, int canQuit)
 		watchForQuit = true;
 	}
 
-	if (t != 0.0)
+	if (t != 0.0f)
 		core->main(t);
 	else
 		errorLog("Called Watch with time == 0 (forgot to include entityInclude?)");
@@ -4175,7 +4175,7 @@ void DSQ::onUpdate(float dt)
 		if (isCutscenePaused())
 		{
 			sound->pause();
-			float sec = 1.0/60.0;
+			float sec = 1.0f/60.0f;
 			while (isCutscenePaused())
 			{
 				pollEvents();
@@ -4508,7 +4508,7 @@ void DSQ::onUpdate(float dt)
 		}
 		else
 		{
-			cameraOffset = Vector((rand()%int(shakeCameraMag))-shakeCameraMag/2.0, (rand()%int(shakeCameraMag))-shakeCameraMag/2.0);
+			cameraOffset = Vector((rand()%int(shakeCameraMag))-shakeCameraMag/2.0f, (rand()%int(shakeCameraMag))-shakeCameraMag/2.0f);
 		}
 	}
 	
@@ -4636,7 +4636,7 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 		q->scale.interpolateTo(Vector(5,5),t);
 		/*
 		q->color = Vector(1,1,1);
-		q->color.interpolateTo(Vector(1,0,0),t-t*0.05);
+		q->color.interpolateTo(Vector(1,0,0),t-t*0.05f);
 		*/
 		q->alpha.path.addPathNode(0, 0);
 		q->alpha.path.addPathNode(0.75, 0.25);
@@ -4647,7 +4647,7 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 		q->setTexture("particles/EnergyRing");
 		if (target)
 			q->positionSnapTo = &target->position;
-		//q->rotation.interpolateTo(Vector(0,0,360), t+0.1);
+		//q->rotation.interpolateTo(Vector(0,0,360), t+0.1f);
 		game->addRenderObject(q, LR_PARTICLES);
 
 		if (target && target->getEntityType() == ET_AVATAR)
@@ -4695,7 +4695,7 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 		if (target)
 			q->positionSnapTo = &target->position;
 		*/
-		q->rotation.interpolateTo(Vector(0,0,q->rotation.z + 360), t+0.1);
+		q->rotation.interpolateTo(Vector(0,0,q->rotation.z + 360), t+0.1f);
 		game->addRenderObject(q, LR_PARTICLES);
 		}
 
@@ -4717,7 +4717,7 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 			*/
 			q->setTexture("particles/EnergyDeltas");
 			q->rotation.z = rand()%360;
-			//q->rotation.interpolateTo(Vector(0,0,-360), t+0.1);
+			//q->rotation.interpolateTo(Vector(0,0,-360), t+0.1f);
 			game->addRenderObject(q, LR_PARTICLES);
 		}
 	}
@@ -4800,22 +4800,22 @@ void DSQ::modifyDt(double &dt)
 		if (core->getKeyState(KEY_G))
 			dt = 0.075;
 		else if (core->getKeyState(KEY_F))
-			dt*=0.6;
+			dt*=0.6f;
 		else if (core->getKeyState(KEY_H))
 			dt = 0.04;
 		else
 		{
 			// frame cap
-			if (dt > 0.04)
-				dt = 0.04;
+			if (dt > 0.04f)
+				dt = 0.04f;
 		}
 		if (core->getKeyState(KEY_H))
 			stopVoice();
 	}
 	else
 	{
-		if (dt > 0.04)
-			dt = 0.04;
+		if (dt > 0.04f)
+			dt = 0.04f;
 	}
 
 	if (skippingCutscene)
@@ -4826,13 +4826,13 @@ void DSQ::modifyDt(double &dt)
 
 	if (frameOutputMode)
 	{
-		dt = 1.0/60.0;
+		dt = 1.0f/60.0f;
 		doScreenshot = true;
 	}
 
 	if (dsq->demo.mode == Demo::DEMOMODE_RECORD)
 	{
-		dt = 1.0/60.0;
+		dt = 1.0f/60.0f;
 	}
 }
 

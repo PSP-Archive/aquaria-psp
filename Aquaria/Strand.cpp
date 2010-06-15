@@ -62,10 +62,10 @@ void Strand::onRender()
 	glVertex2f(position.x, position.y);
 	glVertex2f(segments[0]->position.x, segments[0]->position.y);
 	float x,y;
-	float bit = 1.0/segments.size();
+	float bit = 1.0f/segments.size();
 	for (int i =0; i < segments.size()-1; i++)
 	{
-		float d=i*0.02;
+		float d=i*0.02f;
 		float d2=i*bit;
 		float used = 1 - d;
 		if (used < 0) used = 0;

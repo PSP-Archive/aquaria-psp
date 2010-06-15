@@ -227,7 +227,7 @@ protected:
 				q->scale = Vector(pscale, pscale);
 				//q->fadeAlphaWithLife = 1;
 				q->setLife(1);
-				q->setDecayRate(1.0/t);
+				q->setDecayRate(1.0f/t);
 				
 				q->setBlendType(BLEND_ADD);
 				addChild(q, PM_POINTER);
@@ -354,10 +354,10 @@ protected:
 		if (sz.x > zoomMax)
 			sz.x = sz.y = zoomMax;
 		
-		if (sz.x > 1.0)
+		if (sz.x > 1.0f)
 		{
-			scale.x = (1.0/sz.x);
-			scale.y = (1.0/sz.y);
+			scale.x = (1.0f/sz.x);
+			scale.y = (1.0f/sz.y);
 		}
 		else
 		{
@@ -605,7 +605,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 			setProperTileColor(tile);
 			
 			q->setWidthHeight(q->getWidth()*tile->scale, q->getHeight()*tile->scale);
-			q->scale = Vector(0.25*tile->scale2, 0.25*tile->scale2);
+			q->scale = Vector(0.25f*tile->scale2, 0.25f*tile->scale2);
 
 			if (tile == activeTile)
 				activeQuad = q;
@@ -1006,7 +1006,7 @@ void WorldMapRender::onUpdate(float dt)
 				if (activeTile && activeQuad)
 				{
 					float amt = dt*4;
-					float a2 = dt*0.1;
+					float a2 = dt*0.1f;
 
 					if (core->getShiftState())
 					{
@@ -1037,7 +1037,7 @@ void WorldMapRender::onUpdate(float dt)
 					}
 
 					activeQuad->position = activeTile->gridPos;
-					activeQuad->scale = Vector(0.25*activeTile->scale2, 0.25*activeTile->scale2);
+					activeQuad->scale = Vector(0.25f*activeTile->scale2, 0.25f*activeTile->scale2);
 				}
 			}
 		}
@@ -1121,9 +1121,9 @@ Vector WorldMapRender::getWorldToTile(WorldMapTile *tile, Vector position, bool 
 {
 	Vector p;
 	p = (position/TILE_SIZE) / (256*tile->scale);
-	p *= 256*tile->scale*0.25*tile->scale2;
+	p *= 256*tile->scale*0.25f*tile->scale2;
 	if (fromCenter)
-		p -= Vector((128.0*tile->scale)*(0.25*tile->scale2), (128*tile->scale)*(0.25*tile->scale2));
+		p -= Vector((128*tile->scale)*(0.25f*tile->scale2), (128*tile->scale)*(0.25f*tile->scale2));
 	if (tilePos)
 		p += tile->gridPos;
 	return p;

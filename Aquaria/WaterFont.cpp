@@ -57,7 +57,7 @@ void spawnWaterFontParticle(RenderObject *me, Vector position, int size, float l
 	q->velocity = Vector(sinf(angle)*spd,cosf(angle)*spd);
 	//q->velocity += vel;
 	q->setLife(1.0);
-	q->setDecayRate(1.0/t);
+	q->setDecayRate(1.0f/t);
 	q->rotation.z = rand()%360;
 	q->setWidthHeight(size, size);
 	q->position = position;
@@ -78,8 +78,8 @@ void WaterFont::onUpdate(float dt)
 {
 	BitmapText::onUpdate(dt);
 
-	Vector sp(position.x-alignWidth*0.5-15, 5+position.y+5);
-	Vector ep(position.x+alignWidth*0.5+15, 5+position.y+10);
+	Vector sp(position.x-alignWidth*0.5f-15, 5+position.y+5);
+	Vector ep(position.x+alignWidth*0.5f+15, 5+position.y+10);
 	pTime += dt;
 	while (pTime > interval)
 	{
@@ -93,7 +93,7 @@ void WaterFont::onUpdate(float dt)
 			debugLog(os.str());
 			*/
 			Vector d(rand()%200-100,rand()%200-100);
-			d *= 0.01;
+			d *= 0.01f;
 			spawnWaterFontParticle(this, p, 64, 1.2, LR_PARTICLES);
 		}
 		pTime -= interval;

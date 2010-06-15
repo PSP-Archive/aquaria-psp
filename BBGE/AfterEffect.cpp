@@ -232,7 +232,7 @@ void AfterEffectManager::render()
 		glScalef(core->invGlobalScale, core->invGlobalScale,0);
 		/*
 		static float angle=0;
-		angle += 0.03;
+		angle += 0.03f;
 		*/
 		//glRotatef(angle, 0, 0, 1);
 		//glColor4f(1,1,1,0.75);
@@ -259,7 +259,7 @@ void AfterEffectManager::render()
 		glScalef(core->invGlobalScale, core->invGlobalScale,0);
 		/*
 		static float angle;
-		angle += 0.03;
+		angle += 0.03f;
 		*/
 		//glRotatef(angle, 0, 0, 1);
 		//glColor4f(1,1,1,0.75);
@@ -624,11 +624,11 @@ void RippleEffect::update(float dt, Vector ** drawGrid, int xDivs, int yDivs)
 		{
 			float offset = +i/float(xDivs) +j/float(xDivs);
 			//drawGrid[i][j].x += sinf(time+offset)*amp;
-			drawGrid[i][j].y += cosf((time+offset)*2.5)*amp;
+			drawGrid[i][j].y += cosf((time+offset)*2.5f)*amp;
 		}
 	}
 	*/
-	time += dt*0.5;
+	time += dt*0.5f;
 	float amp = 0.002;
 	for (int i = 0; i < (xDivs-1); i++)
 	{
@@ -636,8 +636,8 @@ void RippleEffect::update(float dt, Vector ** drawGrid, int xDivs, int yDivs)
 		{
 			float offset = i/float(xDivs) + (core->screenCenter.x/float(core->width)/2) +j/float(xDivs) + (core->screenCenter.y/float(core->height)/2);
 			//drawGrid[i][j].x += sinf(time+offset)*amp;
-			drawGrid[i][j].x += sinf((time+offset)*7.5)*(amp*0.5);
-			drawGrid[i][j].y += cosf((time+offset)*7.5)*amp;
+			drawGrid[i][j].x += sinf((time+offset)*7.5f)*(amp*0.5f);
+			drawGrid[i][j].y += cosf((time+offset)*7.5f)*amp;
 		}
 	}
 }

@@ -168,7 +168,7 @@ void Mod::start()
 
 	float t = 1;
 	dsq->overlay->alpha.interpolateTo(1, t);
-	core->sound->fadeMusic(SFT_OUT, t*0.9);
+	core->sound->fadeMusic(SFT_OUT, t*0.9f);
 
 	core->main(t);
 

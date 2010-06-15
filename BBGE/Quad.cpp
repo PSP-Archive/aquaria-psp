@@ -181,7 +181,7 @@ void Quad::setGridPoints(bool vert, const std::vector<Vector> &points)
 
 float Quad::getStripSegmentSize()
 {
-	return (1.0/(float(strip.size())));
+	return (1.0f/(float(strip.size())));
 }
 
 void Quad::resetStrip()
@@ -190,7 +190,7 @@ void Quad::resetStrip()
 	{
 		for (int i = 0; i < strip.size(); i++)
 		{
-			//float v = (i/(float)(strip.size()-1))-0.5;
+			//float v = (i/(float)(strip.size()-1))-0.5f;
 			float v = (i/(float(strip.size())));
 			strip[i].x = v;
 			strip[i].y = 0;
@@ -208,8 +208,8 @@ void Quad::resetGrid()
 	{
 		for (int j = 0; j < yDivs; j++)
 		{
-			drawGrid[i][j].x = i/(float)(xDivs-1)-0.5;
-			drawGrid[i][j].y = j/(float)(yDivs-1)-0.5;
+			drawGrid[i][j].x = i/(float)(xDivs-1)-0.5f;
+			drawGrid[i][j].y = j/(float)(yDivs-1)-0.5f;
 		}
 	}
 }
@@ -219,7 +219,7 @@ void Quad::spawnChildClone(float t)
 	if (!this->texture) return;
 	Quad *q = new Quad;
 	q->setTexture(this->texture->name);
-	q->setLife(t+0.1);
+	q->setLife(t+0.1f);
 	q->setDecayRate(1);
 	q->width = this->width;
 	q->height = this->height;
@@ -329,8 +329,8 @@ int Quad::getCullRadius()
 
 bool Quad::isCoordinateInside(Vector coord, int minSize)
 {
-	int hw = fabs((width)*getRealScale().x)*0.5;
-	int hh = fabs((height)*getRealScale().y)*0.5;
+	int hw = fabs((width)*getRealScale().x)*0.5f;
+	int hh = fabs((height)*getRealScale().y)*0.5f;
 	if (hw < minSize)
 		hw = minSize;
 	if (hh < minSize)
@@ -348,8 +348,8 @@ bool Quad::isCoordinateInside(Vector coord, int minSize)
 
 bool Quad::isCoordinateInsideWorld(const Vector &coord, int minSize)
 {
-	int hw = fabs((width)*getRealScale().x)*0.5;
-	int hh = fabs((height)*getRealScale().y)*0.5;
+	int hw = fabs((width)*getRealScale().x)*0.5f;
+	int hh = fabs((height)*getRealScale().y)*0.5f;
 	if (hw < minSize)
 		hw = minSize;
 	if (hh < minSize)
@@ -368,8 +368,8 @@ bool Quad::isCoordinateInsideWorld(const Vector &coord, int minSize)
 
 bool Quad::isCoordinateInsideWorldRect(const Vector &coord, int w, int h)
 {
-	int hw = w*0.5;
-	int hh = h*0.5;
+	int hw = w*0.5f;
+	int hh = h*0.5f;
 
 	Vector pos = getWorldPosition();
 	if (coord.x >= pos.x + offset.x - hw && coord.x <= pos.x + offset.x + hw)
@@ -535,7 +535,7 @@ Vector oldQuadColor;
 
 void Quad::render()
 {
-	if (lightingColor.x != 1.0 || lightingColor.y != 1.0 || lightingColor.z != 1.0)
+	if (lightingColor.x != 1.0f || lightingColor.y != 1.0f || lightingColor.z != 1.0f)
 	{
 		oldQuadColor = color;
 		color *= lightingColor;
@@ -631,16 +631,16 @@ void Quad::onRender()
 				{
 					glBegin(GL_QUADS);
 					{
-						glTexCoord2f(upperLeftTextureCoordinates.x, 1.0-upperLeftTextureCoordinates.y);
+						glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
 						glVertex2f(-_w2, +_h2);
 
-						glTexCoord2f(lowerRightTextureCoordinates.x, 1.0-upperLeftTextureCoordinates.y);
+						glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
 						glVertex2f(+_w2, +_h2);
 
-						glTexCoord2f(lowerRightTextureCoordinates.x, 1.0-lowerRightTextureCoordinates.y);
+						glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
 						glVertex2f(+_w2, -_h2);
 
-						glTexCoord2f(upperLeftTextureCoordinates.x, 1.0-lowerRightTextureCoordinates.y);
+						glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
 						glVertex2f(-_w2, -_h2);
 					}
 					glEnd();
@@ -735,8 +735,8 @@ void Quad::onRender()
 	if (this->texture)
 	{
 		core->getD3DSprite()->Begin(D3DXSPRITE_ALPHABLEND);
-		D3DXVECTOR2 scaling((1.0/float(this->texture->width))*width*scale.x,
-			(1.0/float(this->texture->height))*height*scale.y);
+		D3DXVECTOR2 scaling((1.0f/float(this->texture->width))*width*scale.x,
+			(1.0f/float(this->texture->height))*height*scale.y);
 		if (isfh())
 			scaling.x = -scaling.x;
 		D3DXVECTOR2 spriteCentre=D3DXVECTOR2((this->texture->width/2), (this->texture->height/2));
@@ -764,8 +764,8 @@ void Quad::onRender()
 		}
 		D3DXMATRIX mat, scale, final;
 		//D3DXVECTOR2 centre = trans + spriteCentre;
-		float rotation = (this->rotation.z*3.14)/180.0;
-		//D3DXVECTOR2 scaling((1.0/float(this->texture->width))*width*scale.x,(1.0/float(this->texture->height))*height*scale.y);
+		float rotation = (this->rotation.z*PI)/180.0f;
+		//D3DXVECTOR2 scaling((1.0f/float(this->texture->width))*width*scale.x,(1.0f/float(this->texture->height))*height*scale.y);
 
 		//D3DXVECTOR2 scaling(1,1);
 		const D3DCOLOR d3dColor=D3DCOLOR_ARGB(int(alpha.x*255), int(color.x*255), int(color.y*255), int(color.z*255));
@@ -936,8 +936,8 @@ void Quad::onSetTexture()
 	{
 		width = this->texture->width;
 		height = this->texture->height;
-		_w2 = this->texture->width/2.0;
-		_h2 = this->texture->height/2.0;
+		_w2 = this->texture->width/2.0f;
+		_h2 = this->texture->height/2.0f;
 	}
 }
 

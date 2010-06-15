@@ -232,7 +232,7 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 
 	if (screen->getWidth() == 0)
 		screen->color = 0;
-	screen->setWidthHeight(0.4*256, 0.3*256);
+	screen->setWidthHeight(0.4f*256, 0.3f*256);
 	screen->scale = Vector(0.93,0.93);
 	screen->position = Vector(-250, 0) + Vector(-1.5, -1.6);
 	addChild(screen, PM_POINTER);

@@ -329,28 +329,28 @@ RenderObjectLayer *Core::getRenderObjectLayer(int i)
 		vertices[0].y = v1y;
 		vertices[0].z = 1.0f;
 		vertices[0].u = 0.0f;
-		vertices[0].v = 1.0-1.0f;
+		vertices[0].v = 1.0f-1.0f;
 
 		vertices[1].colour = d3dColor;
 		vertices[1].x = v2x;
 		vertices[1].y = v2y;
 		vertices[1].z = 1.0f;
 		vertices[1].u = 1.0f;
-		vertices[1].v = 1.0-1.0f;
+		vertices[1].v = 1.0f-1.0f;
 
 		vertices[2].colour = d3dColor;
 		vertices[2].x = v3x;
 		vertices[2].y = v3y;
 		vertices[2].z = 1.0f;
 		vertices[2].u = 1.0f;
-		vertices[2].v = 1.0-0.0f;
+		vertices[2].v = 1.0f-0.0f;
 
 		vertices[3].colour = d3dColor;
 		vertices[3].x = v4x;
 		vertices[3].y = v4y;
 		vertices[3].z = 1.0f;
 		vertices[3].u = 0.0f;
-		vertices[3].v = 1.0-0.0f;
+		vertices[3].v = 1.0f-0.0f;
 		//Unlock the vertex buffer
 		vertexBuffer->Unlock();
 
@@ -378,36 +378,36 @@ RenderObjectLayer *Core::getRenderObjectLayer(int i)
 		//automatically, but on others texture alignment errors are introduced
 		//More information on this can be found in the Direct3D 9 documentation
 		vertices[0].colour = d3dColor;
-		vertices[0].x = -0.5*w2;
-		vertices[0].y = -0.5*h2;
+		vertices[0].x = -0.5f*w2;
+		vertices[0].y = -0.5f*h2;
 		vertices[0].z = 1.0f;
 		//vertices[0].rhw = 1.0f;
 		vertices[0].u = u1;
-		vertices[0].v = 1.0-v2;
+		vertices[0].v = 1.0f-v2;
 
 		vertices[1].colour = d3dColor;
-		vertices[1].x = 0.5*w2;
-		vertices[1].y = -0.5*h2;
+		vertices[1].x = 0.5f*w2;
+		vertices[1].y = -0.5f*h2;
 		vertices[1].z = 1.0f;
 		//vertices[1].rhw = 1.0f;
 		vertices[1].u = u2;
-		vertices[1].v = 1.0-v2;
+		vertices[1].v = 1.0f-v2;
 
 		vertices[2].colour = d3dColor;
-		vertices[2].x = 0.5*w2;
-		vertices[2].y = 0.5*h2;
+		vertices[2].x = 0.5f*w2;
+		vertices[2].y = 0.5f*h2;
 		vertices[2].z = 1.0f;
 		//vertices[2].rhw = 1.0f;
 		vertices[2].u = u2;
-		vertices[2].v = 1.0-v1;
+		vertices[2].v = 1.0f-v1;
 
 		vertices[3].colour = d3dColor;
-		vertices[3].x = -0.5*w2;
-		vertices[3].y = 0.5*h2;
+		vertices[3].x = -0.5f*w2;
+		vertices[3].y = 0.5f*h2;
 		vertices[3].z = 1.0f;
 		//vertices[3].rhw = 1.0f;
 		vertices[3].u = u1;
-		vertices[3].v = 1.0-v1;
+		vertices[3].v = 1.0f-v1;
 		//Unlock the vertex buffer
 		vertexBuffer->Unlock();
 
@@ -425,36 +425,36 @@ RenderObjectLayer *Core::getRenderObjectLayer(int i)
 		//Lock the vertex buffer
 		vertexBuffer->Lock(0, 0, (void**)&vertices, NULL);
 		vertices[0].colour = ulc0;
-		vertices[0].x = -0.5;
-		vertices[0].y = -0.5;
+		vertices[0].x = -0.5f;
+		vertices[0].y = -0.5f;
 		vertices[0].z = 1.0f;
 		//vertices[0].rhw = 1.0f;
 		vertices[0].u = 0.0f;
-		vertices[0].v = 1.0-1.0f;
+		vertices[0].v = 1.0f-1.0f;
 
 		vertices[1].colour = ulc1;
-		vertices[1].x = 0.5;
-		vertices[1].y = -0.5;
+		vertices[1].x = 0.5f;
+		vertices[1].y = -0.5f;
 		vertices[1].z = 1.0f;
 		//vertices[1].rhw = 1.0f;
 		vertices[1].u = 1.0f;
-		vertices[1].v = 1.0-1.0f;
+		vertices[1].v = 1.0f-1.0f;
 
 		vertices[2].colour = ulc2;
-		vertices[2].x = 0.5;
-		vertices[2].y = 0.5;
+		vertices[2].x = 0.5f;
+		vertices[2].y = 0.5f;
 		vertices[2].z = 1.0f;
 		//vertices[2].rhw = 1.0f;
 		vertices[2].u = 1.0f;
-		vertices[2].v = 1.0-0.0f;
+		vertices[2].v = 1.0f-0.0f;
 
 		vertices[3].colour = ulc3;
-		vertices[3].x = -0.5;
-		vertices[3].y = 0.5;
+		vertices[3].x = -0.5f;
+		vertices[3].y = 0.5f;
 		vertices[3].z = 1.0f;
 		//vertices[3].rhw = 1.0f;
 		vertices[3].u = 0.0f;
-		vertices[3].v = 1.0-0.0f;
+		vertices[3].v = 1.0f-0.0f;
 		//Unlock the vertex buffer
 		vertexBuffer->Unlock();
 
@@ -484,36 +484,36 @@ RenderObjectLayer *Core::getRenderObjectLayer(int i)
 		//automatically, but on others texture alignment errors are introduced
 		//More information on this can be found in the Direct3D 9 documentation
 		vertices[0].colour = d3dColor;
-		vertices[0].x = x-0.5*w2;
-		vertices[0].y = y-0.5*h2;
+		vertices[0].x = x-0.5f*w2;
+		vertices[0].y = y-0.5f*h2;
 		vertices[0].z = 1.0f;
 		//vertices[0].rhw = 1.0f;
 		vertices[0].u = 0.0f;
-		vertices[0].v = 1.0-1.0f;
+		vertices[0].v = 1.0f-1.0f;
 
 		vertices[1].colour = d3dColor;
-		vertices[1].x = x+0.5*w2;
-		vertices[1].y = y-0.5*h2;
+		vertices[1].x = x+0.5f*w2;
+		vertices[1].y = y-0.5f*h2;
 		vertices[1].z = 1.0f;
 		//vertices[1].rhw = 1.0f;
 		vertices[1].u = 1.0f;
-		vertices[1].v = 1.0-1.0f;
+		vertices[1].v = 1.0f-1.0f;
 
 		vertices[2].colour = d3dColor;
-		vertices[2].x = x+0.5*w2;
-		vertices[2].y = y+0.5*h2;
+		vertices[2].x = x+0.5f*w2;
+		vertices[2].y = y+0.5f*h2;
 		vertices[2].z = 1.0f;
 		//vertices[2].rhw = 1.0f;
 		vertices[2].u = 1.0f;
-		vertices[2].v = 1.0-0.0f;
+		vertices[2].v = 1.0f-0.0f;
 
 		vertices[3].colour = d3dColor;
-		vertices[3].x = x-0.5*w2;
-		vertices[3].y = y+0.5*h2;
+		vertices[3].x = x-0.5f*w2;
+		vertices[3].y = y+0.5f*h2;
 		vertices[3].z = 1.0f;
 		//vertices[3].rhw = 1.0f;
 		vertices[3].u = 0.0f;
-		vertices[3].v = 1.0-0.0f;
+		vertices[3].v = 1.0f-0.0f;
 		/*
 		//Unlock the vertex buffer
 		preTransVertexBuffer->Unlock();
@@ -545,36 +545,36 @@ RenderObjectLayer *Core::getRenderObjectLayer(int i)
 		//automatically, but on others texture alignment ors are introduced
 		//More information on this can be found in the Direct3D 9 documentation
 		vertices[0].colour = d3dColor;
-		vertices[0].x = -0.5*w2;
-		vertices[0].y = -0.5*h2;
+		vertices[0].x = -0.5f*w2;
+		vertices[0].y = -0.5f*h2;
 		vertices[0].z = 1.0f;
 		//vertices[0].rhw = 1.0f;
 		vertices[0].u = 0.0f;
-		vertices[0].v = 1.0-1.0f;
+		vertices[0].v = 1.0f-1.0f;
 
 		vertices[1].colour = d3dColor;
-		vertices[1].x = 0.5*w2;
-		vertices[1].y = -0.5*h2;
+		vertices[1].x = 0.5f*w2;
+		vertices[1].y = -0.5f*h2;
 		vertices[1].z = 1.0f;
 		//vertices[1].rhw = 1.0f;
 		vertices[1].u = 1.0f;
-		vertices[1].v = 1.0-1.0f;
+		vertices[1].v = 1.0f-1.0f;
 
 		vertices[2].colour = d3dColor;
-		vertices[2].x = 0.5*w2;
-		vertices[2].y = 0.5*h2;
+		vertices[2].x = 0.5f*w2;
+		vertices[2].y = 0.5f*h2;
 		vertices[2].z = 1.0f;
 		//vertices[2].rhw = 1.0f;
 		vertices[2].u = 1.0f;
-		vertices[2].v = 1.0-0.0f;
+		vertices[2].v = 1.0f-0.0f;
 
 		vertices[3].colour = d3dColor;
-		vertices[3].x = -0.5*w2;
-		vertices[3].y = 0.5*h2;
+		vertices[3].x = -0.5f*w2;
+		vertices[3].y = 0.5f*h2;
 		vertices[3].z = 1.0f;
 		//vertices[3].rhw = 1.0f;
 		vertices[3].u = 0.0f;
-		vertices[3].v = 1.0-0.0f;
+		vertices[3].v = 1.0f-0.0f;
 		//Unlock the vertex buffer
 		vertexBuffer->Unlock();
 
@@ -791,7 +791,7 @@ void Core::rotateMatrixStack(float z)
 	D3DXVECTOR3 axis(0,0,1);
 	float angle = D3DXToRadian(z);
 	if (angle == D3DX_PI)
-		angle += 0.001;
+		angle += 0.001f;
 	core->getD3DMatrixStack()->RotateAxisLocal(&axis,angle);
 	*/
 	if (z != 0)
@@ -1715,7 +1715,7 @@ void Core::onUpdate(float dt)
 	if (joystickOverrideMouse && !joychange.isZero())
 	{
 		Vector joy(joystate.lX, joystate.lY);
-		//core->mouse.position += joychange * 0.001;
+		//core->mouse.position += joychange * 0.001f;
 		core->mouse.position = Vector(400,300) + ((joy * 600) / (65536/2))-300;
 	}
 	*/
@@ -2284,11 +2284,11 @@ static void
 bbgePerspective(double fovy, double aspect, double zNear, double zFar)
 {
     double sine, cotangent, deltaZ;
-    double radians = fovy / 2.0 * M_PI / 180.0;
+    double radians = fovy / 2.0f * M_PI / 180.0f;
 
     deltaZ = zFar - zNear;
     sine = sin(radians);
-    if ((deltaZ == 0.0) || (sine == 0.0) || (aspect == 0.0)) {
+    if ((deltaZ == 0.0f) || (sine == 0.0f) || (aspect == 0.0f)) {
         return;
     }
     cotangent = cos(radians) / sine;
@@ -2303,7 +2303,7 @@ bbgePerspective(double fovy, double aspect, double zNear, double zFar)
     m[1][1] = (GLfloat) cotangent;
     m[2][2] = (GLfloat) (-(zFar + zNear) / deltaZ);
     m[2][3] = -1.0f;
-    m[3][2] = (GLfloat) (-2.0 * zNear * zFar / deltaZ);
+    m[3][2] = (GLfloat) (-2.0f * zNear * zFar / deltaZ);
     m[3][3] = 0.0f;
 
     glMultMatrixf(&m[0][0]);
@@ -2418,7 +2418,7 @@ void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
 void Core::enable2DWide(int rx, int ry)
 {
 	float aspect = float(rx) / float(ry);
-	if (aspect >= 1.3)
+	if (aspect >= 1.3f)
 	{
 		int vw = int(double(baseVirtualHeight) * (double(rx)/double(ry)));
 		//vw = MAX(vw, baseVirtualWidth);
@@ -2493,14 +2493,14 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 
 	float aspect = float(width)/float(height);
 
-	if (aspect >= 1.4)
+	if (aspect >= 1.4f)
 	{
 		vw = double(baseVirtualWidth * viewPort[3]) / double(baseVirtualHeight);
 
 		viewOffX = viewPort[2] - vw;
 		viewOffX *= 0.5;
 	}
-	else if (aspect < 1.3)
+	else if (aspect < 1.3f)
 	{
 		vh = double(baseVirtualHeight * viewPort[2]) / double(baseVirtualWidth);
 
@@ -2529,7 +2529,7 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 	/*
 	float aspect = float(width) / float (height);
 
-	if (aspect < 1.3)
+	if (aspect < 1.3f)
 	{
 		viewOffX *= 0.5;
 	}
@@ -2844,12 +2844,12 @@ float Core::stopWatch(int d)
 {
 	if (d)
 	{
-		stopWatchStartTime = getTicks()/1000.0;
+		stopWatchStartTime = getTicks()/1000.0f;
 		return stopWatchStartTime;
 	}
 	else
 	{
-		return (getTicks()/1000.0) - stopWatchStartTime;
+		return (getTicks()/1000.0f) - stopWatchStartTime;
 	}
 
 	return 0;
@@ -2949,7 +2949,7 @@ void Core::main(float runTime)
 		dt = (double(timerEnd-timerStart)/double(freq));
 		timerStart = timerEnd;
 //		dt = double(newTicks)/1000.0;
-		//dt = float(newTicks - ticks)/1000.0;
+		//dt = float(newTicks - ticks)/1000.0f;
 		//ticks = newTicks;
 #endif
 
@@ -3199,7 +3199,7 @@ void Core::main(float runTime)
 			avg_diff += diff;
 			
 			char buf[256];
-			sprintf(buf, "real_dt: %5.4f \n realFPS: %5.4f \n fixedFPS: %5.4f \n diff: %5.4f \n delay: %5.4f \n avgdiff: %5.8f", float(real_dt), float(real_dt>0?(1.0/real_dt):0.0f), float(fixedFPS), float(diff), float(diff*1000), float(avg_diff/(float)avg_diff_count));
+			sprintf(buf, "real_dt: %5.4f \n realFPS: %5.4f \n fixedFPS: %5.4f \n diff: %5.4f \n delay: %5.4f \n avgdiff: %5.8f", float(real_dt), float(real_dt>0?(1.0f/real_dt):0.0f), float(fixedFPS), float(diff), float(diff*1000), float(avg_diff/(float)avg_diff_count));
 			fpsDebugString = buf;
 
 			/*
@@ -3582,7 +3582,7 @@ void Core::print(int x, int y, const char *str, float sz)
 	//float osz = sz;
 	float xx = x;
 	float yy = y;
-	glTranslatef(x, y-0.5*sz, 0);
+	glTranslatef(x, y-0.5f*sz, 0);
 	x = y = 0;
 	xx = 0; yy = 0;
 	bool isLower = false, wasLower = false;
@@ -3596,7 +3596,7 @@ void Core::print(int x, int y, const char *str, float sz)
 	glColor4f(r,g,b,a);
 	*/
 	glLineWidth(1);
-	glScalef(sz*0.75, sz, 1);
+	glScalef(sz*0.75f, sz, 1);
 
 	glBegin(GL_LINES);
 
@@ -3609,7 +3609,7 @@ void Core::print(int x, int y, const char *str, float sz)
 
 		/*
 		if (isLower)
-			glScalef(sz*0.5, sz*0.5, 1);
+			glScalef(sz*0.5f, sz*0.5f, 1);
 		else if (wasLower)
 		{
 			glScalef(sz, sz, 1);
@@ -3623,24 +3623,24 @@ void Core::print(int x, int y, const char *str, float sz)
 			_VLN(xx, y+1, xx+1, y+1)
 		break;
 		case '-':
-			_VLN(xx, y+0.5, xx+1, y+0.5)
+			_VLN(xx, y+0.5f, xx+1, y+0.5f)
 		break;
 		case '~':
-			_VLN(xx, y+0.5, xx+0.25, y+0.4)
-			_VLN(xx+0.25, y+0.4, xx+0.75, y+0.6)
-			_VLN(xx+0.75, y+0.6, xx+1, y+0.5)
+			_VLN(xx, y+0.5f, xx+0.25f, y+0.4f)
+			_VLN(xx+0.25f, y+0.4f, xx+0.75f, y+0.6f)
+			_VLN(xx+0.75f, y+0.6f, xx+1, y+0.5f)
 		break;
 		case 'A':
 			_VLN(xx, y, xx+1, y)
 			_VLN(xx+1, y, xx+1, y+1)
 			_VLN(xx, y, xx, y+1)
-			_VLN(xx, y+0.5, xx+1, y+0.5)
+			_VLN(xx, y+0.5f, xx+1, y+0.5f)
 		break;
 		case 'B':
 			_VLN(xx, y, xx+1, y)
 			_VLN(xx+1, y, xx+1, y+1)
 			_VLN(xx, y, xx, y+1)
-			_VLN(xx, y+0.5, xx+1, y+0.5)
+			_VLN(xx, y+0.5f, xx+1, y+0.5f)
 			_VLN(xx, y+1, xx+1, y+1)
 		break;
 		case 'C':
@@ -3649,35 +3649,35 @@ void Core::print(int x, int y, const char *str, float sz)
 			_VLN(xx, y+1, xx+1, y+1)
 		break;
 		case 'D':
-			_VLN(xx, y, xx+1, y+0.2)
+			_VLN(xx, y, xx+1, y+0.2f)
 			_VLN(xx, y, xx, y+1)
 			_VLN(xx, y+1, xx+1, y+1)
-			_VLN(xx+1, y+0.2, xx+1, y+1)
+			_VLN(xx+1, y+0.2f, xx+1, y+1)
 		break;
 		case 'E':
 			_VLN(xx, y, xx+1, y)
 			_VLN(xx, y, xx, y+1)
-			_VLN(xx, y+0.5, xx+1, y+0.5)
+			_VLN(xx, y+0.5f, xx+1, y+0.5f)
 			_VLN(xx, y+1, xx+1, y+1)
 		break;
 		case 'F':
 			_VLN(xx, y, xx+1, y)
 			_VLN(xx, y, xx, y+1)
-			_VLN(xx, y+0.5, xx+1, y+0.5)
+			_VLN(xx, y+0.5f, xx+1, y+0.5f)
 		break;
 		case 'G':
 			_VLN(xx, y, xx+1, y)
 			_VLN(xx, y, xx, y+1)
 			_VLN(xx, y+1, xx+1, y+1)
-			_VLN(xx+1, y+0.5, xx+1, y+1)
+			_VLN(xx+1, y+0.5f, xx+1, y+1)
 		break;
 		case 'H':
 			_VLN(xx, y, xx, y+1)
-			_VLN(xx, y+0.5, xx+1, y+0.5)
+			_VLN(xx, y+0.5f, xx+1, y+0.5f)
 			_VLN(xx+1, y, xx+1, y+1)
 		break;
 		case 'I':
-			_VLN(xx+0.5, y, xx+0.5, y+1)
+			_VLN(xx+0.5f, y, xx+0.5f, y+1)
 			_VLN(xx, y, xx+1, y)
 			_VLN(xx, y+1, xx+1, y+1)
 		break;
@@ -3685,12 +3685,12 @@ void Core::print(int x, int y, const char *str, float sz)
 			_VLN(xx+1, y, xx+1, y+1)
 			_VLN(xx, y, xx+1, y)
 			_VLN(xx, y+1, xx+1, y+1)
-			_VLN(xx, y+1, xx, y+0.75)
+			_VLN(xx, y+1, xx, y+0.75f)
 		break;
 		case 'K':
 			_VLN(xx, y, xx, y+1)
-			_VLN(xx, y+0.25, xx+1, y)
-			_VLN(xx, y+0.25, xx+1, y+1)
+			_VLN(xx, y+0.25f, xx+1, y)
+			_VLN(xx, y+0.25f, xx+1, y+1)
 		break;
 		case 'L':
 			_VLN(xx, y, xx, y+1)
@@ -3699,8 +3699,8 @@ void Core::print(int x, int y, const char *str, float sz)
 		case 'M':
 			_VLN(xx, y, xx, y+1)
 			_VLN(xx+1, y, xx+1, y+1)
-			_VLN(xx, y, xx+0.5, y+0.5)
-			_VLN(xx+1, y, xx+0.5, y+0.5)
+			_VLN(xx, y, xx+0.5f, y+0.5f)
+			_VLN(xx+1, y, xx+0.5f, y+0.5f)
 		break;
 		case 'N':
 			_VLN(xx, y, xx, y+1)
@@ -3716,33 +3716,33 @@ void Core::print(int x, int y, const char *str, float sz)
 		case 'P':
 			_VLN(xx, y, xx+1, y)
 			_VLN(xx, y, xx, y+1)
-			_VLN(xx, y+0.5, xx+1, y+0.5)
-			_VLN(xx+1, y+0.5, xx+1, y)
+			_VLN(xx, y+0.5f, xx+1, y+0.5f)
+			_VLN(xx+1, y+0.5f, xx+1, y)
 		break;
 		case 'Q':
 			_VLN(xx, y, xx, y+1)
 			_VLN(xx+1, y, xx+1, y+1)
 			_VLN(xx, y+1, xx+1, y+1)
 			_VLN(xx, y, xx+1, y)
-			_VLN(xx, y+0.5, xx+1.25, y+1.25)
+			_VLN(xx, y+0.5f, xx+1.25f, y+1.25f)
 		break;
 		case 'R':
 			_VLN(xx, y, xx+1, y)
 			_VLN(xx, y, xx, y+1)
-			_VLN(xx, y+0.5, xx+1, y+0.5)
-			_VLN(xx+1, y+0.5, xx+1, y)
-			_VLN(xx, y+0.5, xx+1, y+1)
+			_VLN(xx, y+0.5f, xx+1, y+0.5f)
+			_VLN(xx+1, y+0.5f, xx+1, y)
+			_VLN(xx, y+0.5f, xx+1, y+1)
 		break;
 		case 'S':
 			_VLN(xx, y, xx+1, y)
-			_VLN(xx, y, xx, y+0.5)
-			_VLN(xx, y+0.5, xx+1, y+0.5)
-			_VLN(xx+1, y+0.5, xx+1, y+1)
+			_VLN(xx, y, xx, y+0.5f)
+			_VLN(xx, y+0.5f, xx+1, y+0.5f)
+			_VLN(xx+1, y+0.5f, xx+1, y+1)
 			_VLN(xx, y+1, xx+1, y+1)
 		break;
 		case 'T':
 			_VLN(xx, y, xx+1, y)
-			_VLN(xx+0.5, y, xx+0.5, y+1)
+			_VLN(xx+0.5f, y, xx+0.5f, y+1)
 		break;
 		case 'U':
 			_VLN(xx, y+1, xx+1, y+1)
@@ -3750,23 +3750,23 @@ void Core::print(int x, int y, const char *str, float sz)
 			_VLN(xx+1, y, xx+1, y+1)
 		break;
 		case 'V':
-			_VLN(xx, y, xx+0.5, y+1)
-			_VLN(xx+1, y, xx+0.5, y+1)
+			_VLN(xx, y, xx+0.5f, y+1)
+			_VLN(xx+1, y, xx+0.5f, y+1)
 		break;
 		case 'W':
-			_VLN(xx, y, xx+0.25, y+1)
-			_VLN(xx+0.25, y+1, xx+0.5, y+0.5)
-			_VLN(xx+0.5, y+0.5, xx+0.75, y+1)
-			_VLN(xx+1, y, xx+0.75, y+1)
+			_VLN(xx, y, xx+0.25f, y+1)
+			_VLN(xx+0.25f, y+1, xx+0.5f, y+0.5f)
+			_VLN(xx+0.5f, y+0.5f, xx+0.75f, y+1)
+			_VLN(xx+1, y, xx+0.75f, y+1)
 		break;
 		case 'X':
 			_VLN(xx, y, xx+1, y+1)
 			_VLN(xx+1, y, xx, y+1)
 		break;
 		case 'Y':
-			_VLN(xx, y, xx+0.5, y+0.5)
-			_VLN(xx+1, y, xx+0.5, y+0.5)
-			_VLN(xx+0.5, y+0.5, xx+0.5, y+1)
+			_VLN(xx, y, xx+0.5f, y+0.5f)
+			_VLN(xx+1, y, xx+0.5f, y+0.5f)
+			_VLN(xx+0.5f, y+0.5f, xx+0.5f, y+1)
 		break;
 		case 'Z':
 			_VLN(xx, y, xx+1, y)
@@ -3775,58 +3775,58 @@ void Core::print(int x, int y, const char *str, float sz)
 		break;
 
 		case '1':
-			_VLN(xx+0.5, y, xx+0.5, y+1)
+			_VLN(xx+0.5f, y, xx+0.5f, y+1)
 			_VLN(xx, y+1, xx+1, y+1)
-			_VLN(xx+0.5, y, xx+0.25, y+0.25)
+			_VLN(xx+0.5f, y, xx+0.25f, y+0.25f)
 		break;
 		case '2':
 			_VLN(xx, y, xx+1, y)
-			_VLN(xx+1, y, xx+1, y+0.5)
-			_VLN(xx+1, y+0.5, xx, y+0.5)
-			_VLN(xx, y+0.5, xx, y+1)
+			_VLN(xx+1, y, xx+1, y+0.5f)
+			_VLN(xx+1, y+0.5f, xx, y+0.5f)
+			_VLN(xx, y+0.5f, xx, y+1)
 			_VLN(xx, y+1, xx+1, y+1)
 		break;
 		case '3':
 			_VLN(xx, y, xx+1, y)
 			_VLN(xx, y+1, xx+1, y+1)
-			_VLN(xx, y+0.5, xx+1, y+0.5)
+			_VLN(xx, y+0.5f, xx+1, y+0.5f)
 			_VLN(xx+1, y, xx+1, y+1)
 		break;
 		case '4':
 			_VLN(xx+1, y, xx+1, y+1)
-			_VLN(xx+1, y, xx, y+0.5)
-			_VLN(xx, y+0.5, xx+1, y+0.5)
+			_VLN(xx+1, y, xx, y+0.5f)
+			_VLN(xx, y+0.5f, xx+1, y+0.5f)
 		break;
 		case '5':
 			_VLN(xx, y, xx+1, y)
-			_VLN(xx, y, xx, y+0.5)
-			_VLN(xx+1, y+0.5, xx, y+0.5)
-			_VLN(xx+1, y+0.5, xx+1, y+1)
+			_VLN(xx, y, xx, y+0.5f)
+			_VLN(xx+1, y+0.5f, xx, y+0.5f)
+			_VLN(xx+1, y+0.5f, xx+1, y+1)
 			_VLN(xx, y+1, xx+1, y+1)
 		break;
 		case '6':
 			_VLN(xx, y, xx+1, y)
 			_VLN(xx, y, xx, y+1)
-			_VLN(xx+1, y+0.5, xx, y+0.5)
-			_VLN(xx+1, y+0.5, xx+1, y+1)
+			_VLN(xx+1, y+0.5f, xx, y+0.5f)
+			_VLN(xx+1, y+0.5f, xx+1, y+1)
 			_VLN(xx, y+1, xx+1, y+1)
 		break;
 		case '7':
-			_VLN(xx+1, y, xx+0.5, y+1)
+			_VLN(xx+1, y, xx+0.5f, y+1)
 			_VLN(xx, y, xx+1, y)
 		break;
 		case '8':
 			_VLN(xx, y, xx+1, y)
 			_VLN(xx+1, y, xx+1, y+1)
 			_VLN(xx, y, xx, y+1)
-			_VLN(xx, y+0.5, xx+1, y+0.5)
+			_VLN(xx, y+0.5f, xx+1, y+0.5f)
 			_VLN(xx, y+1, xx+1, y+1)
 		break;
 		case '9':
 			_VLN(xx, y, xx+1, y)
 			_VLN(xx+1, y, xx+1, y+1)
-			_VLN(xx, y+0.5, xx+1, y+0.5)
-			_VLN(xx, y+0.5, xx, y)
+			_VLN(xx, y+0.5f, xx+1, y+0.5f)
+			_VLN(xx, y+0.5f, xx, y)
 		break;
 		case '0':
 			_VLN(xx, y, xx, y+1)
@@ -3836,25 +3836,25 @@ void Core::print(int x, int y, const char *str, float sz)
 			_VLN(xx, y, xx+1, y+1)
 		break;
 		case '.':
-			_VLN(xx+0.4, y+1, xx+0.6, y+1)
+			_VLN(xx+0.4f, y+1, xx+0.6f, y+1)
 		break;
 		case ' ':
 		break;
 		case '(':
 		case '[':
 			_VLN(xx, y, xx, y+1);
-			_VLN(xx, y, xx+0.25, y);
-			_VLN(xx, y+1, xx+0.25, y+1);
+			_VLN(xx, y, xx+0.25f, y);
+			_VLN(xx, y+1, xx+0.25f, y+1);
 		break;
 		case ')':
 		case ']':
 			_VLN(xx+1, y, xx+1, y+1);
-			_VLN(xx+1, y, xx+0.75, y);
-			_VLN(xx+1, y+1, xx+0.75, y+1);
+			_VLN(xx+1, y, xx+0.75f, y);
+			_VLN(xx+1, y+1, xx+0.75f, y+1);
 		break;
 		case ':':
-			_VLN(xx+0.5, y, xx+0.5, y+0.25);
-			_VLN(xx+0.5, y+0.75, xx+0.5, y+1);
+			_VLN(xx+0.5f, y, xx+0.5f, y+0.25f);
+			_VLN(xx+0.5f, y+0.75f, xx+0.5f, y+1);
 		break;
 		case '/':
 			_VLN(xx, y+1, xx+1, y);
@@ -3873,7 +3873,7 @@ void Core::print(int x, int y, const char *str, float sz)
 
 		}
 		c++;
-		xx += 1.4;
+		xx += 1.4f;
 	}
 	glEnd();
 
@@ -3900,7 +3900,7 @@ void Core::updateCullData()
 	// update cull data
 	//this->cullRadius = int((getVirtualWidth())*invGlobalScale);
 	this->cullRadius = baseCullRadius * invGlobalScale;
-	this->cullCenter = cameraPos + Vector(400.0*invGlobalScale,300.0*invGlobalScale);
+	this->cullCenter = cameraPos + Vector(400.0f*invGlobalScale,300.0f*invGlobalScale);
 	screenCullX1 = cameraPos.x;
 	screenCullX2 = cameraPos.x + 800*invGlobalScale;
 	screenCullY1 = cameraPos.y;
@@ -3927,7 +3927,7 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 	if (core->minimized) return;
 	onRender();
 
-	invGlobalScale = 1.0/globalScale.x;
+	invGlobalScale = 1.0f/globalScale.x;
 
 	RenderObject::lastTextureApplied = 0;
 
@@ -4822,7 +4822,7 @@ void Core::saveSizedScreenshotTGA(const std::string &filename, int sz, int crop3
 	imageData = (unsigned char *)malloc(size);
 
 	float wbit = fsz;//+1;
-	float hbit = ((fsz)*(3.0/4.0));
+	float hbit = ((fsz)*(3.0f/4.0f));
 
 	int width = core->width-1;
 	int height = core->height-1;
@@ -4830,7 +4830,7 @@ void Core::saveSizedScreenshotTGA(const std::string &filename, int sz, int crop3
 
 	if (crop34)
 	{
-		width = int((core->height*4.0)/3.0);
+		width = int((core->height*4.0f)/3.0f);
 		diff = (core->width - width)/2;
 		width--;
 	}

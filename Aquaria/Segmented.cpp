@@ -77,7 +77,7 @@ void Segmented::updateSegment(int i, const Vector &diff)
 	}
 	else if (diff.getSquaredLength2D() > sqr(minDist)) // 6.3
 	{
-		segments[i]->position += diff*0.05;
+		segments[i]->position += diff*0.05f;
 
 		float angle;
 		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);

@@ -188,10 +188,11 @@ enum Direction
 	}\
 
 
-const double SQRT2 = 1.41421356;
+// double -> float, since they're only used with float variables.  --achurch
+const float SQRT2 = 1.41421356;
 
-const double PI			= 3.14159265;
-const double PI_HALF	= 1.57079633;
+const float PI			= 3.14159265;
+const float PI_HALF	= 1.57079633;
 
 struct IntPair
 {
@@ -279,7 +280,7 @@ enum LerpType
 	LERP_EASEOUT		= 3
 };
 
-#define DOUBLE_CLICK_DELAY	0.5
+#define DOUBLE_CLICK_DELAY	0.5f
 
 
 float lerp(const float &v1, const float &v2, float dt, int lerpType);

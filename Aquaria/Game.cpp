@@ -522,7 +522,7 @@ void FoodSlot::onUpdate(float dt)
 
 				//if (ingredient->type < IT_FOOD)
 
-				//if (grabTime > 0.5)
+				//if (grabTime > 0.5f)
 				if (!dsq->game->recipeMenu.on)
 				{
 					/*
@@ -1354,7 +1354,7 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 		else
 		{
 			menuBg2->alpha = 0;
-			menuBg2->alpha.interpolateTo(1, t*0.5);
+			menuBg2->alpha.interpolateTo(1, t*0.5f);
 		}
 
 		if (dsq->continuity.hasFormUpgrade(FORMUPGRADE_ENERGY2))
@@ -1396,9 +1396,9 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 
 		menuDescription->alpha.interpolateTo(1, t);
 
-		menuBg->scale = menuBgScale*0.5;
+		menuBg->scale = menuBgScale*0.5f;
 		menuBg->scale.interpolateTo(menuBgScale, t);
-		menuBg->alpha.interpolateTo(1, t*0.5);
+		menuBg->alpha.interpolateTo(1, t*0.5f);
 
 
 		if (dsq->game->miniMapRender)
@@ -1569,7 +1569,7 @@ void Game::hideInGameMenu(bool effects)
 		for (i = 0; i < menu.size(); i++)
 		{
 			menu[i]->alpha = 0;
-			//menu[i]->alpha.interpolateTo(0, t*0.5);
+			//menu[i]->alpha.interpolateTo(0, t*0.5f);
 			//menu[i]->scale.interpolateTo(Vector(0, 0), t);
 		}
 		for (i = 0; i < spellIcons.size(); i++)
@@ -1587,7 +1587,7 @@ void Game::hideInGameMenu(bool effects)
 
 		menuDescription->alpha.interpolateTo(0, t);
 		menuBg->alpha.interpolateTo(0, t);
-		menuBg->scale.interpolateTo(menuBg->scale*0.5, t);
+		menuBg->scale.interpolateTo(menuBg->scale*0.5f, t);
 		menuBg2->alpha.interpolateTo(0, t);
 		
 		
@@ -1977,7 +1977,7 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 					}
 				}
 
-				if (num >= int((szx*szy)*0.8))
+				if (num >= int((szx*szy)*0.8f))
 				//if (num >= int((szx*szy)))
 				{
 					// add tile
@@ -2038,7 +2038,7 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 			rot -= 360;
 		while (rot < 0)
 			rot += 360;
-		//rot = int(float(rot-45)/90.0);
+		//rot = int(float(rot-45)/90.0f);
 		//int obsType = OT_INVISIBLEIN;
 		for (int i = 0; i < obs.size(); i++)
 		{
@@ -2285,8 +2285,8 @@ Vector Game::getWallNormal(Vector pos, int sampleArea, float *dist, int obs)
 				int xDiff = pos.x-vt.x;
 				int yDiff = pos.y-vt.y;
 				/*
-				float xEffect = (sampleArea*TILE_SIZE - abs(xDiff))*1.0;
-				float yEffect = (sampleArea*TILE_SIZE - abs(yDiff))*1.0;
+				float xEffect = (sampleArea*TILE_SIZE - abs(xDiff))*1.0f;
+				float yEffect = (sampleArea*TILE_SIZE - abs(yDiff))*1.0f;
 				*/
 				//Vector v(xDiff*xEffect, yDiff*yEffect);
 				Vector v(xDiff, yDiff);
@@ -2752,7 +2752,7 @@ void Game::setTimerText(float time)
 	int mins = int(time/60);
 	int secs = time - (mins*60);
 	os << mins;
-	if (getTimer() > 0.5)
+	if (getTimer() > 0.5f)
 		os << ":";
 	else
 		os << ".";
@@ -2848,7 +2848,7 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 						}
 					}
 				}
-				if (num >= int((szx*szy)*0.25))
+				if (num >= int((szx*szy)*0.25f))
 				{
 					TileVector tile(int((tx+TILE_SIZE/2)/TILE_SIZE), int((ty+TILE_SIZE/2)/TILE_SIZE));
 
@@ -3273,8 +3273,8 @@ void Game::createInGameMenu()
 	menuBg = new Quad;
 	menuBg->setTexture("menu");
 	//menuBg->setWidthHeight(800);
-	//menuBg->scale = Vector(800.0/1024.0, 800.0/1024.0);
-	menuBgScale = Vector(800.0/1024.0, 800.0/1024.0);
+	//menuBg->scale = Vector(800.0f/1024.0f, 800.0f/1024.0f);
+	menuBgScale = Vector(800.0f/1024.0f, 800.0f/1024.0f);
 	menuBg->position = Vector(400,300,menuz);
 	menuBg->followCamera = 1;
 	//menuBg->shareAlphaWithChildren=true;
@@ -3329,7 +3329,7 @@ void Game::createInGameMenu()
 	Quad *controllabels = new Quad("gui/controllabels", Vector(0,0,0));
 	int w = controllabels->getWidth();
 	int h = controllabels->getHeight();
-	controllabels->position = Vector(checkx-16-w/2.0, checky + h/2.0 - 14);
+	controllabels->position = Vector(checkx-16-w/2.0f, checky + h/2.0f - 14);
 	options->addChild(controllabels, PM_POINTER);
 	
 
@@ -3342,7 +3342,7 @@ void Game::createInGameMenu()
 	Quad *subtitleslabel = new Quad("gui/subtitles", Vector(0,0,0));
 	sw = subtitleslabel->getWidth();
 	sh = subtitleslabel->getHeight();
-	subtitleslabel->position = Vector(scheckx-16-sw*0.5, schecky + sh/2.0 - 14);
+	subtitleslabel->position = Vector(scheckx-16-sw*0.5f, schecky + sh/2.0f - 14);
 	options->addChild(subtitleslabel, PM_POINTER);
 
 	subtitlesCheck = new AquariaCheckBox();
@@ -3351,7 +3351,7 @@ void Game::createInGameMenu()
 	options->addChild(subtitlesCheck, PM_POINTER);
 
 	Quad *fullscreenLabel = new Quad("gui/fullscreen", Vector(0,0,0));
-	fullscreenLabel->position = Vector(scheckx-16-sw*0.5, schecky + voptoffy + sh/2.0 - 14);
+	fullscreenLabel->position = Vector(scheckx-16-sw*0.5f, schecky + voptoffy + sh/2.0f - 14);
 	options->addChild(fullscreenLabel, PM_POINTER);
 
 	fullscreenCheck = new AquariaCheckBox();
@@ -3380,7 +3380,7 @@ void Game::createInGameMenu()
 	Quad *audiolabels = new Quad("gui/audiolabels", Vector(0,0,0));
 	w = audiolabels->getWidth();
 	h = audiolabels->getHeight();
-	audiolabels->position = Vector(sliderx-64-w/2.0, slidery + h/2.0 - 14);
+	audiolabels->position = Vector(sliderx-64-w/2.0f, slidery + h/2.0f - 14);
 	options->addChild(audiolabels, PM_POINTER);
 
 	musslider = new AquariaSlider();
@@ -3745,7 +3745,7 @@ void Game::createInGameMenu()
 		foodHolders[i] = new FoodHolder(i);
 		foodHolders[i]->alpha = 0;
 
-		float angle = (float(holders)/float(foodHolders.size()))*3.14*2;
+		float angle = (float(holders)/float(foodHolders.size()))*PI*2;
 		foodHolders[i]->position = rightCenter + Vector(sinf(angle), cosf(angle))*radius;
 		holders ++;
 
@@ -3822,8 +3822,8 @@ void Game::createInGameMenu()
 		{
 			petSlots[i] = new PetSlot(i);
 			petSlots[i]->alpha = 0;
-			float angle = (float(i)/float(petSlots.size()))*3.14*2;
-			petSlots[i]->position = center + Vector(sinf(angle), cosf(angle))*(radius*0.9);
+			float angle = (float(i)/float(petSlots.size()))*PI*2;
+			petSlots[i]->position = center + Vector(sinf(angle), cosf(angle))*(radius*0.9f);
 			menuBg->addChild(petSlots[i], PM_POINTER);
 		}
 	}
@@ -3847,14 +3847,14 @@ void Game::createInGameMenu()
 		SongType s = (SongType)dsq->continuity.getSongTypeBySlot(i);
 		if (dsq->continuity.isSongTypeForm(s))
 		{
-			angle = (float(outer)/float(numForms))*3.14*2;
+			angle = (float(outer)/float(numForms))*PI*2;
 			songSlots[i]->position = center + Vector(sinf(angle), cosf(angle))*radius;
 			outer ++;
 		}
 		else
 		{
-			angle = (float(inner)/float(songSlots.size()-numForms))*3.14*2 + 3.14;
-			songSlots[i]->position = center + Vector(sinf(angle), cosf(angle))*radius*0.4;
+			angle = (float(inner)/float(songSlots.size()-numForms))*PI*2 + PI;
+			songSlots[i]->position = center + Vector(sinf(angle), cosf(angle))*radius*0.4f;
 			inner ++;
 		}
 		menuBg->addChild(songSlots[i], PM_POINTER);
@@ -4018,7 +4018,7 @@ void Game::createInGameMenu()
 	{
 		foodSlots[i] = new FoodSlot(i);
 		
-		float angle = (float(food)/float(foodSlots.size()))*3.14*2;
+		float angle = (float(food)/float(foodSlots.size()))*PI*2;
 		foodSlots[i]->position = worldCenter + Vector(sinf(angle), cosf(angle))*foodSlotRadius;
 
 		foodSlots[i]->setOriginalPosition(foodSlots[i]->position);
@@ -4074,7 +4074,7 @@ void Game::createInGameMenu()
 		treasureSlots[i] = new TreasureSlot(i);
 
 
-		float angle = (float(i)/float(treasureSlots.size()))*3.14*2;
+		float angle = (float(i)/float(treasureSlots.size()))*PI*2;
 		treasureSlots[i]->position = worldCenter + Vector(sinf(angle), cosf(angle))*treasureSlotRadius;
 
 		treasureSlots[i]->alphaMod = 0;
@@ -4157,7 +4157,7 @@ void Game::endProgress()
 	if (progressBar)
 	{
 		progressBar->setLife(1);
-		progressBar->setDecayRate(1.0/0.5);
+		progressBar->setDecayRate(1.0f/0.5f);
 		progressBar->fadeAlphaWithLife = 1;
 		progressBar = 0;
 	}
@@ -5752,7 +5752,7 @@ void Game::colorTest()
 			{
 				float fract = float(dist.getLength2D())/float(quadLights[i].dist);
 				float amb = fract;
-				fract = 1.0 - fract;
+				fract = 1.0f - fract;
 				e->color = sceneColor*amb + q->color*fract;
 			}
 			else
@@ -5797,7 +5797,7 @@ void Game::hideImage()
 	if (image)
 	{
 		image->setLife(1);
-		image->setDecayRate(1.0/2.0);
+		image->setDecayRate(1.0f/2.0f);
 		image->fadeAlphaWithLife = 1;
 	}
 
@@ -5974,7 +5974,7 @@ void game_wibbleParticle(Particle *p)
 	{
 		if (!p->offset.isInterpolating())
 		{
-			p->offset.interpolateTo(Vector(10,0), (8-dsq->game->avatar->getLastNote())/10.0, -1, 1);
+			p->offset.interpolateTo(Vector(10,0), (8-dsq->game->avatar->getLastNote())/10.0f, -1, 1);
 
 			//if (dsq->game->avatar->isSinging())
 			//{
@@ -6027,7 +6027,7 @@ float Game::getTimer(float mod)
 float Game::getHalf2WayTimer(float mod)
 {
 	float t=timer;
-	if (t > 0.5)
+	if (t > 0.5f)
 		t = 1 - t;
 	return timer*2*mod;
 }
@@ -7673,7 +7673,7 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 
 			char str[128]; sprintf(str, "song/notebutton-%d", note); 
 			Quad *q = new Quad(str, p);
-			q->color = dsq->getNoteColor(note)*0.5 + Vector(1, 1, 1)*0.5;
+			q->color = dsq->getNoteColor(note)*0.5f + Vector(1, 1, 1)*0.5f;
 			q->followCamera = 1;
 			q->scale = Vector(1.0, 1.0);
 			q->alpha = 0;
@@ -8091,7 +8091,7 @@ void Game::onPressEscape()
 		{
 			if (!AquariaKeyConfig::waitingForInput)
 			{
-				if (dsq->game->menuOpenTimer > 0.5)
+				if (dsq->game->menuOpenTimer > 0.5f)
 				{
 					if (optionsMenu || keyConfigMenu)
 						onOptionsCancel();
@@ -8237,13 +8237,13 @@ void Game::playBurstSound(bool wallJump)
 	int freqBase = 950;
 	if (wallJump)
 		freqBase += 100;
-	sound->playSfx("Burst", 1, 0);//, (freqBase+rand()%25)/1000.0);
+	sound->playSfx("Burst", 1, 0);//, (freqBase+rand()%25)/1000.0f);
 	if (chance(50))
 	{
 		switch (dsq->continuity.form)
 		{
 		case FORM_BEAST:
-			sound->playSfx("BeastBurst", (128+rand()%64)/256.0, 0);//, (freqBase+rand()%25)/1000.0);
+			sound->playSfx("BeastBurst", (128+rand()%64)/256.0f, 0);//, (freqBase+rand()%25)/1000.0f);
 		break;
 		}
 	}
@@ -8709,7 +8709,7 @@ void Game::toggleMiniMapRender()
 	if (miniMapRender)
 	{
 		if (miniMapRender->alpha == 0)
-			miniMapRender->alpha.interpolateTo(1, 0.1);
+			miniMapRender->alpha.interpolateTo(1, 0.1f);
 		else if (!miniMapRender->alpha.isInterpolating())
 			miniMapRender->alpha.interpolateTo(0, 0.1f);
 	}
@@ -8761,13 +8761,13 @@ void Game::setParallaxTextureCoordinates(Quad *q, float speed)
 	q->followCamera = 1;
 	q->texture->repeat = true;
 
-	float camx = (core->cameraPos.x/800.0)*speed;
-	float camy = -(core->cameraPos.y/600.0)*speed;
+	float camx = (core->cameraPos.x/800.0f)*speed;
+	float camy = -(core->cameraPos.y/600.0f)*speed;
 
-	float camx1 = camx - float(backgroundImageRepeat)/2.0;
-	float camx2 = camx + float(backgroundImageRepeat)/2.0;
-	float camy1 = camy - float(backgroundImageRepeat)/2.0;
-	float camy2 = camy + float(backgroundImageRepeat)/2.0;
+	float camx1 = camx - float(backgroundImageRepeat)/2.0f;
+	float camx2 = camx + float(backgroundImageRepeat)/2.0f;
+	float camy1 = camy - float(backgroundImageRepeat)/2.0f;
+	float camy2 = camy + float(backgroundImageRepeat)/2.0f;
 
 	q->upperLeftTextureCoordinates = Vector(camx1*backgroundImageRepeat, camy1*backgroundImageRepeat);
 	q->lowerRightTextureCoordinates = Vector(camx2*backgroundImageRepeat, camy2*backgroundImageRepeat);
@@ -8799,7 +8799,7 @@ void Game::updateCurrentVisuals(float dt)
 	/*
 	static float delay = 0;
 	delay += dt;
-	if (delay > 0.2)
+	if (delay > 0.2f)
 	{
 		for (int i = 0; i < dsq->game->paths.size(); i++)
 		{
@@ -9679,7 +9679,7 @@ void Game::updateOptionsMenu(float dt)
 		*/
 
 		optsfxdly += dt;
-		if (optsfxdly > 0.6)
+		if (optsfxdly > 0.6f)
 		{
 			optsfxdly = 0;
 			if (sfxslider->isGrabbed())
@@ -9762,7 +9762,7 @@ void Game::updateInGameMenu(float dt)
 
 			if (currentSongMenuNote < s.notes.size())
 			{
-				if (songMenuPlayDelay >= 0.5)
+				if (songMenuPlayDelay >= 0.5f)
 				{
 					songMenuPlayDelay = 0;
 
@@ -9775,7 +9775,7 @@ void Game::updateInGameMenu(float dt)
 						*/
 						sound->playSfx(dsq->game->getNoteName(s.notes[currentSongMenuNote], "Menu"));
 
-						float a = (s.notes[currentSongMenuNote]*2*PI)/8.0;
+						float a = (s.notes[currentSongMenuNote]*2*PI)/8.0f;
 						int sz = 110*menuBg->scale.x;
 						Vector notePos(sinf(a)*sz,cosf(a)*sz);
 
@@ -9810,7 +9810,7 @@ void Game::updateInGameMenu(float dt)
 			}
 			else
 			{
-				if (songMenuPlayDelay >= 1.0)
+				if (songMenuPlayDelay >= 1.0f)
 				{
 					playingSongInMenu = -1;
 				}
@@ -10292,7 +10292,7 @@ void Game::update(float dt)
 		q->alpha = 0;
 		q->alpha.interpolateTo(0.4, 1, 1, 1, 1);
 		addRenderObject(q, LR_ELEMENTS3);
-		q->velocity = Vector(((rand()%200)-100)/100.0, ((rand()%200)-100)/100.0);
+		q->velocity = Vector(((rand()%200)-100)/100.0f, ((rand()%200)-100)/100.0f);
 		q->velocity *= 32;
 		bubbleTimer -= spawnTime;
 	}
@@ -10335,14 +10335,14 @@ void Game::update(float dt)
 
 		/*
 		// dynamic gradient
-		Vector top1(99/256.0, 166/256.0, 170/256.0);
-		Vector top2(86/256.0, 150/256.0, 154/256.0);
-		Vector btm1(86/256.0, 150/256.0, 154/256.0);
-		Vector btm2(66/256.0, 109/256.0, 122/256.0);
+		Vector top1(99/256.0f, 166/256.0f, 170/256.0f);
+		Vector top2(86/256.0f, 150/256.0f, 154/256.0f);
+		Vector btm1(86/256.0f, 150/256.0f, 154/256.0f);
+		Vector btm2(66/256.0f, 109/256.0f, 122/256.0f);
 		btm2 *= 0.75;
 
 
-		Vector newtop1(105/256.0, 190/256.0, 200/256.0);
+		Vector newtop1(105/256.0f, 190/256.0f, 200/256.0f);
 
 		grad->makeVertical(newtop1, btm2);
 		*/
@@ -10352,7 +10352,7 @@ void Game::update(float dt)
 		//grad->makeVertical(top1*(1.0-d) + top2*(d), btm1*(1.0-d) + btm2*(d));
 		/*
 		float range = 0.5f;
-		float left = 1.0 - range;
+		float left = 1.0f - range;
 		float v = ((range-(d*range)) + left);
 		bg->color = Vector(v,v,v);
 		bg2->color = Vector(v,v,v);
@@ -10372,12 +10372,12 @@ void Game::update(float dt)
 	if (!isPaused())
 	{
 		timer += dt;
-		while (timer > 1.0)
-			timer -= 1.0;
+		while (timer > 1.0f)
+			timer -= 1.0f;
 
-		halfTimer += dt*0.5;
-		while (halfTimer > 1.0)
-			halfTimer -= 1.0;
+		halfTimer += dt*0.5f;
+		while (halfTimer > 1.0f)
+			halfTimer -= 1.0f;
 	}
 
 
@@ -10403,7 +10403,7 @@ void Game::update(float dt)
 			}
 		}
 	}
-	if (avatar && avatar->isSinging() && avatar->songInterfaceTimer > 0.5)
+	if (avatar && avatar->isSinging() && avatar->songInterfaceTimer > 0.5f)
 	{
 		avatar->entityToActivate = 0;
 		avatar->pathToActivate = 0;
@@ -10716,7 +10716,7 @@ void Game::snapCam()
 
 ElementTemplate Game::getElementTemplateForLetter(int i)
 {
-	float cell = float(64.0)/float(512.0);
+	float cell = 64.0f/512.0f;
 	//for (int i = 0; i < 27; i++)
 	ElementTemplate t;
 	t.idx = 1024+i;

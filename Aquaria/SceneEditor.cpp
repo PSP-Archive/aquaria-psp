@@ -970,7 +970,7 @@ void SceneEditor::toggleWarpAreaRender()
 {
 	if (warpAreaRender->alpha.x == 0)
 		warpAreaRender->alpha.x = 0.5;
-	else if (warpAreaRender->alpha.x >= 0.5)
+	else if (warpAreaRender->alpha.x >= 0.5f)
 		warpAreaRender->alpha.x = 0;
 		//warpAreaRender->alpha.interpolateTo(1, 0.2);
 }
@@ -1959,7 +1959,7 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 				*/
 				float dist=0;
 				wallNormal = dsq->game->getWallNormal(t.worldVector(), 5, &dist, OT_BLACK);
-				offset = wallNormal*(-TILE_SIZE*0.6);
+				offset = wallNormal*(-TILE_SIZE*0.6f);
 				MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), wallNormal, rot);
 				rot = 180-(360-rot);
 				addTile = true;
@@ -2157,7 +2157,7 @@ void SceneEditor::generateLevel()
 						maxX = x;
 					if (y > maxY)
 						maxY = y;
-					positions.push_back(Vector(x*scale+(scale/2.0),y*scale+(scale/2.0)));
+					positions.push_back(Vector(x*scale+(scale/2.0f),y*scale+(scale/2.0f)));
 					e = &positions[positions.size()-1];
 				}
 				if (rawinfo.Data[c] < 32 &&
@@ -2190,7 +2190,7 @@ void SceneEditor::generateLevel()
 						p2 = (colorVects[i].y == 0 && rawinfo.Data[c+1] < 32);
 						if (!p2)
 						{
-							p2 = (colorVects[i].y == 0.5 && rawinfo.Data[c+1] > 96 && rawinfo.Data[c+1] < 164);
+							p2 = (colorVects[i].y == 0.5f && rawinfo.Data[c+1] > 96 && rawinfo.Data[c+1] < 164);
 						}
 					}
 					p3 = (colorVects[i].z == 1 && rawinfo.Data[c+2] > 200);
@@ -3467,9 +3467,9 @@ void SceneEditor::update(float dt)
 			zoom -= Vector(spd,spd)*dt;
 		else if (isActing(ACTION_ZOOMIN))
 			zoom += Vector(spd,spd)*dt;
-		if (zoom.x < 0.04)
+		if (zoom.x < 0.04f)
 		{
-			zoom.x = zoom.y = 0.04;
+			zoom.x = zoom.y = 0.04f;
 		}
 		core->globalScale = zoom;
 		updateText();
@@ -3590,7 +3590,7 @@ void SceneEditor::update(float dt)
 			break;
 			case ES_ROTATING:
 			{
-				float add = (dsq->getGameCursorPosition().x - cursorOffset.x)/2.4;
+				float add = (dsq->getGameCursorPosition().x - cursorOffset.x)/2.4f;
 				if (core->getKeyState(KEY_LCONTROL))
 				{
 					int a = (oldRotation.z + add)/45;
@@ -3656,7 +3656,7 @@ void SceneEditor::update(float dt)
 				if (!selectedElements.empty())
 				{
 
-					float add = (dsq->getGameCursorPosition().x - cursorOffset.x)/2.4;
+					float add = (dsq->getGameCursorPosition().x - cursorOffset.x)/2.4f;
 					if (core->getKeyState(KEY_LCONTROL))
 					{
 						int a = (oldRotation.z + add)/45;
@@ -3670,7 +3670,7 @@ void SceneEditor::update(float dt)
 				}
 				else if (editingElement)
 				{
-					float add = (dsq->getGameCursorPosition().x - cursorOffset.x)/2.4;
+					float add = (dsq->getGameCursorPosition().x - cursorOffset.x)/2.4f;
 					if (core->getKeyState(KEY_LCONTROL))
 					{
 						int a = (oldRotation.z + add)/45;
@@ -3701,8 +3701,8 @@ void SceneEditor::update(float dt)
 				else if (noSide)
 					middle = true;
 
-				Vector add = Vector((dsq->getGameCursorPosition().x - cursorOffset.x)/100.0,
-					(dsq->getGameCursorPosition().y - cursorOffset.y)/100.0);
+				Vector add = Vector((dsq->getGameCursorPosition().x - cursorOffset.x)/100.0f,
+					(dsq->getGameCursorPosition().y - cursorOffset.y)/100.0f);
 				{
 					if (!selectedElements.empty())
 						add.y = add.x;
@@ -3758,7 +3758,7 @@ void SceneEditor::update(float dt)
 						{
 							if (!middle)
 							{
-								Vector offsetChange = (add*Vector(editingElement->getWidth(), editingElement->getHeight()))*0.5;
+								Vector offsetChange = (add*Vector(editingElement->getWidth(), editingElement->getHeight()))*0.5f;
 								if (add.y == 0)
 								{
 									if (right)

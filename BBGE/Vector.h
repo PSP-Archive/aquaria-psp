@@ -288,7 +288,7 @@ public:
      const Vector inline Reflection(const Vector& normal) const
      {    
           const Vector vec(*this | 1);     // normalize this vector
-          return (vec - normal * 2.0 * (vec % normal)) * !*this;
+          return (vec - normal * 2.0f * (vec % normal)) * !*this;
      }
 	 */
 

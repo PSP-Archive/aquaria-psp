@@ -51,9 +51,9 @@ void LensFlare::onUpdate(float dt)
 	else
 	{
 		float l = v.getLength2D();
-		float a = 1.0-(l/(float)maxLen);
-		a*=0.8;
-		//Vector vbit = v*(1.0/flares.size());
+		float a = 1.0f-(l/(float)maxLen);
+		a*=0.8f;
+		//Vector vbit = v*(1.0f/flares.size());
 		Vector vbit = v;
 		vbit *= inc;
 		for (int i = 0; i < flares.size(); i++)

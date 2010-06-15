@@ -189,7 +189,7 @@ void Bone::updateSegment(Bone *b, const Vector &diff)
 	}
 	else if (diff.getSquaredLength2D() > sqr(minDist)) // 6.3
 	{
-		b->position += diff*0.05;
+		b->position += diff*0.05f;
 
 		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
 

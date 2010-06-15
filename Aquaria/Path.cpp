@@ -72,7 +72,7 @@ void Path::clampPosition(Vector *pos, int radius)
 	if (pathShape == PATHSHAPE_CIRCLE)
 	{
 		Vector diff = (*pos) - nodes[0].position;
-		float rad = rect.getWidth()*0.5;
+		float rad = rect.getWidth()*0.5f;
 		diff.capLength2D(rad-2-radius);
 		*pos = nodes[0].position + diff;
 	}
@@ -122,7 +122,7 @@ bool Path::isCoordinateInside(const Vector &pos, int radius)
 	if (pathShape == PATHSHAPE_CIRCLE)
 	{
 		Vector diff = pos - nodes[0].position;
-		return diff.isLength2DIn(this->rect.getWidth()*0.5 - radius);
+		return diff.isLength2DIn(this->rect.getWidth()*0.5f - radius);
 	}
 	else
 	{
@@ -584,7 +584,7 @@ void Path::update(float dt)
 				spawnedEntity = dsq->game->createEntity(spawnEnemyName, 0, nodes[0].position, 0, false, "");
 			}
 		}
-		if (spawnedEntity && spawnedEntity->life < 1.0)
+		if (spawnedEntity && spawnedEntity->life < 1.0f)
 		{
 			spawnedEntity = 0;
 		}
@@ -592,8 +592,8 @@ void Path::update(float dt)
 		{
 			animOffset -= currentMod*(dt/830);
 			/*
-			while (animOffset < -1.0)
-				animOffset += 1.0;
+			while (animOffset < -1.0f)
+				animOffset += 1.0f;
 			*/
 		}
 		if (pathType == PATH_GEM && dsq->game->avatar)
@@ -626,7 +626,7 @@ void Path::update(float dt)
 
 		if (pathType == PATH_STEAM && dsq->continuity.getWorldType() == WT_NORMAL && effectOn)
 		{
-			animOffset -= 1000*0.00002;
+			animOffset -= 1000*0.00002f;
 
 
 			if (nodes.size() >= 2)
@@ -646,7 +646,7 @@ void Path::update(float dt)
 						if (e->getEntityType() == ET_AVATAR && dsq->continuity.form == FORM_SPIRIT)
 							continue;
 						*/
-						if (dsq->game->collideCircleVsLine(e, start, end, rect.getWidth()*0.5))
+						if (dsq->game->collideCircleVsLine(e, start, end, rect.getWidth()*0.5f))
 						{
 							if (e->getEntityType() == ET_AVATAR)
 							{
@@ -686,7 +686,7 @@ void Path::update(float dt)
 								e->vel2 += v;
 							}
 							e->vel2 += push;
-							if (dsq->game->collideCircleVsLine(e, start, end, rect.getWidth()*0.25))
+							if (dsq->game->collideCircleVsLine(e, start, end, rect.getWidth()*0.25f))
 							{
 								push.setLength2D(100);
 								/*

@@ -193,7 +193,7 @@ void MiniMapRender::onUpdate(float dt)
 
 	if (dsq->game->avatar && dsq->game->avatar->isInputEnabled())
 	{
-		float v = dsq->game->avatar->health/5.0;
+		float v = dsq->game->avatar->health/5.0f;
 		if (v < 0)
 			v = 0;
 		if (!lerp.isInterpolating())
@@ -201,14 +201,14 @@ void MiniMapRender::onUpdate(float dt)
 		lerp.update(dt);
 
 
-		jumpTimer += dt*0.5;
+		jumpTimer += dt*0.5f;
 		if (jumpTimer > jumpTime)
 		{
 			jumpTimer = 0.5;
 		}
 		incr += dt*2;
-		if (incr > 3.14)
-			incr -= 3.14;
+		if (incr > PI)
+			incr -= PI;
 	}
 
 	_isCursorIn = false;
@@ -330,7 +330,7 @@ void MiniMapRender::onRender()
 	
 
 	const int sz2 = 80;//80;
-	const int bsz2 = sz2*1.5;
+	const int bsz2 = sz2*1.5f;
 
 	TileVector t(dsq->game->avatar->position);
 
@@ -343,7 +343,7 @@ void MiniMapRender::onRender()
 		Vector t2;
 		t2.x = int(dsq->game->avatar->position.x/useTile);
 		t2.y = int(dsq->game->avatar->position.y/useTile);
-		Vector t2wp = (t2 * useTile) + useTile*0.5;
+		Vector t2wp = (t2 * useTile) + useTile*0.5f;
 
 		texMinimapBtm->apply();
 
@@ -372,7 +372,7 @@ void MiniMapRender::onRender()
 		
 			off = t2wp - dsq->game->avatar->position;
 			off *= sz2/800.0f;
-			off *= 0.5;
+			off *= 0.5f;
 
 			glScalef(0.5, 0.5,0);
 
@@ -382,7 +382,7 @@ void MiniMapRender::onRender()
 			for (int y = t.y-sz2*2; y < t.y + sz2*2; y+=skip)
 			{
 				int rowStart = -1;
-				float out = sin((float(y-(t.y-sz2*2))/float(sz2*4)) * 3.14f);
+				float out = sin((float(y-(t.y-sz2*2))/float(sz2*4)) * PI);
 				int x1= t.x-int(sz2*2*out) - skip, x2 = t.x+int(sz2*2*out) + skip;
 
 				for (int x = x1; x < x2; x+=skip)
@@ -395,28 +395,28 @@ void MiniMapRender::onRender()
 
 						if (ttt.worldVector().y < dsq->game->waterLevel.x)
 						{
-							glColor4f(0.1, 0.2, 0.5, 0.2*a);
+							glColor4f(0.1, 0.2, 0.5, 0.2f*a);
 						}
 						else
 						{
-							glColor4f(0.1, 0.2, 0.9, 0.4*a);
+							glColor4f(0.1, 0.2, 0.9, 0.4f*a);
 						}
 
-						Vector tt(int(((x*TILE_SIZE)+TILE_SIZE*0.5)/(skip*TILE_SIZE)), int(((y*TILE_SIZE)+TILE_SIZE*0.5)/(skip*TILE_SIZE)));
+						Vector tt(int(((x*TILE_SIZE)+TILE_SIZE*0.5f)/(skip*TILE_SIZE)), int(((y*TILE_SIZE)+TILE_SIZE*0.5f)/(skip*TILE_SIZE)));
 						tt *= TILE_SIZE*skip;
-						tt.x += TILE_SIZE*skip*0.5;
-						tt.y += TILE_SIZE*skip*0.5;
+						tt.x += TILE_SIZE*skip*0.5f;
+						tt.y += TILE_SIZE*skip*0.5f;
 
 						if (tt.x < dsq->game->cameraMin.x)	continue;
 						if (tt.x > dsq->game->cameraMax.x)	continue;
 						if (tt.y < dsq->game->cameraMin.y)	continue;
 						if (tt.y > dsq->game->cameraMax.y)	continue;
 					
-						rp = Vector(tt-dsq->game->avatar->position)*Vector(1.0/1600.0, 1.0/1600.0)*sz2;
+						rp = Vector(tt-dsq->game->avatar->position)*Vector(1.0f/1600.0f, 1.0f/1600.0f)*sz2;
 
 						glTranslatef(rp.x, rp.y, 0);
 
-						float v = sin(waterSin +  (tt.x + tt.y*sz2*2)*0.001 + sqr(tt.x+tt.y)*0.00001);
+						float v = sin(waterSin +  (tt.x + tt.y*sz2*2)*0.001f + sqr(tt.x+tt.y)*0.00001f);
 						
 						int sz = 20 + fabs(v)*20;
 
@@ -462,9 +462,9 @@ void MiniMapRender::onRender()
 				{
 					bool render = true;
 					
-					Vector rp = Vector(d)*Vector(1.0/1600.0, 1.0/1600.0)*sz2*0.5;
+					Vector rp = Vector(d)*Vector(1.0f/1600.0f, 1.0f/1600.0f)*sz2*0.5f;
 
-					extraSize = sin(game->getTimer()*3.14)*6 + 14;
+					extraSize = sin(game->getTimer()*PI)*6 + 14;
 
 					switch(p->pathType)
 					{
@@ -517,7 +517,7 @@ void MiniMapRender::onRender()
 							}
 						}
 						if (render)
-							glColor4f(1.0, 0, 0, alphaValue*0.75);
+							glColor4f(1.0, 0, 0, alphaValue*0.75f);
 					}
 					break;
 					case PATH_WARP:
@@ -535,11 +535,11 @@ void MiniMapRender::onRender()
 						{
 							if (p->naijaHome)
 							{
-								glColor4f(1.0, 0.9, 0.2, alphaValue*0.75);	
+								glColor4f(1.0, 0.9, 0.2, alphaValue*0.75f);	
 							}
 							else
 							{
-								glColor4f(1.0, 1.0, 1.0, alphaValue*0.75);
+								glColor4f(1.0, 1.0, 1.0, alphaValue*0.75f);
 							}
 						}
 					}
@@ -617,18 +617,18 @@ void MiniMapRender::onRender()
 
 
 	float angle = 0;
-	float stepSize = 6.28/128.0;
+	float stepSize = 2*PI/128.0f;
 
-	glLineWidth(10 * (core->width / 1024.0));
+	glLineWidth(10 * (core->width / 1024.0f));
 	
-	stepSize = 6.28 / 64;
+	stepSize = 2*PI / 64;
 
-	float oangle = -3.14*0.5;
+	float oangle = -PI*0.5f;
 	angle = oangle;
-	float eangle = oangle + 3.14*lerp.x;
-	float eangle2 = oangle + 3.14*(dsq->game->avatar->maxHealth/5.0);
+	float eangle = oangle + PI*lerp.x;
+	float eangle2 = oangle + PI*(dsq->game->avatar->maxHealth/5.0f);
 	float steps = (eangle - oangle)/stepSize;
-	float bit = (3.14/5.0);
+	float bit = (PI/5.0f);
 	int step = 0;
 
 	Vector gc;
@@ -639,7 +639,7 @@ void MiniMapRender::onRender()
 	}
 	else
 	{
-		gc = Vector(1-lerp.x, lerp.x*1, lerp.x*0.5);
+		gc = Vector(1-lerp.x, lerp.x*1, lerp.x*0.5f);
 		gc.normalize2D();
 	}
 
@@ -688,7 +688,7 @@ void MiniMapRender::onRender()
 
 	float pa = jumpTimer;
 	if (pa > 1)
-		pa = (1.5 - pa) + 0.5;
+		pa = (1.5f - pa) + 0.5f;
 
 
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE);
@@ -704,7 +704,7 @@ void MiniMapRender::onRender()
 		if (jump == 0)
 		{
 			// !!! FIXME: loop invariant.
-			glColor4f(c.x, c.y, c.z, fabs(cos(angle-incr))*0.3 + 0.2);
+			glColor4f(c.x, c.y, c.z, fabs(cos(angle-incr))*0.3f + 0.2f);
 
 			glBegin(GL_QUADS);
 				glTexCoord2f(0, 1);

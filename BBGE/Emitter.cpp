@@ -93,7 +93,7 @@ void Emitter::spawnParticle(float perc)
 	else
 	{
 		int r = rand()%(int(data.randomScale2*100) - int(data.randomScale1*100));
-		float sz = data.randomScale1 + float(r)/100.0;
+		float sz = data.randomScale1 + float(r)/100.0f;
 		p->scale = Vector(sz,sz);
 	}
 
@@ -273,8 +273,8 @@ void Emitter::onRender()
 		core->setupRenderPositionAndScale();
 	}
 
-	float w2 = width*0.5;
-	float h2 = height*0.5;
+	float w2 = width*0.5f;
+	float h2 = height*0.5f;
 
 	float x, y;
 

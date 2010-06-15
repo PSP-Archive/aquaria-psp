@@ -113,7 +113,7 @@ void WaterSurfaceRender::render()
 			if (dist > 400)
 				scale.y = 0;
 			else
-				scale.y = 1.0-(dist/400.0);
+				scale.y = 1.0f-(dist/400.0f);
 		}
 
 		offset.y = (height*scale.y);
@@ -136,7 +136,7 @@ void WaterSurfaceRender::render()
 
 		qSurface->setWidthHeight(width, height);
 
-		float bit = core->cameraPos.x/300.0;
+		float bit = core->cameraPos.x/300.0f;
 		//qSurface->texOff.x = bit;
 		qLine->texOff.x = bit;
 		//qSurface->refreshRepeatTextureToFill();
@@ -208,7 +208,7 @@ void WaterSurfaceRender::onRender()
 		float diff = (dsq->game->waterLevel.x - core->screenCenter.y)*factor + (core->screenCenter.y-core->cameraPos.y);
 
 		float tehSz = 97;
-		float psy1 = (tehSz/100.0)-(diff/float(scrh*core->invGlobalScale));
+		float psy1 = (tehSz/100.0f)-(diff/float(scrh*core->invGlobalScale));
 		float bit = (tehSz/float(scrh*core->invGlobalScale));
 		
 		upperLeftTextureCoordinates.y = (psy1*core->frameBuffer.getHeightP());
@@ -251,7 +251,7 @@ void WaterSurfaceRender::onRender()
 
 	glEnable(GL_SCISSOR_TEST);
 	float realSz2 = sz2*scale.x;
-	float factor = float(core->getWindowWidth()) / 800.0;
+	float factor = float(core->getWindowWidth()) / 800.0f;
 	glScissor(dsq->game->waterLevel.x*factor - realSz2 * factor, 600*factor-(position.y+realSz2)*factor, realSz2*2*factor, realSz2*2*factor);
 
 	*/

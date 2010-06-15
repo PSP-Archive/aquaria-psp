@@ -39,7 +39,7 @@ InterpolatedVector RenderObject::savePosition;
 
 void RenderObject::toggleAlpha(float t)
 {
-	if (alpha.x < 0.5)
+	if (alpha.x < 0.5f)
 		alpha.interpolateTo(1,t);
 	else
 		alpha.interpolateTo(0,t);
@@ -540,8 +540,8 @@ void RenderObject::render()
 		{
 			position = motionBlurPositions[i].position;
 			rotation.z = motionBlurPositions[i].rotz;
-			alpha = 1.0-(float(i)/float(motionBlurPositions.size()));
-			alpha *= 0.5;
+			alpha = 1.0f-(float(i)/float(motionBlurPositions.size()));
+			alpha *= 0.5f;
 			if (motionBlurTransition)
 			{
 				alpha *= motionBlurTransitionTimer;
@@ -814,7 +814,7 @@ void RenderObject::renderCall()
 	if (useColor)
 	{
 #ifdef BBGE_BUILD_OPENGL
-		if (rlayer && (rlayer->color.x != 1.0 || rlayer->color.y != 1.0 || rlayer->color.z != 1.0))
+		if (rlayer && (rlayer->color.x != 1.0f || rlayer->color.y != 1.0f || rlayer->color.z != 1.0f))
 			glColor4f(color.x * rlayer->color.x, color.y * rlayer->color.y, color.z * rlayer->color.z, alpha.x*alphaMod);
 		else
 			glColor4f(color.x, color.y, color.z, alpha.x*alphaMod);

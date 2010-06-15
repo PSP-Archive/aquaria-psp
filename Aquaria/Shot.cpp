@@ -759,13 +759,13 @@ void Shot::onUpdate(float dt)
 		else if (target->alpha == 0)
 			target = 0;
 	}
-	if (life >= 1.0)
+	if (life >= 1.0f)
 	{
 		if (velocity.isZero())
 		{
 			//velocity = Vector(rand()%100-50, rand()%100-50);
 		}
-		else if (velocity.isLength2DIn(maxSpeed*0.75))
+		else if (velocity.isLength2DIn(maxSpeed*0.75f))
 		{
 			velocity.setLength2D(maxSpeed);
 		}

@@ -67,9 +67,9 @@ Ingredient::Ingredient(const Vector &pos, IngredientData *data, int amount)
 	}
 	int mag = 600;
 	if (isRotKind())
-		velocity = randVector(mag)*0.5 + Vector(0, -mag)*0.5;
+		velocity = randVector(mag)*0.5f + Vector(0, -mag)*0.5f;
 	else
-		velocity = Vector(0,-mag*0.5);
+		velocity = Vector(0,-mag*0.5f);
 	gravity = Vector(0, 250); //300
 	scale = Vector(0.2,0.2);
 	scale.interpolateTo(Vector(1, 1), 0.75);
@@ -181,7 +181,7 @@ void Ingredient::onUpdate(float dt)
 			maxV.setLength2D(len);
 			diff = maxV - diff;
 			diff *= maxSpeed/len;
-			velocity += diff * 1.5 * dt;
+			velocity += diff * 1.5f * dt;
 		}
 	}
 
@@ -191,9 +191,9 @@ void Ingredient::onUpdate(float dt)
 	{
 		int mag = velocity.getLength2D();
 		if (velocity.x > 0)
-			rotation.z += mag*0.01;
+			rotation.z += mag*0.01f;
 		else
-			rotation.z -= mag*0.01;
+			rotation.z -= mag*0.01f;
 	}
 
 

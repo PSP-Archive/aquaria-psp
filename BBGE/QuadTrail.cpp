@@ -87,7 +87,7 @@ void QuadTrail::onRender()
 			diff = p - lastPoint;
 			//possible opt here
 			if (texture)
-				diff.setLength2D(texture->width*0.5);
+				diff.setLength2D(texture->width*0.5f);
 			else
 				diff.setLength2D(32);
 			dl = diff.getPerpendicularLeft();
