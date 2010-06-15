@@ -275,6 +275,11 @@ void Joystick::update(float dt)
 		else
 			buttons[i] = UP;
 	}
+
+	dpadLeft  = buttons[7];
+	dpadRight = buttons[5];
+	dpadUp    = buttons[4];
+	dpadDown  = buttons[6];
 #endif
 
 	if (clearRumbleTime > 0)

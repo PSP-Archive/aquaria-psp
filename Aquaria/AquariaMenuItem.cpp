@@ -115,8 +115,9 @@ void AquariaGuiElement::updateMovement(float dt)
 
 		if (guiMoveTimer==0)
 		{
-			Vector p = core->joystick.position;
 			Direction dir = DIR_NONE;
+#ifndef BBGE_BUILD_PSP  // Only allow movement via the D-pad, for UI consistency.
+			Vector p = core->joystick.position;
 			if (!p.isLength2DIn(0.4))
 			{
 				if (fabs(p.x) > fabs(p.y))
@@ -134,9 +135,20 @@ void AquariaGuiElement::updateMovement(float dt)
 						dir = DIR_UP;
 				}
 			}
-
-			if (p.isZero())
+			else
+#endif  // BBGE_BUILD_PSP
 			{
+#ifdef BBGE_BUILD_PSP
+				// FIXME: For some reason, this doesn't detect action keys
+				// when in the options menu shown from the title screen.
+				// I suspect it has something to do with the nested
+				// dsq->main() call at the end of Game::showInGameMenu().
+				// For now, we just check the raw button data.  --achurch
+				if (core->joystick.dpadLeft)		dir = DIR_LEFT;
+				else if (core->joystick.dpadRight)	dir = DIR_RIGHT;
+				else if (core->joystick.dpadUp)		dir = DIR_UP;
+				else if (core->joystick.dpadDown)	dir = DIR_DOWN;
+#else
 				StateObject *obj = dsq->getTopStateObject();
 				if (obj)
 				{
@@ -145,9 +157,10 @@ void AquariaGuiElement::updateMovement(float dt)
 					else if (obj->isActing(ACTION_MENUUP))		dir = DIR_UP;
 					else if (obj->isActing(ACTION_MENUDOWN))	dir = DIR_DOWN;
 				}
+#endif
 			}
 
-			if (p.isZero()) return;
+			if (dir == DIR_NONE) return;
 
 			const float moveDelay = 0.2;
 

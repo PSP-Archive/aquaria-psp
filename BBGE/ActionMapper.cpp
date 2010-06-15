@@ -347,19 +347,19 @@ bool ActionMapper::getKeyState(int k)
 	{
 		keyState = core->joystick.btnSelect;
 	}
-	else if (k == X360_DPAD_LEFT)
+	else if (k == JOY1_DPAD_LEFT)
 	{
 		keyState = core->joystick.dpadLeft;
 	}
-	else if (k == X360_DPAD_RIGHT)
+	else if (k == JOY1_DPAD_RIGHT)
 	{
 		keyState = core->joystick.dpadRight;
 	}
-	else if (k == X360_DPAD_UP)
+	else if (k == JOY1_DPAD_UP)
 	{
 		keyState = core->joystick.dpadUp;
 	}
-	else if (k == X360_DPAD_DOWN)
+	else if (k == JOY1_DPAD_DOWN)
 	{
 		keyState = core->joystick.dpadDown;
 	}

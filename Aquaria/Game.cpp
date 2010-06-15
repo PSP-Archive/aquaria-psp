@@ -7051,7 +7051,7 @@ void Game::bindInput()
 
 	/*
 	addAction(ACTION_MENULEFT,	KEY_LEFT);
-	addAction(ACTION_MENURIGHT, KEY_RIGHT);
+	addAction(ACTION_MENURIGHT,	KEY_RIGHT);
 	addAction(ACTION_MENUUP,	KEY_UP);
 	addAction(ACTION_MENUDOWN,	KEY_DOWN);
 
@@ -7059,18 +7059,19 @@ void Game::bindInput()
 	dsq->user.control.actionSet.importAction(this, "SwimRight",		ACTION_MENURIGHT);
 	dsq->user.control.actionSet.importAction(this, "SwimUp",		ACTION_MENUUP);
 	dsq->user.control.actionSet.importAction(this, "SwimDown",		ACTION_MENUDOWN);
-
-	addAction(ACTION_MENULEFT,	X360_DPAD_LEFT);
-	addAction(ACTION_MENURIGHT, X360_DPAD_RIGHT);
-	addAction(ACTION_MENUUP,	X360_DPAD_UP);
-	addAction(ACTION_MENUDOWN,	X360_DPAD_DOWN);
 	*/
 
+#ifdef BBGE_BUILD_PSP
+	addAction(ACTION_MENULEFT,	JOY1_DPAD_LEFT);
+	addAction(ACTION_MENURIGHT,	JOY1_DPAD_RIGHT);
+	addAction(ACTION_MENUUP,	JOY1_DPAD_UP);
+	addAction(ACTION_MENUDOWN,	JOY1_DPAD_DOWN);
+#else
 	addAction(ACTION_MENULEFT,	JOY1_STICK_LEFT);
-	addAction(ACTION_MENURIGHT, JOY1_STICK_RIGHT);
+	addAction(ACTION_MENURIGHT,	JOY1_STICK_RIGHT);
 	addAction(ACTION_MENUUP,	JOY1_STICK_UP);
 	addAction(ACTION_MENUDOWN,	JOY1_STICK_DOWN);
-
+#endif
 
 
 	if (avatar)
