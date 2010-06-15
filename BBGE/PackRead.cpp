@@ -28,6 +28,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define _read read
 #define _lseek lseek
 #define _close close
+#elif defined(BBGE_BUILD_PSP)
+#include <pspuser.h>
+#define _open(path,flags) sceIoOpen((path),(flags),0)
+#define _read sceIoRead
+#define _lseek sceIoLseek
+#define _close sceIoClose
 #else
 #include <io.h>
 #endif

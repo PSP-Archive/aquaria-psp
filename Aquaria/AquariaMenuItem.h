@@ -106,6 +106,9 @@ public:
 	bool isGuiVisible();
 
 	bool mbDown;
+
+	static std::string getSaveDescription(const TiXmlDocument &doc);
+
 protected:
 	void onUpdate(float dt);
 	bool selected;

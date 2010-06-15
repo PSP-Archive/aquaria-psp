@@ -37,6 +37,9 @@ void AquariaProgressBar::progress(float perc)
 		perc = 0.01f;
 	this->perc += perc;
 	spinner.rotation = Vector(0,0,this->perc*360);
+#ifdef BBGE_BUILD_PSP
+	fakeglBeginFrame();
+#endif
 	core->render();
 	core->showBuffer();
 }

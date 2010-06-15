@@ -66,6 +66,35 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 
 	bool tmp=false;
 
+	// FIXME: Loading code here is duplicated from Continuity.cpp.
+	// Ideally, we should coalesce them into a single routine.  --achurch
+
+	TiXmlDocument doc;
+
+#ifdef BBGE_BUILD_PSP
+
+	// FIXME: This is only enough for the beginning of the game.
+	// Later save files can hit 4MB+ uncompressed.  We'll need to
+	// compress eventually...
+	const uint32_t size = 1000000;  // Waaay more than enough.  Hopefully.
+	char *buffer = new char[size];
+	PSPTexture *texture;
+	if (savefile_load(slot+1, buffer, size-1, &texture))
+	{
+		int32_t bytesRead;
+		while (!savefile_status(&bytesRead)) {
+			sys_time_delay(0.01);
+		}
+		if (bytesRead > 0)
+		{
+			buffer[bytesRead] = 0;
+			doc.Parse(buffer);
+		}
+	}
+	delete[] buffer;
+
+#else  // !BBGE_BUILD_PSP
+
 	std::string teh_file = dsq->continuity.getSaveFileName(slot, "aqs");
 
 	if (!exists(teh_file, false))
@@ -94,8 +123,6 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 		tmp = true;
 	}
 
-	TiXmlDocument doc;
-
 	doc.LoadFile(teh_file);
 
 	if (tmp)
@@ -103,156 +130,20 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 		remove(teh_file.c_str());
 	}
 
-	TiXmlElement *startData = doc.FirstChildElement("StartData");
-	if (startData)
+#endif
+
+	std::string description = getSaveDescription(doc);
+	if (description.length() > 0)
 	{
-		int hours, minutes, seconds;
-		hours = minutes = seconds = 0;
-		int x = atoi(startData->Attribute("x"));
-		int y = atoi(startData->Attribute("y"));
-
-		int exp, money, time=0;
-		if (startData->Attribute("exp"))
-			exp = atoi(startData->Attribute("exp"));
-		if (startData->Attribute("money"))
-			money = atoi(startData->Attribute("money"));
-		if (startData->Attribute("seconds"))
-		{
-			std::istringstream is(startData->Attribute("seconds"));
-			is >> time;
-		}
-
-		float s = dsq->continuity.seconds;
-		dsq->continuity.seconds = time;
-		dsq->continuity.getHoursMinutesSeconds(&hours, &minutes, &seconds);
-		
-		/*
-		std::ostringstream os;
-		os << "Slot: " << slot << " - " << startData->Attribute("scene") << " - exp: " << exp << " - wealth: " << money;
-		os << " Time: " << hours << ": " << minutes << ": " << seconds << " T: " << time;
-		*/
-		std::string location = startData->Attribute("scene");
-		stringToLower(location);
-		if (location.find("boilerroom")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1000);
-		}
-		else if (location.find("seahorse")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1028);
-		}
-		else if (location.find("whale")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1001);
-		}
-		else if (location.find("frozenveil")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1002);
-		}
-		else if (location.find("bubblecave")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1003);
-		}
-		else if (location.find("energytemple")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1004);
-		}
-		else if (location.find("trainingcave")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1023);
-		}
-		else if (location.find("vedhacave")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1005);
-		}
-		else if (location.find("naijacave")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1006);
-		}
-		else if (location.find("songcave")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1007);
-		}
-		else if (location.find("mainarea")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1008);
-		}
-		else if (location.find("openwater")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1009);
-		}
-		else if (location.find("forest")!=std::string::npos
-			|| location.find("tree")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1010);
-		}
-		else if (location.find("mithalas")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1011);
-		}
-		else if (location.find("cathedral")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1012);
-		}
-		else if (location.find("suntemple")!=std::string::npos || location.find("sunworm")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1013);
-		}
-		else if (location.find("veil")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1014);
-		}
-		else if (location.find("abyss")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1015);
-		}
-		else if (location.find("sunkencity")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1016);
-		}
-		else if (location.find("fishcave")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1017);
-		}
-		else if (location.find("octocave")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1018);
-		}
-		else if (location.find("icecave")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1019);
-		}
-		else if (location.find("secret")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1020);
-		}
-		else if (location.find("final")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1021);
-		}
-		else if (location.find("licave")!=std::string::npos)
-		{
-			location = dsq->continuity.stringBank.get(1029);
-		}
-
-		std::string showLoc;
-		if (dsq->isDeveloperKeys())
-		{
-			showLoc = " (" + std::string(startData->Attribute("scene")) + ")";
-		}
 		std::ostringstream os;
 		os << "Slot ";
 		if (dsq->isDeveloperKeys())
 			os << slot;
 		else
 			os << (slot+1);
-		os << " - " << location << std::endl;
-		os << hours << ":" << numToZeroString(minutes, 2) << showLoc;
-		// << ": " << seconds;
-		//" T: " << time;
+		os << " - " << description;
 		text1->setText(os.str());
 		glowText->setText(os.str());
-		dsq->continuity.seconds = s;
 
 		empty = false;
 	}
@@ -272,6 +163,32 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 
 	screen = new Quad;
 
+#ifdef BBGE_BUILD_PSP
+
+	if (texture)
+	{
+		// FIXME: This is horribly ugly, but I'm not sure there's
+		// any good way to accomplish this within the current
+		// engine's framework...  --achurch
+		Texture *t = new Texture;
+		std::ostringstream os;
+		os << "__save" << slot;
+		t->name = os.str();
+		t->width = 144;
+		t->height = 80;
+		glGenTextures(1, &t->textures[0]);
+		glBindTexture(GL_TEXTURE_2D, t->textures[0]);
+		fakeglTexImagePSP(GL_TEXTURE_2D, texture);
+		t->addRef();
+		core->addResource(t);
+		screen->setTexturePointer(t, NO_ADD_REF);
+	}
+	else
+	{
+		screen->setTexture("gui/savescreendefault");
+	}
+
+#else  // !BBGE_BUILD_PSP
 
 	if (dsq->user.video.saveSlotScreens)
 	{
@@ -296,6 +213,7 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 		screen->setTexture("gui/savescreendefault");
 	}
 
+#endif  // BBGE_BUILD_PSP
 
 	if (empty)
 	{
@@ -305,8 +223,14 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 		screen->alphaMod = 1;
 
 	core->resetTimer();
-	screen->upperLeftTextureCoordinates = Vector(0, 1);
+#ifdef BBGE_BUILD_PSP
+	const float cut = (((144.0f/80.0f) - (4.0f/3.0f)) / 2) / (144.0f/80.0f);
+	screen->upperLeftTextureCoordinates  = Vector(0+cut, 0);
+	screen->lowerRightTextureCoordinates = Vector(1-cut, 1);
+#else
+	screen->upperLeftTextureCoordinates  = Vector(0, 1);
 	screen->lowerRightTextureCoordinates = Vector(1, 0.25);
+#endif
 	//screen->scale = Vector(0.4, 0.3);
 
 	if (screen->getWidth() == 0)
@@ -466,3 +390,154 @@ void AquariaSaveSlot::onUpdate(float dt)
 	}
 }
 
+
+std::string AquariaSaveSlot::getSaveDescription(const TiXmlDocument &doc)
+{
+	const TiXmlElement *startData = doc.FirstChildElement("StartData");
+	if (!startData)
+		return "";
+
+	int hours, minutes, seconds;
+	hours = minutes = seconds = 0;
+	int x = atoi(startData->Attribute("x"));
+	int y = atoi(startData->Attribute("y"));
+
+	int exp, money, time=0;
+	if (startData->Attribute("exp"))
+		exp = atoi(startData->Attribute("exp"));
+	if (startData->Attribute("money"))
+		money = atoi(startData->Attribute("money"));
+	if (startData->Attribute("seconds"))
+	{
+		std::istringstream is(startData->Attribute("seconds"));
+		is >> time;
+	}
+
+	float s = dsq->continuity.seconds;
+	dsq->continuity.seconds = time;
+	dsq->continuity.getHoursMinutesSeconds(&hours, &minutes, &seconds);
+	
+	/*
+	std::ostringstream os;
+	os << "Slot: " << slot << " - " << startData->Attribute("scene") << " - exp: " << exp << " - wealth: " << money;
+	os << " Time: " << hours << ": " << minutes << ": " << seconds << " T: " << time;
+	*/
+	std::string location = startData->Attribute("scene");
+	stringToLower(location);
+	if (location.find("boilerroom")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1000);
+	}
+	else if (location.find("seahorse")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1028);
+	}
+	else if (location.find("whale")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1001);
+	}
+	else if (location.find("frozenveil")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1002);
+	}
+	else if (location.find("bubblecave")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1003);
+	}
+	else if (location.find("energytemple")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1004);
+	}
+	else if (location.find("trainingcave")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1023);
+	}
+	else if (location.find("vedhacave")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1005);
+	}
+	else if (location.find("naijacave")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1006);
+	}
+	else if (location.find("songcave")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1007);
+	}
+	else if (location.find("mainarea")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1008);
+	}
+	else if (location.find("openwater")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1009);
+	}
+	else if (location.find("forest")!=std::string::npos
+		|| location.find("tree")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1010);
+	}
+	else if (location.find("mithalas")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1011);
+	}
+	else if (location.find("cathedral")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1012);
+	}
+	else if (location.find("suntemple")!=std::string::npos || location.find("sunworm")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1013);
+	}
+	else if (location.find("veil")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1014);
+	}
+	else if (location.find("abyss")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1015);
+	}
+	else if (location.find("sunkencity")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1016);
+	}
+	else if (location.find("fishcave")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1017);
+	}
+	else if (location.find("octocave")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1018);
+	}
+	else if (location.find("icecave")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1019);
+	}
+	else if (location.find("secret")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1020);
+	}
+	else if (location.find("final")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1021);
+	}
+	else if (location.find("licave")!=std::string::npos)
+	{
+		location = dsq->continuity.stringBank.get(1029);
+	}
+
+	std::string showLoc;
+	if (dsq->isDeveloperKeys())
+	{
+		showLoc = " (" + std::string(startData->Attribute("scene")) + ")";
+	}
+	std::ostringstream os;
+	os << location << std::endl;
+	os << hours << ":" << numToZeroString(minutes, 2) << showLoc;
+	// << ": " << seconds;
+	//" T: " << time;
+
+	dsq->continuity.seconds = s;
+
+	return os.str();
+}

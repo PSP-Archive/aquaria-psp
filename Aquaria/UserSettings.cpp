@@ -261,6 +261,20 @@ void UserSettings::save()
 	doc.SaveFile(dsq->getPreferencesFolder() + "/" + userSettingsFilename);
 #elif defined(BBGE_BUILD_WINDOWS)
 	doc.SaveFile(userSettingsFilename);
+#elif defined(BBGE_BUILD_PSP)
+	TiXmlPrinter printer;
+	printer.SetIndent("\t");
+	doc.Accept(&printer);
+	if (savefile_save(SAVE_FILE_CONFIG,
+			printer.CStr(), printer.Str().length(),
+			NULL, 0 /*FIXME(PSP): icon*/, "Aquaria System Data",
+			"System data used by Aquaria.  Deleting this"
+			" file will reset all options to their defaults."))
+	{
+		while (!savefile_status(NULL)) {
+			sys_time_delay(0.01);
+		}
+	}
 #endif
 
 	//clearInputCodeMap();
@@ -312,6 +326,31 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		doc.LoadFile(overrideFile);
 	else
 		doc.LoadFile(userSettingsFilename);
+#elif defined(BBGE_BUILD_PSP)
+# ifdef AQUARIA_ALLOW_PSP_SETTINGS_OVERRIDE
+	if (exists(userSettingsFilename, false))
+		doc.LoadFile(userSettingsFilename);
+	else
+	{
+# endif
+	const uint32_t size = 100000;  // Waaay more than enough.
+	char *buffer = new char[size];
+	if (savefile_load(SAVE_FILE_CONFIG, buffer, size-1, NULL))
+	{
+		int32_t bytesRead;
+		while (!savefile_status(&bytesRead)) {
+			sys_time_delay(0.01);
+		}
+		if (bytesRead > 0)
+		{
+			buffer[bytesRead] = 0;
+			doc.Parse(buffer);
+		}
+	}
+	delete[] buffer;
+# ifdef AQUARIA_ALLOW_PSP_SETTINGS_OVERRIDE
+	}
+# endif
 #endif
 	
 	version.settingsVersion = 0;

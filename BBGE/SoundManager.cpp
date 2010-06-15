@@ -24,15 +24,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "PackRead.h"
 
 #if defined(BBGE_BUILD_FMODEX)
-    #ifdef BBGE_BUILD_FMOD_OPENAL_BRIDGE
+    #if defined(BBGE_BUILD_FMOD_OPENAL_BRIDGE) || defined(BBGE_BUILD_FMOD_PSP_BRIDGE)
 	#include "FmodOpenALBridge.h"
-	#else
+    #else
 	#include <fmod.h>
 	#include <fmod.hpp>
 	#ifdef BBGE_BUILD_WINDOWS
 		#pragma comment(lib, "fmodex_vc.lib")
 	#endif
-	#endif
+    #endif
 #endif
 
 #ifdef BBGE_BUILD_FMODEX

@@ -87,6 +87,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#include "glext.h"
 #endif
 
+#if defined(BBGE_BUILD_PSP)
+	#include "PSPInterface.h"
+#endif
+
 
 #ifdef _MSC_VER
 #pragma warning(disable:4786)

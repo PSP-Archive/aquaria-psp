@@ -28,6 +28,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Avatar.h"
 #include "GridRender.h"
 
+#ifdef BBGE_BUILD_PSP  // FIXME(PSP): deal with this later
+# define pngLoadRaw(path,info) false
+#endif
+
 
 #ifdef BBGE_BUILD_WINDOWS
 	#include <shellapi.h>

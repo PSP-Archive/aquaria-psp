@@ -36,6 +36,11 @@ typedef float    FTGL_FLOAT;
 #else
 
     // Non windows platforms - don't require nonsense as seen above :-)    
+    #ifdef BBGE_BUILD_PSP
+        #define SYSDEP_COMMON_H "sysdep-psp/common.h"
+        #include "common.h"
+        #include "fakegl.h"
+    #else
     #if 1
         #include "GL/gl.h"
         //#include "GL/glu.h"
@@ -49,6 +54,7 @@ typedef float    FTGL_FLOAT;
             #include <GL/glu.h>
         #endif                
 
+    #endif
     #endif
     #endif
 

@@ -131,7 +131,7 @@ void Precacher::precacheList(const std::string &list, void progressCallback())
 	{
 		if (!t.empty())
 		{
-#if defined(BBGE_BUILD_UNIX)
+#if defined(BBGE_BUILD_UNIX) || defined(BBGE_BUILD_PSP)
 			//debugLog("precache["+t+"]");
 			t = t.substr(0,t.size()-1);
 			debugLog("precache["+t+"]");

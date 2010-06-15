@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#include <shellapi.h>
 #endif
 
-#if defined(BBGE_BUILD_UNIX)
+#if defined(BBGE_BUILD_UNIX) || defined(BBGE_BUILD_PSP)
 	#include <sys/types.h>
 	#include <dirent.h>
 #endif
@@ -282,8 +282,12 @@ bool exists(const std::string &f, bool makeFatal)
         debugLog(os.str());
         */
 
+#ifdef BBGE_BUILD_PSP
+		if (!resource_exists(f.c_str()))
+#else
 		FILE *file = fopen(core->adjustFilenameCase(f).c_str(), "rb");
 		if (!file)
+#endif
 		{
 			if (makeFatal)
 			{
@@ -292,7 +296,9 @@ bool exists(const std::string &f, bool makeFatal)
 			}
 			return false;
 		}
+#ifndef BBGE_BUILD_PSP
 		fclose(file);
+#endif
 	//}
 	return true;
 }
@@ -508,7 +514,7 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
 	//HACK: MAC:
 	debugLog("forEachFile - path: " + path + " type: " + type);
 
-#if defined(BBGE_BUILD_UNIX)
+#if defined(BBGE_BUILD_UNIX) || defined(BBGE_BUILD_PSP)
 	DIR *dir=0;
 	dir = opendir(path.c_str());
 	if (dir)

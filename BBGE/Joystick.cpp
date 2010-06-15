@@ -255,6 +255,28 @@ void Joystick::update(float dt)
 	}
 #endif
 
+#ifdef BBGE_BUILD_PSP
+	float xaxis, yaxis;
+	input_stick_pos(0, &xaxis, &yaxis);
+	position.x = xaxis;
+	position.y = yaxis;
+
+	rightStick.x = 0;
+	rightStick.y = 0;
+
+	callibrate(position, deadZone1);
+
+	callibrate(rightStick, deadZone2);
+		
+	for (int i = 0; i < maxJoyBtns; i++)
+	{
+		if (i < INPUT_MAX_BUTTONS)
+			buttons[i] = input_button_state(i) ? DOWN : UP;
+		else
+			buttons[i] = UP;
+	}
+#endif
+
 	if (clearRumbleTime > 0)
 	{
 		clearRumbleTime -= dt;

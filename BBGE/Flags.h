@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef BBGE_BUILD_WINDOWS
 	typedef unsigned __int32	uint32;
 #endif
-#ifdef BBGE_BUILD_UNIX
+#if defined(BBGE_BUILD_UNIX) || defined(BBGE_BUILD_PSP)
 	#include <stdint.h>
 	typedef uint32_t			uint32;
 #endif

@@ -440,7 +440,7 @@ void Quad::renderGrid()
 		{
 			percentX = fabs(this->lowerRightTextureCoordinates.x - this->upperLeftTextureCoordinates.x);
 			percentY = fabs(this->upperLeftTextureCoordinates.y - this->lowerRightTextureCoordinates.y);
-#if defined(BBGE_BUILD_UNIX)
+#if defined(BBGE_BUILD_UNIX) || defined(BBGE_BUILD_PSP)
 			if (lowerRightTextureCoordinates.x < upperLeftTextureCoordinates.x)
 				baseX = lowerRightTextureCoordinates.x;
 			else

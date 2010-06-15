@@ -842,6 +842,9 @@ void Core::messageBox(const std::string &title, const std::string &msg)
 #elif defined(BBGE_BUILD_UNIX)
 	// !!! FIXME: probably don't want the whole GTK+ dependency in here...
 	fprintf(stderr, "%s: %s\n", title.c_str(), msg.c_str());
+#elif defined(BBGE_BUILD_PSP)
+	// Not really applicable on the PSP (and Aquaria doesn't call this
+	// function anyway).
 #else
 #error Please define your platform.
 #endif
@@ -919,6 +922,9 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
 	particleManager = new ParticleManager(particleSize);
 #ifdef BBGE_BUILD_SDL
 	nowTicks = thenTicks = 0;
+#endif
+#ifdef BBGE_BUILD_PSP
+	curTime = lastTime = 0;
 #endif
 	_hasFocus = false;
 	lib_graphics = lib_sound = lib_input = false;
@@ -1041,6 +1047,9 @@ std::string Core::getPreferencesFolder()
 #ifdef BBGE_BUILD_WINDOWS
 	return "";
 #endif
+#ifdef BBGE_BUILD_PSP
+	return ".";
+#endif
 }
 
 std::string Core::getUserDataFolder()
@@ -1158,7 +1167,9 @@ void Core::setInputGrab(bool on)
 {
 	if (isWindowFocus())
 	{
+#ifdef BBGE_BUILD_SDL
 		SDL_WM_GrabInput(on?SDL_GRAB_ON:SDL_GRAB_OFF);
+#endif
 	}
 }
 
@@ -1643,10 +1654,20 @@ void Core::onUpdate(float dt)
 	core->mouse.lastPosition = core->mouse.position;
 	core->mouse.lastScrollWheel = core->mouse.scrollWheel;
 
+#ifdef BBGE_BUILD_PSP
+	// FIXME: pollEvents() has to come before the input checks on
+	// the PSP (otherwise the input checks will use old data).  Is
+	// there any reason pollEvents() can't be called here for SDL as
+	// well?  If not, it could be called unconditionally here and
+	// the !PSP copy below could be removed.  --achurch
+	pollEvents();
+#endif
 	readKeyData();
 	readMouseData();
 	readJoystickData();
+#ifndef BBGE_BUILD_PSP
 	pollEvents();
+#endif
 	joystick.update(dt);
 
 
@@ -1761,8 +1782,10 @@ void Core::setSDLGLAttributes()
 	os << "setting vsync: " << _vsync;
 	debugLog(os.str());
 
+#ifdef BBGE_BUILD_SDL
 	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, _vsync);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+#endif
 }
 
 
@@ -1924,6 +1947,10 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 
 #endif
 
+#ifdef BBGE_BUILD_PSP
+	fakeglBeginFrame();
+#endif
+
 #if defined(BBGE_BUILD_OPENGL)
 	glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);				// Black Background
@@ -1984,6 +2011,8 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 void Core::enumerateScreenModes()
 {
 	screenModes.clear();
+
+#ifdef BBGE_BUILD_SDL
 	SDL_Rect **modes;
 	int i;
 
@@ -2010,6 +2039,11 @@ void Core::enumerateScreenModes()
 			}
 		}
 	}
+#endif
+
+#ifdef BBGE_BUILD_PSP
+	screenModes.push_back(ScreenMode(0, 480, 272));
+#endif
 }
 
 void Core::shutdownSoundLibrary()
@@ -2668,6 +2702,9 @@ void Core::resetTimer()
 #ifdef BBGE_BUILD_SDL
 	nowTicks = thenTicks = SDL_GetTicks();
 #endif
+#ifdef BBGE_BUILD_PSP
+	curTime = lastTime = sys_time_now();
+#endif
 #ifdef BBGE_BUILD_DIRECTX
 	QueryPerformanceCounter((LARGE_INTEGER*)&timerEnd);
 	timerStart = timerEnd;
@@ -2766,11 +2803,12 @@ std::string getScreenshotFilename()
 	}
 }
 
-Uint32 Core::getTicks()
+uint32 Core::getTicks()
 {
 #ifdef BBGE_BUILD_SDL
 	return SDL_GetTicks();
 #endif
+	return 0;
 }
 
 float Core::stopWatch(int d)
@@ -2790,7 +2828,10 @@ float Core::stopWatch(int d)
 
 bool Core::isWindowFocus()
 {
+#ifdef BBGE_BUILD_SDL
 	return ((SDL_GetAppState() & SDL_APPINPUTFOCUS) != 0);
+#endif
+	return true;
 }
 
 void Core::main(float runTime)
@@ -2833,6 +2874,10 @@ void Core::main(float runTime)
 
 #ifdef BBGE_BUILD_SDL
 	nowTicks = thenTicks = SDL_GetTicks();
+#endif
+
+#ifdef BBGE_BUILD_PSP
+	curTime = lastTime = sys_time_now();
 #endif
 
 	//int i;
@@ -2896,6 +2941,12 @@ void Core::main(float runTime)
 		dt = (nowTicks-thenTicks)/1000.0;
 		thenTicks = nowTicks;
 		//thenTicks = SDL_GetTicks();
+#endif
+
+#ifdef BBGE_BUILD_PSP
+		curTime = sys_time_now();
+		dt = curTime - lastTime;
+		lastTime = curTime;
 #endif
 
 		if (verbose) debugLog("avgFPS");
@@ -3063,6 +3114,10 @@ void Core::main(float runTime)
 
 		if (settings.renderOn)
 		{
+#ifdef BBGE_BUILD_PSP
+			fakeglBeginFrame();
+#endif
+
 			if (verbose) debugLog("dark layer prerender");
 			if (darkLayer.isUsed())
 			{
@@ -3124,6 +3179,7 @@ void Core::main(float runTime)
 			fpsDebugString = os.str();
 			*/
 
+#ifdef BBGE_BUILD_SDL
 			nowTicks = SDL_GetTicks();
 			
 			if (diff > 0)
@@ -3137,6 +3193,12 @@ void Core::main(float runTime)
 			}
 
 			//nowTicks = SDL_GetTicks();
+#endif
+
+#ifdef BBGE_BUILD_PSP
+			sys_time_delay(diff);
+#endif
+
 		}	
 	}
 	if (verbose) debugLog("bottom of function");
@@ -3466,6 +3528,10 @@ void Core::pollEvents()
 	}
 
 #endif
+
+#ifdef BBGE_BUILD_PSP
+	input_update();
+#endif
 }
 
 #define _VLN(x, y, x2, y2) glVertex2f(x, y); glVertex2f(x2, y2);
@@ -3790,6 +3856,9 @@ void Core::print(int x, int y, const char *str, float sz)
 
 void Core::cacheRender()
 {
+#ifdef BBGE_BUILD_PSP
+	fakeglBeginFrame();
+#endif
 	render();
 	// what if the screen was full white? then you wouldn't want to clear buffers
 	//clearBuffers();
@@ -4117,6 +4186,9 @@ void Core::showBuffer()
 	// Present the backbuffer contents to the display
     g_pd3dDevice->Present( NULL, NULL, NULL, NULL );
 #endif
+#ifdef BBGE_BUILD_PSP
+	fakeglEndFrame();
+#endif
 }
 
 // WARNING: only for use during shutdown
@@ -4260,6 +4332,12 @@ void Core::shutdown()
 	debugLog("SDL Quit...");
 		SDL_Quit();
 	debugLog("OK");
+#endif
+
+
+
+#ifdef BBGE_BUILD_PSP
+	sys_exit(0);  // Doesn't return
 #endif
 }
 

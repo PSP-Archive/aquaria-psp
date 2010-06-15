@@ -96,6 +96,9 @@ void ScreenTransition::reloadDevice()
 
 void ScreenTransition::capture()
 {	
+#ifdef BBGE_BUILD_PSP
+	fakeglBeginFrame();
+#endif
 	core->render();
 	core->showBuffer();
 

@@ -398,7 +398,7 @@ enum GameKeys
 	KEY_ANYKEY = 4059,
 	KEY_MAXARRAY = SDLK_LAST+1
 };
-#elif defined(BBGE_BUILD_XINPUT)
+#elif defined(BBGE_BUILD_XINPUT) || defined(BBGE_BUILD_PSP)
 enum GameKeys
 {
 	KEY_LSUPER = 0,
@@ -979,7 +979,7 @@ public:
 
 	void updateCursorFromJoystick(float dt, int spd);
 
-	Uint32 getTicks();
+	uint32 getTicks();
 
 	float stopWatch(int d);
 
@@ -1297,6 +1297,10 @@ protected:
 
 #ifdef BBGE_BUILD_SDL
 	int nowTicks, thenTicks;
+#endif
+
+#ifdef BBGE_BUILD_PSP
+	double lastTime, curTime;
 #endif
 	
 	int _vsync, _bpp;

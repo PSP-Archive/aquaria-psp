@@ -100,6 +100,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 	void enumerateTest()
 	{
+#ifdef BBGE_BUILD_SDL
 		SDL_Rect **modes;
 		int i;
 
@@ -127,6 +128,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 				//printf("  %d x %d\n", modes[i]->w, modes[i]->h);
 			}
 		}
+#endif
 #endif
 	}
 
@@ -218,7 +220,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 		DSQ core(fileSystem);
+
+#elif defined(BBGE_BUILD_PSP)
+
+	extern "C" int main(int argc,char *argv[])
+	{
+		init_all(argc, argv);
+		set_performance(PERFORMANCE_HIGH);
+
+		DSQ core("");
+
 #endif	 
+
 		{			
 			core.init();
 			//enumerateTest();

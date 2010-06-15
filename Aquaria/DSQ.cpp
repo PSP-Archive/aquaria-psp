@@ -345,7 +345,9 @@ void DSQ::forceInputGrabOff()
 {
 	toggleInputGrabPlat(false);
 	setInpGrab = 0;
+#ifdef BBGE_BUILD_SDL
 	SDL_ShowCursor(SDL_DISABLE);
+#endif
 }
 
 void DSQ::rumble(float leftMotor, float rightMotor, float time)
@@ -845,6 +847,9 @@ void loadBit(int index, float perc = 1)
 
 	loading->setWidthHeight(loadingProgress*600, 23);
 
+#ifdef BBGE_BUILD_PSP
+	fakeglBeginFrame();
+#endif
 	core->render();
 	core->showBuffer();
 }
@@ -1210,6 +1215,9 @@ This build is not yet final, and as such there are a couple things lacking. They
 	addRenderObject(lbit2, LR_HUD);
 	*/
 
+#ifdef BBGE_BUILD_PSP
+	fakeglBeginFrame();
+#endif
 	core->render();
 	core->showBuffer();
 
@@ -3160,6 +3168,8 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 		{
 			//dsq->screenMessage("Game Saved");
 			continuity.saveFile(selectedSaveSlot->getSlotIndex(), position);
+
+#ifndef BBGE_BUILD_PSP
 			core->main(1);
 
 			if (user.video.saveSlotScreens)
@@ -3186,6 +3196,7 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 				remove((dsq->getSaveDirectory() + "/poot-s.tmp").c_str());
 				dsq->prepScreen(0);
 			}
+#endif  // !BBGE_BUILD_PSP
 		}
 		else if (saveSlotMode == SSM_LOAD)
 		{
@@ -4104,9 +4115,11 @@ void DSQ::bindInput()
 
 void DSQ::jiggleCursor()
 {
+#ifdef BBGE_BUILD_SDL
 	// hacky
 	SDL_ShowCursor(SDL_ENABLE);
 	SDL_ShowCursor(SDL_DISABLE);
+#endif
 }
 
 float skipSfxVol = 1.0;
@@ -4140,12 +4153,18 @@ void DSQ::onUpdate(float dt)
 		if (isCutscenePaused())
 		{
 			sound->pause();
-			float ms = 1.0/60.0;
+			float sec = 1.0/60.0;
 			while (isCutscenePaused())
 			{
 				pollEvents();
-				ActionMapper::onUpdate(ms);
-				SDL_Delay(int(ms*1000));
+				ActionMapper::onUpdate(sec);
+#ifdef BBGE_BUILD_SDL
+				SDL_Delay(int(sec*1000));
+#endif
+#ifdef BBGE_BUILD_PSP
+				sys_time_delay(sec);
+				fakeglBeginFrame();
+#endif
 				render();
 				showBuffer();
 				resetTimer();
@@ -4862,6 +4881,8 @@ std::string DSQ::getSaveDirectory()
 {
 #if defined(BBGE_BUILD_WINDOWS)
 	return "save";
+#elif defined(BBGE_BUILD_PSP)
+	return "";  // Not actually used, since we save in native save files.
 #elif defined(BBGE_BUILD_UNIX)
 	return getUserDataFolder() + "/save";
 #endif
@@ -4920,6 +4941,10 @@ void AquariaScreenTransition::capture()
 	InterpolatedVector oldAlpha = dsq->cursor->alpha;
 	dsq->cursor->alpha.x = 0;
 	int width=0, height=0;
+
+#ifdef BBGE_BUILD_PSP
+	fakeglBeginFrame();
+#endif
 	core->render();
 
 	width = core->getWindowWidth();

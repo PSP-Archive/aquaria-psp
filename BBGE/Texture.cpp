@@ -67,7 +67,9 @@ Texture::Texture() : Resource()
 	width = height = 0;
 
 	repeat = false;
+#ifndef BBGE_BUILD_PSP
 	pngSetStandardOrientation(0);
+#endif
 	imageData = 0;
 	layer = 0;
 
@@ -477,6 +479,39 @@ void Texture::loadPNG(const std::string &file)
 {
 	if (file.empty()) return;
 
+#ifdef BBGE_BUILD_PSP
+
+	// Allocate textures from the top of memory, so they don't
+	// contribute to fragmentation of the area used by malloc().
+	PSPTexture *psptex = texture_load(file.c_str(), MEM_ALLOC_TOP);
+	if (psptex != NULL)
+	{
+		if (psptex->swizzled) {  // Thus also half-size
+			width = psptex->width * 2;
+			height = psptex->height * 2;
+		} else {
+			width = psptex->width;
+			height = psptex->height;
+		}
+		glGenTextures(1, &textures[0]);
+		glBindTexture(GL_TEXTURE_2D, textures[0]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+		fakeglTexImagePSP(GL_TEXTURE_2D, psptex);
+	}
+	else
+	{
+		debugLog("Can't load PNG file: " + file);
+		width = 64;
+		height = 64;
+		Texture::textureError = TEXERR_FILENOTFOUND;
+	}
+	return;
+
+#endif
+
 #ifdef BBGE_BUILD_OPENGL
 
 
@@ -661,6 +696,11 @@ static float fread_float(FILE *file)
 
 #ifdef BBGE_BUILD_WINDOWS
 	#define byte char
+#endif
+
+#ifdef BBGE_BUILD_PSP
+	#define byte uint8_t
+	#define WORD uint16_t
 #endif
 
 ImageTGA *Texture::TGAload(const char *filename)

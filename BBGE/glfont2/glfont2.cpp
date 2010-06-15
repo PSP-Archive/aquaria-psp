@@ -21,7 +21,11 @@ using namespace std;
 */
 #include "Base.h"
 
+#ifdef BBGE_BUILD_PSP
+# define SDL_SwapLE32(x) (x)
+#else
 #include "SDL_endian.h"
+#endif
 
 //glFont header
 #include "glfont2.h"

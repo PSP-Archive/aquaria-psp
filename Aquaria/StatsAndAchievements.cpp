@@ -176,28 +176,28 @@ void StatsAndAchievements::RunFrame()
 		// Get generic achievement data...
 		io = fopen("data/achievements.txt", "r");
 		char *ptr = NULL;
-		char buf[1024];
+		char line[1024];
 		for (size_t i = 0; i < max_achievements; i++)
 		{
-			if (!io || (fgets(buf, sizeof (buf), io) == NULL))
-				snprintf(buf, sizeof (buf), "Achievement #%d", (int) i);
+			if (!io || (fgets(line, sizeof (line), io) == NULL))
+				snprintf(line, sizeof (line), "Achievement #%d", (int) i);
 			else
 			{
-				for (char *ptr = (buf + strlen(buf)) - 1; (ptr >= buf) && ((*ptr == '\r') || (*ptr == '\n')); ptr--)
+				for (char *ptr = (line + strlen(line)) - 1; (ptr >= line) && ((*ptr == '\r') || (*ptr == '\n')); ptr--)
 					*ptr = '\0';
 			}
-			buf[sizeof (g_rgAchievements[i].name) - 1] = '\0';  // just in case.
-			strcpy(g_rgAchievements[i].name, buf);
+			line[sizeof (g_rgAchievements[i].name) - 1] = '\0';  // just in case.
+			strcpy(g_rgAchievements[i].name, line);
 
-			if (!io || (fgets(buf, sizeof (buf), io) == NULL))
-				snprintf(buf, sizeof (buf), "[Description of Achievement #%d is missing!]", (int) i);
+			if (!io || (fgets(line, sizeof (line), io) == NULL))
+				snprintf(line, sizeof (line), "[Description of Achievement #%d is missing!]", (int) i);
 			else
 			{
-				for (char *ptr = (buf + strlen(buf)) - 1; (ptr >= buf) && ((*ptr == '\r') || (*ptr == '\n')); ptr--)
+				for (char *ptr = (line + strlen(line)) - 1; (ptr >= line) && ((*ptr == '\r') || (*ptr == '\n')); ptr--)
 					*ptr = '\0';
 			}
-			buf[sizeof (g_rgAchievements[i].desc) - 1] = '\0';  // just in case.
-			strcpy(g_rgAchievements[i].desc, buf);
+			line[sizeof (g_rgAchievements[i].desc) - 1] = '\0';  // just in case.
+			strcpy(g_rgAchievements[i].desc, line);
 
 			// unsupported at the moment.
 			g_rgAchievements[i].iconImage = 0;
@@ -207,28 +207,44 @@ void StatsAndAchievements::RunFrame()
 			fclose(io);
 
 		// See what this specific player has achieved...
+
+		unsigned char *buf = new unsigned char[max_achievements];
+		size_t br = 0;
+#ifdef BBGE_BUILD_PSP
+		if (savefile_load(SAVE_FILE_STATS, buf, max_achievements,
+				  NULL)) {
+			int32_t result;
+			while (!savefile_status(&result))
+				sys_time_delay(0.01);
+			br = result;
+			if (br == 0)
+				statsValid = true;  // Probably file not found.
+		} else {
+			statsValid = true;
+		}
+#else
 		const std::string fname(core->getUserDataFolder() + "/achievements.bin");
 		io = fopen(fname.c_str(), "rb");
 		if (io == NULL)
 			statsValid = true;  // nothing to report.
 		else
 		{
-			unsigned char *buf = new unsigned char[max_achievements];
-			const size_t br = fread(buf, sizeof (buf[0]), max_achievements, io);
+			br = fread(buf, sizeof (buf[0]), max_achievements, io);
 			fclose(io);
-
-			if (br == max_achievements)
-			{
-				statsValid = true;  // but we'll reset if there's a problem.
-				for (size_t i = 0; statsValid && (i < max_achievements); i++)
-				{
-					const int val = ((int) (buf[i] ^ 0xFF)) - ((int)i);
-					statsValid = ((val == 0) || (val == 1));
-					g_rgAchievements[i].achieved = (val == 1);
-				}
-			}
-			delete[] buf;
 		}
+#endif
+
+		if (br == max_achievements)
+		{
+			statsValid = true;  // but we'll reset if there's a problem.
+			for (size_t i = 0; statsValid && (i < max_achievements); i++)
+			{
+				const int val = ((int) (buf[i] ^ 0xFF)) - ((int)i);
+				statsValid = ((val == 0) || (val == 1));
+				g_rgAchievements[i].achieved = (val == 1);
+			}
+		}
+		delete[] buf;
 	}
 #endif
 
@@ -845,11 +861,6 @@ void StatsAndAchievements::StoreStatsIfNecessary()
 #ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
 		storeStats = false;  // only ever try once.
 
-		const std::string fname(core->getUserDataFolder() + "/achievements.bin");
-		FILE *io = fopen(fname.c_str(), "wb");
-		if (io == NULL)
-			return;
-
 		const size_t max_achievements = ARRAYSIZE(g_rgAchievements);
 		unsigned char *buf = new unsigned char[max_achievements];
         
@@ -857,6 +868,29 @@ void StatsAndAchievements::StoreStatsIfNecessary()
 		{
 			int val = g_rgAchievements[i].achieved ? 1 : 0;
 			buf[i] = ((unsigned char) (val + ((int)i))) ^ 0xFF;
+		}
+
+#ifdef BBGE_BUILD_PSP
+		if (savefile_save(SAVE_FILE_STATS, buf, max_achievements,
+				  NULL, 0, "Aquaria Achievements Data",
+				  "Data recording the achievements you've"
+				  " unlocked in Aquaria.  Deleting this file"
+				  " will erase all of your achievements."))
+		{
+			while (!savefile_status(NULL)) {
+				sys_time_delay(0.01);
+			}
+		}
+		delete[] buf;
+		return;
+#endif
+
+		const std::string fname(core->getUserDataFolder() + "/achievements.bin");
+		FILE *io = fopen(fname.c_str(), "wb");
+		if (io == NULL)
+		{
+			delete[] buf;
+			return;
 		}
 
 		fwrite(buf, sizeof (buf[0]), max_achievements, io);
