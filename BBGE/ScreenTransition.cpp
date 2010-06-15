@@ -142,8 +142,8 @@ void ScreenTransition::onRender()
 	if (alpha.x == 0) return;
 	
 #ifdef BBGE_BUILD_OPENGL
-	int width2 = width/2;
-	int height2 = height/2;
+	float width2 = float(width)/2;
+	float height2 = float(height)/2;
 	
 	const float pw = float(windowWidth)/float(textureWidth);
 	const float ph = float(windowHeight)/float(textureHeight);
@@ -171,7 +171,24 @@ void ScreenTransition::onRender()
 		glTranslatef(0.5f,0.0f,0.0f);
 	}
 #endif
-	
+
+#ifdef BBGE_BUILD_PSP
+	// I think the problem is that with all the coordinate conversion
+	// to and from the virtual 800x600 coordinate space, a bit of
+	// rounding error creeps in.  The PSP has a similar problem, but
+	// since its resolution is fixed at 480x272, I'm just setting
+	// hard constants here.  --achurch
+	width2  = float(480)/2;
+	height2 = float(272)/2;
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-width2, width2, height2, -height2, -1, 1);
+#endif
+
 	glBegin(GL_QUADS);
 		//glNormal3f( 0.0f, 0.0f, 1.0f);
 		//glColor4f(color.x, color.y, color.z, alpha.getValue());
@@ -184,6 +201,12 @@ void ScreenTransition::onRender()
 		glTexCoord2d(0, ph);
 		glVertex3f(-width2,  -height2,  0.0);
 	glEnd();
+
+#ifdef BBGE_BUILD_PSP  // See above.
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+#endif
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
