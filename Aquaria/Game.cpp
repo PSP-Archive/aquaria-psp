@@ -6517,6 +6517,7 @@ void Game::applyState()
 		controlHint_bg->alphaMod = 0.7;
 		//controlHint_bg->setTexture("HintBox");
 		controlHint_bg->setWidthHeight(core->getVirtualWidth(), 100);
+		controlHint_bg->autoWidth = AUTO_VIRTUALWIDTH;
 		controlHint_bg->alpha = 0;
 	}
 	addRenderObject(controlHint_bg, LR_HELP);

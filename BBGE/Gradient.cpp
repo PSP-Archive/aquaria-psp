@@ -32,7 +32,11 @@ void Gradient::onUpdate(float dt)
 
 	if (autoWidth == AUTO_VIRTUALWIDTH)
 	{
+#ifdef BBGE_BUILD_PSP  // FIXME: As in Quad::onUpdate().  --achurch
+		scale.x = core->getVirtualWidth() + 2;
+#else
 		scale.x = core->getVirtualWidth();
+#endif
 	}
 
 	if (autoHeight == AUTO_VIRTUALHEIGHT)

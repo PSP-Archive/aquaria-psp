@@ -937,7 +937,11 @@ void Quad::onUpdate(float dt)
 	RenderObject::onUpdate(dt);
 
 	if (autoWidth == AUTO_VIRTUALWIDTH)
+#ifdef BBGE_BUILD_PSP  // FIXME: Otherwise it ends up 1 pixel too narrow.  Rounding error?  --achurch
+		width = core->getVirtualWidth() + 2;
+#else
 		width = core->getVirtualWidth();
+#endif
 	else if (autoWidth == AUTO_VIRTUALHEIGHT)
 		width = core->getVirtualHeight();
 
