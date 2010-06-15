@@ -100,7 +100,6 @@ void ScreenTransition::capture()
 	fakeglBeginFrame();
 #endif
 	core->render();
-	core->showBuffer();
 
 	/*
 	std::ostringstream os;
@@ -116,6 +115,8 @@ void ScreenTransition::capture()
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 #endif
+
+	core->showBuffer();
 }
 
 void ScreenTransition::go(float time)
