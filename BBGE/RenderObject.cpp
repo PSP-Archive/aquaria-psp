@@ -129,6 +129,8 @@ void RenderObject::multiplyColor(const Vector &color, bool inv)
 {
 	if (inv)
 	{
+		if (color.x == 0 || color.y == 0 || color.z == 0)
+			return;  // Avoid division by zero
 		const Vector invColor(1/color.x, 1/color.y, 1/color.z);
 		this->color *= invColor;
 		for (Children::iterator i = children.begin(); i != children.end(); i++)
@@ -150,6 +152,8 @@ void RenderObject::multiplyAlpha(const float alpha, bool inv)
 {
 	if (inv)
 	{
+		if (alpha == 0)
+			return;  // Avoid division by zero
 		const float invAlpha = 1/alpha;
 		this->alpha.x *= invAlpha;
 		for (Children::iterator i = children.begin(); i != children.end(); i++)
@@ -754,6 +758,7 @@ void RenderObject::renderCall()
 #ifdef BBGE_BUILD_OPENGL
 			if (RenderObject::renderPaths && position.data && position.data->path.getNumPathNodes() > 0)
 			{
+				// FIXME: Isn't this parameter order wrong?  --achurch
 				glRotatef(0, 0, 1, -rotation.z);
 				glLineWidth(4);
 				glEnable(GL_BLEND);

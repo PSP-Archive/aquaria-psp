@@ -781,6 +781,7 @@ public:
 
 	std::vector<Path*> paths;
 	Path *getPathByName(std::string name);
+	void moveMouseToPathNode(std::string name);
 	std::string avatarTransit;
 	SceneEditor sceneEditor;
 

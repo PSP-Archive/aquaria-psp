@@ -2793,11 +2793,9 @@ void Core::updateRenderObjects(float dt)
 		if (!rl->update)
 			continue;
 
-		RenderObject *r = rl->getFirst();
-		while (r)
+		for (RenderObject *r = rl->getFirst(); r; r = rl->getNext())
 		{
 			r->update(dt);
-			r = rl->getNext();
 		}
 	}
 
@@ -4086,15 +4084,12 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 
 				if (r->fastCull)
 				{
-					robj = r->getFirst();
-					while (robj)
+					for (robj = r->getFirst(); robj; robj = r->getNext())
 					{
+
 						totalRenderObjectCount++;
 						if (robj->parent || robj->alpha.x == 0)
-						{
-							robj = r->getNext();
 							continue;
-						}
 
 						if (r->cull && robj->cull && robj->followCamera != 1)
 						{
@@ -4110,7 +4105,6 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 									robj->position.x > xmax ||
 									robj->position.y > ymax)
 								{
-									robj = r->getNext();
 									continue;
 								}
 							}
@@ -4150,21 +4144,15 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 							renderObjectCount++;
 						}
 						processedRenderObjectCount++;
-
-						robj = r->getNext();
 					}
 				}
 				else
 				{
-					robj = r->getFirst();
-					while (robj)
+					for (robj = r->getFirst(); robj; robj = r->getNext())
 					{
 						totalRenderObjectCount++;
 						if (robj->parent || robj->alpha.x == 0)
-						{
-							robj = r->getNext();
 							continue;
-						}
 
 						if (!r->cull || !robj->cull || robj->isOnScreen())
 						{
@@ -4172,8 +4160,6 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 							renderObjectCount++;
 						}
 						processedRenderObjectCount++;
-
-						robj = r->getNext();
 					}
 				}
 

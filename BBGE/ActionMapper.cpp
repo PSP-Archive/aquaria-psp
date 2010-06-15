@@ -401,40 +401,14 @@ void ActionMapper::onUpdate (float dt)
 						if (ad->state==-1 || keyState == ad->state)
 						{
 							ad->event->act();
-							// NOTE: see below (about multiple actions per key)
 						}
 					}
 					else
 					{
 						action(ad->id, keyState);
-						if (core->loopDone) goto out;
-						// note: this will allow multiple actions per key
-						// it runs through the actions' buttons to see if another action has the same button
-						// NOTE: This needs to be added to work for events as well, at some point
-						ActionDataSet::iterator u;
-						for (u = actionData.begin(); u != actionData.end(); ++u)
-						{
-							if (u != i)
-							{
-								ButtonList::iterator l;
-								l = u->buttonList.begin();
-								for (; l != u->buttonList.end(); l++)
-								{
-									int key = (*l);
-									if (key == k)
-									{
-										action(u->id, u->state);
-										if (core->loopDone)
-										{
-											goto out;
-										}
-									}
-								}
-							}
-						}
 					}
+					if (core->loopDone) goto out;
 				}
-				if (cleared) { cleared = false; goto out; }
 			}
 		}
 	}
