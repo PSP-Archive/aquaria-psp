@@ -273,7 +273,7 @@ void readInt(TiXmlElement *xml, const std::string &elem, std::string att, int *t
 		TiXmlElement *xml2 = xml->FirstChildElement(elem);
 		if (xml2)
 		{
-			const char *c = xml2->Attribute(att);
+			const char *c = xml2->Attribute(att)->c_str();
 			if (c)
 			{
 				*toChange = atoi(c);
@@ -286,7 +286,7 @@ void readIntAtt(TiXmlElement *xml, std::string att, int *toChange)
 {
 	if (xml)
 	{
-		const char *c = xml->Attribute(att);
+		const char *c = xml->Attribute(att)->c_str();
 		if (c)
 		{
 			*toChange = atoi(c);

@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
 // This file implements just enough of the FMOD library with OpenAL to suit
 //  the needs of the existing game code without having to actually ship FMOD.
 
@@ -25,6 +26,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+
+#ifdef BBGE_BUILD_UNIX
+#include <signal.h>
+#endif
 
 #include "Core.h"
 
@@ -58,12 +63,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 namespace FMOD {
 
 #if _DEBUG
+    #ifdef _MSC_VER
+        #define bbgeDebugBreak _CrtDbgBreak
+    #elif defined(__GNUC__) && ((__i386__) || (__x86_64__))
+        #define bbgeDebugBreak() __asm__ __volatile__ ( "int $3\n\t" )
+    #else
+        #define bbgeDebugBreak() raise(SIGTRAP)
+    #endif
     #define SANITY_CHECK_OPENAL_CALL() { \
         const ALenum err = alGetError(); \
         if (err != AL_NONE) { \
             fprintf(stderr, "WARNING: OpenAL error %s:%d: 0x%X\n", \
                         __FILE__, __LINE__, (int) err); \
-            __asm__ __volatile__ ( "int $3\n\t" ); \
+            bbgeDebugBreak(); \
         } \
     }
 #else

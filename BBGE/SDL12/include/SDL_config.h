@@ -63,4 +63,8 @@ typedef size_t uintptr_t;
 /* Enable the dummy video driver (src/video/dummy/\*.c) */
 #define SDL_VIDEO_DRIVER_DUMMY	1
 
+#ifdef _WINDOWS
+#define SDL_VIDEO_DRIVER_WINDIB 1
+#endif
+
 #endif /* _SDL_config_minimal_h */

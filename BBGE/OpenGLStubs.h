@@ -18,6 +18,12 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
+// !!! FIXME: whoa, we should fix this warning, not mask it!
+//#ifdef _MSC_VER
+//#pragma warning( disable : 4003 ) // "not enough actual parameters for macro 'GL_FUNC'"
+//#endif
+
 GL_FUNC(void,glBindTexture,(GLenum target,GLuint name),(target,name),)
 GL_FUNC(void,glBitmap,(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte *bitmap),(width,height,xorig,yorig,xmove,ymove,bitmap),)
 GL_FUNC(void,glBlendFunc,(GLenum f,GLenum x),(f,x),)

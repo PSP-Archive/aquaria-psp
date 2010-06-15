@@ -1048,11 +1048,10 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 
 #ifdef _DEBUG
-	fullscreen = false;
-	resx = 800;
-	resy = 600;
-#endif
+	if (!createWindow(800, 600, user.video.bits, false, "Aquaria"))
+#else
 	if (!createWindow(user.video.resx, user.video.resy, user.video.bits, user.video.full, "Aquaria"))
+#endif
 	{
 		msg("Failed to create window");
 		return;
