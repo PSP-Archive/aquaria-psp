@@ -981,12 +981,13 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
 
 	initRenderObjectLayers(numRenderLayers);
 
-	initPlatform();
+	initPlatform(filesystem);
 }
 
-void Core::initPlatform()
+void Core::initPlatform(const std::string &filesystem)
 {
 #if defined(BBGE_BUILD_MACOSX) && !defined(BBGE_BUILD_MACOSX_NOBUNDLEPATH)
+	// FIXME: filesystem not handled
 	CFBundleRef mainBundle = CFBundleGetMainBundle();
 	//CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(mainBundle);
 	CFURLRef resourcesURL = CFBundleCopyBundleURL(mainBundle);
@@ -1000,6 +1001,13 @@ void Core::initPlatform()
 	debugLog(path);
 	chdir(path);
 #elif defined(BBGE_BUILD_UNIX)
+	if (!filesystem.empty())
+	{
+		if (chdir(filesystem.c_str()) == 0)
+			return;
+		else
+			debugLog("Failed to chdir to filesystem path" + filesystem);
+	}
 	char path[PATH_MAX];
 	// always a symlink to this process's binary, on modern Linux systems.
 	const ssize_t rc = readlink("/proc/self/exe", path, sizeof (path));
@@ -1021,6 +1029,7 @@ void Core::initPlatform()
 	}
 #endif
 #ifdef BBGE_BUILD_WINDOWS
+	// FIXME: filesystem not handled
 #endif
 }
 
@@ -1121,6 +1130,8 @@ std::string Core::adjustFilenameCase(const char *_buf)
 	#endif
 
 	return std::string(buf);
+#else
+	return std::string(_buf);
 #endif
 }
 
@@ -1754,17 +1765,21 @@ void Core::setSDLGLAttributes()
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 }
 
-#if (defined (BBGE_BUILD_UNIX) || defined (BBGE_BUILD_WINDOWS))
+
 #ifdef GLAPIENTRY
 #undef GLAPIENTRY
 #endif
+
+#ifdef BBGE_BUILD_WINDOWS
+#define GLAPIENTRY APIENTRY
+#else
 #define GLAPIENTRY
 #endif
 
 #if BBGE_BUILD_OPENGL_DYNAMIC
 #define GL_FUNC(ret,fn,params,call,rt) \
     extern "C" { \
-        static ret GLAPIENTRY (*p##fn) params = NULL; \
+        static ret (GLAPIENTRY *p##fn) params = NULL; \
         ret GLAPIENTRY fn params { rt p##fn call; } \
     }
 #include "OpenGLStubs.h"
@@ -2197,6 +2212,10 @@ bool Core::createWindow(int width, int height, int bits, bool fullscreen, std::s
 #endif
 }
 
+// No longer part of C/C++ standard
+#ifndef M_PI
+#define M_PI           3.14159265358979323846
+#endif
 
 static void
 bbgePerspective(double fovy, double aspect, double zNear, double zFar)
@@ -4390,7 +4409,7 @@ Texture* Core::addTexture(const std::string &textureName)
 		texture = secondaryTexturePath + texture.substr(1, texture.size());
 		loadName = texture;
 	}
-	else if (!secondaryTexturePath.empty() && texture[0] != '.')
+	else if (!secondaryTexturePath.empty() && texture[0] != '.' && texture[0] != '/')
 	{
 		std::string t = texture;
 		std::string ln = loadName;

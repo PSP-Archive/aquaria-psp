@@ -3387,8 +3387,13 @@ typedef unsigned short GLhalfNV;
 #endif
 
 #ifndef GL_EXT_timer_query
+#ifdef _MSC_VER
+typedef signed __int64 GLint64EXT;
+typedef unsigned __int64 GLuint64EXT;
+#else
 typedef signed long long GLint64EXT;
 typedef unsigned long long GLuint64EXT;
+#endif
 #endif
 
 #ifndef GL_VERSION_1_2

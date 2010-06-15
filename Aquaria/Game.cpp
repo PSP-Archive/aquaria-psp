@@ -2441,6 +2441,11 @@ void Game::loadEntityTypeList()
 	entityTypeList.clear();
 	std::ifstream in("scripts/entities/entities.txt");
 	std::string line;
+	if(!in)
+	{
+		core->messageBox("error", "Entity data not found! Aborting...");
+		exit(1);
+	}
 	while (std::getline(in, line))
 	{
 		std::string name, prevGfx;
@@ -3360,7 +3365,7 @@ void Game::createInGameMenu()
 
 	resBox = new AquariaComboBox();
 	resBox->position = Vector(196, 285);
-	for (int i = 0; i < core->screenModes.size(); i++)
+	for (i = 0; i < core->screenModes.size(); i++)
 	{
 		char str[256];
 		sprintf(str, "%dx%d", core->screenModes[i].x, core->screenModes[i].y);
@@ -9401,10 +9406,13 @@ void Game::toggleKeyConfigMenu(bool f)
 
 		toggleOptionsMenu(false, false, true);
 
-		for (int i = 0; i <= 1; i++)
-			menu[i]->alpha.interpolateTo(0, t);
-		for (int i = 4; i <= 8; i++)
-			menu[i]->alpha.interpolateTo(0, t);
+		// Prevent int i from "leaking out" due to Microsoft extension to for-scope
+		{
+			for (int i = 0; i <= 1; i++)
+				menu[i]->alpha.interpolateTo(0, t);
+			for (int i = 4; i <= 8; i++)
+				menu[i]->alpha.interpolateTo(0, t);
+		}
 
 		toggleMainMenu(false);
 

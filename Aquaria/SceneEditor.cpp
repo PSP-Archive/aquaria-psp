@@ -725,6 +725,8 @@ void SceneEditor::init()
 	addAction(ACTION_CAMUP,			KEY_W);
 	addAction(ACTION_CAMDOWN,		KEY_S);
 
+	addAction(ACTION_BGLAYEREND,	KEY_0);
+
 	addAction(ACTION_BGLAYER1,		KEY_1);
 	addAction(ACTION_BGLAYER2,		KEY_2);
 	addAction(ACTION_BGLAYER3,		KEY_3);
@@ -2469,7 +2471,18 @@ void SceneEditor::updateMultiSelect()
 
 void SceneEditor::action(int id, int state)
 {
-	if (editType == ET_ELEMENTS && state && id >= ACTION_BGLAYER1 && id < ACTION_BGLAYEREND)
+	if (core->getKeyState(KEY_LCONTROL) && editingElement)
+	{
+		if (id == ACTION_BGLAYEREND)
+		{
+			editingElement->setElementEffectByIndex(-1);
+		}
+		else if (id >= ACTION_BGLAYER1 && id < ACTION_BGLAYER10)
+		{
+			editingElement->setElementEffectByIndex(id - ACTION_BGLAYER1);
+		}
+	}
+	else if (editType == ET_ELEMENTS && state && id >= ACTION_BGLAYER1 && id < ACTION_BGLAYEREND)
 	{
 		/*
 		std::string copy = action;

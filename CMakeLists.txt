@@ -3,6 +3,10 @@ PROJECT(Aquaria)
 
 INCLUDE(CheckCCompilerFlag)
 
+IF(NOT CMAKE_BUILD_TYPE)
+    SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "None Debug Release RelWithDebInfo MinSizeRel" FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
 IF(APPLE)
     SET(MACOSX TRUE)
 ENDIF(APPLE)
@@ -34,6 +38,17 @@ if (NOT SDL_FOUND)
         set(SDL_INCLUDE_DIR "${SDLDIR}/include")
         message(STATUS "Using internal copy of SDL")
         set(SDL_LIBRARY "${SDLDIR}/lib/macosx/libSDL-1.2.0.dylib ${SDLDIR}/lib/macosx/libSDLmain.a")
+    elseif(WIN32)
+        if(MSVC)
+            set(SDLDIR "${BBGEDIR}/SDL12")
+            set(SDL_INCLUDE_DIR "${SDLDIR}/include" CACHE PATH "SDL include directory" FORCE)
+            message(STATUS "Using internal copy of SDL")
+            set(SDLMAIN_LIBRARY "${SDLDIR}/lib/win32/SDLmain.lib" CACHE INTERNAL "")
+            set(SDL_LIBRARY_TEMP "${SDLDIR}/lib/win32/SDL.lib" CACHE INTERNAL "")
+            set(SDL_LIBRARY ${SDLMAIN_LIBRARY} ${SDL_LIBRARY_TEMP} CACHE STRING "Where the SDL library can be found")
+        else(MSVC)
+            message(ERROR "We don't have prebuilt SDL for this environment.")
+        endif(MSVC)
     else(MACOSX)
         message(ERROR "We don't have a prebuilt SDL for this platform.")
     endif(MACOSX)
@@ -42,7 +57,18 @@ endif (NOT SDL_FOUND)
 # Find OpenAL or use the included library if applicable
 find_package(OpenAL REQUIRED)
 if (NOT OPENAL_FOUND)
-    message(ERROR "We don't have a prebuilt OpenAL for this platform.")
+    if(WIN32)
+        if(MSVC)
+            set(OPENALDIR "${BBGEDIR}/AL")
+            set(OPENAL_INCLUDE_DIR "${OPENALDIR}/include" CACHE PATH "OpenAL include directory" FORCE)
+            message(STATUS "Using internal copy of OpenAL")
+            set(OPENAL_LIBRARY "${OPENALDIR}/lib/win32/OpenAL32.lib" CACHE FILEPATH "Where the OpenAL library can be found" FORCE)
+        else(MSVC)
+            message(ERROR "We don't have prebuilt OpenAL for this environment.")
+        endif(MSVC)
+    else(WIN32)
+        message(ERROR "We don't have a prebuilt OpenAL for this platform.")
+    endif(WIN32)
 endif (NOT OPENAL_FOUND)
 
 SET(FTGLDIR ${BBGEDIR}/FTGL)
@@ -100,7 +126,7 @@ IF(UNIX)
 ENDIF(UNIX)
 
 IF(CMAKE_COMPILER_IS_GNUCC)
-    ADD_DEFINITIONS(-pipe -fsigned-char -g)
+    ADD_DEFINITIONS(-pipe -fsigned-char)
     #ADD_DEFINITIONS(-Wall)
 
     # See if -fno-stack-protector is available to us.
@@ -302,6 +328,11 @@ SET(FTGL_SRCS
     ${FTGLSRCDIR}/FTTextureGlyph.cpp
 )
 
+SET_SOURCE_FILES_PROPERTIES(
+    ${FTGL_SRCS}
+    PROPERTIES COMPILE_FLAGS "-DFTGL_LIBRARY_STATIC"
+)
+
 SET(OGGVORBIS_SRCS
     ${LIBOGGDIR}/src/bitwise.c
     ${LIBOGGDIR}/src/framing.c
@@ -371,10 +402,17 @@ SET(FREETYPE2_SRCS
     ${FREETYPE2SRCDIR}/psnames/psmodule.c
 )
 
-SET_SOURCE_FILES_PROPERTIES(
-    ${FREETYPE2_SRCS}
-    PROPERTIES COMPILE_FLAGS "-DFT_CONFIG_OPTION_SYSTEM_ZLIB -DFT_CONFIG_CONFIG_H='\"${FREETYPE2DIR}/include/freetype/config/ftconfig.h\"' -DFT2_BUILD_LIBRARY -DFT_CONFIG_MODULES_H='\"${FREETYPE2DIR}/include/freetype/config/ftmodule.h\"' -I${FREETYPE2SRCDIR} -I${FREETYPE2DIR}/include/freetype/config -DHAVE_FCNTL_H"
-)
+IF(MSVC)
+    SET_SOURCE_FILES_PROPERTIES(
+        ${FREETYPE2_SRCS}
+        PROPERTIES COMPILE_FLAGS "-DFT_CONFIG_OPTION_SYSTEM_ZLIB -DFT2_BUILD_LIBRARY -I${FREETYPE2SRCDIR} -I${FREETYPE2DIR}/include/freetype/config -DHAVE_FCNTL_H"
+    )
+ELSE(MSVC)
+    SET_SOURCE_FILES_PROPERTIES(
+        ${FREETYPE2_SRCS}
+        PROPERTIES COMPILE_FLAGS "-DFT_CONFIG_OPTION_SYSTEM_ZLIB -DFT_CONFIG_CONFIG_H='\"${FREETYPE2DIR}/include/freetype/config/ftconfig.h\"' -DFT2_BUILD_LIBRARY -DFT_CONFIG_MODULES_H='\"${FREETYPE2DIR}/include/freetype/config/ftmodule.h\"' -I${FREETYPE2SRCDIR} -I${FREETYPE2DIR}/include/freetype/config -DHAVE_FCNTL_H"
+    )
+ENDIF(MSVC)
 
 
 SET(LUA_SRCS
