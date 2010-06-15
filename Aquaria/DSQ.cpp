@@ -4251,36 +4251,20 @@ void DSQ::onUpdate(float dt)
 	
 	if (inputMode != INPUT_KEYBOARD && game->isActive())
 	{
-		if (!mouse.buttons.left && almb)
-		{
-			if (ActionMapper::getKeyState(almb->key[0]))
-				mouse.buttons.left = DOWN;
-			else if (ActionMapper::getKeyState(almb->key[1]))
-				mouse.buttons.left = DOWN;
-		}
+		if (almb && (ActionMapper::getKeyState(almb->key[0]) || ActionMapper::getKeyState(almb->key[1])))
+			mouse.buttons.left = DOWN;
 
-		if (!mouse.buttons.right && armb)
-		{
-			if (ActionMapper::getKeyState(armb->key[0]))
-				mouse.buttons.right = DOWN;
-			else if (ActionMapper::getKeyState(armb->key[1]))
-				mouse.buttons.right = DOWN;
-		}
+		if (armb && (ActionMapper::getKeyState(armb->key[0]) || ActionMapper::getKeyState(armb->key[1])))
+			mouse.buttons.right = DOWN;
 	}
 
 	if (joystickAsMouse)
 	{
-		if (!mouse.buttons.left)
-		{
-			if (almb && ActionMapper::getKeyState(almb->joy[0]))
-				mouse.buttons.left = DOWN;
-		}
+		if (almb && ActionMapper::getKeyState(almb->joy[0]))
+			mouse.buttons.left = DOWN;
 
-		if (!mouse.buttons.right)
-		{
-			if (armb && ActionMapper::getKeyState(armb->joy[0]))
-				mouse.buttons.right = DOWN;
-		}
+		if (armb && ActionMapper::getKeyState(armb->joy[0]))
+			mouse.buttons.right = DOWN;
 
 		/*
 		if (routeShoulder)

@@ -1433,6 +1433,12 @@ void readMouseData()
 	core->mouse.buttons.right = glfwGetMouseButton(GLFW_MOUSE_BUTTON_RIGHT) ? DOWN : UP;
 	core->mouse.buttons.middle = glfwGetMouseButton(GLFW_MOUSE_BUTTON_MIDDLE) ? DOWN : UP;
 	core->mouse.scrollWheel = glfwGetMouseWheel();
+#elif defined(BBGE_BUILD_PSP)
+	/* We need to reset all these so mouse-up events are recognized
+	 * when the equivalent joystick buttons are released. */
+	core->mouse.buttons.left   = UP;
+	core->mouse.buttons.right  = UP;
+	core->mouse.buttons.middle = UP;
 #endif
 }
 
