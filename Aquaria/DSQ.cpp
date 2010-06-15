@@ -129,7 +129,9 @@ float titTimer = 0;
 
 const int saveSlotPageSize = 4;
 int maxPages = 7;
+#ifdef AQUARIA_BUILD_CONSOLE
 const int MAX_CONSOLELINES	= 14;
+#endif
 
 DSQ *dsq = 0;
 
@@ -199,8 +201,6 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 		difficulty = DIFF_EASY;//DIFF_NORMAL;
 	*/
 
-	console = 0;
-
 	watchQuitFlag = false;
 	watchForQuit = false;
 
@@ -233,7 +233,10 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	vars = &v;
 	v.load();
 
-	console = cmDebug = 0;
+#ifdef AQUARIA_BUILD_CONSOLE
+	console = 0;
+#endif
+	cmDebug = 0;
 	languagePack = "english";
 	saveSlotMode = SSM_NONE;
 	afterEffectManagerLayer = LR_AFTER_EFFECTS; // LR_AFTER_EFFECTS
@@ -1275,6 +1278,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	debugLog("done");
 
 
+#ifdef AQUARIA_BUILD_CONSOLE
 	debugLog("Creating console");
 	console = new DebugFont;
 	//(&dsq->smallFont);
@@ -1288,6 +1292,9 @@ This build is not yet final, and as such there are a couple things lacking. They
 		console->setFontSize(6);
 	}
 	addRenderObject(console, LR_DEBUG_TEXT);
+#else
+	debugLog("NOT creating console (disabled in this build)");
+#endif
 
 	debugLog("1");
 
@@ -1302,7 +1309,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 			cmDebug->followCamera = 1;
 			cmDebug->alpha = 0;
 			//cmDebug->setAlign(ALIGN_LEFT);
-			//console->setWidth(12);
+			//cmDebug->setWidth(12);
 			//cmDebug->setFontSize(18);
 			cmDebug->setFontSize(6);
 		}
@@ -2041,6 +2048,7 @@ void DSQ::reloadDevice()
 	recreateBlackBars();
 }
 
+#ifdef AQUARIA_BUILD_CONSOLE
 void DSQ::toggleConsole()
 {
 	if (console)
@@ -2063,9 +2071,11 @@ void DSQ::toggleConsole()
 		}
 	}
 }
+#endif
 
 void DSQ::debugLog(const std::string &s)
 {
+#ifdef AQUARIA_BUILD_CONSOLE
 	consoleLines.push_back(s);
 	if (consoleLines.size() > MAX_CONSOLELINES)
 	{
@@ -2085,6 +2095,7 @@ void DSQ::debugLog(const std::string &s)
 		}
 		console->setText(text);
 	}
+#endif
 	Core::debugLog(s);
 }
 
@@ -2272,9 +2283,10 @@ void DSQ::shutdown()
 	UNREFTEX(texCursorSing);
 	UNREFTEX(texCursorLook);
 
+#ifdef AQUARIA_BUILD_CONSOLE
 	removeRenderObject(console);
-
 	console = 0;
+#endif
 	removeRenderObject(cmDebug);
 	cmDebug = 0;
 	removeRenderObject(subtext);
@@ -4106,7 +4118,9 @@ void DSQ::bindInput()
 	{
 #if defined(BBGE_BUILD_WINDOWS) || defined(BBGE_BUILD_UNIX)
 		addAction(MakeFunctionEvent(DSQ, instantQuit), KEY_Q, 1);
+#ifdef AQUARIA_BUILD_CONSOLE
 		addAction(MakeFunctionEvent(DSQ, toggleConsole), KEY_TILDE, 0);
+#endif
 #endif
 		addAction(MakeFunctionEvent(DSQ, toggleRenderCollisionShapes), KEY_CAPSLOCK, 0);
 	}

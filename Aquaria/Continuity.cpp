@@ -2547,10 +2547,7 @@ void Continuity::loadFile(int slot)
 
 #ifdef BBGE_BUILD_PSP
 
-	// FIXME: This is only enough for the beginning of the game.
-	// Later save files can hit 4MB+ uncompressed.  We'll need to
-	// compress eventually...
-	const uint32_t size = 1000000;  // Waaay more than enough.  Hopefully.
+	const uint32_t size = 100000;  // Waaay more than enough.  Hopefully.
 	char *buffer = new char[size];
 	if (savefile_load(slot+1, buffer, size-1, NULL))
 	{

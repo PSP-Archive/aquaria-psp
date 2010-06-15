@@ -85,7 +85,7 @@ class WorldMapRender;
 
 const float boxElementZ = -0.1f;
 #ifdef BBGE_BUILD_PSP
-const int MAX_GRID = 1280;  // FIXME: Is this enough?
+const int MAX_GRID = 1280;  // FIXME: Is this enough?  We have no room for more...
 #else
 const int MAX_GRID = 2222;
 #endif
@@ -98,8 +98,10 @@ const char CHAR_RIGHT		= 'r';
 
 const float MIN_SIZE = 0.1;
 
+#ifndef BBGE_BUILD_PSP
 #ifndef AQUARIA_DEMO
 	#define BUILD_SCENEEDITOR	1
+#endif
 #endif
 
 //#include "GridRender.h"

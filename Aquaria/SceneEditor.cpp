@@ -28,7 +28,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Avatar.h"
 #include "GridRender.h"
 
-#ifdef BBGE_BUILD_PSP  // FIXME(PSP): deal with this later
+#ifdef BBGE_BUILD_PSP 
+// We don't build the scene editor for PSP, so avoid an unnecessary
+// dependency on glpng.
 # define pngLoadRaw(path,info) false
 #endif
 
