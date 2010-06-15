@@ -4304,6 +4304,11 @@ void DSQ::onUpdate(float dt)
 			conversationDelay = 0;
 	}
 	
+#ifdef BBGE_BUILD_PSP
+	if (isInCutscene())
+		sys_ping();  // Keep the backlight from dimming.
+#endif
+
 	Core::onUpdate(dt);
 
 	demo.update(dt);
