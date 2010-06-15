@@ -3306,15 +3306,13 @@ void Entity::render()
 	InterpolatedVector bcolor = color;
 	InterpolatedVector bscale = scale;
 
-	scale = scale * flipScale;
-
+	scale *= flipScale;
+	color *= dsq->game->sceneColor;
+	color *= dsq->game->sceneColor2;
+	color *= dsq->game->sceneColor3;
 	if (multColor.isInterpolating())
 	{
-		color = dsq->game->sceneColor * color * multColor * dsq->game->sceneColor2 * dsq->game->sceneColor3;
-	}
-	else
-	{
-		color = dsq->game->sceneColor * color * dsq->game->sceneColor2 * dsq->game->sceneColor3;
+		color *= multColor;
 	}
 
 	if (dsq->game->sceneEditor.isOn() && dsq->game->sceneEditor.editType == ET_ENTITIES)
@@ -3329,7 +3327,7 @@ void Entity::render()
 	// HACK: need to multiply base + etc
 	//skeletalSprite.shareColor(this->color);
 	skeletalSprite.multiplyColor(this->color);
-	skeletalSprite.multiplyAlpha(this->alpha);
+	skeletalSprite.multiplyAlpha(this->alpha.x);
 	bool set=false;
 	if (beautyFlip && blurShader.isLoaded() && flipScale.isInterpolating() && dsq->user.video.blur)
 	{
@@ -3349,7 +3347,7 @@ void Entity::render()
 		blurShader.unbind();
 	renderBorder = false;
 	skeletalSprite.multiplyColor(this->color, true);
-	skeletalSprite.multiplyAlpha(this->alpha, true);
+	skeletalSprite.multiplyAlpha(this->alpha.x, true);
 	color = bcolor;
 	scale = bscale;
 }
@@ -3574,8 +3572,7 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, i
 	}
 	if (c > 0)
 	{
-		accum /= float(c);
-		accum /= totalDist/2;
+		accum /= float(c) * (totalDist/2);
 		accum.setLength2D(1.0f - accum.getLength2D());
 		if (onlyVP)
 		{

@@ -219,7 +219,7 @@ public:
 
 	void shareColor(const Vector &color);
 	void multiplyColor(const Vector &color, bool inv=false);
-	void multiplyAlpha(const Vector &alpha, bool inv=false);
+	void multiplyAlpha(const float alpha, bool inv=false);
 
 	void enableMotionBlur(int sz=10, int off=5);
 	void disableMotionBlur();

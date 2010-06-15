@@ -133,24 +133,42 @@ void RenderObject::shareColor(const Vector &color)
 void RenderObject::multiplyColor(const Vector &color, bool inv)
 {
 	if (inv)
-		this->color /= color;
-	else
-		this->color *= color;
-	for (Children::iterator i = children.begin(); i != children.end(); i++)
 	{
-		(*i)->multiplyColor(color, inv);
+		const Vector invColor(1/color.x, 1/color.y, 1/color.z);
+		this->color *= invColor;
+		for (Children::iterator i = children.begin(); i != children.end(); i++)
+		{
+			(*i)->multiplyColor(invColor);
+		}
+	}
+	else
+	{
+		this->color *= color;
+		for (Children::iterator i = children.begin(); i != children.end(); i++)
+		{
+			(*i)->multiplyColor(color);
+		}
 	}
 }
 
-void RenderObject::multiplyAlpha(const Vector &alpha, bool inv)
+void RenderObject::multiplyAlpha(const float alpha, bool inv)
 {
 	if (inv)
-		this->alpha.x /= alpha.x;
-	else
-		this->alpha.x *= alpha.x;
-	for (Children::iterator i = children.begin(); i != children.end(); i++)
 	{
-		(*i)->multiplyAlpha(alpha, inv);
+		const float invAlpha = 1/alpha;
+		this->alpha.x *= invAlpha;
+		for (Children::iterator i = children.begin(); i != children.end(); i++)
+		{
+			(*i)->multiplyAlpha(invAlpha);
+		}
+	}
+	else
+	{
+		this->alpha.x *= alpha;
+		for (Children::iterator i = children.begin(); i != children.end(); i++)
+		{
+			(*i)->multiplyAlpha(alpha);
+		}
 	}
 }
 
