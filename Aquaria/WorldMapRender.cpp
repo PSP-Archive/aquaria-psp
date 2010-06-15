@@ -217,9 +217,10 @@ protected:
 				float t = 0.75;
 				WorldMapBoundQuad *q = new WorldMapBoundQuad(Vector(x, y, 0));
 				q->setTexture("particles/glow");
-				q->alpha.path.addPathNode(0.0, 0.0);
-				q->alpha.path.addPathNode(1.0, 0.5);
-				q->alpha.path.addPathNode(0.0, 1.0);
+				q->alpha.ensureData();
+				q->alpha.data->path.addPathNode(0.0, 0.0);
+				q->alpha.data->path.addPathNode(1.0, 0.5);
+				q->alpha.data->path.addPathNode(0.0, 1.0);
 				q->alpha.startPath(0.5);
 				q->alphaMod = 0.5;
 				q->color = color;

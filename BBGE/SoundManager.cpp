@@ -501,7 +501,7 @@ void SoundManager::setOverrideVoiceFader(float v)
 void SoundManager::setMusicFader(float v, float t)
 {
 	// ignore fades if the music is already on its way to fading out to 0
-	if (v != 0 && musVol.target.y == 0 && musVol.y > 0)
+	if (v != 0 && musVol.data && musVol.data->target.y == 0 && musVol.y > 0)
 	{
 		return;
 	}

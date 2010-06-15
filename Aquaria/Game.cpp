@@ -256,10 +256,11 @@ void FoodHolder::setIngredient(IngredientData *i, bool effects)
 		ing->renderQuad = true;
 		//renderQuad = true;
 
-		ing->scale.path.clear();
-		ing->scale.path.addPathNode(Vector(1,1),0);
-		ing->scale.path.addPathNode(Vector(1.25,1.25), 0.2);
-		ing->scale.path.addPathNode(Vector(1,1),1);
+		ing->scale.ensureData();
+		ing->scale.data->path.clear();
+		ing->scale.data->path.addPathNode(Vector(1,1),0);
+		ing->scale.data->path.addPathNode(Vector(1.25,1.25), 0.2);
+		ing->scale.data->path.addPathNode(Vector(1,1),1);
 		ing->scale.startPath(0.5);
 
 		game->enqueuePreviewRecipe();
@@ -431,10 +432,11 @@ void FoodSlot::refresh(bool effects)
 	{
 		if (effects)
 		{
-			scale.path.clear();
-			scale.path.addPathNode(Vector(1,1)*scaleFactor,0);
-			scale.path.addPathNode(Vector(1.5,1.5)*scaleFactor, 0.2);
-			scale.path.addPathNode(Vector(1,1)*scaleFactor,1);
+			scale.ensureData();
+			scale.data->path.clear();
+			scale.data->path.addPathNode(Vector(1,1)*scaleFactor,0);
+			scale.data->path.addPathNode(Vector(1.5,1.5)*scaleFactor, 0.2);
+			scale.data->path.addPathNode(Vector(1,1)*scaleFactor,1);
 			scale.startPath(0.5);
 		}
 	}
@@ -1508,9 +1510,10 @@ void Game::pickupIngredientEffects(IngredientData *data)
 	Quad *q = new Quad("gfx/ingredients/" + data->gfx, Vector(800-20 + core->getVirtualOffX(), 460+ingOffY));
 	q->scale = Vector(0.8, 0.8);
 	q->followCamera = 1;
-	q->alpha.path.addPathNode(0, 0);
-	q->alpha.path.addPathNode(1.0, 0.1);
-	q->alpha.path.addPathNode(0, 1.0);
+	q->alpha.ensureData();
+	q->alpha.data->path.addPathNode(0, 0);
+	q->alpha.data->path.addPathNode(1.0, 0.1);
+	q->alpha.data->path.addPathNode(0, 1.0);
 	q->alpha.startPath(2);
 	q->setLife(1);
 	q->setDecayRate(0.5);
@@ -7514,11 +7517,12 @@ void Game::onCook()
 			showRecipe->setTexture(n);
 			showRecipe->scale = Vector(0.5, 0.5);
 			showRecipe->scale.interpolateTo(Vector(1.2, 1.2), t);
-			showRecipe->alpha.path.clear();
-			showRecipe->alpha.path.addPathNode(0, 0);
-			showRecipe->alpha.path.addPathNode(1, 0.1);
-			showRecipe->alpha.path.addPathNode(1, 0.6);
-			showRecipe->alpha.path.addPathNode(0, 1);
+			showRecipe->alpha.ensureData();
+			showRecipe->alpha.data->path.clear();
+			showRecipe->alpha.data->path.addPathNode(0, 0);
+			showRecipe->alpha.data->path.addPathNode(1, 0.1);
+			showRecipe->alpha.data->path.addPathNode(1, 0.6);
+			showRecipe->alpha.data->path.addPathNode(0, 1);
 			showRecipe->alpha.startPath(t);
 		}
 
@@ -7762,10 +7766,11 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 	controlHint_ignoreClear = ignoreClear;
 
 
-	controlHint_shine->alpha.path.clear();
-	controlHint_shine->alpha.path.addPathNode(0.001, 0.0);
-	controlHint_shine->alpha.path.addPathNode(1.000, 0.3);
-	controlHint_shine->alpha.path.addPathNode(0.001, 1.0);
+	controlHint_shine->alpha.ensureData();
+	controlHint_shine->alpha.data->path.clear();
+	controlHint_shine->alpha.data->path.addPathNode(0.001, 0.0);
+	controlHint_shine->alpha.data->path.addPathNode(1.000, 0.3);
+	controlHint_shine->alpha.data->path.addPathNode(0.001, 1.0);
 	controlHint_shine->alpha.startPath(0.4);
 }
 
@@ -9783,10 +9788,11 @@ void Game::updateInGameMenu(float dt)
 						Quad *q = new Quad("particles/glow", Vector(400+237*menuBg->scale.x,300-52*menuBg->scale.x)+notePos);
 						q->setBlendType(RenderObject::BLEND_ADD);
 						q->scale = Vector(5,5);
-						q->alpha.path.addPathNode(0, 0);
-						q->alpha.path.addPathNode(0.75, 0.5);
-						q->alpha.path.addPathNode(0.75, 0.5);
-						q->alpha.path.addPathNode(0, 1);
+						q->alpha.ensureData();
+						q->alpha.data->path.addPathNode(0, 0);
+						q->alpha.data->path.addPathNode(0.75, 0.5);
+						q->alpha.data->path.addPathNode(0.75, 0.5);
+						q->alpha.data->path.addPathNode(0, 1);
 						q->alpha.startPath(t);
 						q->followCamera = 1;
 						q->setLife(t);

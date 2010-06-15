@@ -8358,10 +8358,11 @@ int l_showControls(lua_State *L)
 		keyboard->followCamera = 1;
 		keyboard->setTexture("controls/" + mousegfx);
 		keyboard->alpha = 0;
-		keyboard->alpha.path.addPathNode(0, 0);
-		keyboard->alpha.path.addPathNode(0.5, .1);
-		keyboard->alpha.path.addPathNode(0.5, .9);
-		keyboard->alpha.path.addPathNode(0, 1);
+		keyboard->alpha.ensureData();
+		keyboard->alpha.data->path.addPathNode(0, 0);
+		keyboard->alpha.data->path.addPathNode(0.5, .1);
+		keyboard->alpha.data->path.addPathNode(0.5, .9);
+		keyboard->alpha.data->path.addPathNode(0, 1);
 		keyboard->alpha.startPath(t);
 		//keyboard->alpha.interpolateTo(0.5, 4, 1, 1);
 		keyboard->scale.interpolateTo(Vector(0.9, 0.9), t+0.5f);
