@@ -969,6 +969,14 @@ public:
 
 	/** Given an attribute name, Attribute() returns the value
 		for the attribute of that name, or null if none exists.
+		If the attribute exists and can be converted to a float,
+		the float value will be put in the return 'f', if 'f' is
+		non-null.
+	*/
+	const char* Attribute( const char* name, float* f ) const;
+
+	/** Given an attribute name, Attribute() returns the value
+		for the attribute of that name, or null if none exists.
 		If the attribute exists and can be converted to an double,
 		the double value will be put in the return 'd', if 'd'
 		is non-null.
@@ -1045,6 +1053,7 @@ public:
     #ifdef TIXML_USE_STL
 	const std::string* Attribute( const std::string& name ) const;
 	const std::string* Attribute( const std::string& name, int* i ) const;
+	const std::string* Attribute( const std::string& name, float* f ) const;
 	const std::string* Attribute( const std::string& name, double* d ) const;
 	int QueryIntAttribute( const std::string& name, int* _value ) const;
 	int QueryDoubleAttribute( const std::string& name, double* _value ) const;

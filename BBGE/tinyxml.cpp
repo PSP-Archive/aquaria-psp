@@ -621,6 +621,38 @@ const std::string* TiXmlElement::Attribute( const std::string& name, int* i ) co
 #endif
 
 
+const char * TiXmlElement::Attribute( const char * name, float* f ) const
+{
+	const TiXmlAttribute* attrib = attributeSet.Find( name );
+	const char* result = 0;
+
+	if ( attrib ) {
+		result = attrib->Value();
+		if ( f )
+			*f = strtof( result, NULL );
+	}
+	return result;
+}
+
+
+#ifdef TIXML_USE_STL
+const std::string* TiXmlElement::Attribute( const std::string& name, float* f ) const
+{
+	const TiXmlAttribute* attrib = attributeSet.Find( name );
+	const std::string* result = 0;
+
+	if ( attrib ) {
+		result = &attrib->ValueStr();
+		if ( f )
+			*f = atof( result->c_str() );
+		else
+			*f = 0;
+	}
+	return result;
+}
+#endif
+
+
 const char* TiXmlElement::Attribute( const char* name, double* d ) const
 {
 	const TiXmlAttribute* attrib = attributeSet.Find( name );
