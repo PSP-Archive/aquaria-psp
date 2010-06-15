@@ -38,6 +38,20 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef BBGE_BUILD_FMODEX
 #endif
 
+#ifdef BBGE_DISABLE_SOUND_CACHE
+// We don't disable the entire cache, just the loading of sound data, so we
+// need a way to know the file to load and the mode to pass to createStream().
+struct SoundInfo {
+	std::string file;
+	FMOD_MODE mode;
+	SoundInfo(std::string _file, FMOD_MODE _mode)
+	{
+		file = _file;
+		mode = _mode;
+	}
+};
+#endif
+
 SoundManager *sound = 0;
 
 std::string soundPath = "sfx/cache/";
@@ -1096,6 +1110,11 @@ void *SoundManager::playSfx(const PlaySfx &play)
 		sound = (FMOD::Sound*)play.handle;
 	else if (!play.name.empty())
 		sound = (FMOD::Sound*)getBuffer(play.name);
+#ifdef BBGE_DISABLE_SOUND_CACHE
+	SoundInfo *info = (SoundInfo*)sound;
+	sound = 0;
+	SoundCore::system->createStream(info->file.c_str(), info->mode, 0, &sound);
+#endif
 
 	if (!sound) return 0;
 
@@ -1539,12 +1558,17 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 	if (loop)
 		mode |= FMOD_LOOP_NORMAL;
 
+#ifndef BBGE_DISABLE_SOUND_CACHE
 	result = SoundCore::system->createSound(f.c_str(), mode, 0, &sound);
 	if (checkError())
 	{
 		debugLog("createSound failed");
 		return Buffer();
 	}
+#else
+	SoundInfo *info = new SoundInfo(f, mode);
+	sound = (FMOD::Sound*)info;
+#endif
 
 	SoundCore::soundMap[name] = sound;
 
@@ -1603,8 +1627,13 @@ void SoundManager::clearLocalSounds()
 	{
 		std::string snd = (*i);
 		debugLog("unloading sound [" + snd + "]");
+#ifndef BBGE_DISABLE_SOUND_CACHE
 		FMOD::Sound *samp = (FMOD::Sound*)soundMap[snd];
 		samp->release();
+#else
+		SoundInfo *info = (SoundInfo*)soundMap[snd];
+		delete info;
+#endif
 		soundMap[snd] = 0;
 	}
 	localSounds.clear();

@@ -849,7 +849,11 @@ static const float loadingProgressTable[] = {
 	#define LOAD_TEXTURES	6  // After loading textures to be precached
 	#define LOAD_FINISHED	7  // All done!
 #ifdef BBGE_BUILD_PSP
+# ifndef BBGE_DISABLE_SOUND_CACHE
 	0.01, 0.11, 0.55, 0.58, 0.59, 0.60, 0.89, 1.00,
+# else
+	0.01, 0.19, 0.31, 0.35, 0.36, 0.37, 0.89, 1.00,
+# endif
 #else
 	0.01, 0.06, 0.51, 0.52, 0.53, 0.54, 0.89, 1.00,
 #endif
