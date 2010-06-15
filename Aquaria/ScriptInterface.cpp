@@ -8465,7 +8465,11 @@ static int l_dofile_caseinsensitive(lua_State *L)
 
 void ScriptInterface::initLuaVM(lua_State **L)
 {
+#ifdef BBGE_BUILD_PSP
+	*L = lua_newstate(lalloc, NULL);  // Use a custom allocator for PSP.
+#else
 	*L = lua_open();				/* opens Lua */
+#endif
 	luaopen_base(*L);				/* opens the basic library */
 	luaopen_table(*L);				/* opens the table library */
 	luaopen_string(*L);				/* opens the string lib. */
