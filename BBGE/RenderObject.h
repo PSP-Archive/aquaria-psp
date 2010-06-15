@@ -286,7 +286,25 @@ protected:
 	// spread parentManagedStatic flag to the entire child tree
 	void propogateParentManagedStatic();
 	void propogateAlpha();
-	void updateLife(float dt);
+
+	inline void updateLife(float dt)
+	{
+		if (decayRate > 0)
+		{
+			life -= decayRate*dt;
+			if (life<=0)
+			{
+				safeKill();
+			}
+		}
+		if (fadeAlphaWithLife && !alpha.isInterpolating())
+		{
+			alpha = ((life*lifeAlphaFadeMultiplier)/maxLife);
+		}
+	}
+
+	// Is this object or any of its children rendered in pass "pass"?
+	bool hasRenderPass(const int pass);
 
 	inline void renderCall();
 

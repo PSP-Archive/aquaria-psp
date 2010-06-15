@@ -539,20 +539,48 @@ bool RenderObject::isfvr()
 		return this->isfv();
 }
 
+bool RenderObject::hasRenderPass(const int pass)
+{
+	if (pass == renderPass)
+		return true;
+	for (Children::iterator i = children.begin(); i != children.end(); i++)
+	{
+		if (!(*i)->isDead() && (*i)->hasRenderPass(pass))
+			return true;
+	}
+	return false;
+}
+
 void RenderObject::render()
 {
-	//HACK: possible optimization here: 
-	/*
-	if (layer != LR_NONE && children.empty() && renderPass != RENDER_ALL)
-	{
-		RenderObjectLayer *l = core->getRenderObjectLayer(this->layer);
-		if (l && l->currentPass != renderPass) return;
-	}
-	*/
-	
 	/// new (breaks anything?)
 	if (alpha.x == 0 || alphaMod == 0) return;
 
+	if (core->currentLayerPass != RENDER_ALL && renderPass != RENDER_ALL)
+	{
+		RenderObject *top = getTopParent();
+		if (top == NULL && this->overrideRenderPass != OVERRIDE_NONE)
+		{
+			// FIXME: overrideRenderPass is not applied to the
+			// node itself in the original check (below); is
+			// that intentional?  Doing the same thing here
+			// for the time being.  --achurch
+			if (core->currentLayerPass != this->renderPass
+			 && core->currentLayerPass != this->overrideRenderPass)
+				return;
+		}
+		else if (top != NULL && top->overrideRenderPass != OVERRIDE_NONE)
+		{
+			if (core->currentLayerPass != top->overrideRenderPass)
+				return;
+		}
+		else
+		{
+			if (!hasRenderPass(core->currentLayerPass))
+				return;
+		}
+	}
+	
 	if (motionBlur || motionBlurTransition)
 	{
 		Vector oldPos = position;
@@ -1243,22 +1271,6 @@ void RenderObject::safeKill()
 	}
 }
 
-void RenderObject::updateLife(float dt)
-{
-	if (decayRate > 0)
-	{
-		life -= decayRate*dt;
-		if (life<=0)
-		{
-			safeKill();
-		}
-	}
-	if (fadeAlphaWithLife && !alpha.isInterpolating())
-	{
-		alpha = ((life*lifeAlphaFadeMultiplier)/maxLife);
-	}
-}
-
 Vector RenderObject::getNormal()
 {
 	float a = MathFunctions::toRadians(getAbsoluteRotation().z);
@@ -1322,23 +1334,10 @@ void RenderObject::onUpdate(float dt)
 	}
 	*/
 
-	if (shareAlphaWithChildren && !children.empty())
-	{
-		for (Children::iterator i = children.begin(); i != children.end(); i++)
-		{
-			(*i)->alpha = this->alpha;
-		}
-	}
-
-	if (shareColorWithChildren && !children.empty())
-	{
-		for (Children::iterator i = children.begin(); i != children.end(); i++)
-		{
-			(*i)->color = this->color;
-		}
-	}
-	position += velocity * dt;
-	velocity += gravity * dt;
+	if (!velocity.isZero())
+		position += velocity * dt;
+	if (!gravity.isZero())
+		velocity += gravity * dt;
 	position.update(dt);
 	velocity.update(dt);
 	scale.update(dt);
@@ -1352,6 +1351,11 @@ void RenderObject::onUpdate(float dt)
 
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
 	{
+		if (shareAlphaWithChildren)
+			(*i)->alpha.x = this->alpha.x;
+		if (shareColorWithChildren)
+			(*i)->color = this->color;
+
 		if (!(*i)->updateAfterParent && (((*i)->pm == PM_POINTER) || ((*i)->pm == PM_STATIC)))
 		{
 			(*i)->update(dt);
