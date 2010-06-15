@@ -3203,11 +3203,11 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 				
 				
 				int i = 2;
-				while (pow(2.0, i) < core->height)
+				while (2 << i < core->height)
 				{
 					i++;
 				}
-				int size = pow(2.0, i-1);
+				int size = 1 << (i-1);
 				
 
 				saveCenteredScreenshotTGA(dsq->getSaveDirectory() + "/poot-s.tmp", size);

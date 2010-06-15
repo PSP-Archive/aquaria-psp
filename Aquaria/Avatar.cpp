@@ -6512,28 +6512,11 @@ int Avatar::getCursorQuadrant()
 		stopRoll();
 		return -999;
 	}
-	//diff = getForward();
-	float angle = atanf(diff.y / diff.x);
-	//float angle = rotation.z;
 
-	/*
-	std::ostringstream os;
-	os << "angle: " << angle;
-	debugLog(os.str());
-	*/
-
-
-	int quad = 0;
-	if (angle > -1.6 && angle <= 0 && diff.x > 0)
-		quad = 1;
-	else if (angle > -1.6 && angle <= 0 && diff.x < 0 && diff.y > 0)
-		quad = 3;
-	else if (angle < 1.6 && angle >= 0 && diff.y < 0)
-		quad = 4;
+	if (diff.y < 0)
+		return diff.x < 0 ? 4 : 1;
 	else
-		quad = 2;
-
-	return quad;
+		return diff.x < 0 ? 3 : 2;
 }
 
 int Avatar::getQuadrantDirection(int lastQuad, int quad)

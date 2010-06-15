@@ -102,7 +102,7 @@ void sizePowerOf2Texture(int &v)
 	int p = 8, use=0;
 	do 
 	{
-		use = pow(2.0, (double)p);
+		use = 1 << p;
 		p++;
 	}
 	while(v > use);
