@@ -871,8 +871,11 @@ void StatsAndAchievements::StoreStatsIfNecessary()
 		}
 
 #ifdef BBGE_BUILD_PSP
+		unsigned long icon0Size = 0;
+		char *icon0 = readFile("ICON0.PNG", &icon0Size);
 		if (savefile_save(SAVE_FILE_STATS, buf, max_achievements,
-				  NULL, 0, "Aquaria Achievements Data",
+				  icon0, icon0Size,
+				  "Aquaria Achievements Data",
 				  "Data recording the achievements you've"
 				  " unlocked in Aquaria.  Deleting this file"
 				  " will erase all of your achievements."))
@@ -881,6 +884,7 @@ void StatsAndAchievements::StoreStatsIfNecessary()
 				sys_time_delay(0.01);
 			}
 		}
+		delete[] icon0;
 		delete[] buf;
 		return;
 #endif

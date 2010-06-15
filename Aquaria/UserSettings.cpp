@@ -265,9 +265,11 @@ void UserSettings::save()
 	TiXmlPrinter printer;
 	printer.SetIndent("\t");
 	doc.Accept(&printer);
+	unsigned long icon0Size = 0;
+	char *icon0 = readFile("ICON0.PNG", &icon0Size);
 	if (savefile_save(SAVE_FILE_CONFIG,
 			printer.CStr(), printer.Str().length(),
-			NULL, 0 /*FIXME(PSP): icon*/, "Aquaria System Data",
+			icon0, icon0Size, "Aquaria System Data",
 			"System data used by Aquaria.  Deleting this"
 			" file will reset all options to their defaults."))
 	{
@@ -275,6 +277,7 @@ void UserSettings::save()
 			sys_time_delay(0.01);
 		}
 	}
+	delete[] icon0;
 #endif
 
 	//clearInputCodeMap();
