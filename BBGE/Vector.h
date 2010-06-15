@@ -40,20 +40,17 @@ public:
      Vector(const Vector &vec) : x(vec.x), y(vec.y), z(vec.z) {}
 
 
-     float *getv()
+     float *getv(float *v)
 	 {
 		 v[0] = x; v[1] = y; v[2] = z;
 		 return v;
 	 }
 
-	 float *getv4(float param)
+	 float *getv4(float *v, float param)
 	 {
-		 v4[0] = x; v4[1] = y; v4[2] = z; v4[3] = param;
-		 return v4;
+		 v[0] = x; v[1] = y; v[2] = z; v[3] = param;
+		 return v;
 	 }
-
-	 float v[3];
-	 float v4[4];
 		 
 	 // vector assignment
      const Vector &operator=(const Vector &vec)
@@ -430,16 +427,15 @@ public:
 	bool triggerFlag;
 	bool pendingInterpolation;
 
+	bool interpolating;
+	bool pingPong;
+	int loopType;
 
 	EventPtr endOfInterpolationEvent;
 	EventPtr startOfInterpolationEvent;
 	EventPtr endOfPathEvent;
 
 	VectorPath path;
-
-	bool interpolating;
-	int loopType;
-	bool pingPong;
 
 	float pathTimer, pathTime;
 	float timePassed, timePeriod;
@@ -460,14 +456,14 @@ public:
 	}
 
 	float pathSpeed;
-	bool speedPath;
 	int currentPathNode;
 	float pathTimeMultiplier;
 protected:
 	
 	float timeSpeedMultiplier, timeSpeedEase;
-	bool ease;
 	float fakeTimePassed;
+	bool speedPath;
+	bool ease;
 	bool followingPath;
 };
 
