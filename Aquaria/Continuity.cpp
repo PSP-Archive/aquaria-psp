@@ -2239,7 +2239,7 @@ void Continuity::upgradeHealth()
 	a->heal(maxHealth - a->health);
 }
 
-void Continuity::saveFile(int slot, Vector position)
+void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData, int scrShotWidth, int scrShotHeight)
 {
 	if (position.isZero())
 	{
@@ -2462,50 +2462,18 @@ void Continuity::saveFile(int slot, Vector position)
 
 #ifdef BBGE_BUILD_PSP
 
-	core->main(1);
-
-	const unsigned int renderWidth   = 480/2;
-	const unsigned int renderHeight  = 272/2;
-	const unsigned int scrshotWidth  = 144;
-	const unsigned int scrshotHeight =  80;
-
-	uint32_t *pixelBuffer = new uint32_t[scrshotWidth * scrshotHeight];
-	dsq->prepScreen(1);
-	fakeglBeginOffscreenFrame();
-	glPushAttrib(GL_ALL_ATTRIB_BITS);
-	glViewport(0, 0, renderWidth, renderHeight);
-	dsq->clearBuffers();
-	dsq->render();
-	glDisable(GL_BLEND);
-	glDisable(GL_ALPHA_TEST); glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST); glDisable(GL_DITHER); glDisable(GL_FOG);
-	glDisable(GL_LIGHTING); glDisable(GL_LOGIC_OP);
-	glDisable(GL_STENCIL_TEST); glDisable(GL_TEXTURE_1D);
-	glDisable(GL_TEXTURE_2D); glPixelTransferi(GL_MAP_COLOR,
-		GL_FALSE); glPixelTransferi(GL_RED_SCALE, 1);
-	glPixelTransferi(GL_RED_BIAS, 0); glPixelTransferi(GL_GREEN_SCALE, 1);
-	glPixelTransferi(GL_GREEN_BIAS, 0); glPixelTransferi(GL_BLUE_SCALE, 1);
-	glPixelTransferi(GL_BLUE_BIAS, 0); glPixelTransferi(GL_ALPHA_SCALE, 1);
-	glPixelTransferi(GL_ALPHA_BIAS, 0);
-	glRasterPos2i(0, 0);
-	glReadPixels(renderWidth/2 - scrshotWidth/2, renderHeight/2 - scrshotHeight/2, scrshotWidth, scrshotHeight, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)pixelBuffer);
-	glPopAttrib();
-	fakeglEndFrame();
-	dsq->prepScreen(0);
-
 	char *pngData = NULL;
-	long pngSize = quickpng_rgb32_size(scrshotWidth, scrshotHeight, false);
+	long pngSize = quickpng_rgb32_size(scrShotWidth, scrShotHeight, false);
 	if (pngSize > 0)
 	{
 		pngData = new char[pngSize];
-		pngSize = quickpng_from_rgb32(pixelBuffer, scrshotWidth, scrshotHeight, scrshotWidth, pngData, pngSize, false, false, false);
+		pngSize = quickpng_from_rgb32(scrShotData, scrShotWidth, scrShotHeight, scrShotWidth, pngData, pngSize, false, false, false);
 		if (pngSize == 0)
 		{
 			delete[] pngData;
 			pngData = NULL;
 		}
 	}
-	delete[] pixelBuffer;
 
 	TiXmlPrinter printer;
 	printer.SetIndent("\t");
@@ -2520,6 +2488,7 @@ void Continuity::saveFile(int slot, Vector position)
 			sys_time_delay(0.01);
 		}
 	}
+
 	delete[] pngData;
 
 #else  // !BBGE_BUILD_PSP

@@ -2594,6 +2594,7 @@ void DSQ::doSavePoint(const Vector &position)
 	dsq->game->avatar->myZoom.interpolateTo(Vector(1,1),0.5);
 	// override =
 	dsq->game->avatar->skeletalSprite.animate("save", 0, 3);
+	dsq->game->clearControlHint();
 	dsq->main(2);
 	dsq->game->avatar->enableInput();
 	dsq->game->avatar->revive();
@@ -2685,14 +2686,6 @@ bool DSQ::onPickedSaveSlot(AquariaSaveSlot *slot)
 	
 		if (doit)
 		{
-			if (saveSlotMode == SSM_SAVE)
-			{
-				PlaySfx sfx;
-				sfx.name = "saved";
-				sfx.vol = 0.55;
-				dsq->sound->playSfx(sfx);
-				confirm("", "saved", 1);
-			}
 			selectedSaveSlot = slot;
 			quitNestedMain();
 			return true;
@@ -3166,7 +3159,40 @@ void DSQ::transitionSaveSlots()
 
 void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 {
-	game->clearControlHint();
+	int scrShotWidth = 0, scrShotHeight = 0;
+	unsigned char *scrShotData = 0;
+
+	if (ssm == SSM_SAVE && user.video.saveSlotScreens)
+	{
+		prepScreen(1);
+
+#ifdef BBGE_BUILD_PSP
+		int renderWidth = 480/2, renderHeight = 272/2;
+		scrShotWidth = 144; scrShotHeight = 80;
+		fakeglBeginOffscreenFrame();
+#else
+		int renderWidth = getWindowWidth(), renderHeight = getWindowHeight();
+		int i = 2;
+		while (2 << i < core->height)
+		{
+			i++;
+		}
+		scrShotWidth = scrShotHeight = 1 << (i-1);
+#endif
+		int x = renderWidth/2  - scrShotWidth/2;
+		int y = renderHeight/2 - scrShotHeight/2;
+
+		glPushAttrib(GL_VIEWPORT_BIT);
+		glViewport(0, 0, renderWidth, renderHeight);
+		clearBuffers();
+		render();
+		scrShotData = core->grabScreenshot(x, y, scrShotWidth, scrShotHeight);
+		glPopAttrib();
+		showBuffer();
+
+		prepScreen(0);
+	}
+
 	selectedSaveSlot = 0;
 	saveSlotMode = SSM_NONE;
 	
@@ -3181,47 +3207,51 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 
 
 
-	if (saveSlotMode == SSM_SAVE)
+	if (selectedSaveSlot == 0)
 	{
-		clearSaveSlots(true);
+		if (saveSlotMode == SSM_SAVE)
+		{
+			clearSaveSlots(true);
+		}
 	}
-
-	if (selectedSaveSlot != 0)
+	else
 	{
 		recentSaveSlot = selectedSaveSlot->getSlotIndex();
 		if (saveSlotMode == SSM_SAVE)
 		{
-			//dsq->screenMessage("Game Saved");
-			continuity.saveFile(selectedSaveSlot->getSlotIndex(), position);
+			continuity.saveFile(selectedSaveSlot->getSlotIndex(), position, scrShotData, scrShotWidth, scrShotHeight);
 
 #ifndef BBGE_BUILD_PSP
-			core->main(1);
-
-			if (user.video.saveSlotScreens)
+			if (user.video.saveSlotScreens && scrShotData != 0)
 			{
 				std::ostringstream os;
 				os << dsq->getSaveDirectory() << "/screen-" << numToZeroString(selectedSaveSlot->getSlotIndex(), 4) << ".zga";
-				dsq->prepScreen(1);
-				dsq->clearBuffers();
-				dsq->render();
-				dsq->showBuffer();
-				
-				
-				int i = 2;
-				while (2 << i < core->height)
-				{
-					i++;
-				}
-				int size = 1 << (i-1);
-				
+				std::string tempfile = dsq->getSaveDirectory() + "/poot-s.tmp";
 
-				saveCenteredScreenshotTGA(dsq->getSaveDirectory() + "/poot-s.tmp", size);
-				//saveSizedScreenshotTGA(dsq->getSaveDirectory() + "/poot-s.tmp",512,1);
+				//saveCenteredScreenshotTGA(tempfile, scrShotWidth);
+				//saveSizedScreenshotTGA(tempfile,512,1);
+
+				// Cut off top and bottom to get a 4:3 aspect ratio.
+				int adjHeight = (scrShotWidth * 3.0f) / 4.0f;
+				int imageDataSize = scrShotWidth * scrShotHeight * 4;
+				int adjImageSize = scrShotWidth * adjHeight * 4;
+				int adjOffset = scrShotWidth * ((scrShotHeight-adjHeight)/2) * 4;
+				memmove(scrShotData, scrShotData + adjOffset, adjImageSize);
+				memset(scrShotData + adjImageSize, 0, imageDataSize - adjImageSize);
+				tgaSave(tempfile.c_str(), scrShotWidth, scrShotHeight, 32, scrShotData);
+				scrShotData = 0;  // deleted by tgaSave()
+
 				packFile(dsq->getSaveDirectory() + "/poot-s.tmp", os.str(),9);
 				remove((dsq->getSaveDirectory() + "/poot-s.tmp").c_str());
-				dsq->prepScreen(0);
 			}
 #endif  // !BBGE_BUILD_PSP
+
+			PlaySfx sfx;
+			sfx.name = "saved";
+			sfx.vol = 0.55;
+			dsq->sound->playSfx(sfx);
+			confirm("", "saved", 1);
+			clearSaveSlots(true);
 		}
 		else if (saveSlotMode == SSM_LOAD)
 		{
@@ -3233,6 +3263,7 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 
 	resetTimer();
 
+	delete[] scrShotData;
 	saveSlotMode = SSM_NONE;
 
 }

@@ -1090,6 +1090,8 @@ public:
 		return virtualHeight;
 	}
 
+	unsigned char *grabScreenshot(int x, int y, int w, int h);
+	unsigned char *grabCenteredScreenshot(int w, int h);
 	int saveScreenshotTGA(const std::string &filename);
 	void save64x64ScreenshotTGA(const std::string &filename);
 	void saveSizedScreenshotTGA(const std::string &filename, int sz, int crop34);
@@ -1313,7 +1315,7 @@ protected:
 
 	
 	int tgaSaveSeries(char	*filename,  short int width, short int height, unsigned char pixelDepth, unsigned char *imageData);
-	int tgaSave(char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
+	int tgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
 	virtual void onUpdate(float dt);
 	virtual void onRender(){}
 };
