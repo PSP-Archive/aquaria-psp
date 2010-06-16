@@ -43,6 +43,7 @@ FTFace::FTFace( const unsigned char *pBufferBytes, size_t bufferSizeInBytes)
     else
     {
         numGlyphs = (*ftFace)->num_glyphs;
+        hasKerningTable = FT_HAS_KERNING((*ftFace));
     }
 }
 
