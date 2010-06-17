@@ -110,14 +110,6 @@ class MiniMapRender;
 class WaterSurfaceRender;
 class ToolTip;
 
-#ifdef BBGE_BUILD_WINDOWS
-	typedef __int8 SmallInt;
-#elif defined(BBGE_BUILD_PSP)
-	typedef uint8_t SmallInt;
-#else
-	typedef int SmallInt;
-#endif
-
 #include "Path.h"
 
 struct EntityGroupEntity
@@ -1182,8 +1174,8 @@ protected:
 
 
 
-	SmallInt grid[MAX_GRID][MAX_GRID];
-	SmallInt baseGrid[MAX_GRID][MAX_GRID];
+	signed char grid[MAX_GRID][MAX_GRID];
+	signed char baseGrid[MAX_GRID][MAX_GRID];
 
 
 	Quad *bg, *bg2;

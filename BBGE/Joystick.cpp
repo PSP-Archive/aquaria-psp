@@ -66,12 +66,24 @@ bool tryXInput()
 
 #endif
 
+#ifdef __LINUX__
+#include <sys/types.h>
+#include <fcntl.h>
+#include <linux/input.h>
+#include <errno.h>
+#include <iostream>
+#endif
+
 Joystick::Joystick()
 {
 	xinited = false;
 	stickIndex = -1;
 #ifdef BBGE_BUILD_SDL
 	sdl_joy = 0;
+#endif
+#ifdef __LINUX__
+	eventfd = -1;
+	effectid = -1;
 #endif
 	inited = false;
 	for (int i = 0; i < maxJoyBtns; i++)
@@ -97,10 +109,13 @@ Joystick::Joystick()
 
 void Joystick::init(int stick)
 {
+#if defined(BBGE_BUILD_SDL) || defined(__LINUX__)
+	std::ostringstream os;
+#endif
+
 #ifdef BBGE_BUILD_SDL
 	stickIndex = stick;
 	int numJoy = SDL_NumJoysticks();
-	std::ostringstream os;
 	os << "Found [" << numJoy << "] joysticks";
 	debugLog(os.str());
 	if (numJoy > stick)
@@ -121,6 +136,33 @@ void Joystick::init(int stick)
 	else
 	{
 		debugLog("Not enough Joystick(s) found");
+	}
+#endif
+	
+#ifdef __LINUX__
+	os.seekp(0);
+	os << "AQUARIA_EVENT_JOYSTICK" << stick;
+
+	std::string envkey = os.str();
+	const char* evdevice = getenv(envkey.c_str());
+
+	if (evdevice != NULL) {
+		eventfd = open(evdevice, O_RDWR);
+		os.seekp(0);
+		if (eventfd < 0) {
+			os << "Could not open rumble device [" << evdevice << "]: " << strerror(errno);
+		}
+		else {
+			os << "Successfully opened rumble device [" << evdevice << "]";
+		}
+		debugLog(os.str());
+	}
+	else {
+		std::cout <<
+			"Environment varialbe " << envkey << " is not set.\n"
+			"Set this environment variable to the device file that shall be used for joystick number " << stick << " in order to enable rumble support.\n"
+			"Example:\n"
+			"\texport " << envkey << "=/dev/input/event6\n\n";
 	}
 #endif
 
@@ -162,6 +204,37 @@ void Joystick::rumble(float leftMotor, float rightMotor, float time)
 		else
 		{
 			//unknown error
+		}
+#elif defined(__LINUX__)
+		if (eventfd >= 0) {
+			struct ff_effect effect;
+			struct input_event event;
+	
+			effect.type = FF_RUMBLE;
+			effect.id = effectid;
+			effect.u.rumble.strong_magnitude = (uint16_t) (leftMotor * 0xffff);
+			effect.u.rumble.weak_magnitude = (uint16_t) (rightMotor * 0xffff);
+			effect.replay.length = (uint16_t) (time * 1000);
+			effect.replay.delay = 0;
+	
+			if (ioctl(eventfd, EVIOCSFF, &effect) == -1) {
+				debugLog(std::string("Upload rumble effect: ") + strerror(errno));
+				return;
+			}
+	
+			event.type = EV_FF;
+			event.code = effectid = effect.id;
+	
+			if (leftMotor == 0 && rightMotor == 0) {
+				event.value = 0;
+			}
+			else {
+				event.value = 1;
+			}
+	
+			if (write(eventfd, (const void*) &event, sizeof(event)) == -1) {
+				debugLog(std::string("Play rumble effect: ") + strerror(errno));
+			}
 		}
 #endif
 	}

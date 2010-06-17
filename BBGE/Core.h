@@ -807,6 +807,10 @@ public:
 #ifdef BBGE_BUILD_SDL
 	SDL_Joystick *sdl_joy;
 #endif
+#ifdef __LINUX__
+	int eventfd;
+	int16_t effectid;
+#endif
 	int stickIndex;
 
 	int s1ax, s1ay, s2ax, s2ay;

@@ -3440,7 +3440,8 @@ void Core::pollEvents()
 				if ((event.key.keysym.sym == SDLK_g) && (event.key.keysym.mod & KMOD_CTRL))
 				{
 					// toggle mouse grab with the magic hotkey.
-					SDL_WM_GrabInput((SDL_WM_GrabInput(SDL_GRAB_QUERY) == SDL_GRAB_ON) ? SDL_GRAB_OFF : SDL_GRAB_ON);
+					grabInputOnReentry = (grabInputOnReentry)?0:-1;
+					setReentryInputGrab(0);
 				}
 				else if (_hasFocus)
 				{
