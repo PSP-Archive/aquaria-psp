@@ -3840,6 +3840,11 @@ bool DSQ::runScriptNum(const std::string &name, const std::string &func, float n
 	return false;
 }
 
+void DSQ::collectScriptGarbage()
+{
+	scriptInterface.collectGarbage();
+}
+
 void DSQ::onMouseInput()
 {
 	if (dsq->game && dsq->game->avatar)
