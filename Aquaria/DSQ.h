@@ -551,16 +551,19 @@ struct WorldMapTile
 
 	int stringIndex;
 
-	void visToList();
-	void listToVis(float ab, float av);
-	void clearList();
+	void visToData();
+	void dataToVis(float ab, float av);
+	void clearData();
+	void dataToString(std::ostringstream &os);
+	void stringToData(std::istringstream &is);
 
-	std::vector<IntPair> list;
-
-
-	int visSize;
+	unsigned int visSize;
 	Vector ** vis;
 	Quad *q;
+
+protected:
+	unsigned int dataSize;
+	unsigned char *data;
 };
 
 struct WorldMap

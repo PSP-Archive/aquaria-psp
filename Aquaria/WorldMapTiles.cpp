@@ -27,29 +27,80 @@ WorldMapTile::WorldMapTile()
 	scale = scale2 = 1;
 	layer = 0;
 	index = -1;
+	data = 0;
+	dataSize = 0;
 	vis = 0;
 	visSize = 0;
 	q = 0;
 	stringIndex = 0;
 }
 
-void WorldMapTile::visToList()
+void WorldMapTile::visToData()
 {
 	if (vis)
 	{
-		for (int x = 0; x < visSize; x++)
+		if (visSize % 8 != 0)
 		{
-			for (int y = 0; y < visSize; y++)
+			debugLog("visSize must be a multiple of 8!");
+			return;
+		}
+		if (!data || dataSize != visSize)
+		{
+			delete[] data;
+			dataSize = visSize;
+			const unsigned int rowSize = (dataSize+7)/8;
+			data = new unsigned char[rowSize * dataSize];
+		}
+		unsigned char *ptr = data;
+		for (unsigned int y = 0; y < visSize; y++, ptr += (dataSize+7)/8)
+		{
+			for (unsigned int x = 0; x < visSize; x += 8)
 			{
-				if (vis[x][y].z > 0.5)
-					list.push_back(IntPair(x, y));
+				unsigned char dataByte = 0;
+				for (unsigned int x2 = 0; x2 < 8; x2++)
+				{
+					if (vis[x+x2][y].z > 0.5f)
+						dataByte |= 1 << x2;
+				}
+				ptr[x/8] = dataByte;
 			}
 		}
 	}
 }
 
-void WorldMapTile::listToVis(float ab, float av)
+void WorldMapTile::dataToVis(float ab, float av)
 {
+	if (data)
+	{
+		if (dataSize == visSize)
+		{
+			unsigned char *ptr = data;
+			for (unsigned int y = 0; y < dataSize; y++, ptr += (dataSize+7)/8)
+			{
+				for (unsigned int x = 0; x < dataSize; x += 8)
+				{
+					unsigned char dataByte = ptr[x/8];
+					for (unsigned int x2 = 0; x2 < 8; x2++)
+					{
+						vis[x+x2][y].z = (dataByte & (1 << x2)) ? av : ab;
+					}
+				}
+			}
+			return;
+		}
+		else
+		{
+			std::ostringstream os;
+			os << "dataSize " << dataSize << " != visSize " << visSize
+			   << ", clearing data!";
+			delete[] data;
+			data = 0;
+			dataSize = 0;
+			// Fall through to vis[] clearing.
+		}
+	}
+
+	/* No data, so set it to all empty */			
 	for (int x = 0; x < visSize; x++)
 	{
 		for (int y = 0; y < visSize; y++)
@@ -57,20 +108,66 @@ void WorldMapTile::listToVis(float ab, float av)
 			vis[x][y].z = ab;
 		}
 	}
+}
 
-	for (int i = 0; i < list.size(); i++)
+void WorldMapTile::clearData()
+{
+	delete[] data;
+	data = 0;
+	dataSize = 0;
+}
+
+// Convert the data array to string format for saving.
+void WorldMapTile::dataToString(std::ostringstream &os)
+{
+	unsigned int count = 0;
+	std::ostringstream tempStream;
+	unsigned char *ptr = data;
+	for (unsigned int y = 0; y < dataSize; y++, ptr += (dataSize+7)/8)
 	{
-		int x,y;
-		x = int(list[i].x);
-		y = int(list[i].y);
-		vis[x][y].z = av;
+		for (unsigned int x = 0; x < dataSize; x += 8)
+		{
+			unsigned char dataByte = ptr[x/8];
+			for (unsigned int x2 = 0; x2 < 8; x2++)
+			{
+				if (dataByte & (1 << x2))
+				{
+					tempStream << (x+x2) << " " << y << " ";
+					count++;
+				}
+			}
+		}
+	}
+
+	os << dataSize << " " << count << " " << tempStream.str();
+}
+
+// Parse a string from a save file and store in the data array.
+void WorldMapTile::stringToData(std::istringstream &is)
+{
+	delete[] data;
+	data = 0;
+	dataSize = 0;
+	unsigned int rowSize = 0;
+
+	int count = 0;
+	is >> dataSize >> count;
+	if (dataSize > 0)
+	{
+		rowSize = (dataSize+7)/8;
+		data = new unsigned char[rowSize * dataSize];
+		memset(data, 0, rowSize * dataSize);
+	}
+
+	for (int i = 0; i < count; i++)
+	{
+		int x, y;
+		is >> x >> y;
+		if (x >= 0 && x < dataSize && y >= 0 && y < dataSize)
+			data[y*rowSize + x/8] |= 1 << (x%8);
 	}
 }
 
-void WorldMapTile::clearList()
-{
-	list.clear();
-}
 
 WorldMap::WorldMap()
 {

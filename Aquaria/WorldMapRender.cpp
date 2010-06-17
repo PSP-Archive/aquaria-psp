@@ -507,7 +507,7 @@ void WorldMapRender::setVis(Quad *q)
 		q->setSegs(SUBDIV, SUBDIV, 0, 0, 0, 0, 2.0, 1);
 		tile->vis = q->getDrawGrid();
 		tile->visSize = SUBDIV;
-		tile->listToVis(baseMapSegAlpha, visibleMapSegAlpha);
+		tile->dataToVis(baseMapSegAlpha, visibleMapSegAlpha);
 	}
 	else if (visMethod == VIS_PARTICLES)
 	{
@@ -737,7 +737,7 @@ void WorldMapRender::transferData()
 		WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
 		if (tile)
 		{
-			tile->visToList();
+			tile->visToData();
 		}
 	}
 #endif
