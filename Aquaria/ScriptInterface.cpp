@@ -8395,10 +8395,10 @@ void ScriptInterface::init()
 	currentParticleEffect = 0;
 	//collideEntity = 0;
 
+	initLuaVM(&L);
+
 //	particleEffectScripts
 	//loadParticleEffectScripts();
-
-	initLuaVM(&L);
 }
 
 ParticleEffectScript *ScriptInterface::getParticleEffectScriptByIdx(int idx)
@@ -9530,21 +9530,27 @@ void ScriptInterface::initLuaVM(lua_State **L)
 	// ============== deprecated
 }
 
+void ScriptInterface::closeLuaVM(lua_State *L)
+{
+	lua_close(L);
+}
+
 void ScriptInterface::shutdown()
 {
-	if (L)
-	{
-		lua_close(L);
-		L = 0;
-	}
 	for (ParticleEffectScripts::iterator i = particleEffectScripts.begin(); i != particleEffectScripts.end(); i++)
 	{
 		ParticleEffectScript *p = &(*i).second;
 		if (p->lua)
 		{
-			lua_close(p->lua);
+			closeLuaVM(p->lua);
 			p->lua = 0;
 		}
+	}
+
+	if (L)
+	{
+		lua_close(L);
+		L = 0;
 	}
 }
 
