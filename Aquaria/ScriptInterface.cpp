@@ -2724,6 +2724,7 @@ int l_cam_setPosition(lua_State *L)
 	}
 
 	dsq->cameraPos = p;
+	lua_pushnumber(L, 0);
 	return 1;
 }
 
@@ -4536,6 +4537,7 @@ int l_setupEntity(lua_State *L)
 		}
 		se->setupEntity(tex, lua_tonumber(L, 3));
 	}
+	lua_pushnumber(L, 0);
 	return 1;
 }
 
@@ -4663,7 +4665,7 @@ int l_entity_moveTowardsAngle(lua_State *L)
 	{
 		e->moveTowardsAngle(lua_tointeger(L, 2), lua_tonumber(L, 3), lua_tointeger(L, 4));
 	}
-	lua_tonumber(L, 0);
+	lua_pushinteger(L, 0);
 	return 1;
 }
 
@@ -4674,7 +4676,7 @@ int l_entity_moveAroundAngle(lua_State *L)
 	{
 		e->moveTowardsAngle(lua_tointeger(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
 	}
-	lua_tonumber(L, 0);
+	lua_pushinteger(L, 0);
 	return 1;
 }
 
@@ -4685,7 +4687,7 @@ int l_entity_moveTowards(lua_State *L)
 	{
 		e->moveTowards(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5));
 	}
-	lua_tonumber(L, 0);
+	lua_pushinteger(L, 0);
 	return 1;
 }
 
@@ -4696,7 +4698,7 @@ int l_entity_moveAround(lua_State *L)
 	{
 		e->moveAround(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
 	}
-	lua_tonumber(L, 0);
+	lua_pushinteger(L, 0);
 	return 1;
 }
 
