@@ -142,9 +142,8 @@ public:
 
 	int getTopLayer();
 
-	void shareColor(const Vector &color);
-	void multiplyColor(const Vector &color, bool inv=false);
-	void multiplyAlpha(const float alpha, bool inv=false);
+	void setColorMult(const Vector &color, const float alpha);
+	void clearColorMult();
 
 	void enableMotionBlur(int sz=10, int off=5);
 	void disableMotionBlur();
@@ -247,7 +246,9 @@ public:
 	//float updateMultiplier;
 	//EventPtr deathEvent;
 
-	InterpolatedVector *positionSnapTo;
+	bool colorIsSaved;  // Used for both color and alpha
+	Vector savedColor;  // Saved values from setColorMult()
+	float savedAlpha;
 
 	bool shareAlphaWithChildren;
 	bool shareColorWithChildren;
@@ -257,6 +258,8 @@ public:
 	bool cull;
 	int updateCull;
 	int layer;
+
+	InterpolatedVector *positionSnapTo;
 
 	//DestroyType destroyType;
 	typedef std::list<RenderObject*> Children;

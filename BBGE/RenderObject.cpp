@@ -116,58 +116,43 @@ void RenderObject::applyBlendType()
 #endif
 }
 
-void RenderObject::shareColor(const Vector &color)
+void RenderObject::setColorMult(const Vector &color, const float alpha)
 {
-	this->color = color;
+	if (colorIsSaved)
+	{
+printf("setColorMult() WARNING: can't do nested multiplies\n");//FIXME temp
+		debugLog("setColorMult() WARNING: can't do nested multiplies");
+		return;
+	}
+	this->colorIsSaved = true;
+	this->savedColor.x = this->color.x;
+	this->savedColor.y = this->color.y;
+	this->savedColor.z = this->color.z;
+	this->savedAlpha = this->alpha.x;
+	this->color *= color;
+	this->alpha.x *= alpha;
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
 	{
-		(*i)->shareColor(color);
+		(*i)->setColorMult(color, alpha);
 	}
 }
 
-void RenderObject::multiplyColor(const Vector &color, bool inv)
+void RenderObject::clearColorMult()
 {
-	if (inv)
+	if (!colorIsSaved)
 	{
-		if (color.x == 0 || color.y == 0 || color.z == 0)
-			return;  // Avoid division by zero
-		const Vector invColor(1/color.x, 1/color.y, 1/color.z);
-		this->color *= invColor;
-		for (Children::iterator i = children.begin(); i != children.end(); i++)
-		{
-			(*i)->multiplyColor(invColor);
-		}
+printf("clearColorMult() WARNING: no saved color to restore\n");//FIXME temp
+		debugLog("clearColorMult() WARNING: no saved color to restore");
+		return;
 	}
-	else
+	this->color.x = this->savedColor.x;
+	this->color.y = this->savedColor.y;
+	this->color.z = this->savedColor.z;
+	this->alpha.x = this->savedAlpha;
+	this->colorIsSaved = false;
+	for (Children::iterator i = children.begin(); i != children.end(); i++)
 	{
-		this->color *= color;
-		for (Children::iterator i = children.begin(); i != children.end(); i++)
-		{
-			(*i)->multiplyColor(color);
-		}
-	}
-}
-
-void RenderObject::multiplyAlpha(const float alpha, bool inv)
-{
-	if (inv)
-	{
-		if (alpha == 0)
-			return;  // Avoid division by zero
-		const float invAlpha = 1/alpha;
-		this->alpha.x *= invAlpha;
-		for (Children::iterator i = children.begin(); i != children.end(); i++)
-		{
-			(*i)->multiplyAlpha(invAlpha);
-		}
-	}
-	else
-	{
-		this->alpha.x *= alpha;
-		for (Children::iterator i = children.begin(); i != children.end(); i++)
-		{
-			(*i)->multiplyAlpha(alpha);
-		}
+		(*i)->clearColorMult();
 	}
 }
 
@@ -226,6 +211,7 @@ RenderObject::RenderObject()
 	renderBeforeParent = false;
 	//followXOnly = false;
 	//renderOrigin = false;
+	colorIsSaved = false;
 	shareAlphaWithChildren = false;
 	shareColorWithChildren = false;
 	touchDamage = 0;	

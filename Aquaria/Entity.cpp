@@ -3325,9 +3325,7 @@ void Entity::render()
 		//errorLog("!^!^$");
 	}
 	// HACK: need to multiply base + etc
-	//skeletalSprite.shareColor(this->color);
-	skeletalSprite.multiplyColor(this->color);
-	skeletalSprite.multiplyAlpha(this->alpha.x);
+	skeletalSprite.setColorMult(this->color, this->alpha.x);
 	bool set=false;
 	if (beautyFlip && blurShader.isLoaded() && flipScale.isInterpolating() && dsq->user.video.blur)
 	{
@@ -3346,8 +3344,7 @@ void Entity::render()
 	if (set)
 		blurShader.unbind();
 	renderBorder = false;
-	skeletalSprite.multiplyColor(this->color, true);
-	skeletalSprite.multiplyAlpha(this->alpha.x, true);
+	skeletalSprite.clearColorMult();
 	color = bcolor;
 	scale = bscale;
 }
