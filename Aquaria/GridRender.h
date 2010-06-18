@@ -68,7 +68,6 @@ class WorldMapRender : public RenderObject, public ActionMapper
 {
 public:
 	WorldMapRender();
-	void transferData();
 	void destroy();
 	void toggle(bool on);
 	bool isOn();

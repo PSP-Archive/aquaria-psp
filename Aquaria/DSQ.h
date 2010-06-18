@@ -547,30 +547,28 @@ public:
 };
 */
 
+#define MAPVIS_SUBDIV 64
+
 struct WorldMapTile
 {
 	WorldMapTile();
+	~WorldMapTile();
+
+	void markVisited(int left, int top, int right, int bottom);
+	void dataToString(std::ostringstream &os);
+	void stringToData(std::istringstream &is);
+	const unsigned char *getData() const {return data;}
 
 	std::string name;
 	Vector gridPos;
 	float scale, scale2;
 	bool revealed, prerevealed;
 	int layer, index;
-
 	int stringIndex;
 
-	void visToData();
-	void dataToVis(float ab, float av);
-	void clearData();
-	void dataToString(std::ostringstream &os);
-	void stringToData(std::istringstream &is);
-
-	unsigned int visSize;
-	Vector ** vis;
 	Quad *q;
 
 protected:
-	unsigned int dataSize;
 	unsigned char *data;
 };
 

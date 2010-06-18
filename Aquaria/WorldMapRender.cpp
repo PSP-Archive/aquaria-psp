@@ -32,8 +32,6 @@ namespace WorldMapRenderNamespace
 {
 	const float WORLDMAP_UNDERLAY_ALPHA = 0.8;
 
-	const int SUBDIV			= 64;
-
 	float baseMapSegAlpha		= 0.4;
 	float visibleMapSegAlpha	= 0.8;
 
@@ -469,6 +467,41 @@ void WorldMapRender::setProperTileColor(WorldMapTile *tile)
 	}
 }
 
+#ifdef AQUARIA_BUILD_MAPVIS
+static void tileDataToVis(WorldMapTile *tile, Vector **vis)
+{
+	const unsigned char *data = tile->getData();
+
+	if (data != 0)
+	{
+		const unsigned int rowSize = MAPVIS_SUBDIV/8;
+		for (unsigned int y = 0; y < MAPVIS_SUBDIV; y++, data += rowSize)
+		{
+			for (unsigned int x = 0; x < MAPVIS_SUBDIV; x += 8)
+			{
+				unsigned char dataByte = data[x/8];
+				for (unsigned int x2 = 0; x2 < 8; x2++)
+				{
+					vis[x+x2][y].z = (dataByte & (1 << x2)) ? visibleMapSegAlpha : baseMapSegAlpha;
+				}
+			}
+		}
+	}
+	else
+	{
+		for (int x = 0; x < MAPVIS_SUBDIV; x++)
+		{
+			for (int y = 0; y < MAPVIS_SUBDIV; y++)
+			{
+				vis[x][y].z = baseMapSegAlpha;
+			}
+		}
+		return;
+	}
+}
+#endif  // AQUARIA_BUILD_MAPVIS
+
+
 void WorldMapRender::setVis(Quad *q)
 {
 	if (!q) return;
@@ -480,10 +513,6 @@ void WorldMapRender::setVis(Quad *q)
 		lastVisQuad->color = Vector(0.7, 0.8, 1);
 	}
 	*/
-	if (lastVisTile)
-	{
-		lastVisTile->vis = 0;
-	}
 
 	q->color = Vector(1,1,1);
 	q->alphaMod = 1;
@@ -504,10 +533,8 @@ void WorldMapRender::setVis(Quad *q)
 
 	if (visMethod == VIS_VERTEX)
 	{
-		q->setSegs(SUBDIV, SUBDIV, 0, 0, 0, 0, 2.0, 1);
-		tile->vis = q->getDrawGrid();
-		tile->visSize = SUBDIV;
-		tile->dataToVis(baseMapSegAlpha, visibleMapSegAlpha);
+		q->setSegs(MAPVIS_SUBDIV, MAPVIS_SUBDIV, 0, 0, 0, 0, 2.0, 1);
+		tileDataToVis(tile, q->getDrawGrid());
 	}
 	else if (visMethod == VIS_PARTICLES)
 	{
@@ -607,9 +634,6 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 
 			if (tile == activeTile)
 				activeQuad = q;
-
-			tile->vis = 0;
-			
 
 			if (activeQuad == q)
 			{
@@ -729,20 +753,6 @@ void WorldMapRender::bindInput()
 	dsq->user.control.actionSet.importAction(this, "SwimDown",			ACTION_SWIMDOWN);
 }
 
-void WorldMapRender::transferData()
-{
-#ifdef AQUARIA_BUILD_MAPVIS
-	for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
-	{
-		WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
-		if (tile)
-		{
-			tile->visToData();
-		}
-	}
-#endif
-}
-
 void WorldMapRender::destroy()
 {
 	RenderObject::destroy();
@@ -853,8 +863,6 @@ void WorldMapRender::onUpdate(float dt)
 						{
 							if ((activeTile != selectedTile) && selectedTile->q)
 							{
-								transferData();
-
 								WorldMapTile *oldTile = activeTile;
 
 								activeTile->q->deleteGrid();
@@ -1014,28 +1022,27 @@ void WorldMapRender::onUpdate(float dt)
 	else
 	{
 #ifdef AQUARIA_BUILD_MAPVIS
-		if (dsq->game->avatar)
+		if (dsq->game->avatar && activeTile)
 		{
-			if (activeQuad && activeTile)
+			Vector p = dsq->game->avatar->position;
+			p.x /= dsq->game->cameraMax.x;
+			p.y /= dsq->game->cameraMax.y;
+			int x = int(p.x * MAPVIS_SUBDIV);
+			int y = int(p.y * MAPVIS_SUBDIV);
+			activeTile->markVisited(x-1, y-1, x+1, y+1);
+			if (activeQuad)
 			{
 				if (visMethod == VIS_VERTEX)
 				{
-					Vector p = dsq->game->avatar->position;
-					p.x = p.x / dsq->game->cameraMax.x;
-					p.y = p.y / dsq->game->cameraMax.y;
-					p.x = p.x * SUBDIV;
-					p.y = p.y * SUBDIV;
-					p.x = int(p.x);
-					p.y = int(p.y);
-					activeQuad->setDrawGridAlpha(p.x, p.y, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x-1, p.y, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x-1, p.y-1, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x-1, p.y+1, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x+1, p.y, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x+1, p.y-1, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x+1, p.y+1, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x, p.y-1, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x, p.y+1, visibleMapSegAlpha);
+					activeQuad->setDrawGridAlpha(x, y, visibleMapSegAlpha);
+					activeQuad->setDrawGridAlpha(x-1, p.y, visibleMapSegAlpha);
+					activeQuad->setDrawGridAlpha(x-1, y-1, visibleMapSegAlpha);
+					activeQuad->setDrawGridAlpha(x-1, y+1, visibleMapSegAlpha);
+					activeQuad->setDrawGridAlpha(x+1, y, visibleMapSegAlpha);
+					activeQuad->setDrawGridAlpha(x+1, y-1, visibleMapSegAlpha);
+					activeQuad->setDrawGridAlpha(x+1, y+1, visibleMapSegAlpha);
+					activeQuad->setDrawGridAlpha(x, y-1, visibleMapSegAlpha);
+					activeQuad->setDrawGridAlpha(x, y+1, visibleMapSegAlpha);
 				}
 				else if (visMethod == VIS_PARTICLES)
 				{

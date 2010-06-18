@@ -2315,8 +2315,6 @@ void Continuity::saveFile(int slot, Vector position)
 #ifdef AQUARIA_BUILD_MAPVIS
 		if (dsq->game->worldMapRender)
 		{
-			dsq->game->worldMapRender->transferData();
-
 			std::ostringstream os;
 			for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
 			{
