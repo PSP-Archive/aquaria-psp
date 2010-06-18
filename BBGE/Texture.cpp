@@ -81,27 +81,38 @@ Texture::~Texture()
 
 void Texture::read(int tx, int ty, int w, int h, unsigned char *pixels)
 {
-
+#ifdef BBGE_BUILD_OPENGL
+	if (tx == 0 && ty == 0 && w == this->width && h == this->height)
+	{
+		glBindTexture(GL_TEXTURE_2D, textures[0]);
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+	else
+	{
+		std::ostringstream os;
+		os << "Unable to read a texture subimage (size = "
+		   << this->width << "x" << this->height << ", requested = "
+		   << tx << "," << ty << "+" << w << "x" << h << ")";
+		debugLog(os.str());
+	}
+#endif
 }
 
-void Texture::write(int tx, int ty, int w, int h, unsigned char *pixels)
+void Texture::write(int tx, int ty, int w, int h, const unsigned char *pixels)
 {
 #ifdef BBGE_BUILD_OPENGL
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
 
-	int levels = 99;
-	for (int i = 0; i < levels; i++)
-	{
-		glTexSubImage2D(GL_TEXTURE_2D, 0,
-						tx,
-						ty,
-						w,
-						h,
-						GL_RGBA,
-						GL_UNSIGNED_BYTE,
-						pixels
-						);
-	}
+	glTexSubImage2D(GL_TEXTURE_2D, 0,
+					tx,
+					ty,
+					w,
+					h,
+					GL_RGBA,
+					GL_UNSIGNED_BYTE,
+					pixels
+					);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	/*
