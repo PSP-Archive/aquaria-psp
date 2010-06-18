@@ -2727,13 +2727,16 @@ void fakeglEndFrame(void)
  * fakeglTexImagePSP:  Associate a texture loaded into a Texture structure
  * by one of the texture_*() functions with GL_TEXTURE_2D.  After this
  * call, the Texture structure is owned by the GL library, and may not be
- * used by the caller (even if this function raises an error).
+ * used by the caller (even if this function raises an error), except that
+ * operations which would be permitted on a texture pointer returned by
+ * fakeglGetTexPointerPSP() may be performed on the passed-in texture
+ * after this function returns.
  *
  * [Parameters]
  *      target: Target GL texture ID (must be GL_TEXTURE_2D)
  *     texture: Texture structure to associate
  * [Return value]
- *      None
+ *     None
  */
 void fakeglTexImagePSP(GLenum target, Texture *texture)
 {
@@ -2762,6 +2765,39 @@ void fakeglTexImagePSP(GLenum target, Texture *texture)
         texture_destroy(texture_array[bound_texture].texture);
     }
     texture_array[bound_texture].texture = texture;
+}
+
+/*-----------------------------------------------------------------------*/
+
+/**
+ * fakeglGetTexPointerPSP:  Retrieve the pointer to the Texture structure
+ * associated with GL_TEXTURE_2D.  The caller may read any fields from the
+ * returned structure, and may modify the pixel data or (if an indexed
+ * texture) the color palette, but must not modify any other fields or
+ * free the structure.
+ *
+ * [Parameters]
+ *     target: Target GL texture ID (must be GL_TEXTURE_2D)
+ * [Return value]
+ *     Texture structure pointer, or NULL if no texture is currently
+ *     associated with the target or the associated texture hs no data
+ */
+const Texture *fakeglGetTexPointerPSP(GLenum target)
+{
+    if (target != GL_TEXTURE_2D) {
+        SET_ERROR(GL_INVALID_ENUM);
+        return NULL;
+    }
+
+
+    if (!bound_texture || !texture_array[bound_texture].texture
+     || texture_array[bound_texture].texture == UNDEFINED_TEXTURE
+    ) {
+        SET_ERROR(GL_INVALID_OPERATION);
+        return NULL;
+    }
+
+    return texture_array[bound_texture].texture;
 }
 
 /*************************************************************************/

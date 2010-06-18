@@ -35,17 +35,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "TTFFont.h"
 
-// FIXME: On the PSP, the save data generated for map visited flags
-// quickly grows too large to be manageable -- the game would run out of
-// memory trying to create the location list for the save file -- and
-// reducing the value of SUBDIV in WorldMapRender.cpp causes the "visited"
-// coloring to overflow into areas the player hasn't actually reached yet,
-// so this feature is disabled.  Changing the save data to use a binary
-// bitmap might be enough to resolve this problem, though memory usage
-// may also prove to be an issue.
-#ifndef BBGE_BUILD_PSP
 #define AQUARIA_BUILD_MAPVIS
-#endif
 
 // Define this to save map visited data in a base64-encoded raw format.
 // This can take much less space than the standard text format (as little

@@ -11,10 +11,6 @@ Important notice (limitations of this version)
 Due to Aquaria's memory requirements, the game will only run on a PSP-2000
 ("Slim") or later.  Aquaria will _not_ run on a PSP-1000 ("Phat").  Sorry!
 
-Also due to memory limitations, the world map will not show which areas
-you have already visited or not yet visited.  If you're daring, see the
-note in Aquaria/DSQ.h and define AQUARIA_BUILD_MAPVIS at your own risk.
-
 Save early and often!  Aquaria seems to have a few memory leaks or
 fragmentation issues which would be unnoticeable on a PC, but which
 quickly run the PSP out of resources, leading to a crash.  Sometimes it
@@ -144,13 +140,13 @@ sections below for important notes regarding the data files.
 
 Default controls
 ----------------
-The default controls for PSP are as follows:
+The default controls for the PSP are as follows:
 
 Analog pad      -- move Naija
 Directional pad -- select options in menus
 L/R triggers    -- change page in menus
 Cross    -- swim faster; select menu option (left mouse button equivalent)
-Circle   -- interact with object, other actions (right mouse button equiv.)
+Circle   -- interact with object; other actions (right mouse button equiv.)
 Square   -- revert to normal form; select food for cooking
 Triangle -- display world map; remove food from cooking slot
 Start    -- open/close in-game menu; pause cutscene

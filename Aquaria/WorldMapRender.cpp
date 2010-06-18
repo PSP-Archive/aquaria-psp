@@ -40,11 +40,14 @@ namespace WorldMapRenderNamespace
 	enum VisMethod
 	{
 		VIS_VERTEX		= 0,
-		VIS_PARTICLES	= 1,
-		VIS_COPY		= 2
+		VIS_WRITE		= 1
 	};
 
+#ifdef BBGE_BUILD_PSP
+	VisMethod visMethod = VIS_WRITE;
+#else
 	VisMethod visMethod = VIS_VERTEX;
+#endif
 
 	std::vector<Quad *> tiles;
 
@@ -469,6 +472,7 @@ void WorldMapRender::setProperTileColor(WorldMapTile *tile)
 }
 
 #ifdef AQUARIA_BUILD_MAPVIS
+
 static void tileDataToVis(WorldMapTile *tile, Vector **vis)
 {
 	const unsigned char *data = tile->getData();
@@ -500,12 +504,214 @@ static void tileDataToVis(WorldMapTile *tile, Vector **vis)
 		return;
 	}
 }
+
+// Returns a copy of the original texture data.
+static unsigned char *tileDataToAlpha(WorldMapTile *tile)
+{
+	const unsigned char *data = tile->getData();
+	const unsigned int ab = int(baseMapSegAlpha * (1<<8) + 0.5f);
+	const unsigned int av = int(visibleMapSegAlpha * (1<<8) + 0.5f);
+
+#ifdef BBGE_BUILD_PSP
+	// PSP-specific code to directly modify swizzled texture data.
+
+	glBindTexture(GL_TEXTURE_2D, tile->q->texture->textures[0]);
+	const PSPTexture *psptex = fakeglGetTexPointerPSP(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	if (!psptex->indexed || !psptex->swizzled)
+	{
+		debugLog("Textures must be indexed and swizzled for writing");
+		return 0;
+	}
+	if (psptex->width != psptex->stride)
+	{
+		std::ostringstream os;
+		os << "Width " << psptex->width << " != stride " << psptex->stride
+		   << ", can't write";
+		debugLog(os.str());
+		return 0;
+	}
+
+	const unsigned int texWidth = psptex->width;
+	const unsigned int texHeight = psptex->height;
+	if (texWidth % MAPVIS_SUBDIV != 0 || texHeight % MAPVIS_SUBDIV != 0)
+	{
+		std::ostringstream os;
+		os << "Texture size " << texWidth << "x" << texHeight
+		   << " not a multiple of MAPVIS_SUBDIV " << MAPVIS_SUBDIV
+		   << ", can't edit";
+		debugLog(os.str());
+		return 0;
+	}
+	const unsigned int scaleX = texWidth / MAPVIS_SUBDIV;
+	const unsigned int scaleY = texHeight / MAPVIS_SUBDIV;
+
+	// Generate an alpha -> color index lookup table.  Approximate
+	// matches are stored as (index - 0x100), which has the same byte
+	// value but lets us know it's not an exact match.
+	const uint32_t *palette = psptex->palette;
+	short alphaLookup[256];
+	memset(alphaLookup, -1, sizeof(alphaLookup));
+	for (unsigned int i = 0; i < 256; i++)
+	{
+		const int alpha = palette[i] >> 24;
+		if (alphaLookup[alpha] < 0)
+			alphaLookup[alpha] = i;
+	}
+	for (unsigned int i = 0; i < 256; i++)
+	{
+		if (alphaLookup[i] < 0)
+		{
+			for (unsigned int j = 1; j < 256; j++)
+			{
+				if (j <= i && alphaLookup[i-j] >= 0)
+				{
+					alphaLookup[i] = alphaLookup[i-j] - 0x100;
+					break;
+				}
+				else if (j <= 255-i && alphaLookup[i+j] >= 0)
+				{
+					alphaLookup[i] = alphaLookup[i+j] - 0x100;
+					break;
+				}
+			}
+		}
+	}
+
+	unsigned char *savedTexData = new unsigned char[texWidth * texHeight];
+	memcpy(savedTexData, psptex->pixels, texWidth * texHeight);
+
+	if (data != 0)
+	{
+		const unsigned int rowSize = MAPVIS_SUBDIV/8;
+		for (unsigned int y = 0; y < MAPVIS_SUBDIV; y++, data += rowSize)
+		{
+			const unsigned int line = y*scaleY;
+			unsigned char *texOut = &psptex->pixels[(line/8)*(texWidth*8) + (line%8)*16];
+			for (unsigned int x = 0; x < MAPVIS_SUBDIV; x += 8)
+			{
+				unsigned char dataByte = data[x/8];
+				for (unsigned int x2 = 0; x2 < 8; x2++)
+				{
+					const bool visited = (dataByte & (1 << x2)) != 0;
+					const unsigned int alphaMod = visited ? av : ab;
+					const unsigned int column = (x+x2)*scaleX;
+					unsigned char *ptr = &texOut[(column/16)*128 + (column%16)];
+					for (unsigned int pixelY = 0; pixelY < scaleY; pixelY++, ptr += 16)
+					{
+						for (unsigned int pixelX = 0; pixelX < scaleX; pixelX++)
+						{
+							const int alpha = palette[ptr[pixelX]] >> 24;
+							if (alpha == 0)
+								continue;
+							ptr[pixelX] = alphaLookup[(alpha * alphaMod + 128) >> 8];
+						}
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		unsigned char *texOut = psptex->pixels;
+		unsigned char *top = psptex->pixels + psptex->stride * psptex->height;
+		for (; texOut < top; texOut++)
+		{
+			const int alpha = palette[*texOut] >> 24;
+			if (alpha == 0)
+				continue;
+			*texOut = alphaLookup[(alpha * ab + 128) >> 8];
+		}
+	}
+
+#else  // !BBGE_BUILD_PSP
+
+	const unsigned int texWidth = tile->q->texture->width;
+	const unsigned int texHeight = tile->q->texture->height;
+	if (texWidth % MAPVIS_SUBDIV != 0 || texHeight % MAPVIS_SUBDIV != 0)
+	{
+		std::ostringstream os;
+		os << "Texture size " << texWidth << "x" << texHeight
+		   << " not a multiple of MAPVIS_SUBDIV " << MAPVIS_SUBDIV
+		   << ", can't edit";
+		debugLog(os.str());
+		return 0;
+	}
+	const unsigned int scaleX = texWidth / MAPVIS_SUBDIV;
+	const unsigned int scaleY = texHeight / MAPVIS_SUBDIV;
+
+	unsigned char *savedTexData = new unsigned char[texWidth * texHeight * 4];
+	tile->q->texture->read(0, 0, texWidth, texHeight, savedTexData);
+
+	unsigned char *texData = new unsigned char[texWidth * texHeight * 4];
+	memcpy(texData, savedTexData, texWidth * texHeight * 4);
+
+	if (data != 0)
+	{
+		const unsigned int rowSize = MAPVIS_SUBDIV/8;
+		for (unsigned int y = 0; y < MAPVIS_SUBDIV; y++, data += rowSize)
+		{
+			unsigned char *texOut = &texData[(y*scaleY) * texWidth * 4];
+			for (unsigned int x = 0; x < MAPVIS_SUBDIV; x += 8)
+			{
+				unsigned char dataByte = data[x/8];
+				for (unsigned int x2 = 0; x2 < 8; x2++, texOut += scaleX*4)
+				{
+					const bool visited = (dataByte & (1 << x2)) != 0;
+					const unsigned int alphaMod = visited ? av : ab;
+					for (unsigned int pixelY = 0; pixelY < scaleY; pixelY++)
+					{
+						unsigned char *ptr = &texOut[pixelY * texWidth * 4];
+						for (unsigned int pixelX = 0; pixelX < scaleX; pixelX++, ptr += 4)
+						{
+							if (ptr[3] == 0)
+								continue;
+							ptr[3] = (ptr[3] * alphaMod + 128) >> 8;
+						}
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		unsigned char *texOut = texData;
+		for (unsigned int y = 0; y < texHeight; y++)
+		{
+			for (unsigned int x = 0; x < texWidth; x++, texOut += 4)
+			{
+				texOut[3] = (texOut[3] * ab + 128) >> 8;
+			}
+		}
+	}
+
+	tile->q->texture->write(0, 0, texWidth, texHeight, texData);
+	delete[] texData;
+
+#endif
+
+	return savedTexData;
+}
+
+static void resetTileAlpha(WorldMapTile *tile, const unsigned char *savedTexData)
+{
+#ifdef BBGE_BUILD_PSP
+	glBindTexture(GL_TEXTURE_2D, tile->q->texture->textures[0]);
+	const PSPTexture *psptex = fakeglGetTexPointerPSP(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	memcpy(psptex->pixels, savedTexData,
+	       psptex->stride * psptex->height * (psptex->indexed ? 1 : 4));
+#else
+	tile->q->texture->write(0, 0, tile->q->texture->width, tile->q->texture->height, savedTexData);
+#endif
+}
+
 #endif  // AQUARIA_BUILD_MAPVIS
 
 
-void WorldMapRender::setVis(Quad *q)
+void WorldMapRender::setVis(WorldMapTile *tile)
 {
-	if (!q) return;
+	if (!tile) return;
 #ifdef AQUARIA_BUILD_MAPVIS
 	/*
 	if (lastVisQuad)
@@ -515,41 +721,41 @@ void WorldMapRender::setVis(Quad *q)
 	}
 	*/
 
-	q->color = Vector(1,1,1);
-	q->alphaMod = 1;
+	tile->q->color = Vector(1,1,1);
+	tile->q->alphaMod = 1;
 	
-	WorldMapTile *tile=0;
-	int num = dsq->continuity.worldMap.getNumWorldMapTiles();
-	for (int i = 0; i < num; i++)
-	{
-		WorldMapTile *t = dsq->continuity.worldMap.getWorldMapTile(i);
-		if (t && t->q == q)
-		{
-			tile = t;
-			break;
-		}
-	}
-
-	if (tile == 0)	return;
-
 	if (visMethod == VIS_VERTEX)
 	{
-		q->setSegs(MAPVIS_SUBDIV, MAPVIS_SUBDIV, 0, 0, 0, 0, 2.0, 1);
-		tileDataToVis(tile, q->getDrawGrid());
+		tile->q->setSegs(MAPVIS_SUBDIV, MAPVIS_SUBDIV, 0, 0, 0, 0, 2.0, 1);
+		tileDataToVis(tile, tile->q->getDrawGrid());
 	}
-	else if (visMethod == VIS_PARTICLES)
+	else if (visMethod == VIS_WRITE)
 	{
-
-	}
-	else if (visMethod == VIS_COPY)
-	{
-
+		savedTexData = tileDataToAlpha(tile);
 	}
 
-	lastVisQuad = q;
+	lastVisQuad = tile->q;
 	lastVisTile = tile;
 #endif
 }
+
+void WorldMapRender::clearVis(WorldMapTile *tile)
+{
+	if (!tile) return;
+#ifdef AQUARIA_BUILD_MAPVIS
+	if (visMethod == VIS_VERTEX)
+	{
+		tile->q->deleteGrid();
+	}
+	else if (visMethod == VIS_WRITE)
+	{
+		resetTileAlpha(tile, savedTexData);
+		delete[] savedTexData;
+		savedTexData = 0;
+	}
+#endif
+}
+
 
 WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 {
@@ -582,6 +788,8 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	lastMousePosition = core->mouse.position;
 
 	bg = 0;
+
+	savedTexData = 0;
 
 	/*
 	bg = new Quad("", Vector(400,300));
@@ -640,7 +848,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 
 			if (activeQuad == q)
 			{
-				setVis(q);
+				setVis(tile);
 			}
 		
 			addChild(q, PM_POINTER);
@@ -775,6 +983,7 @@ void WorldMapRender::bindInput()
 void WorldMapRender::destroy()
 {
 	RenderObject::destroy();
+	delete[] savedTexData;
 }
 
 bool WorldMapRender::isCursorOffHud()
@@ -884,7 +1093,7 @@ void WorldMapRender::onUpdate(float dt)
 							{
 								WorldMapTile *oldTile = activeTile;
 
-								activeTile->q->deleteGrid();
+								clearVis(activeTile);
 
 								activeTile = selectedTile;
 								activeQuad = activeTile->q;
@@ -904,7 +1113,7 @@ void WorldMapRender::onUpdate(float dt)
 									setProperTileColor(tile);
 								}
 
-								setVis(selectedTile->q);
+								setVis(selectedTile);
 							}
 
 							mb = false;
@@ -1092,31 +1301,9 @@ void WorldMapRender::onUpdate(float dt)
 					activeQuad->setDrawGridAlpha(x, y-1, visibleMapSegAlpha);
 					activeQuad->setDrawGridAlpha(x, y+1, visibleMapSegAlpha);
 				}
-				else if (visMethod == VIS_PARTICLES)
+				else if (visMethod == VIS_WRITE)
 				{
-					this->getAvatarWorldMapPosition();
-				}
-				else if (visMethod == VIS_COPY)
-				{
-					Vector p = dsq->game->avatar->position;
-					p.x = p.x / dsq->game->cameraMax.x;
-					p.y = p.y / dsq->game->cameraMax.y;
-					//Vector p = getWorldToTile(activeTile, dsq->game->avatar->position, false, false);
-					unsigned char *pixels = (unsigned char*)malloc(sizeof(unsigned char)*32*32*4);
-					unsigned int c = 0;
-					for (int x = 0; x < 32; x++)
-					{
-						for (int y = 0; y < 32; y++)
-						{
-							pixels[c] = 1;
-							pixels[c+1] = 0;
-							pixels[c+2] = 1;
-							pixels[c+3] = 1;
-							c += 4;
-						}
-					}
-					activeQuad->texture->write(p.x, p.y, 32, 32, pixels);
-					free(pixels);
+					// Do nothing -- we regenerate the tile on opening the map.
 				}
 			}
 		}
@@ -1252,6 +1439,12 @@ void WorldMapRender::toggle(bool turnON)
 				scale = Vector(1.5,1.5);
 			else
 				scale = Vector(1,1);
+			if (visMethod == VIS_WRITE)
+			{
+				// Texture isn't updated while moving, so force an update here
+				clearVis(activeTile);
+				setVis(activeTile);
+			}
 		}
 
 		if (bg)
@@ -1291,8 +1484,8 @@ void WorldMapRender::toggle(bool turnON)
 		{
 			if (activeTile != originalActiveTile)
 			{
-				activeTile->q->deleteGrid();
-				setVis(originalActiveTile->q);
+				clearVis(activeTile);
+				setVis(originalActiveTile);
 				activeTile = originalActiveTile;
 				activeQuad = activeTile->q;
 			}
@@ -1307,7 +1500,7 @@ void WorldMapRender::toggle(bool turnON)
 
 		// again to set the correct color
 		// lame, don't do that
-		//setVis(activeTile->q);
+		//setVis(activeTile);
 
 		// just set the color
 		if (activeTile)
@@ -1317,7 +1510,7 @@ void WorldMapRender::toggle(bool turnON)
 		}
 
 
-		//setVis(activeQuad);
+		//setVis(activeTile);
 		/*
 		for (int i = 0; i < LR_MENU; i++)
 		{
