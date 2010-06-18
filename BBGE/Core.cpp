@@ -2901,7 +2901,17 @@ void Core::main(float runTime)
 #endif
 
 #ifdef BBGE_BUILD_PSP
-	curTime = lastTime = sys_time_now();
+	// FIXME: Doing it this way throws the timing off in loops that
+	// call main() with short duration, such as the watch() loop in
+	// the intro sequence in Naija's cave.  Instead, we assume that
+	// if <0.1s have passed since the last call, we exited and were
+	// immediately called again, so we continue counting from the
+	// previous frame's time.  (FIXME: Should this be fixed on other
+	// platforms as well?  --achurch)
+	//curTime = lastTime = sys_time_now();
+	curTime = sys_time_now();
+	if (curTime - lastTime > 0.1)
+		lastTime = curTime;
 #endif
 
 	//int i;
