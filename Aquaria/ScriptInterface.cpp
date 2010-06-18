@@ -36,8 +36,6 @@ extern "C"
 
 #include "../BBGE/MathFunctions.h"
 
-#define FRAME_TIME  0.04
-
 ScriptInterface *si = 0;
 bool conversationStarted = false;
 bool throwLuaErrors = false;
