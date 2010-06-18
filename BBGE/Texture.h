@@ -80,7 +80,7 @@ public:
 
 	static TexErr textureError;
 
-	void write(int tx, int ty, int w, int h, unsigned char *pixels);
+	void write(int tx, int ty, int w, int h, const unsigned char *pixels);
 	void read(int tx, int ty, int w, int h, unsigned char *pixels);
 protected:
 	std::string loadName;
