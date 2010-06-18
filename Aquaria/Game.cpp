@@ -10938,13 +10938,6 @@ void Game::removeState()
 
 	core->joystick.rumble(0,0,0);
 
-	debugLog("world map render transfer");
-	if (worldMapRender)
-	{
-		worldMapRender->transferData();
-	}
-	debugLog("done");
-
 	dsq->sound->clearFadingSfx();
 
 
