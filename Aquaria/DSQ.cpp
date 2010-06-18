@@ -4905,22 +4905,22 @@ void DSQ::modifyDt(float &dt)
 		if (core->getKeyState(KEY_G))
 			dt = 0.075f;
 		else if (core->getKeyState(KEY_F))
-			dt*=0.6f;
+			dt *= 0.6f;
 		else if (core->getKeyState(KEY_H))
-			dt = 0.04f;
+			dt = FRAME_TIME;
 		else
 		{
 			// frame cap
-			if (dt > 0.04f)
-				dt = 0.04f;
+			if (dt > FRAME_TIME)
+				dt = FRAME_TIME;
 		}
 		if (core->getKeyState(KEY_H))
 			stopVoice();
 	}
 	else
 	{
-		if (dt > 0.04f)
-			dt = 0.04f;
+		if (dt > FRAME_TIME)
+			dt = FRAME_TIME;
 	}
 
 	if (skippingCutscene)
