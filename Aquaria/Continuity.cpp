@@ -2323,20 +2323,13 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 #ifdef AQUARIA_BUILD_MAPVIS
 		if (dsq->game->worldMapRender)
 		{
-			dsq->game->worldMapRender->transferData();
-
 			std::ostringstream os;
 			for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
 			{
 				WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
 				os << tile->index << " ";
-				os << tile->visSize << " ";
-				os << tile->list.size() << " ";
-
-				for (int i = 0; i < tile->list.size(); i++)
-				{
-					os << tile->list[i].x << " " << tile->list[i].y << " ";
-				}
+				tile->dataToString(os);
+				os << " ";
 			}
 			worldMap.SetAttribute("va", os.str());
 		}
@@ -2780,7 +2773,7 @@ void Continuity::loadFile(int slot)
 
 			WorldMapTile dummy;
 
-			int idx, size;
+			int idx;
 
 			//worldMapTiles.clear();
 
@@ -2794,36 +2787,7 @@ void Continuity::loadFile(int slot)
 					tile = &dummy;
 				}
 
-				tile->clearList();
-
-				is >> tile->visSize; 
-				is >> size;
-
-				for (int i = 0; i < size; i++)
-				{
-					int x,y;
-					is >> x >> y;
-					tile->list.push_back(IntPair(x, y));
-				}
-				
-			/*
-			dsq->game->worldMapRender->transferData();
-
-			std::ostringstream os;
-			for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
-			{
-				WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
-				os << tile->index << " ";
-				os << tile->visSize << " ";
-				os << tile->list.size() << " ";
-
-				for (int i = 0; i < tile->list.size(); i++)
-				{
-					os << tile->list[i].x << " " << tile->list[i].y << " ";
-				}
-			}
-			worldMap.SetAttribute("va", os.str());
-			*/
+				tile->stringToData(is);
 			}
 		}
 #endif

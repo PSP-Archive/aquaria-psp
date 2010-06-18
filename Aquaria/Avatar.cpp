@@ -5619,6 +5619,14 @@ void Avatar::action(int id, int state)
 			else
 			{
 				startBurst();
+				// FIXME: This is a quick hack to make sure the burst
+				// transition animation is played when using joystick or
+				// keyboard control.  The same thing should probably be
+				// done for wall bursts, but the movement there is fast
+				// enough that people probably won't notice, so I skipped
+				// that.  Sorry about the ugliness.  --achurch
+				if (dsq->inputMode != INPUT_MOUSE)
+					skeletalSprite.transitionAnimate("swim", ANIM_TRANSITION, -1);
 			}
 		}
 	}

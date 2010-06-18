@@ -43,6 +43,7 @@ class ScriptInterface
 public:
 	void init();
 	void loadParticleEffectScripts();
+	void collectGarbage();
 	void shutdown();
 	void setCurrentParticleEffect(ScriptedParticleEffect *e);
 	bool setCurrentEntity (Entity *e);
@@ -51,7 +52,6 @@ public:
 
 
 	ParticleData *getCurrentParticleData() { return currentParticleData; }
-	lua_State *L;
 	void initLuaVM(lua_State **L);
 	void closeLuaVM(lua_State *L);
 	bool runScript(const std::string &script, const std::string &func);
@@ -67,6 +67,11 @@ public:
 	//int currentEntityTarget;
 	//Entity *getCurrentEntity() { return currentEntity; }
 protected:
+
+	void createBaseLuaVM();
+	void destroyBaseLuaVM();
+
+	lua_State *baseState;
 
 	ParticleData* currentParticleData;
 	ScriptedParticleEffect* currentParticleEffect;
