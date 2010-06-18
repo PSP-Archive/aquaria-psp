@@ -124,6 +124,12 @@ void WorldMapTile::clearData()
 // Convert the data array to string format for saving.
 void WorldMapTile::dataToString(std::ostringstream &os)
 {
+	if (!data)
+	{
+		os << "0 0";
+		return;
+	}
+
 #ifdef AQUARIA_SAVE_MAPVIS_RAW
 
 	const unsigned int rowSize = (dataSize+7)/8;
@@ -173,14 +179,14 @@ void WorldMapTile::dataToString(std::ostringstream &os)
 			{
 				if (dataByte & (1 << x2))
 				{
-					tempStream << (x+x2) << " " << y << " ";
+					tempStream << " " << (x+x2) << " " << y;
 					count++;
 				}
 			}
 		}
 	}
 
-	os << dataSize << " " << count << " " << tempStream.str();
+	os << dataSize << " " << count << tempStream.str();
 
 #endif
 }
