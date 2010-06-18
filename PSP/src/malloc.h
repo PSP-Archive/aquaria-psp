@@ -17,6 +17,18 @@ extern void *realloc(void *ptr, size_t size);
 extern void free(void *ptr);
 
 #ifdef DEBUG
+
+extern void *debug_malloc(size_t size, const char *file, int line);
+extern void *debug_calloc(size_t nmemb, size_t size, const char *file, int line);
+extern void *debug_realloc(void *ptr, size_t size, const char *file, int line);
+extern void debug_free(void *ptr, const char *file, int line);
+
+/* Redefine malloc(), etc. to point to the debug functions. */
+# define malloc(size)        debug_malloc(size, __FILE__, __LINE__)
+# define calloc(nmemb,size)  debug_calloc(nmemb, size, __FILE__, __LINE__)
+# define realloc(ptr,size)   debug_realloc(ptr, size, __FILE__, __LINE__)
+# define free(ptr)           debug_free(ptr, __FILE__, __LINE__)
+
 /**
  * malloc_display_debuginfo:  Display debug information about malloc()
  * heaps.  Only implemented when DEBUG is defined.
@@ -27,7 +39,8 @@ extern void free(void *ptr);
  *     None
  */
 extern void malloc_display_debuginfo(void);
-#endif
+
+#endif  // DEBUG
 
 /*************************************************************************/
 

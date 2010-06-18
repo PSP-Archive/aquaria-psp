@@ -21,11 +21,28 @@
  * block, malloc() needs simply to take the first block from the list of
  * the requested size, shifting up to larger-size lists if necessary.
  *
+ * When a block is freed, the allocator attempts to coalesce it with any
+ * preceding or following free block.  The following block can be easily
+ * found by adding the block size to its base address; if that block
+ * header's alloc.magic field is _not_ equal to HEAP_BLOCK_MAGIC, the
+ * block is free and can thus be merged.  (This works because alloc.magic
+ * overlays the low 16 bits of free.size, and HEAP_BLOCK_MAGIC is chosen
+ * to be unaligned with respect to the block size, so no free block will
+ * have the value HEAP_BLOCK_MAGIC in the lower 16 bits of its size.)
+ * With respect to the previous block, the allocator keeps a "previous
+ * block free" bit in each block's header; if that bit is set, the header
+ * of the previous block can then be found by accessing the pointer value
+ * immediately preceding the current block in memory.  (This pointer is
+ * part of an 8-byte footer stored at the end of each free block.)
+ *
  * Since attempting to adjust the heap size may cause it to be moved,
  * which would destroy all heap-based pointers, we instead allocate a new
- * heap when our first heap is full, and search through each heap in
- * sequence to find an empty block of sufficient size.  If all blocks in
- * a heap are freed, the heap itself is freed as well.
+ * heap when our first heap is full.  In addition to the per-heap arrays
+ * of free blocks for each size, we also keep a global array which
+ * indicates the first heap containing a free block of each size, so we
+ * do not need to search all of the heaps in order to find an empty block
+ * to allocate.  If all blocks in a heap are freed, the heap itself is
+ * freed as well.
  *
  * For simplicity (and speed), we don't handle realloc() block resizing at
  * all, instead redirecting any resized block to the primary allocator.
@@ -101,9 +118,19 @@
 #include "memory.h"
 #include "sysdep.h"
 
-#ifdef DEBUG  // These are needed for debug info display.
+#ifdef DEBUG
+
+/* Undefine the malloc() macros from malloc.h so we can define the actual
+ * functions here. */
+# undef malloc
+# undef calloc
+# undef realloc
+# undef free
+
+/* These are needed for debug info display. */
 # include "debugfont.h"
 # include "graphics.h"
+
 #endif
 
 /*************************************************************************/
@@ -217,13 +244,14 @@ static uint8_t initialized;
 /*-----------------------------------------------------------------------*/
 
 /* Since we have no way to retrieve source and line information from the
- * caller, we instead use the return address of the current function as the
- * caller name.  (In C++, of course, this will almost always be the "new"
- * operator implementation; but still, it's better than nothing.)  On GCC,
- * we can use __builtin_return_address() to retrieve the return address;
- * other compilers may not have this, so we define __builtin_return_address()
- * as a macro that returns NULL in order to avoid littering our code with
- * #ifdefs. */
+ * caller if it's outside our source tree (and thus our debugging macros),
+ * we instead use the return address of the current function as the caller
+ * name in such cases.  (In C++, of course, this will almost always be the
+ * "new" operator implementation; but still, it's better than nothing.)
+ * On GCC, we can use __builtin_return_address() to retrieve the return
+ * address; other compilers may not have this, so we define
+ * __builtin_return_address() as a macro that returns NULL in order to
+ * avoid littering our code with #ifdefs. */
 
 #ifndef __GNUC__
 # define __builtin_return_address(level)  NULL
@@ -281,11 +309,44 @@ void *malloc(size_t size)
     return debug_mem_alloc(size, 0, 0, ra, 0, -1);
 }
 
+/*----------------------------------*/
+
 /* Also define the newlib reentrant versions. */
 void *_malloc_r(struct _reent *reent_ptr, size_t size)
 {
     return malloc(size);
 }
+
+/*----------------------------------*/
+
+#ifdef DEBUG
+
+/* If we're debugging, include a version that takes source file and line
+ * number, so we can pass them to the primary allocator or log them when
+ * tracing allocations. */
+void *debug_malloc(size_t size, const char *file, int line)
+{
+# ifdef CXX_CONSTRUCTOR_HACK
+    CHECK_INIT();
+# endif
+    if (size < MALLOC_SIZE_LIMIT) {
+        if (UNLIKELY(size == 0)) {
+            return NULL;
+        }
+        void *ptr = alloc_from_heap(size);
+        if (ptr) {
+# ifdef TRACE_ALLOCS
+            DMSG("[%s:%d] malloc(%u) -> %p (block size %u)",
+                 file, line, size, ptr,
+                 ((HeapBlock *)ptr)[-1].alloc.size);
+# endif
+            return ptr;
+        }
+    }
+    return debug_mem_alloc(size, 0, 0, file, line, -1);
+}
+
+#endif  // DEBUG
 
 /*-----------------------------------------------------------------------*/
 
@@ -316,10 +377,41 @@ void *calloc(size_t nmemb, size_t size)
     return debug_mem_alloc(nmemb * size, 0, MEM_ALLOC_CLEAR, ra, 0, -1);
 }
 
+/*----------------------------------*/
+
 void *_calloc_r(struct _reent *reent_ptr, size_t nmemb, size_t size)
 {
     return calloc(nmemb, size);
 }
+
+/*----------------------------------*/
+
+#ifdef DEBUG
+
+void *debug_calloc(size_t nmemb, size_t size, const char *file, int line)
+{
+# ifdef CXX_CONSTRUCTOR_HACK
+    CHECK_INIT();
+# endif
+    if (nmemb * size < MALLOC_SIZE_LIMIT) {
+        if (UNLIKELY(nmemb * size == 0)) {
+            return NULL;
+        }
+        void *ptr = alloc_from_heap(nmemb * size);
+        if (ptr) {
+# ifdef TRACE_ALLOCS
+            DMSG("[%s:%d] calloc(%u,%u) -> %p (block size %u)",
+                 file, line, nmemb, size, ptr,
+                 ((HeapBlock *)ptr)[-1].alloc.size);
+# endif
+            mem_clear(ptr, nmemb * size);
+            return ptr;
+        }
+    }
+    return debug_mem_alloc(nmemb * size, 0, MEM_ALLOC_CLEAR, file, line, -1);
+}
+
+#endif  // DEBUG
 
 /*-----------------------------------------------------------------------*/
 
@@ -371,10 +463,58 @@ void *realloc(void *ptr, size_t size)
     return debug_mem_realloc(ptr, size, 0, ra, 0, -1);
 }
 
+/*----------------------------------*/
+
 void *_realloc_r(struct _reent *reent_ptr, void *ptr, size_t size)
 {
     return realloc(ptr, size);
 }
+
+/*----------------------------------*/
+
+#ifdef DEBUG
+
+void *debug_realloc(void *ptr, size_t size, const char *file, int line)
+{
+# ifdef CXX_CONSTRUCTOR_HACK
+    CHECK_INIT();
+# endif
+    if (ptr == NULL && size < MALLOC_SIZE_LIMIT) {
+        if (UNLIKELY(size == 0)) {
+            return NULL;
+        }
+        void *ptr = alloc_from_heap(size);
+        if (ptr) {
+# ifdef TRACE_ALLOCS
+            DMSG("[%s:%d] realloc(0x0,%u) -> %p (block size %u)",
+                 file, line, size, ptr,
+                 ((HeapBlock *)ptr)[-1].alloc.size);
+# endif
+            return ptr;
+        }
+    } else if (ptr != NULL && is_heap_block(ptr)) {
+# ifdef TRACE_ALLOCS
+        DMSG("[%s:%d] realloc(%p,%u) -> free %p",
+             file, line, ptr, size, ptr);
+# endif
+        if (size == 0) {
+            free_from_heap(ptr);
+            return NULL;
+        } else {
+            HeapBlock *block = (HeapBlock *)ptr - 1;
+            void *newptr = debug_mem_alloc(size, 0, 0, file, line, -1);
+            if (!newptr) {
+                return NULL;
+            }
+            memcpy(newptr, ptr, min(size, block->alloc.size));
+            free_from_heap(ptr);
+            return newptr;
+        }
+    }
+    return debug_mem_realloc(ptr, size, 0, file, line, -1);
+}
+
+#endif  // DEBUG
 
 /*-----------------------------------------------------------------------*/
 
@@ -394,10 +534,30 @@ void free(void *ptr)
     }
 }
 
+/*----------------------------------*/
+
 void _free_r(struct _reent *reent_ptr, void *ptr)
 {
     return free(ptr);
 }
+
+/*----------------------------------*/
+
+#ifdef DEBUG
+
+void debug_free(void *ptr, const char *file, int line)
+{
+    if (ptr && is_heap_block(ptr)) {
+# ifdef TRACE_ALLOCS
+        DMSG("[%s:%d] free(%p)", file, line, ptr);
+# endif
+        free_from_heap(ptr);
+    } else {
+        debug_mem_free(ptr, file, line, -1);
+    }
+}
+
+#endif  // DEBUG
 
 /*************************************************************************/
 

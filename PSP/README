@@ -2,8 +2,8 @@ About the Aquaria PSP port
 ==========================
 
 This is an unofficial, work-in-progress port of Aquaria to the Sony PSP.
-At present, it is marginally playable through the first few areas, but
-still runs very slowly.
+At present, it is marginally playable through at least the first few
+areas, but still runs very slowly.
 
 
 Important notice (limitations of this version)
@@ -17,18 +17,15 @@ quickly run the PSP out of resources, leading to a crash.  Sometimes it
 helps to exit the game (to the PSP's menu) after saving, then restart and
 reload your game.
 
-At present, it is just barely possible to advance to the Home Waters area
-if the sound cache is disabled (see the DISABLE_SOUND_CACHE option in the
-Makefile); with the sound cache enabled, the game crashes due to a lack of
-memory.  The major culprit seems to be Lua, which requires 100k+ of memory
-per state object, and Aquaria allocates a new state object for every
-script it executes (potentially dozens or even hundreds).
-
 Other issues:
-   - The Key Config menu and Help screen crash the game, so they have been
-     disabled for the PSP.  (The most likely cause seems to be that the
-     rendering method used by the FTGL library is too inefficient for use
-     on the PSP; it might be necessary to use prerendered screens.)
+
+- The Key Config menu and Help screen crash the game, so they have been
+  disabled for the PSP.  (The most likely cause seems to be that the
+  rendering method used by the FTGL library is too inefficient for use
+  on the PSP; it might be necessary to use prerendered screens.)
+
+- There is a race condition in the file I/O thread which on rare
+  occasion may cause garbled audio output or crash the program.
 
 
 Build prerequisites
@@ -97,12 +94,12 @@ If you get a "multiple definition of 'strtof'" error during the final
 link, either:
     1) do a "make clean", then re-run "make" with "CAN_OVERRIDE_STRTOF=0"
        on the command line; or
-    2) patch the "newlib" library to allow the strtof() function to be
+    2) patch the Newlib C library to allow the strtof() function to be
        overridden, rebuild and reinstall newlib, then run "make" to
        repeat the final link of Aquaria.
 See the Makefile for details.  For Gentoo Linux users, the "pspsdk"
 package in the Portage overlay at http://achurch.org includes an
-appropriate newlib patch.
+appropriate Newlib patch.
 
 If you want the game and the system save files (settings and achievements)
 to have custom icons, set the ICON0_* variables appropriately in the

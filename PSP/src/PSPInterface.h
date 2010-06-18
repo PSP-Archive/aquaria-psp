@@ -8,13 +8,15 @@
 #ifndef PSPINTERFACE_H
 #define PSPINTERFACE_H
 
+/*************************************************************************/
+
 #ifdef __cplusplus
 #define this _this
 #define private _private
 extern "C" {
 #endif
 
-/*************************************************************************/
+/*-----------------------------------------------------------------------*/
 
 #define SYSDEP_COMMON_H "sysdep-psp/common.h"
 
@@ -68,15 +70,21 @@ int psp_closedir(psp_DIR *dir);
 #define readdir  psp_readdir
 #define closedir psp_closedir
 
-/*************************************************************************/
+/*-----------------------------------------------------------------------*/
 
 #ifdef __cplusplus
-#undef this
-#undef private
-#undef min  // Conflicts with C++ STL
-#undef max  // Conflicts with C++ STL
+
+# undef this
+# undef private
+# undef min  // Conflicts with C++ STL
+# undef max  // Conflicts with C++ STL
 };  // extern "C"
-#endif
+
+# include "malloc-opnew.h"  // Debug implementations of operator new/delete
+
+#endif  // __cplusplus
+
+/*************************************************************************/
 
 #endif  // PSPINTERFACE_H
 
