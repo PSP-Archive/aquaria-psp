@@ -1949,7 +1949,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 
 	setWindowCaption(appName, "");
 
-	SDL_WM_GrabInput(SDL_GRAB_ON);
+	SDL_WM_GrabInput(grabInputOnReentry==0 ? SDL_GRAB_OFF : SDL_GRAB_ON);
 	char name[256];
 	SDL_VideoDriverName((char*)name, 256);
 
@@ -3451,7 +3451,7 @@ void Core::pollEvents()
 				{
 					// toggle mouse grab with the magic hotkey.
 					grabInputOnReentry = (grabInputOnReentry)?0:-1;
-					setReentryInputGrab(0);
+					setReentryInputGrab(1);
 				}
 				else if (_hasFocus)
 				{

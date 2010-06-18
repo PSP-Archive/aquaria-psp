@@ -23,6 +23,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 Slider::Slider(int len, int grabRadius, const std::string &bgQuad, const std::string &sliderGfx) : RenderObject()
 {
+	value = 0;
+	inSlider = false;
 	sliderLength = len;
 	this->grabRadius = grabRadius;
 
