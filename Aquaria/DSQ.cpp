@@ -3224,7 +3224,7 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 #else
 		int renderWidth = getWindowWidth(), renderHeight = getWindowHeight();
 		int i = 2;
-		while (2 << i < core->height)
+		while (1 << i < renderHeight)
 		{
 			i++;
 		}
