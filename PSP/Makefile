@@ -291,7 +291,7 @@ Aquaria_SOURCES  = $(Aquaria_DIR)/AnimationEditor.cpp \
                    $(Aquaria_DIR)/WorldMapTiles.cpp
 Aquaria_OBJECTS := $(Aquaria_SOURCES:%.cpp=%.o)
 Aquaria_CXXFLAGS = $(BBGE_CXXFLAGS) $(-I_lua) -I$(Aquaria_DIR) \
-                   -DAQUARIA_NODRM -DAQUARIA_FULL \
+                   -DAQUARIA_NODRM -DAQUARIA_FULL -DAQUARIA_SAVE_MAPVIS_RAW \
                    $(-DAQUARIA_ALLOW_PSP_SETTINGS_OVERRIDE)
 
 #-------------------------------------
