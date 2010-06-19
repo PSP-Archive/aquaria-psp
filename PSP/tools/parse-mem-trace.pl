@@ -17,7 +17,7 @@ while (<>) {
 	if (/\[(.*?)\] [mc]?alloc\((\d+)(?:,\d+)?\) -\> (0x[0-9A-F]+)/
 	 || /\[(.*?)\] realloc\(0x0,(\d+)\) -\> (0x[0-9A-F]+)/) {
 		my ($caller, $size, $ptr) = ($1, $2, $3);
-		my $used = int(($size+48+63)/64) * 64;
+		my $used = int(($size+(hex($ptr)&63||64)+63)/64) * 64;
 		if (m@: src/malloc@) {
 			$caller = "$caller [malloc]";
 			$used = int(($size+8+7)/8) * 8;
@@ -38,7 +38,7 @@ while (<>) {
 		delete $owner{$old};
 		delete $size{$old};
 		delete $full{$old};
-		my $used = int(($size+48+63)/64) * 64;
+		my $used = int(($size+(hex($ptr)&63||64)+63)/64) * 64;
 		if (m@: src/malloc@) {
 			$caller = "$caller [malloc]";
 			$used = int(($size+8+7)/8) * 8;
@@ -65,8 +65,31 @@ while (<>) {
 	}
 }
 
-printf "Alloc'ed  SizeUsed  Caller\n";
-printf "--------  --------  ------\n";
+print "Alloc'ed  SizeUsed  Caller\n";
+print "--------  --------  ------\n";
 foreach (sort {$owned{$b} <=> $owned{$a}} keys %owned) {
-	printf "%8d  %8d  %s\n",$owned{$_},$used{$_},$_;
+	printf "%8d  %8d  %s\n", $owned{$_}, $used{$_}, $_;
+}
+
+print "\n";
+print "Contiguous allocated/free regions\n";
+print "---------------------------------\n";
+my $base = undef;
+my $top = undef;
+foreach (sort {hex($a) <=> hex($b)} keys %full) {
+	my $addr = hex($_) - (hex($_)&63 || 64);
+	if (!defined($top) || $addr != $top) {
+		if (defined($base) && defined($top)) {
+			printf "0x%X - 0x%X   %9s allocated\n",
+				$base, $top, sprintf("0x%X",$top-$base);
+			printf "0x%X - 0x%X   %9s free\n",
+				$top, $addr, sprintf("0x%X",$addr-$top);
+		}
+		$base = $addr;
+	}
+	$top = $addr + $full{$_};
+}
+if (defined($base) && defined($top)) {
+	printf "0x%X - 0x%X   %9s allocated\n",
+		$base, $top, sprintf("0x%X",$top-$base);
 }
