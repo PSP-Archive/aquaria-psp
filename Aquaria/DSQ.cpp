@@ -543,6 +543,7 @@ void DSQ::destroyFonts()
 	fontArialSmall.destroy();
 	fontArialSmallest.destroy();
 	delete[] arialFontData;
+	arialFontData = 0;
 
 	debugLog("done destroyFonts");
 }
