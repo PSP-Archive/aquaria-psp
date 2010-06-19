@@ -74,8 +74,8 @@ public:
 	void setWidthHeight(int w, int h=-1);
 	void setWidth(int w);
 	void setHeight(int h);
-	int getWidth();
-	int getHeight();
+	int getWidth() const {return int(width);}
+	int getHeight() const {return int(height);}
 	
 	void setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);	
 	void setDrawGridAlpha(int x, int y, float alpha);

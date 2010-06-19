@@ -321,9 +321,8 @@ int Quad::getCullRadius()
 {
 	if (overrideCullRadius)
 		return overrideCullRadius;
-	int w = (int(width))*scale.x+1;
-	int h = (int(height))*scale.y+1;
-
+	int w = int(width*scale.x)+1;
+	int h = int(height*scale.y)+1;
 	return w + h;
 }
 
@@ -380,16 +379,6 @@ bool Quad::isCoordinateInsideWorldRect(const Vector &coord, int w, int h)
 		}
 	}
 	return false;
-}
-
-int Quad::getWidth()
-{
-	return width;
-}
-
-int Quad::getHeight()
-{
-	return height;
 }
 
 void Quad::updateGrid(float dt)
