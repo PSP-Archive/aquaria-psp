@@ -8,10 +8,10 @@
 /*
  * The vast majority of memory allocations made by the Lua interpreter are
  * tiny, on the order of 16-32 bytes.  Since even a low-overhead general
- * allocator requires 8-15 bytes of overhead per allocation, we suffer
- * significant losses to overhead; for example, a 20-byte TKey (assuming
- * the use of "float" instead of "double" for Lua numeric values) requires
- * a 32-byte malloc() block, for 60% overhead.
+ * purpose allocator requires 8-15 bytes of overhead per allocation, we
+ * suffer significant losses to this overhead; for example, a 20-byte TKey
+ * (assuming the use of "float" instead of "double" for Lua numeric
+ * values) requires a 32-byte malloc() block, for 60% overhead.
  *
  * Our solution to this is a custom allocator, lalloc(), tailored
  * specifically to Lua's allocation patterns.  On receiving a new
@@ -30,13 +30,36 @@
  * on the number of words in the bitmap and can typically be executed
  * quickly.
  *
- * Allocations larger than the maximum supported here, reallocations of
- * existing blocks, and frees that do not fall within an lalloc() array
- * are passed back to malloc(), realloc(), or free() respectively.
+ * Allocations larger than the maximum supported here and frees that do
+ * not fall within an lalloc() array are passed back to malloc() or free()
+ * respectively.  Resize requests are handled in one of a few different
+ * ways, depending on the request:
+ *    - A request for exactly the same size is ignored, returning the
+ *      passed-in pointer unchanged.
+ *    - A request to grow a block allocated from one of the small block
+ *      arrays used by this allocator is handled by allocating a new
+ *      block (equivalently to lalloc(NULL,0,size)), copying the old data
+ *      to the new block, and freeing the old block.  This allows us to
+ *      keep overhead low for small buffers that grow slowly.
+ *    - A request to shrink a block allocated from one of the small block
+ *      arrays is handled likewise (allocate new block, copy, free old
+ *      block).  However, if the allocation attempt fails, the old block's
+ *      pointer is returned, to satisfy Lua's requirement that a shrink
+ *      operation never fail.
+ *    - A request to grow a block obtained from malloc() is passed
+ *      directly to realloc() with no further processing.
+ *    - A request to shrink a block obtained from malloc() is handled
+ *      first by attempting to allocate a new block as above, then
+ *      falling back to realloc() if that fails (and returning the
+ *      original pointer if realloc() fails as well).  This approach is
+ *      taken because experience shows that most shrink operations occur
+ *      during garbage collection, and the shrink amounts are often small
+ *      enough that they leave tiny free blocks which are difficult to
+ *      reuse, increasing memory fragmentation.
  *
  * Note:  This implementation does some magic with pointer addresses to
- * let free() run in constant time, which may not work well on systems
- * with large amounts of memory.
+ * let free operations run in constant time, which may not work well on
+ * systems with large amounts of memory.
  */
 
 /*************************************************************************/
@@ -46,7 +69,8 @@
 /**
  * LALLOC_MIN_SIZE:  Minimum size block to support.  Allocations smaller
  * than this will be rounded up to this size, so it should be matched to
- * the smallest actual allocation.  Must be a multiple of 4.
+ * the smallest actual (or smallest frequent) allocation.  Must be a
+ * multiple of 4.
  */
 #define LALLOC_MIN_SIZE  16
 
@@ -225,98 +249,139 @@ static LallocArray *find_containing_array(void *ptr);
  */
 void *lalloc(void *ud, void *ptr, size_t osize, size_t nsize)
 {
-    if (nsize == 0) {
+    /*
+     * This routine can follow one of several paths, depending on the
+     * parameters:
+     *    - Case 1: Allocation of a new block (ptr == NULL)
+     *         + Case 1A: nsize == 0
+     *         + Case 1B: nsize > 0 && nsize <= LALLOC_MAX_SIZE
+     *         + Case 1C: nsize > LALLOC_MAX_SIZE
+     *    - Case 2: Freeing of an existing block (nsize == 0)
+     *         + Case 2A: find_containing_array(ptr) != NULL
+     *         + Case 2B: find_containing_array(ptr) == NULL
+     *    - Case 3: Resizing of an existing block (ptr != NULL && nsize != 0)
+     *         + Case 3A: nsize == osize
+     *         + Case 3B: find_containing_array(ptr) == NULL && nsize > osize
+     *         + Case 3C: All other resize cases
+     *              - Case 3C1: find_containing_array(ptr)==NULL && nsize<osize
+     *              - Case 3C2: find_containing_array(ptr)!=NULL && nsize<osize
+     *              - Case 3C3: find_containing_array(ptr)!=NULL && nsize>osize
+     */
 
-        if (ptr != NULL) {
-            LallocArray *array;
-            if ((array = find_containing_array(ptr)) != NULL) {
+    if (ptr == NULL) {
+
+        /* Case 1: Allocation of a new block */
+
+        if (nsize == 0) {  // Case 1A
+            return NULL;  // Nothing to allocate!
+
+        } else if (nsize <= LALLOC_MAX_SIZE) {  // Case 1B
+            unsigned int aligned_size = align_up(nsize, 4);
+            if (UNLIKELY(aligned_size < LALLOC_MIN_SIZE)) {
 #ifdef TRACE_ALLOCS
-                DMSG("free(%p) array %p", ptr, array);
+                DMSG("WARNING: nsize (%u) < LALLOC_MIN_SIZE (%u),"
+                     " some bytes will be wasted!", nsize, LALLOC_MIN_SIZE);
 #endif
-                do_free(array, ptr);
-            } else {
-                free(ptr);
+                aligned_size = LALLOC_MIN_SIZE;
             }
+#ifdef TRACE_ALLOCS
+            LallocArray *array = NULL;
+            void *ptr = do_alloc(aligned_size, &array);
+#else
+            void *ptr = do_alloc(aligned_size);
+#endif
+            if (ptr) {
+#ifdef TRACE_ALLOCS
+                DMSG("malloc(%u) -> %p (block size %u, array %p)",
+                     nsize, ptr, aligned_size, array);
+#endif
+                return ptr;
+            } else {
+#ifdef TRACE_ALLOCS
+                DMSG("malloc(%u) -> FAILED to get a block!", nsize);
+#endif
+                return malloc(nsize);
+            }
+
+        } else {  // Case 1C (nsize > LALLOC_MAX_SIZE)
+#ifdef TRACE_ALLOCS
+            DMSG("malloc(%u) -> too big, passing to system", nsize);
+#endif
+            return malloc(nsize);
+        }
+
+    } else if (nsize == 0) {
+
+        /* Case 2: Freeing of an existing block */
+
+        LallocArray *array;
+        if ((array = find_containing_array(ptr)) != NULL) {  // Case 2A
+#ifdef TRACE_ALLOCS
+            DMSG("free(%p) array %p", ptr, array);
+#endif
+            do_free(array, ptr);
+        } else {  // Case 2B
+            free(ptr);
         }
         return NULL;
 
-    } else {  // nsize != 0
+    } else {  // ptr != NULL && nsize != 0
 
-        if (ptr != NULL) {
-            /* This is a resize, which we don't handle.  Typically, blocks
-             * that get resized by Lua will have been larger to start with
-             * than this allocator processes, but check anyway just in case. */
+        /* Case 3: Resizing of an existing block */
 
-            LallocArray *array;
-            if (UNLIKELY((array = find_containing_array(ptr)) != NULL)) {
-                /* If it's a shrink operation, just return the current
-                 * block.  This avoids the case where we fail to allocate
-                 * a new block and would return NULL, which Lua assumes
-                 * cannot happen on a shrink.  Of course, if we fail to
-                 * allocate a block at the sizes handled by this allocator,
-                 * we probably have more serious problems to deal with... */
-                if (nsize <= osize) {
-                    return ptr;
-                }
-                void *newptr = malloc(nsize);
-                if (!newptr) {
-#ifdef TRACE_ALLOCS
-                    DMSG("realloc(%p,%u) -> FAILED to get a block!",
-                         ptr, nsize);
-#endif
-                    return NULL;
-                }
-                memcpy(newptr, ptr, osize);  // osize < nsize
+        if (nsize == osize) {  // Case 3A
+            return ptr;
+        }
+
+        LallocArray *array = find_containing_array(ptr);
+        if (array == NULL && nsize > osize) {  // Case 3B
+            return realloc(ptr, nsize);
+        }
+
+        /* Case 3C: First try to allocate a new block and copy the data
+         * into it. */
+        void *newptr = lalloc(ud, NULL, 0, nsize);
+        if (newptr) {
+            memcpy(newptr, ptr, min(osize,nsize));
+            if (array != NULL) {
 #ifdef TRACE_ALLOCS
                 DMSG("realloc(%p,%u) -> free(%p) array %p",
                      ptr, nsize, ptr, array);
 #endif
                 do_free(array, ptr);
+            } else {
+                free(ptr);
+            }
+            return newptr;
+        }
+
+        /* We failed to allocate a new block, so fall back depending on
+         * the particular case. */
+
+        if (array == NULL) {  // Case 3C1: Try realloc() first.
+            newptr = realloc(ptr, nsize);
+            if (newptr) {
                 return newptr;
-            }  // if (UNLIKELY(find_containing_array(ptr)))
-
-            return realloc(ptr, nsize);
-
-        } else {  // ptr == NULL
-
-            if (nsize <= LALLOC_MAX_SIZE) {
-                unsigned int aligned_size = align_up(nsize, 4);
-                if (UNLIKELY(aligned_size < LALLOC_MIN_SIZE)) {
-#ifdef TRACE_ALLOCS
-                    DMSG("WARNING: nsize (%u) < LALLOC_MIN_SIZE (%u),"
-                         " some bytes will be wasted!", nsize,
-                         LALLOC_MIN_SIZE);
-#endif
-                    aligned_size = LALLOC_MIN_SIZE;
-                }
-#ifdef TRACE_ALLOCS
-                LallocArray *array = NULL;
-                void *ptr = do_alloc(aligned_size, &array);
-#else
-                void *ptr = do_alloc(aligned_size);
-#endif
-                if (ptr) {
-#ifdef TRACE_ALLOCS
-                    DMSG("malloc(%u) -> %p (block size %u, array %p)",
-                         nsize, ptr, aligned_size, array);
-#endif
-                    return ptr;
-                } else {
-#ifdef TRACE_ALLOCS
-                    DMSG("malloc(%u) -> FAILED to get a block!", nsize);
-#endif
-                    return malloc(nsize);
-                }
-            } else {  // nsize > LALLOC_MAX_SIZE
-#ifdef TRACE_ALLOCS
-                DMSG("malloc(%u) -> too big, passing to system", nsize);
-#endif
-                return malloc(nsize);
+            } else {
+                return ptr;
             }
 
-        }  // if (ptr != NULL)
-    }  // if (nsize == 0)
-}
+        } else if (nsize < osize) {  // Case 3C2: Just use the current pointer.
+#ifdef TRACE_ALLOCS
+            DMSG("realloc(%p,%u) -> %p reused as is", ptr, nsize, ptr);
+#endif
+            return ptr;
+
+        } else {  // Case 3C3: lalloc() already failed, so we're out of luck.
+#ifdef TRACE_ALLOCS
+            DMSG("realloc(%p,%u) -> FAILED to get a block!", ptr, nsize);
+#endif
+            return NULL;
+
+        }
+
+    }  // Case 1/2/3
+}  // lalloc()
 
 /*************************************************************************/
 /*************************** Helper functions ****************************/
