@@ -1179,6 +1179,7 @@ Core::~Core()
 		delete sound;
 		sound = 0;
 	}
+	core = 0;
 }
 
 bool Core::hasFocus()
