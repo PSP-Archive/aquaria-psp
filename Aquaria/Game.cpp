@@ -1535,7 +1535,7 @@ void Game::hideInGameMenu(bool effects)
 		if (effects)
 			core->sound->playSfx("Menu-Close");
 
-		hideInGameMenuExitCheck();
+		hideInGameMenuExitCheck(false);
 		playingSongInMenu = -1;
 
 
@@ -8166,7 +8166,7 @@ void Game::onExitCheckYes()
 
 void Game::onExitCheckNo()
 {
-	hideInGameMenuExitCheck();
+	hideInGameMenuExitCheck(true);
 }
 
 void Game::showInGameMenuExitCheck()
@@ -8180,14 +8180,15 @@ void Game::showInGameMenuExitCheck()
 	eNo->setFocus(true);
 }
 
-void Game::hideInGameMenuExitCheck()
+void Game::hideInGameMenuExitCheck(bool refocus)
 {
 	inGameMenuExitState = 0;
 	eYes->alpha.interpolateTo(0, 0.2);
 	eNo->alpha.interpolateTo(0, 0.2);
 	eAre->alpha.interpolateTo(0, 0.2);
 
-	((AquariaMenuItem*)menu[1])->setFocus(true);
+	if (refocus)
+		((AquariaMenuItem*)menu[1])->setFocus(true);
 }
 
 void Game::onInGameMenuExit()
@@ -9862,7 +9863,11 @@ void Game::updateCursor(float dt)
 		)
 	{
 		dsq->setCursor(CURSOR_NORMAL);
-		dsq->cursor->alphaMod = 0.5;
+		// Don't show the cursor in keyboard/joystick mode if it's not
+		// already visible (this keeps the cursor from appearing for an
+		// instant during map fadeout).
+		if (dsq->inputMode == INPUT_MOUSE || sceneEditor.isOn() || dsq->game->isPaused())
+			dsq->cursor->alphaMod = 0.5;
 		
 		/*
 		dsq->cursor->offset.stop();

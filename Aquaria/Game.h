@@ -852,7 +852,7 @@ public:
 	bool isElementLayerVisible(int bgLayer);
 
 	void showInGameMenuExitCheck();
-	void hideInGameMenuExitCheck();
+	void hideInGameMenuExitCheck(bool refocus);
 	bool isControlHint();
 
 	int getNumberOfEntitiesNamed(const std::string &name);
