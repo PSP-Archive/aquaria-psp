@@ -3091,10 +3091,19 @@ void DSQ::transitionSaveSlots()
 void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 {
 	game->clearControlHint();
-	selectedSaveSlot = 0;
 	saveSlotMode = SSM_NONE;
 	
 	createSaveSlots(ssm);
+	const int firstSaveSlot = user.data.savePage * saveSlotPageSize;
+	if (user.data.saveSlot >= firstSaveSlot && user.data.saveSlot < firstSaveSlot + saveSlots.size())
+	{
+		selectedSaveSlot = saveSlots[user.data.saveSlot - firstSaveSlot];
+		selectedSaveSlot->setFocus(true);
+	}
+	else
+	{
+		selectedSaveSlot = 0;
+	}
 
 	saveSlotMode = ssm;
 
@@ -3113,6 +3122,7 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 	if (selectedSaveSlot != 0)
 	{
 		recentSaveSlot = selectedSaveSlot->getSlotIndex();
+		user.data.saveSlot = recentSaveSlot;
 		if (saveSlotMode == SSM_SAVE)
 		{
 			//dsq->screenMessage("Game Saved");
