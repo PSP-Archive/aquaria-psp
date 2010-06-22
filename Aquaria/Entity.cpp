@@ -3033,16 +3033,10 @@ void Entity::setInvincible(bool inv)
 
 bool Entity::isInDarkness()
 {
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (Element *e = dsq->getFirstElementOnLayer(12); e; e = e->bgLayerNext)
 	{
-		Element *e = dsq->elements[i];
-		if (e->bgLayer == 12)
-		{
-			if (e->isCoordinateInside(position))
-			{
-				return true;
-			}
-		}
+		if (e->isCoordinateInside(position))
+			return true;
 	}
 	return false;
 }

@@ -1009,16 +1009,16 @@ void SceneEditor::moveToFront()
 {
 	if (editingElement)
 	{
-		std::vector<Element*> copy = dsq->elements;
-		dsq->elements.clear();
+		std::vector<Element*> copy = dsq->getElementsCopy();
+		dsq->clearElements();
 
 		//  move to the foreground ... this means that the editing element should be last in the list (Added last)
 		for (int i = 0; i < copy.size(); i++)
 		{
 			if (copy[i] != editingElement)
-				dsq->elements.push_back(copy[i]);
+				dsq->addElement(copy[i]);
 		}
-		dsq->elements.push_back(editingElement);
+		dsq->addElement(editingElement);
 
 		editingElement->moveToFront();
 	}
@@ -1028,15 +1028,15 @@ void SceneEditor::moveToBack()
 {
 	if (editingElement)
 	{
-		std::vector<Element*> copy = dsq->elements;
-		dsq->elements.clear();
+		std::vector<Element*> copy = dsq->getElementsCopy();
+		dsq->clearElements();
 
 		//  move to the background ... this means that the editing element should be first in the list (Added first)
-		dsq->elements.push_back(editingElement);
+		dsq->addElement(editingElement);
 		for (int i = 0; i < copy.size(); i++)
 		{
 			if (copy[i] != editingElement)
-				dsq->elements.push_back(copy[i]);
+				dsq->addElement(copy[i]);
 		}
 
 		editingElement->moveToBack();
@@ -1083,10 +1083,9 @@ Element *SceneEditor::getElementAtCursor()
 {
 	int minDist = -1;
 	Element *selected = 0;
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (Element *e = dsq->getFirstElementOnLayer(this->bgLayer); e; e = e->bgLayerNext)
 	{
-		Element *e = dsq->elements[i];
-		if (e->bgLayer == this->bgLayer && e->life == 1)
+		if (e->life == 1)
 		{
 			if (e->isCoordinateInside(dsq->getGameCursorPosition()))//, minSelectionSize
 			{
@@ -1246,7 +1245,7 @@ RenderObject *SceneEditor::getSelectedRenderObject()
 		if (selectedIdx > -1)
 		{
 			if (selectedType == 0)
-				return dsq->elements[selectedIdx];
+				return dsq->getElement(selectedIdx);
 			/*
 			else if (selectedType == 1)
 				return dsq->entities[selectedIdx];
@@ -1910,16 +1909,17 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 {
 	std::vector<Element*> deleteElements;
 	int i = 0;
-	for (i = 0; i < dsq->elements.size(); i++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		if (dsq->elements[i]->bgLayer==4 && dsq->elements[i]->templateIdx >= 1 && dsq->elements[i]->templateIdx <= 4)
+		Element *e = dsq->getElement(i);
+		if (e->bgLayer==4 && e->templateIdx >= 1 && e->templateIdx <= 4)
 		{
-			dsq->elements[i]->safeKill();
-			deleteElements.push_back(dsq->elements[i]);
+			e->safeKill();
+			deleteElements.push_back(e);
 			/*
-			dsq->elements[i]->setLife(0.1);
-			dsq->elements[i]->setDecayRate(1);
-			deleteElements.push_back(dsq->elements[i]);
+			e->setLife(0.1);
+			e->setDecayRate(1);
+			deleteElements.push_back(e);
 			*/
 		}
 	}
@@ -1976,11 +1976,12 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 				offset.z = 0;
 
 				bool skip = false;
-				for (int i = 0; i < dsq->elements.size(); i++)
+				for (int i = 0; i < dsq->getNumElements(); i++)
 				{
-					if (dsq->elements[i]->templateIdx <= 4 && dsq->elements[i]->templateIdx >= 1)
+					Element *e = dsq->getElement(i);
+					if (e->templateIdx <= 4 && e->templateIdx >= 1)
 					{
-						if ((p - dsq->elements[i]->position).getSquaredLength2D() < sqr(50))
+						if ((p - e->position).getSquaredLength2D() < sqr(50))
 						{
 							skip = true;
 							break;
@@ -1993,13 +1994,14 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 					std::vector<int> cantUse;
 					cantUse.resize(4);
 					int i = 0;
-					for (i = 0; i < dsq->elements.size(); i++)
+					for (i = 0; i < dsq->getNumElements(); i++)
 					{
-						if (dsq->elements[i]->templateIdx <= 4 && dsq->elements[i]->templateIdx >= 1)
+						Element *e = dsq->getElement(i);
+						if (e->templateIdx <= 4 && e->templateIdx >= 1)
 						{
-							if ((p - dsq->elements[i]->position).getSquaredLength2D() < sqr(120))//sqr(60*3+10)) // 120
+							if ((p - e->position).getSquaredLength2D() < sqr(120))//sqr(60*3+10)) // 120
 							{
-								cantUse[dsq->elements[i]->templateIdx-1]++;
+								cantUse[e->templateIdx-1]++;
 							}
 						}
 					}
@@ -2061,9 +2063,9 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 				}
 			}
 		}
-		for (int i = 0; i < dsq->elements.size(); i++)
+		for (int i = 0; i < dsq->getNumElements(); i++)
 		{
-			Element *e = dsq->elements[i];
+			Element *e = dsq->getElement(i);
 			if (e->bgLayer == 4 && e->templateIdx >= 1 && e->templateIdx <= 4)
 			{
 				e->position += e->offset;
@@ -2464,9 +2466,9 @@ void SceneEditor::updateMultiSelect()
 
 		selectedElements.clear();
 
-		for (int i = 0; i < dsq->elements.size(); i++)
+		for (int i = 0; i < dsq->getNumElements(); i++)
 		{
-			Element *e = dsq->elements[i];
+			Element *e = dsq->getElement(i);
 			if (e->bgLayer == bgLayer && e->position.x >= p1.x && e->position.y >= p1.y && e->position.x <= p2.x && e->position.y <= p2.y)
 			{
 				selectedElements.push_back(e);
@@ -2596,9 +2598,10 @@ void SceneEditor::deleteSelectedElement()
 void SceneEditor::deleteElement(int selectedIdx)
 {
 	if (selectedIdx == -1) return;
-	dsq->elements[selectedIdx]->setLife(0.5);
-	dsq->elements[selectedIdx]->setDecayRate(1);
-	dsq->elements[selectedIdx]->fadeAlphaWithLife = true;
+	Element *e = dsq->getElement(selectedIdx);
+	e->setLife(0.5);
+	e->setDecayRate(1);
+	e->fadeAlphaWithLife = true;
 	dsq->removeElement(selectedIdx);
 	dsq->game->reconstructGrid();
 }
@@ -3013,9 +3016,9 @@ void SceneEditor::moveLayer()
 		is >> fromLayer >> toLayer;
 		toLayer--;
 		fromLayer--;
-		for (int i = 0; i < dsq->elements.size(); i++)
+		for (int i = 0; i < dsq->getNumElements(); i++)
 		{
-			Element *e = dsq->elements[i];
+			Element *e = dsq->getElement(i);
 			if (e)
 			{
 				if (e->bgLayer == fromLayer)
@@ -3611,9 +3614,9 @@ void SceneEditor::update(float dt)
 			case ES_SELECTING:
 			{
 				int closest = -1, idx = -1, i = 0;
-				for (i = 0; i < dsq->elements.size(); i++)
+				for (i = 0; i < dsq->getNumElements(); i++)
 				{
-					Vector dist = dsq->elements[i]->getFollowCameraPosition() - dsq->getGameCursorPosition();
+					Vector dist = dsq->getElement(i)->getFollowCameraPosition() - dsq->getGameCursorPosition();
 					float len = dist.getSquaredLength2D();
 					if (len < sqr(800) && (len < closest || closest == -1))
 					{

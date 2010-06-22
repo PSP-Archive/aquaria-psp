@@ -78,6 +78,7 @@ public:
 	//InteractionContainer interactions;
 	int templateIdx;
 	int bgLayer;
+	Element *bgLayerNext;
 	float getSortDepth();
 	bool dontSave;
 	void render();

@@ -7027,10 +7027,9 @@ int l_node_setElementsInLayerActive(lua_State *L)
 	Path *p = path(L);
 	int l = lua_tonumber(L, 2);
 	bool v = getBool(L, 3);
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (Element *e = dsq->getFirstElementOnLayer(l); e; e = e->bgLayerNext)
 	{
-		Element *e = dsq->elements[i];
-		if (e && p->isCoordinateInside(e->position) && e->bgLayer == l)
+		if (e && p->isCoordinateInside(e->position))
 		{
 			debugLog("setting an element to the value");
 			e->setElementActive(v);

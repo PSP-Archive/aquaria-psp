@@ -394,9 +394,9 @@ Element *DSQ::getSolidElementNear(Vector pos, int rad)
 {
 	Element *closestE = 0;
 	int closestDist = -1;
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (int i = 0; i < elements.size(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = elements[i];
 		int dist = (e->position - pos).getSquaredLength2D();
 		if (e->isElementActive() && e->elementFlag == EF_SOLID && dist < sqr(rad) && (dist < closestDist || closestDist==-1))
 		{
@@ -4878,6 +4878,15 @@ Element *DSQ::getClosestElementWithType(Element::Type type, Element *e)
 void DSQ::addElement(Element *e)
 {
 	elements.push_back(e);
+	if (e->bgLayer >= 0 && e->bgLayer < 16)
+	{
+		e->bgLayerNext = firstElementOnLayer[e->bgLayer];
+		firstElementOnLayer[e->bgLayer] = e;
+	}
+	else
+	{
+		e->bgLayerNext = 0;
+	}
 }
 
 void DSQ::modifyDt(float &dt)
@@ -4936,19 +4945,18 @@ void DSQ::removeElement(Element *element)
 
 }
 // only happens in editor, no need to optimize
-// ABOVE is no longer TRUE
 void DSQ::removeElement(int idx)
 {
 	ElementContainer copy = elements;
-	elements.clear();
+	clearElements();
 	int i = 0;
 	for (i = 0; i < idx; i++)
 	{
-		elements.push_back (copy[i]);
+		addElement(copy[i]);
 	}
 	for (i = idx+1; i < copy.size(); i++)
 	{
-		elements.push_back(copy[i]);
+		addElement(copy[i]);
 	}
 	copy.clear();
 
@@ -4974,6 +4982,8 @@ void DSQ::removeEntity(Entity *entity)
 void DSQ::clearElements()
 {
 	elements.clear();
+	for (int i = 0; i < 16; i++)
+		firstElementOnLayer[i] = 0;
 }
 
 

@@ -1122,9 +1122,9 @@ void Game::flipSceneVertical(int flipY)
 		else
 			obsRows[i].ty = flipTY - (obsRows[i].ty - flipTY);
 	}
-	for (ElementContainer::iterator eit = dsq->elements.begin(); eit != dsq->elements.end(); eit++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = (*eit);
+		Element *e = dsq->getElement(i);
 		e->rotation.z = 180-e->rotation.z;
 		flipRenderObjectVertical(e, flipY);
 	}
@@ -2230,12 +2230,12 @@ void Game::reconstructGrid(bool force)
 
 	clearGrid();
 	int i = 0;
-	for (i = 0; i < dsq->elements.size(); i++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		e->fillGrid();
 		/*
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (e->getElementType() == Element::BOX)
 		{
 			int w = e->getWidth()/TILE_SIZE;
@@ -4959,7 +4959,7 @@ bool Game::loadSceneXML(std::string scene)
 		b->position = Vector(atoi(boxElement->Attribute("x")), atoi(boxElement->Attribute("y")));
 		addRenderObject(b, LR_BLACKGROUND);
 		b->position.z = boxElementZ;
-		dsq->elements.push_back(b);
+		dsq->addElement(b);
 		boxElement = boxElement->NextSiblingElement("BoxElement");
 	}
 
@@ -5369,9 +5369,9 @@ void Game::findMaxCameraValues()
 		}
 	}
 	/*
-	for (i = 0; i < dsq->elements.size(); i++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (e->position.x > cameraMax.x)
 			cameraMax.x = e->position.x;
 		if (e->position.y > cameraMax.y)
@@ -5640,9 +5640,9 @@ void Game::saveScene(std::string scene)
 	std::ostringstream simpleElements[LR_MAX];
 
 
-	for (i = 0; i < dsq->elements.size(); i++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (!e->dontSave)
 		{
 			if (e->getElementType() == Element::BOX) {}
@@ -5854,9 +5854,9 @@ void Game::colorTest()
 	/*
 	std::vector<QuadLight> quadLights;
 	quadLights.push_back(QuadLight(Vector(400, 300), Vector(1, 0, 0), 2000));
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (int i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		//e->color = Vector(rand()%100, rand()%100, rand()%100);
 		for (int i = 0; i < quadLights.size(); i++)
 		{
@@ -6118,11 +6118,11 @@ void Game::rebuildElementUpdateList()
 		dsq->getRenderObjectLayer(i)->update = false;
 
 	elementUpdateList.clear();
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (int i = 0; i < dsq->getNumElements(); i++)
 	//for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS8; i++)
 	{
 		//RenderObjectLayer *rl = dsq->getRenderObjectLayer(i);
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (e && e->layer >= LR_ELEMENTS1 && e->layer <= LR_ELEMENTS8)
 		{
 			if (e->getElementEffectIndex() != -1)
