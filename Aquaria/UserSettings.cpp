@@ -332,6 +332,27 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	control.actionSet.clearActions();
 	//initInputCodeMap();
 
+	control.actionSet.addActionInput("lmb");
+	control.actionSet.addActionInput("rmb");
+	control.actionSet.addActionInput("PrimaryAction");
+	control.actionSet.addActionInput("SecondaryAction");
+	control.actionSet.addActionInput("SwimUp");
+	control.actionSet.addActionInput("SwimDown");
+	control.actionSet.addActionInput("SwimLeft");
+	control.actionSet.addActionInput("SwimRight");
+	control.actionSet.addActionInput("Roll");
+	control.actionSet.addActionInput("Revert");
+	control.actionSet.addActionInput("WorldMap");
+	control.actionSet.addActionInput("Escape");
+	control.actionSet.addActionInput("PrevPage");
+	control.actionSet.addActionInput("NextPage");
+	control.actionSet.addActionInput("CookFood");
+	control.actionSet.addActionInput("FoodLeft");
+	control.actionSet.addActionInput("FoodRight");
+	control.actionSet.addActionInput("FoodDrop");
+	control.actionSet.addActionInput("Look");
+	control.actionSet.addActionInput("ToggleHelp");
+
 	TiXmlElement *xml_system = doc.FirstChildElement("System");
 	if (xml_system)
 	{
