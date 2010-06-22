@@ -67,6 +67,12 @@ namespace MiniMapRenderSpace
 	float jumpTimer = 0.5;
 	const float jumpTime = 1.5;
 	float incr = 0;
+
+	int *widthLookup;
+	const int widthLookupLimit = miniMapTileRadius + tileStep;
+	float *bitSizeLookup;
+	const int bitSizeLookupPeriod = 256;
+	float *healthLookupAngle, *healthLookupX, *healthLookupY;
 }
 
 using namespace MiniMapRenderSpace;
@@ -109,6 +115,35 @@ MiniMapRender::MiniMapRender() : RenderObject()
 	q->position = Vector(miniMapRadius, miniMapRadius);
 
 	addChild(q, PM_POINTER, RBP_OFF);
+
+	widthLookup = new int[widthLookupLimit];
+	for (int i = 0; i < widthLookupLimit; i++)
+	{
+		if (i < miniMapTileRadius)
+		{
+			const float widthFrac = cosf(float(i) / miniMapTileRadius * (PI/2));
+			widthLookup[i] = int(ceilf(miniMapTileRadius * widthFrac));
+		}
+		else
+		{
+			widthLookup[i] = 0;
+		}
+	}
+
+	bitSizeLookup = new float[bitSizeLookupPeriod];
+	for (int i = 0; i < bitSizeLookupPeriod; i++)
+		bitSizeLookup[i] = (1+fabsf(sinf((i*(2*PI)) / bitSizeLookupPeriod))) * waterBitSize;
+
+	healthLookupAngle = new float[healthSteps+1];
+	healthLookupX = new float[healthSteps+1];
+	healthLookupY = new float[healthSteps+1];
+	for (int i = 0; i <= healthSteps; i++)
+	{
+		const float angle = -PI + ((float(i)/healthSteps) * (2*PI));
+		healthLookupAngle[i] = angle;
+		healthLookupX[i] = cosf(angle)*healthBarRadius+2;
+		healthLookupY[i] = -sinf(angle)*healthBarRadius;
+	}
 }
 
 void MiniMapRender::destroy()
@@ -123,6 +158,17 @@ void MiniMapRender::destroy()
 	UNREFTEX(texNaija);
 	UNREFTEX(texHealthBar);
 	UNREFTEX(texMarker);
+
+	delete[] widthLookup;
+	widthLookup = 0;
+	delete[] bitSizeLookup;
+	bitSizeLookup = 0;
+	delete[] healthLookupAngle;
+	healthLookupAngle = 0;
+	delete[] healthLookupX;
+	healthLookupX = 0;
+	delete[] healthLookupY;
+	healthLookupY = 0;
 }
 
 bool MiniMapRender::isCursorIn()
@@ -177,7 +223,8 @@ void MiniMapRender::onUpdate(float dt)
 	RenderObject::onUpdate(dt);	
 	position.z = 2.9;
 
-	waterSin += dt;
+	waterSin += dt * (bitSizeLookupPeriod / (2*PI));
+	waterSin = fmodf(waterSin, bitSizeLookupPeriod);
 
 	if (doubleClickDelay > 0)
 	{
@@ -398,9 +445,10 @@ void MiniMapRender::onRender()
 				if (y < ymin) continue;
 				if (y > ymax) break;
 
-				const int dy = y - centerTile.y;
-				const float widthFrac = cosf(float(dy) / miniMapTileRadius * (PI/2));
-				const int halfTileWidth = int(ceilf(miniMapTileRadius * widthFrac));
+				int dy = y - centerTile.y;
+				if (dy < 0)
+					dy = -dy;
+				const int halfTileWidth = widthLookup[dy];
 				int x1 = centerTile.x - halfTileWidth;
 				int x2 = centerTile.x + halfTileWidth;
 				x1 = (x1 / tileStep) * tileStep;
@@ -435,8 +483,12 @@ void MiniMapRender::onRender()
 
 						glTranslatef(miniMapPos.x, miniMapPos.y, 0);
 
-						const float v = sinf(waterSin +  (tilePos.x + tilePos.y*miniMapTileRadius)*0.001f + sqr(tilePos.x+tilePos.y)*0.00001f);
-						const int bitSize = (1+fabsf(v)) * waterBitSize;
+						const float indexMult = bitSizeLookupPeriod / (2*PI);
+						const float v = waterSin
+							+ (tilePos.x + tilePos.y*miniMapTileRadius) * (indexMult/1000)
+							+ sqr(tilePos.x+tilePos.y) * (indexMult/100000);
+						const unsigned int sizeIndex = (unsigned int)(v) % bitSizeLookupPeriod;
+						const float bitSize = bitSizeLookup[sizeIndex];
 
 						glBegin(GL_QUADS);
 							glTexCoord2f(0, 1);
@@ -595,13 +647,10 @@ void MiniMapRender::onRender()
 
 	glLineWidth(10 * (core->width / 1024.0f));
 
-	const float healthStepSize = 2*PI / healthSteps;
-	const float oangle = -PI;
-	const float eangle = oangle + PI*lerp.x;
-	const float eangle2 = oangle + PI*(dsq->game->avatar->maxHealth/5.0f);
+	const int curHealthSteps = int((lerp.x/2) * healthSteps);
+	const int maxHealthSteps = int((dsq->game->avatar->maxHealth/10.0f) * healthSteps);
 
 	Vector healthBarColor;
-
 	if (lerp.x >= 1)
 	{
 		healthBarColor = Vector(0,1,0.5);
@@ -617,13 +666,11 @@ void MiniMapRender::onRender()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glColor4f(healthBarColor.x, healthBarColor.y, healthBarColor.z, 0.6);
 
-	float angle = oangle;
-
 	glBegin(GL_QUADS);
-	while (lerp.x != 0 && angle <= eangle)
+	for (int step = 0; step <= curHealthSteps; step++)
 	{
-		float x = cosf(angle)*healthBarRadius+2;
-		float y = -sinf(angle)*healthBarRadius;
+		const float x = healthLookupX[step];
+		const float y = healthLookupY[step];
 
 		glTexCoord2f(0, 1);
 		glVertex2f(x-healthBitSizeSmall, y+healthBitSizeSmall);
@@ -633,25 +680,23 @@ void MiniMapRender::onRender()
 		glVertex2f(x+healthBitSizeSmall, y-healthBitSizeSmall);
 		glTexCoord2f(0, 0);
 		glVertex2f(x-healthBitSizeSmall, y-healthBitSizeSmall);
-
-		angle += healthStepSize;
 	}
 	glEnd();
 
 
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE);
 
-	angle = oangle;
 	int jump = 0;
 
 	glBegin(GL_QUADS);
-	while (lerp.x != 0 && angle <= eangle)
+	for (int step = 0; step <= curHealthSteps; step++)
 	{
-		float x = cosf(angle)*healthBarRadius+2;
-		float y = -sinf(angle)*healthBarRadius;
-
 		if (jump == 0)
 		{
+			const float angle = healthLookupAngle[step];
+			const float x = healthLookupX[step];
+			const float y = healthLookupY[step];
+
 			glColor4f(healthBarColor.x, healthBarColor.y, healthBarColor.z, fabsf(cosf(angle-incr))*0.3f + 0.2f);
 
 			glTexCoord2f(0, 1);
@@ -667,8 +712,6 @@ void MiniMapRender::onRender()
 		jump++;
 		if (jump > 3)
 			jump = 0;
-
-		angle += healthStepSize;
 	}
 	glEnd();
 
@@ -679,8 +722,8 @@ void MiniMapRender::onRender()
 
 	texMarker->apply();
 
-	float x = cosf(eangle2)*healthBarRadius+2;
-	float y = -sinf(eangle2)*healthBarRadius;
+	const float x = healthLookupX[maxHealthSteps];
+	const float y = healthLookupY[maxHealthSteps];
 
 	glBegin(GL_QUADS);
 		glTexCoord2f(0, 1);
