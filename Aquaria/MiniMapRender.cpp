@@ -43,8 +43,8 @@ namespace MiniMapRenderSpace
 	const int tileStep = 12;
 	// Radius of the health bar circle
 	const int healthBarRadius = miniMapRadius + 4;
-	// Step interval at which health bar bits are drawn (radians)
-	const float healthStepSize = 2*PI / 64;
+	// Number of steps around health bar at which to draw bits
+	const int healthSteps = 64;
 	// 1/2 size (width/height) used for drawing health bar bits
 	const int healthBitSizeLarge = 32;
 	const int healthBitSizeSmall = 10;
@@ -594,8 +594,9 @@ void MiniMapRender::onRender()
 
 
 	glLineWidth(10 * (core->width / 1024.0f));
-	
-	const float oangle = -PI*0.5f;
+
+	const float healthStepSize = 2*PI / healthSteps;
+	const float oangle = -PI;
 	const float eangle = oangle + PI*lerp.x;
 	const float eangle2 = oangle + PI*(dsq->game->avatar->maxHealth/5.0f);
 
@@ -614,30 +615,28 @@ void MiniMapRender::onRender()
 	texHealthBar->apply();
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glColor4f(healthBarColor.x, healthBarColor.y, healthBarColor.z, 0.6);
 
 	float angle = oangle;
 
+	glBegin(GL_QUADS);
 	while (lerp.x != 0 && angle <= eangle)
 	{
-		float x = sinf(angle)*healthBarRadius+2;
-		float y = cosf(angle)*healthBarRadius;
+		float x = cosf(angle)*healthBarRadius+2;
+		float y = -sinf(angle)*healthBarRadius;
 
-		// !!! FIXME: loop invariant.
-		glColor4f(healthBarColor.x, healthBarColor.y, healthBarColor.z, 0.6);
-
-		glBegin(GL_QUADS);
-			glTexCoord2f(0, 1);
-			glVertex2f(x-healthBitSizeSmall, y+healthBitSizeSmall);
-			glTexCoord2f(1, 1);
-			glVertex2f(x+healthBitSizeSmall, y+healthBitSizeSmall);
-			glTexCoord2f(1, 0);
-			glVertex2f(x+healthBitSizeSmall, y-healthBitSizeSmall);
-			glTexCoord2f(0, 0);
-			glVertex2f(x-healthBitSizeSmall, y-healthBitSizeSmall);
-		glEnd();
+		glTexCoord2f(0, 1);
+		glVertex2f(x-healthBitSizeSmall, y+healthBitSizeSmall);
+		glTexCoord2f(1, 1);
+		glVertex2f(x+healthBitSizeSmall, y+healthBitSizeSmall);
+		glTexCoord2f(1, 0);
+		glVertex2f(x+healthBitSizeSmall, y-healthBitSizeSmall);
+		glTexCoord2f(0, 0);
+		glVertex2f(x-healthBitSizeSmall, y-healthBitSizeSmall);
 
 		angle += healthStepSize;
 	}
+	glEnd();
 
 
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE);
@@ -645,26 +644,24 @@ void MiniMapRender::onRender()
 	angle = oangle;
 	int jump = 0;
 
+	glBegin(GL_QUADS);
 	while (lerp.x != 0 && angle <= eangle)
 	{
-		float x = sinf(angle)*healthBarRadius+2;
-		float y = cosf(angle)*healthBarRadius;
+		float x = cosf(angle)*healthBarRadius+2;
+		float y = -sinf(angle)*healthBarRadius;
 
 		if (jump == 0)
 		{
-			// !!! FIXME: loop invariant.
 			glColor4f(healthBarColor.x, healthBarColor.y, healthBarColor.z, fabsf(cosf(angle-incr))*0.3f + 0.2f);
 
-			glBegin(GL_QUADS);
-				glTexCoord2f(0, 1);
-				glVertex2f(x-healthBitSizeLarge, y+healthBitSizeLarge);
-				glTexCoord2f(1, 1);
-				glVertex2f(x+healthBitSizeLarge, y+healthBitSizeLarge);
-				glTexCoord2f(1, 0);
-				glVertex2f(x+healthBitSizeLarge, y-healthBitSizeLarge);
-				glTexCoord2f(0, 0);
-				glVertex2f(x-healthBitSizeLarge, y-healthBitSizeLarge);
-			glEnd();
+			glTexCoord2f(0, 1);
+			glVertex2f(x-healthBitSizeLarge, y+healthBitSizeLarge);
+			glTexCoord2f(1, 1);
+			glVertex2f(x+healthBitSizeLarge, y+healthBitSizeLarge);
+			glTexCoord2f(1, 0);
+			glVertex2f(x+healthBitSizeLarge, y-healthBitSizeLarge);
+			glTexCoord2f(0, 0);
+			glVertex2f(x-healthBitSizeLarge, y-healthBitSizeLarge);
 		}
 
 		jump++;
@@ -673,6 +670,8 @@ void MiniMapRender::onRender()
 
 		angle += healthStepSize;
 	}
+	glEnd();
+
 	texHealthBar->unbind();
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -680,8 +679,8 @@ void MiniMapRender::onRender()
 
 	texMarker->apply();
 
-	float x = sinf(eangle2)*healthBarRadius+2;
-	float y = cosf(eangle2)*healthBarRadius;
+	float x = cosf(eangle2)*healthBarRadius+2;
+	float y = -sinf(eangle2)*healthBarRadius;
 
 	glBegin(GL_QUADS);
 		glTexCoord2f(0, 1);
