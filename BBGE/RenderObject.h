@@ -138,7 +138,16 @@ public:
 	void moveToFront();
 	void moveToBack();
 
-	virtual int getCullRadius();
+	inline int getCullRadius() const
+	{
+		if (overrideCullRadius)
+			return overrideCullRadius;
+		if (width == 0 || height == 0)
+			return 0;
+		int w = int(width*scale.x)+1;
+		int h = int(height*scale.y)+1;
+		return w + h;
+	}
 
 	int getTopLayer();
 
@@ -162,7 +171,9 @@ public:
 
 	void setPositionSnapTo(InterpolatedVector *positionSnapTo);
 
-	virtual bool isOnScreen();
+	// HACK: This is defined in RenderObject_inline.h because it needs
+	// the class Core definition.  --achurch
+	inline bool isOnScreen();
 
 	bool isCoordinateInRadius(const Vector &pos, float r);
 
@@ -218,6 +229,7 @@ public:
 	static int lastTextureApplied;
 	static bool lastTextureRepeat;
 
+	float width, height;  // Only used by Quads, but stored here for getCullRadius()
 	InterpolatedVector position, scale, color, alpha, rotation;
 	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;
 	InterpolatedVector velocity, gravity;

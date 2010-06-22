@@ -39,7 +39,7 @@ class Mappy : public RenderObject, public ActionMapper
 public:
 	Mappy() : RenderObject(), ActionMapper() {}
 	void render() {}
-	bool isOnScreen() { return false; }
+	//bool isOnScreen() { return false; }
 	void action(int id, int state)
 	{
 		ActionMapper::action(id, state);

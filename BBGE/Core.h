@@ -1435,4 +1435,6 @@ protected:
 
 extern Core *core;
 
+#include "RenderObject_inline.h"
+
 #endif

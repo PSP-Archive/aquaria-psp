@@ -193,6 +193,8 @@ RenderObject::RenderObject()
 	//updateMultiplier = 1;
 	blendEnabled = true;
 	texture = 0;
+	width = 0;
+	height = 0;
 	scale = Vector(1,1,1);
 	color = Vector(1,1,1);
 	alpha.x = 1;
@@ -1506,38 +1508,6 @@ void RenderObject::setPositionSnapTo(InterpolatedVector *positionSnapTo)
 void RenderObject::setOverrideCullRadius(int ovr)
 {
 	overrideCullRadius = ovr;
-}
-
-int RenderObject::getCullRadius()
-{
-	// THIS WILL HARDLY EVER GET CALLED
-	// Quad::getCullRadius is what runs things majorly
-	if (overrideCullRadius)
-		return overrideCullRadius;
-
-	return 0;
-}
-
-#ifdef BBGE_BUILD_WINDOWS
-	inline bool RenderObject::isOnScreen()
-#else
-	bool RenderObject::isOnScreen()
-#endif
-{
-	if (alpha.x == 0) return false;
-	
-	// HACK: assume all children are visible
-	if (parent || !cull) return true;
-
-	if (followCamera == 1) return true;
-	//if (followCamera != 0) return true;
-
-	// note: radii are sqr-ed for speed
-	int checkRadius = getCullRadius();
-
-	if ((this->getFollowCameraPosition() - core->cullCenter).getSquaredLength2D() > ((checkRadius*checkRadius)*core->invGlobalScale + (core->cullRadius*core->cullRadius)))
-		return false;
-	return true;	
 }
 
 void RenderObject::propogateParentManagedStatic()

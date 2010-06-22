@@ -63,8 +63,6 @@ public:
 	bool isCoordinateInsideWorld(const Vector &coord, int minSize=0);
 	bool isCoordinateInsideWorldRect(const Vector &coord, int w, int h);
 
-	int getCullRadius();
-
 	void flipVertical();
 	void flipHorizontal();
 	void setTextureSmooth(const std::string &texture, float t);
@@ -122,7 +120,6 @@ public:
 	Vector repeatToFillScale;
 
 protected:
-	float width, height;
 	bool repeatingTextureToFill;
 	Vector lightingColor;
 	float gridTimer;
