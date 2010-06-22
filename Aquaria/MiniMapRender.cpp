@@ -462,112 +462,40 @@ void MiniMapRender::onRender()
 
 	if (!radarHide)
 	{
+		const int iconSize = sinf(game->getTimer()*PI)*6 + 14;
+		texRipple->apply();
 		for (int i = 0; i < dsq->game->paths.size(); i++)
 		{
 			Path *p = dsq->game->paths[i];
-			if (!p->nodes.empty())
+			if (!p->nodes.empty() && (p->pathType==PATH_COOK || p->pathType==PATH_SAVEPOINT || p->pathType==PATH_WARP))
 			{
-				Vector pt(p->nodes[0].position);
-				Vector d = pt - dsq->game->avatar->position;
-				d.capLength2D(miniMapRadius * miniMapScale * (7.0f/8.0f));
+				bool render = true;
+				Path *p2 = dsq->game->getNearestPath(p->nodes[0].position, PATH_RADARHIDE);
+				if (p2 && p2->isCoordinateInside(p->nodes[0].position))
 				{
+					if (!p2->isCoordinateInside(dsq->game->avatar->position))
+					{
+						render = false;
+					}
+				}
+
+				if (render)
+				{
+					Vector pt(p->nodes[0].position);
+					Vector d = pt - dsq->game->avatar->position;
+					d.capLength2D(miniMapRadius * miniMapScale * (7.0f/8.0f));
 					const Vector miniMapPos = Vector(d)*Vector(1.0f/miniMapScale, 1.0f/miniMapScale);
-
-					bool render = true;
-
-					const int iconSize = sinf(game->getTimer()*PI)*6 + 14;
 
 					switch(p->pathType)
 					{
 					case PATH_COOK:
 					{
-						Path *p2 = dsq->game->getNearestPath(p->nodes[0].position, PATH_RADARHIDE);
-						if (p2 && p2->isCoordinateInside(p->nodes[0].position))
-						{
-							if (!p2->isCoordinateInside(dsq->game->avatar->position))
-							{
-								render = false;
-							}
-						}
-						if (render)
-						{	
-							glColor4f(1, 1, 1, 1);
-							
+						glColor4f(1, 1, 1, 1);
 
-							glTranslatef(miniMapPos.x, miniMapPos.y, 0);
-							int sz = 16;
-
-							texCook->apply();
-
-							glBegin(GL_QUADS);
-								glTexCoord2f(0, 1);
-								glVertex2f(-sz, sz);
-								glTexCoord2f(1, 1);
-								glVertex2f(sz, sz);
-								glTexCoord2f(1, 0);
-								glVertex2f(sz, -sz);
-								glTexCoord2f(0, 0);
-								glVertex2f(-sz, -sz);
-							glEnd();
-
-							glTranslatef(-miniMapPos.x, -miniMapPos.y, 0);
-							render = false;
-							texCook->unbind();
-							glBindTexture(GL_TEXTURE_2D, 0);
-						}
-					}
-					break;
-					case PATH_SAVEPOINT:
-					{
-						Path *p2 = dsq->game->getNearestPath(p->nodes[0].position, PATH_RADARHIDE);
-						if (p2 && p2->isCoordinateInside(p->nodes[0].position))
-						{
-							if (!p2->isCoordinateInside(dsq->game->avatar->position))
-							{
-								render = false;
-							}
-						}
-						if (render)
-							glColor4f(1.0, 0, 0, alphaValue*0.75f);
-					}
-					break;
-					case PATH_WARP:
-					{
-						Path *p2 = dsq->game->getNearestPath(p->nodes[0].position, PATH_RADARHIDE);
-						if (p2 && p2->isCoordinateInside(p->nodes[0].position))
-						{
-							if (!p2->isCoordinateInside(dsq->game->avatar->position))
-							{
-								render = false;
-							}
-						}
-						
-						if (render)
-						{
-							if (p->naijaHome)
-							{
-								glColor4f(1.0, 0.9, 0.2, alphaValue*0.75f);	
-							}
-							else
-							{
-								glColor4f(1.0, 1.0, 1.0, alphaValue*0.75f);
-							}
-						}
-					}
-					break;
-					default:
-					{
-						render = false;
-					}
-					break;
-					}
-					
-					if (render)
-					{
 						glTranslatef(miniMapPos.x, miniMapPos.y, 0);
-						int sz = iconSize;
+						int sz = 16;
 
-						texRipple->apply();
+						texCook->apply();
 
 						glBegin(GL_QUADS);
 							glTexCoord2f(0, 1);
@@ -581,13 +509,51 @@ void MiniMapRender::onRender()
 						glEnd();
 
 						glTranslatef(-miniMapPos.x, -miniMapPos.y, 0);
-						render = false;
-						texRipple->unbind();
-						glBindTexture(GL_TEXTURE_2D, 0);
+						texRipple->apply();
+						render = false;  // Skip common rendering code
+					}
+					break;
+					case PATH_SAVEPOINT:
+					{
+						glColor4f(1.0, 0, 0, alphaValue*0.75f);
+					}
+					break;
+					case PATH_WARP:
+					{
+						if (p->naijaHome)
+						{
+							glColor4f(1.0, 0.9, 0.2, alphaValue*0.75f);	
+						}
+						else
+						{
+							glColor4f(1.0, 1.0, 1.0, alphaValue*0.75f);
+						}
+					}
+					break;
+					}
+
+					if (render)
+					{
+						glTranslatef(miniMapPos.x, miniMapPos.y, 0);
+						int sz = iconSize;
+
+						glBegin(GL_QUADS);
+							glTexCoord2f(0, 1);
+							glVertex2f(-sz, sz);
+							glTexCoord2f(1, 1);
+							glVertex2f(sz, sz);
+							glTexCoord2f(1, 0);
+							glVertex2f(sz, -sz);
+							glTexCoord2f(0, 0);
+							glVertex2f(-sz, -sz);
+						glEnd();
+
+						glTranslatef(-miniMapPos.x, -miniMapPos.y, 0);
 					}
 				}
 			}
 		}
+		texRipple->unbind();
 	}
 
 	glColor4f(1,1,1, alphaValue);
