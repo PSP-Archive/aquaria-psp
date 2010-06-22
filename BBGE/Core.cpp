@@ -4088,11 +4088,6 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 				}
 				*/
 				
-				if (r->quickQuad)
-				{
-					glBegin(GL_QUADS);
-				}
-
 				if (r->fastCull)
 				{
 					for (robj = r->getFirst(); robj; robj = r->getNext())
@@ -4122,36 +4117,7 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 						}
 						if (!r->cull || !robj->cull || robj->isOnScreen())
 						{
-							/*
-							if (r->quickQuad)
-							{
-								//if (robj->texture)
-								//	robj->texture->apply();
-									
-								float w2 = (robj->scale.x*64)/2;
-								float h2 = (robj->scale.y*64)/2;
-								
-								glRotatef(robj->rotation.z, 0, 0, 1);
-								
-								glTexCoord2f(0, 0);
-								glVertex2f(robj->position.x-w2, robj->position.y-h2);
-								glTexCoord2f(1, 0);
-								glVertex2f(robj->position.x+w2, robj->position.y-h2);
-								glTexCoord2f(1, 1);
-								glVertex2f(robj->position.x+w2, robj->position.y+h2);
-								glTexCoord2f(0, 1);
-								glVertex2f(robj->position.x-w2, robj->position.y+h2);
-								
-								glRotatef(-robj->rotation.z, 0, 0, 1);
-							}
-							else
-							{
-								robj->render();
-							}
-							*/
-							
 							robj->render();
-							
 							renderObjectCount++;
 						}
 						processedRenderObjectCount++;
@@ -4172,11 +4138,6 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 						}
 						processedRenderObjectCount++;
 					}
-				}
-
-				if (r->quickQuad)
-				{
-					glEnd();
 				}
 			}
 		}

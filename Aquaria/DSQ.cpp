@@ -264,12 +264,6 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	renderObjectLayers[LR_ELEMENTS14].fastCullDist					= parallaxFastCullDist;
 	renderObjectLayers[LR_ELEMENTS15].fastCullDist					= parallaxFastCullDist;
 	renderObjectLayers[LR_ELEMENTS16].fastCullDist					= parallaxFastCullDist;
-	/*
-	for (int i = LR_ELEMENTS4; i <= LR_ELEMENTS6; i++)
-	{
-		renderObjectLayers[i].quickQuad = true;
-	}
-	*/
 	
 	renderObjectLayers[LR_BLACKGROUND].fastCull = false;
 	renderObjectLayers[LR_LIGHTING].fastCull = false;

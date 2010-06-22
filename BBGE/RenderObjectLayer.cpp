@@ -34,7 +34,6 @@ RenderObjectLayer::RenderObjectLayer()
 
 	color = Vector(1,1,1);
 	
-	quickQuad = false;
 	fastCull = false;
 	fastCullDist = 1024;
 

@@ -967,7 +967,6 @@ public:
 
 	Vector color;
 	
-	bool quickQuad;
 	bool fastCull;
 	int fastCullDist;
 protected:
