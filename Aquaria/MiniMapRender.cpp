@@ -36,7 +36,7 @@ namespace MiniMapRenderSpace
 	// 1/2 size (width/height) of minimap GUI
 	const float miniMapGuiSize = miniMapRadius * 1.5f;
 	// Base radius of texture (texWaterBit) used to indicate open areas
-	const float waterBitSize = 20;
+	const float waterBitSize = 10;
 	// Distance in tiles between adjacent water bits
 	const int tileStep = 12;
 	// Radius of the health bar circle
@@ -376,8 +376,6 @@ void MiniMapRender::onRender()
 		{
 			texWaterBit->apply();
 		
-			glScalef(0.5, 0.5,0);
-
 			glBlendFunc(GL_SRC_ALPHA,GL_ONE);
 
 			for (int y = centerTile.y-miniMapRadius*2; y < centerTile.y + miniMapRadius*2; y+=tileStep)
@@ -410,7 +408,7 @@ void MiniMapRender::onRender()
 						if (tilePos.y < dsq->game->cameraMin.y)	continue;
 						if (tilePos.y > dsq->game->cameraMax.y)	continue;
 					
-						const Vector miniMapPos = Vector(tilePos-dsq->game->avatar->position)*Vector(1.0f/miniMapScale, 1.0f/miniMapScale)*2;
+						const Vector miniMapPos = Vector(tilePos-dsq->game->avatar->position)*Vector(1.0f/miniMapScale, 1.0f/miniMapScale);
 
 						glTranslatef(miniMapPos.x, miniMapPos.y, 0);
 
@@ -436,7 +434,6 @@ void MiniMapRender::onRender()
 			texWaterBit->unbind();
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glBindTexture(GL_TEXTURE_2D, 0);
-			glScalef(2, 2, 0);
 
 		}
 	}
