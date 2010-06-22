@@ -1196,7 +1196,10 @@ void WorldMapRender::onUpdate(float dt)
 			}
 			else
 			{
-				internalOffset += core->joystick.position * (400*dt / scale.x);
+				// The negative multiplier is deliberate -- it makes the
+				// map scroll as though the joystick was controlling the
+				// cursor (which is fixed in the center of the screen).
+				internalOffset += core->joystick.position * (-400*dt / scale.x);
 			}
 		}
 

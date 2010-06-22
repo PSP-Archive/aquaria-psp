@@ -157,8 +157,9 @@ public:
 
 	struct Data
 	{
-		Data() { savePage=0; lastSelectedMod=0; }
+		Data() { savePage=0; saveSlot=0; lastSelectedMod=0; }
 		int savePage;
+		int saveSlot;
 		int lastSelectedMod;
 	} data;
 

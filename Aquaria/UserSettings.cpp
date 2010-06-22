@@ -252,6 +252,7 @@ void UserSettings::save()
 		TiXmlElement xml_data("Data");
 		{
 			xml_data.SetAttribute("savePage",			data.savePage);
+			xml_data.SetAttribute("saveSlot",			data.saveSlot);
 			xml_data.SetAttribute("lastSelectedMod",	data.lastSelectedMod);
 		}
 		doc.InsertEndChild(xml_data);
@@ -290,10 +291,13 @@ void readInt(TiXmlElement *xml, const std::string &elem, std::string att, int *t
 		TiXmlElement *xml2 = xml->FirstChildElement(elem);
 		if (xml2)
 		{
-			const char *c = xml2->Attribute(att)->c_str();
-			if (c)
-			{
-				*toChange = atoi(c);
+			const std::string *s = xml2->Attribute(att);
+			if (s) {
+				const char *c = s->c_str();
+				if (c)
+				{
+					*toChange = atoi(c);
+				}
 			}
 		}
 	}
@@ -303,10 +307,13 @@ void readIntAtt(TiXmlElement *xml, std::string att, int *toChange)
 {
 	if (xml)
 	{
-		const char *c = xml->Attribute(att)->c_str();
-		if (c)
-		{
-			*toChange = atoi(c);
+		const std::string *s = xml->Attribute(att);
+		if (s) {
+			const char *c = s->c_str();
+			if (c)
+			{
+				*toChange = atoi(c);
+			}
 		}
 	}
 }
@@ -425,6 +432,27 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 #endif
 	control.actionSet.clearActions();
 	//initInputCodeMap();
+
+	control.actionSet.addActionInput("lmb");
+	control.actionSet.addActionInput("rmb");
+	control.actionSet.addActionInput("PrimaryAction");
+	control.actionSet.addActionInput("SecondaryAction");
+	control.actionSet.addActionInput("SwimUp");
+	control.actionSet.addActionInput("SwimDown");
+	control.actionSet.addActionInput("SwimLeft");
+	control.actionSet.addActionInput("SwimRight");
+	control.actionSet.addActionInput("Roll");
+	control.actionSet.addActionInput("Revert");
+	control.actionSet.addActionInput("WorldMap");
+	control.actionSet.addActionInput("Escape");
+	control.actionSet.addActionInput("PrevPage");
+	control.actionSet.addActionInput("NextPage");
+	control.actionSet.addActionInput("CookFood");
+	control.actionSet.addActionInput("FoodLeft");
+	control.actionSet.addActionInput("FoodRight");
+	control.actionSet.addActionInput("FoodDrop");
+	control.actionSet.addActionInput("Look");
+	control.actionSet.addActionInput("ToggleHelp");
 
 	TiXmlElement *xml_system = doc.FirstChildElement("System");
 	if (xml_system)
@@ -564,11 +592,8 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	if (xml_data)
 	{
 		readIntAtt(xml_data, "savePage", &data.savePage);
+		readIntAtt(xml_data, "saveSlot", &data.saveSlot);
 		readIntAtt(xml_data, "lastSelectedMod", &data.lastSelectedMod);
-		/*
-		data.savePage = atoi(xml_data->Attribute("savePage"));
-		data.lastSelectedMod = atoi(xml_data->Attribute("lastSelectedMod"));
-		*/
 	}
 
 	//clearInputCodeMap();
