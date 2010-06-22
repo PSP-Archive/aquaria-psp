@@ -4040,18 +4040,11 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 			postProcessingFx.render();
 		}
 
-		int scr=0, xmin=0, ymin=0, xmax=0, ymax=0;
 		RenderObjectLayer *r = &renderObjectLayers[i];
 		RenderObject::rlayer = r;
 		RenderObject *robj;
 		if (r->visible)
 		{
-			scr = r->fastCullDist*invGlobalScale;
-			xmin = screenCenter.x-scr;
-			ymin = screenCenter.y-scr;
-			xmax = screenCenter.x+scr;
-			ymax = screenCenter.y+scr;
-	
 			if (r->mode != mode)
 			{
 				switch(r->mode)
@@ -4074,70 +4067,19 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 				}
 				else
 					currentLayerPass = r->currentPass;
-				/*
-				for (int i = 0; i < r->renderObjects.size(); i++)
+
+				for (robj = r->getFirst(); robj; robj = r->getNext())
 				{
-					robj = r->renderObjects[i];
-					if (!robj || robj->parent || robj->alpha.x == 0) continue;
-					//if (robj->isOnScreen())
+					totalRenderObjectCount++;
+					if (robj->parent || robj->alpha.x == 0)
+						continue;
+
+					if (!r->cull || !robj->cull || robj->isOnScreen())
 					{
 						robj->render();
 						renderObjectCount++;
 					}
 					processedRenderObjectCount++;
-				}
-				*/
-				
-				if (r->fastCull)
-				{
-					for (robj = r->getFirst(); robj; robj = r->getNext())
-					{
-
-						totalRenderObjectCount++;
-						if (robj->parent || robj->alpha.x == 0)
-							continue;
-
-						if (r->cull && robj->cull && robj->followCamera != 1)
-						{
-							//HACK:
-							// best would be this:
-							//if (robj->getCullRadius()<1024)
-							// but that is slow
-							// so, check scale
-							if (robj->scale.x < 3)
-							{
-								if (robj->position.x < xmin ||
-									robj->position.y < ymin ||
-									robj->position.x > xmax ||
-									robj->position.y > ymax)
-								{
-									continue;
-								}
-							}
-						}
-						if (!r->cull || !robj->cull || robj->isOnScreen())
-						{
-							robj->render();
-							renderObjectCount++;
-						}
-						processedRenderObjectCount++;
-					}
-				}
-				else
-				{
-					for (robj = r->getFirst(); robj; robj = r->getNext())
-					{
-						totalRenderObjectCount++;
-						if (robj->parent || robj->alpha.x == 0)
-							continue;
-
-						if (!r->cull || !robj->cull || robj->isOnScreen())
-						{
-							robj->render();
-							renderObjectCount++;
-						}
-						processedRenderObjectCount++;
-					}
 				}
 			}
 		}

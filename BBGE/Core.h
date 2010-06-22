@@ -966,9 +966,14 @@ public:
 	int mode;
 
 	Vector color;
-	
-	bool fastCull;
-	int fastCullDist;
+
+#ifdef BBGE_BUILD_PSP
+	// FIXME: This is a HACK to work around what seem to be cache
+	// alignment issues on the PSP.  This field is never used, but
+	// without it rendering can slow down by 10% or more.
+	int pspDummy[2];
+#endif
+
 protected:
 
 #ifdef RLT_FIXED

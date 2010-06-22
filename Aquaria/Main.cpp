@@ -52,7 +52,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 			debugLog("OK");
 
 			renderObjectLayers.resize(2);
-			fastCullLayers.resize(2);
 
 			Quad *q = new Quad;
 			q->setTexture("gfx/Logo");

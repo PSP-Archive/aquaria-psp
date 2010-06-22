@@ -34,9 +34,6 @@ RenderObjectLayer::RenderObjectLayer()
 
 	color = Vector(1,1,1);
 	
-	fastCull = false;
-	fastCullDist = 1024;
-
 #ifdef RLT_FIXED
 	renderObjects.clear();
 	currentSize = 0;
