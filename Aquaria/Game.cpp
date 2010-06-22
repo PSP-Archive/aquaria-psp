@@ -6208,8 +6208,10 @@ void Game::action(int id, int state)
 	{
 		if (foodMenu)
 		{
+#ifndef BBGE_BUILD_PSP  // We need to use the same button for FoodLeft.
 			recipes->setFocus(true);
 			recipeMenu.toggle(!recipeMenu.on, true);
+#endif
 		}
 		else
 		{
