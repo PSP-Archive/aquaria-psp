@@ -496,6 +496,17 @@ void FoodSlot::moveRight()
 	}
 }
 
+void FoodSlot::discard()
+{
+	if (!ingredient) return;
+	if (ingredient->amount <= 0) return;
+
+	ingredient->amount--;
+	dsq->game->dropIngrNames.push_back(ingredient->name);
+	dsq->continuity.removeEmptyIngredients();
+	dsq->game->refreshFoodSlots(true);
+}
+
 bool FoodSlot::isCursorIn()
 {
 	return (core->mouse.position - getWorldPosition()).isLength2DIn(32);
@@ -3565,11 +3576,10 @@ void Game::createInGameMenu()
 	RoundedRect *kcb = new RoundedRect();
 	//kcb->color = 0;
 	//kcb->alphaMod = 0.75;
-	kcb->position = Vector(400,276 - 20);
-	kcb->setWidthHeight(580, 435, 10);
+	kcb->position = Vector(400,276 - 10);
+	kcb->setWidthHeight(580, 455, 10);
 	group_keyConfig->addChild(kcb, PM_POINTER);
 
-	//int offy = 0; //-20;
 	int offy = -20;
 	
 	TTFText *header_action = new TTFText(&dsq->fontArialSmall);
@@ -3633,10 +3643,11 @@ void Game::createInGameMenu()
 	addKeyConfigLine(group_keyConfig, "Food Menu Cook",				"CookFood",				380+offy);
 	addKeyConfigLine(group_keyConfig, "Food Left",					"FoodLeft",				400+offy);
 	addKeyConfigLine(group_keyConfig, "Food Right",					"FoodRight",			420+offy);
+	addKeyConfigLine(group_keyConfig, "Food Drop",					"FoodDrop",			440+offy);
 
-	addKeyConfigLine(group_keyConfig, "Look",						"Look",					440+offy);
+	addKeyConfigLine(group_keyConfig, "Look",						"Look",					460+offy);
 	
-	addKeyConfigLine(group_keyConfig, "Help",						"ToggleHelp",			460+offy);
+	addKeyConfigLine(group_keyConfig, "Help",						"ToggleHelp",			480+offy);
 
 
 
@@ -6199,6 +6210,42 @@ void Game::action(int id, int state)
 						}
 					}
 				}
+
+				if (id == ACTION_FOODDROP)
+				{
+					if (recipeMenu.on)
+					{
+					}
+					else
+					{
+						int trashIndex = -1;
+						for (int i = 0; i < foodHolders.size(); i++)
+						{
+							if (foodHolders[i]->alpha.x > 0 && foodHolders[i]->alphaMod > 0 && foodHolders[i]->isTrash())
+							{
+								trashIndex = i;
+								break;
+							}
+						}
+						if (trashIndex >= 0)
+						{
+							int ingrIndex = -1;
+							for (int i = 0; i < foodSlots.size(); i++)
+							{
+								if (foodSlots[i]->isCursorIn() && foodSlots[i]->getIngredient())
+								{
+									ingrIndex = i;
+									break;
+								}
+							}
+							if (ingrIndex >= 0)
+							{
+								foodSlots[ingrIndex]->discard();
+								adjustFoodSlotCursor();
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -7042,6 +7089,7 @@ void Game::bindInput()
 	dsq->user.control.actionSet.importAction(this, "CookFood",		ACTION_COOKFOOD);
 	dsq->user.control.actionSet.importAction(this, "FoodLeft",		ACTION_FOODLEFT);
 	dsq->user.control.actionSet.importAction(this, "FoodRight",		ACTION_FOODRIGHT);
+	dsq->user.control.actionSet.importAction(this, "FoodDrop",		ACTION_FOODDROP);
 
 	if (dsq->isDeveloperKeys() || dsq->mod.isActive())
 	{
