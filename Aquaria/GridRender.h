@@ -55,9 +55,9 @@ protected:
 	float doubleClickDelay;
 	bool isCursorInButtons();
 	bool _isCursorIn, lastCursorIn;
-	bool mb;
+	bool mouseDown;
 	bool doRender;
-	float a;
+	float lightLevel;
 	void onUpdate(float dt);
 	void onRender();
 

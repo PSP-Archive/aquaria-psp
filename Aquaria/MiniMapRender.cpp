@@ -29,21 +29,42 @@ namespace MiniMapRenderSpace
 
 	const int BUTTON_RADIUS = 15;
 
-	Texture *texCook=0;
-	Texture *texWaterBit=0;
+	// View area radius in virtual pixels
+	const int miniMapRadius = 80;
+	// Minimap scale (actual distance / displayed distance)
+	const float miniMapScale = 40;
+	// 1/2 size (width/height) of minimap GUI
+	const float miniMapGuiSize = miniMapRadius * 1.5f;
+	// Base radius of texture (texWaterBit) used to indicate open areas
+	const float waterBitSize = 20;
+	// Distance in tiles between adjacent water bits
+	const int tileStep = 12;
+	// Radius of the health bar circle
+	const int healthBarRadius = miniMapRadius + 4;
+	// Step interval at which health bar bits are drawn (radians)
+	const float healthStepSize = 2*PI / 64;
+	// 1/2 size (width/height) used for drawing health bar bits
+	const int healthBitSizeLarge = 32;
+	const int healthBitSizeSmall = 10;
+	// 1/2 size (width/height) used for drawing the maximum health marker
+	const int healthMarkerSize = 20;
+
+
+	Texture *texCook = 0;
+	Texture *texWaterBit = 0;
 	Texture *texMinimapBtm = 0;
 	Texture *texMinimapTop = 0;
-	Texture *texRipple=0;
-	Texture *texNaija=0;
-	Texture *texHealthBar=0;
-	Texture *texMarker=0;
+	Texture *texRipple = 0;
+	Texture *texNaija = 0;
+	Texture *texHealthBar = 0;
+	Texture *texMarker = 0;
 
 	float waterSin = 0;
 
-	int jumpOff=0;
+	int jumpOff = 0;
 	float jumpTimer = 0.5;
-	float jumpTime = 1.5;
-	float incr=0;
+	const float jumpTime = 1.5;
+	float incr = 0;
 }
 
 using namespace MiniMapRenderSpace;
@@ -55,7 +76,7 @@ MiniMapRender::MiniMapRender() : RenderObject()
 	radarHide = false;
 
 	doubleClickDelay = 0;
-	mb = false;
+	mouseDown = false;
 	_isCursorIn = false;
 	lastCursorIn = false;
 	followCamera = 1;
@@ -63,7 +84,7 @@ MiniMapRender::MiniMapRender() : RenderObject()
 	float shade = 0.75;
 	color = Vector(shade, shade, shade);
 	cull = false;
-	a = 1.0;
+	lightLevel = 1.0;
 
 	texCook				= core->addTexture("GUI/ICON-FOOD");
 	texWaterBit			= core->addTexture("GUI/MINIMAP/WATERBIT");
@@ -83,7 +104,7 @@ MiniMapRender::MiniMapRender() : RenderObject()
 	q->scale = Vector(1.5, 1.5);
 	buttons.push_back(q);
 
-	q->position = Vector(80, 80);
+	q->position = Vector(miniMapRadius, miniMapRadius);
 
 	addChild(q, PM_POINTER, RBP_OFF);
 }
@@ -174,21 +195,21 @@ void MiniMapRender::onUpdate(float dt)
 			|| (p && p->isCoordinateInside(dsq->game->avatar->position)))
 		{
 			radarHide = true;
-			a -= t;
-			if (a < 0)
-				a = 0;
+			lightLevel -= t;
+			if (lightLevel < 0)
+				lightLevel = 0;
 		}
 		else
 		{
-			a += t;
-			if (a > 1)
-				a = 1;
+			lightLevel += t;
+			if (lightLevel > 1)
+				lightLevel = 1;
 		}
 
 	}
 	else
 	{
-		a = 1;
+		lightLevel = 1;
 	}
 
 	if (dsq->game->avatar && dsq->game->avatar->isInputEnabled())
@@ -218,20 +239,20 @@ void MiniMapRender::onUpdate(float dt)
 		{
 			if (isCursorInButtons())
 			{
-				if (!core->mouse.buttons.left || mb)
+				if (!core->mouse.buttons.left || mouseDown)
 					_isCursorIn = true;
 			}
 
 			if (_isCursorIn || lastCursorIn)
 			{
 
-				if (core->mouse.buttons.left && !mb)
+				if (core->mouse.buttons.left && !mouseDown)
 				{
-					mb = true;
+					mouseDown = true;
 				}
-				else if (!core->mouse.buttons.left && mb)
+				else if (!core->mouse.buttons.left && mouseDown)
 				{
-					mb = false;
+					mouseDown = false;
 
 					bool btn=false;
 
@@ -289,7 +310,7 @@ void MiniMapRender::onUpdate(float dt)
 
 				if (isCursorInButtons())
 				{
-					if (mb)
+					if (mouseDown)
 					{
 						_isCursorIn = true;
 					}
@@ -297,7 +318,7 @@ void MiniMapRender::onUpdate(float dt)
 			}
 			else
 			{
-				mb = false;
+				mouseDown = false;
 			}
 			lastCursorIn = _isCursorIn;
 		}
@@ -326,115 +347,88 @@ void MiniMapRender::onRender()
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	RenderObject::lastTextureApplied = 0;
-	float alphaValue = alpha.x;
-	
+	const float alphaValue = alpha.x;
 
-	const int sz2 = 80;//80;
-	const int bsz2 = sz2*1.5f;
-
-	TileVector t(dsq->game->avatar->position);
+	const TileVector centerTile(dsq->game->avatar->position);
 
 	glLineWidth(1);
 	
 	if (alphaValue > 0)
 	{
-		int skip = 12;
-		int useTile = TILE_SIZE*skip;
-		Vector t2;
-		t2.x = int(dsq->game->avatar->position.x/useTile);
-		t2.y = int(dsq->game->avatar->position.y/useTile);
-		Vector t2wp = (t2 * useTile) + useTile*0.5f;
-
 		texMinimapBtm->apply();
 
 		glBegin(GL_QUADS);
-			glColor4f(a, a, a, 1);
+			glColor4f(lightLevel, lightLevel, lightLevel, 1);
 			glTexCoord2f(0, 1);
-			glVertex2f(-bsz2, bsz2);
+			glVertex2f(-miniMapGuiSize, miniMapGuiSize);
 			glTexCoord2f(1, 1);
-			glVertex2f(bsz2, bsz2);
+			glVertex2f(miniMapGuiSize, miniMapGuiSize);
 			glTexCoord2f(1, 0);
-			glVertex2f(bsz2, -bsz2);
+			glVertex2f(miniMapGuiSize, -miniMapGuiSize);
 			glTexCoord2f(0, 0);
-			glVertex2f(-bsz2, -bsz2);
+			glVertex2f(-miniMapGuiSize, -miniMapGuiSize);
 		glEnd();
 
 		texMinimapBtm->unbind();
 
 
-		float realSz2 = sz2*scale.x;
-		float factor = float(core->getWindowWidth()) / float(core->getVirtualWidth());
-		
-		if (a > 0)
+		if (lightLevel > 0)
 		{
 			texWaterBit->apply();
-			Vector off;
 		
-			off = t2wp - dsq->game->avatar->position;
-			off *= sz2/800.0f;
-			off *= 0.5f;
-
 			glScalef(0.5, 0.5,0);
 
 			glBlendFunc(GL_SRC_ALPHA,GL_ONE);
 
-			Vector rp;
-			for (int y = t.y-sz2*2; y < t.y + sz2*2; y+=skip)
+			for (int y = centerTile.y-miniMapRadius*2; y < centerTile.y + miniMapRadius*2; y+=tileStep)
 			{
-				int rowStart = -1;
-				float out = sinf((float(y-(t.y-sz2*2))/float(sz2*4)) * PI);
-				int x1= t.x-int(sz2*2*out) - skip, x2 = t.x+int(sz2*2*out) + skip;
+				float out = sinf((float(y-(centerTile.y-miniMapRadius*2))/float(miniMapRadius*4)) * PI);
+				int x1 = centerTile.x-int(miniMapRadius*2*out) - tileStep, x2 = centerTile.x+int(miniMapRadius*2*out) + tileStep;
 
-				for (int x = x1; x < x2; x+=skip)
+				for (int x = x1; x < x2; x+=tileStep)
 				{	
-					int ttx = (int(x/skip))*skip, tty = (int(y/skip))*skip;
-					TileVector ttt(ttx, tty);
-					if (!dsq->game->getGrid(ttt))
+					int tileX = (int(x/tileStep))*tileStep, tileY = (int(y/tileStep))*tileStep;
+					TileVector tile(tileX, tileY);
+					if (!dsq->game->getGrid(tile))
 					{
-						int bright = 0;
-
-						if (ttt.worldVector().y < dsq->game->waterLevel.x)
+						if (tile.worldVector().y < dsq->game->waterLevel.x)
 						{
-							glColor4f(0.1, 0.2, 0.5, 0.2f*a);
+							glColor4f(0.1, 0.2, 0.5, 0.2f*lightLevel);
 						}
 						else
 						{
-							glColor4f(0.1, 0.2, 0.9, 0.4f*a);
+							glColor4f(0.1, 0.2, 0.9, 0.4f*lightLevel);
 						}
 
-						Vector tt(int(((x*TILE_SIZE)+TILE_SIZE*0.5f)/(skip*TILE_SIZE)), int(((y*TILE_SIZE)+TILE_SIZE*0.5f)/(skip*TILE_SIZE)));
-						tt *= TILE_SIZE*skip;
-						tt.x += TILE_SIZE*skip*0.5f;
-						tt.y += TILE_SIZE*skip*0.5f;
+						Vector tilePos(int(((x*TILE_SIZE)+TILE_SIZE*0.5f)/(tileStep*TILE_SIZE)), int(((y*TILE_SIZE)+TILE_SIZE*0.5f)/(tileStep*TILE_SIZE)));
+						tilePos *= TILE_SIZE*tileStep;
+						tilePos.x += TILE_SIZE*tileStep*0.5f;
+						tilePos.y += TILE_SIZE*tileStep*0.5f;
 
-						if (tt.x < dsq->game->cameraMin.x)	continue;
-						if (tt.x > dsq->game->cameraMax.x)	continue;
-						if (tt.y < dsq->game->cameraMin.y)	continue;
-						if (tt.y > dsq->game->cameraMax.y)	continue;
+						if (tilePos.x < dsq->game->cameraMin.x)	continue;
+						if (tilePos.x > dsq->game->cameraMax.x)	continue;
+						if (tilePos.y < dsq->game->cameraMin.y)	continue;
+						if (tilePos.y > dsq->game->cameraMax.y)	continue;
 					
-						rp = Vector(tt-dsq->game->avatar->position)*Vector(1.0f/1600.0f, 1.0f/1600.0f)*sz2;
+						const Vector miniMapPos = Vector(tilePos-dsq->game->avatar->position)*Vector(1.0f/miniMapScale, 1.0f/miniMapScale)*2;
 
-						glTranslatef(rp.x, rp.y, 0);
+						glTranslatef(miniMapPos.x, miniMapPos.y, 0);
 
-						float v = sinf(waterSin +  (tt.x + tt.y*sz2*2)*0.001f + sqr(tt.x+tt.y)*0.00001f);
-						
-						int sz = 20 + fabsf(v)*20;
-
-						if (bright)
-							sz = 10;			
+						const float v = sinf(waterSin +  (tilePos.x + tilePos.y*miniMapRadius*2)*0.001f + sqr(tilePos.x+tilePos.y)*0.00001f);
+						const int bitSize = (1+fabsf(v)) * waterBitSize;
 
 						glBegin(GL_QUADS);
 							glTexCoord2f(0, 1);
-							glVertex2f(-sz, sz);
+							glVertex2f(-bitSize, bitSize);
 							glTexCoord2f(1, 1);
-							glVertex2f(sz, sz);
+							glVertex2f(bitSize, bitSize);
 							glTexCoord2f(1, 0);
-							glVertex2f(sz, -sz);
+							glVertex2f(bitSize, -bitSize);
 							glTexCoord2f(0, 0);
-							glVertex2f(-sz, -sz);
+							glVertex2f(-bitSize, -bitSize);
 						glEnd();
 
-						glTranslatef(-rp.x, -rp.y, 0);
+						glTranslatef(-miniMapPos.x, -miniMapPos.y, 0);
 					}
 					
 				}
@@ -451,20 +445,18 @@ void MiniMapRender::onRender()
 	{
 		for (int i = 0; i < dsq->game->paths.size(); i++)
 		{
-			int extraSize;
-			extraSize = 0;
 			Path *p = dsq->game->paths[i];
 			if (!p->nodes.empty())
 			{
 				Vector pt(p->nodes[0].position);
 				Vector d = pt - dsq->game->avatar->position;
-				d.capLength2D(2800);
+				d.capLength2D(miniMapRadius * miniMapScale * (7.0f/8.0f));
 				{
-					bool render = true;
-					
-					Vector rp = Vector(d)*Vector(1.0f/1600.0f, 1.0f/1600.0f)*sz2*0.5f;
+					const Vector miniMapPos = Vector(d)*Vector(1.0f/miniMapScale, 1.0f/miniMapScale);
 
-					extraSize = sinf(game->getTimer()*PI)*6 + 14;
+					bool render = true;
+
+					const int iconSize = sinf(game->getTimer()*PI)*6 + 14;
 
 					switch(p->pathType)
 					{
@@ -483,7 +475,7 @@ void MiniMapRender::onRender()
 							glColor4f(1, 1, 1, 1);
 							
 
-							glTranslatef(rp.x, rp.y, 0);
+							glTranslatef(miniMapPos.x, miniMapPos.y, 0);
 							int sz = 16;
 
 							texCook->apply();
@@ -499,7 +491,7 @@ void MiniMapRender::onRender()
 								glVertex2f(-sz, -sz);
 							glEnd();
 
-							glTranslatef(-rp.x, -rp.y, 0);
+							glTranslatef(-miniMapPos.x, -miniMapPos.y, 0);
 							render = false;
 							texCook->unbind();
 							glBindTexture(GL_TEXTURE_2D, 0);
@@ -553,8 +545,8 @@ void MiniMapRender::onRender()
 					
 					if (render)
 					{
-						glTranslatef(rp.x, rp.y, 0);
-						int sz = extraSize;
+						glTranslatef(miniMapPos.x, miniMapPos.y, 0);
+						int sz = iconSize;
 
 						texRipple->apply();
 
@@ -569,7 +561,7 @@ void MiniMapRender::onRender()
 							glVertex2f(-sz, -sz);
 						glEnd();
 
-						glTranslatef(-rp.x, -rp.y, 0);
+						glTranslatef(-miniMapPos.x, -miniMapPos.y, 0);
 						render = false;
 						texRipple->unbind();
 						glBindTexture(GL_TEXTURE_2D, 0);
@@ -603,128 +595,98 @@ void MiniMapRender::onRender()
 	texMinimapTop->apply();
 	glBegin(GL_QUADS);
 		glTexCoord2f(0, 1);
-		glVertex2f(-bsz2, bsz2);
+		glVertex2f(-miniMapGuiSize, miniMapGuiSize);
 		glTexCoord2f(1, 1);
-		glVertex2f(bsz2, bsz2);
+		glVertex2f(miniMapGuiSize, miniMapGuiSize);
 		glTexCoord2f(1, 0);
-		glVertex2f(bsz2, -bsz2);
+		glVertex2f(miniMapGuiSize, -miniMapGuiSize);
 		glTexCoord2f(0, 0);
-		glVertex2f(-bsz2, -bsz2);
+		glVertex2f(-miniMapGuiSize, -miniMapGuiSize);
 	glEnd();
 	texMinimapTop->unbind();
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 
-	float angle = 0;
-	float stepSize = 2*PI/128.0f;
-
 	glLineWidth(10 * (core->width / 1024.0f));
 	
-	stepSize = 2*PI / 64;
+	const float oangle = -PI*0.5f;
+	const float eangle = oangle + PI*lerp.x;
+	const float eangle2 = oangle + PI*(dsq->game->avatar->maxHealth/5.0f);
 
-	float oangle = -PI*0.5f;
-	angle = oangle;
-	float eangle = oangle + PI*lerp.x;
-	float eangle2 = oangle + PI*(dsq->game->avatar->maxHealth/5.0f);
-	float steps = (eangle - oangle)/stepSize;
-	float bit = (PI/5.0f);
-	int step = 0;
-
-	Vector gc;
+	Vector healthBarColor;
 
 	if (lerp.x >= 1)
 	{
-		gc = Vector(0,1,0.5);
+		healthBarColor = Vector(0,1,0.5);
 	}
 	else
 	{
-		gc = Vector(1-lerp.x, lerp.x*1, lerp.x*0.5f);
-		gc.normalize2D();
+		healthBarColor = Vector(1-lerp.x, lerp.x*1, lerp.x*0.5f);
+		healthBarColor.normalize2D();
 	}
-
-	float rad = sz2 + 4;
 
 	texHealthBar->apply();
 
-	Vector c;
-	float x,y;
-
-	const int msz = 20;
-	const int qsz = 32;
-	const int qsz1 = 10;
-
-	int jump = 0;
-
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	float angle = oangle;
 
 	while (lerp.x != 0 && angle <= eangle)
 	{
-		c = gc;
-
-		x = sinf(angle)*rad+2;
-		y = cosf(angle)*rad;
+		float x = sinf(angle)*healthBarRadius+2;
+		float y = cosf(angle)*healthBarRadius;
 
 		// !!! FIXME: loop invariant.
-		glColor4f(c.x, c.y, c.z, 0.6);
+		glColor4f(healthBarColor.x, healthBarColor.y, healthBarColor.z, 0.6);
 
 		glBegin(GL_QUADS);
 			glTexCoord2f(0, 1);
-			glVertex2f(x-qsz1, y+qsz1);
+			glVertex2f(x-healthBitSizeSmall, y+healthBitSizeSmall);
 			glTexCoord2f(1, 1);
-			glVertex2f(x+qsz1, y+qsz1);
+			glVertex2f(x+healthBitSizeSmall, y+healthBitSizeSmall);
 			glTexCoord2f(1, 0);
-			glVertex2f(x+qsz1, y-qsz1);
+			glVertex2f(x+healthBitSizeSmall, y-healthBitSizeSmall);
 			glTexCoord2f(0, 0);
-			glVertex2f(x-qsz1, y-qsz1);
+			glVertex2f(x-healthBitSizeSmall, y-healthBitSizeSmall);
 		glEnd();
 
-		step++;
-
-		angle += stepSize;
+		angle += healthStepSize;
 	}
-
-	angle = oangle;
-
-	float pa = jumpTimer;
-	if (pa > 1)
-		pa = (1.5f - pa) + 0.5f;
 
 
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE);
 
+	angle = oangle;
+	int jump = 0;
+
 	while (lerp.x != 0 && angle <= eangle)
 	{
-		c = gc;
-
-
-		x = sinf(angle)*rad+2;
-		y = cosf(angle)*rad;
+		float x = sinf(angle)*healthBarRadius+2;
+		float y = cosf(angle)*healthBarRadius;
 
 		if (jump == 0)
 		{
 			// !!! FIXME: loop invariant.
-			glColor4f(c.x, c.y, c.z, fabsf(cosf(angle-incr))*0.3f + 0.2f);
+			glColor4f(healthBarColor.x, healthBarColor.y, healthBarColor.z, fabsf(cosf(angle-incr))*0.3f + 0.2f);
 
 			glBegin(GL_QUADS);
 				glTexCoord2f(0, 1);
-				glVertex2f(x-qsz, y+qsz);
+				glVertex2f(x-healthBitSizeLarge, y+healthBitSizeLarge);
 				glTexCoord2f(1, 1);
-				glVertex2f(x+qsz, y+qsz);
+				glVertex2f(x+healthBitSizeLarge, y+healthBitSizeLarge);
 				glTexCoord2f(1, 0);
-				glVertex2f(x+qsz, y-qsz);
+				glVertex2f(x+healthBitSizeLarge, y-healthBitSizeLarge);
 				glTexCoord2f(0, 0);
-				glVertex2f(x-qsz, y-qsz);
+				glVertex2f(x-healthBitSizeLarge, y-healthBitSizeLarge);
 			glEnd();
 		}
-
-		step++;
 
 		jump++;
 		if (jump > 3)
 			jump = 0;
 
-		angle += stepSize;
+		angle += healthStepSize;
 	}
 	texHealthBar->unbind();
 
@@ -733,18 +695,18 @@ void MiniMapRender::onRender()
 
 	texMarker->apply();
 
-	x = sinf(eangle2)*rad+2;
-	y = cosf(eangle2)*rad;
+	float x = sinf(eangle2)*healthBarRadius+2;
+	float y = cosf(eangle2)*healthBarRadius;
 
 	glBegin(GL_QUADS);
 		glTexCoord2f(0, 1);
-		glVertex2f(x-msz, y+msz);
+		glVertex2f(x-healthMarkerSize, y+healthMarkerSize);
 		glTexCoord2f(1, 1);
-		glVertex2f(x+msz, y+msz);
+		glVertex2f(x+healthMarkerSize, y+healthMarkerSize);
 		glTexCoord2f(1, 0);
-		glVertex2f(x+msz, y-msz);
+		glVertex2f(x+healthMarkerSize, y-healthMarkerSize);
 		glTexCoord2f(0, 0);
-		glVertex2f(x-msz, y-msz);
+		glVertex2f(x-healthMarkerSize, y-healthMarkerSize);
 	glEnd();
 
 	texMarker->unbind();
