@@ -3053,19 +3053,18 @@ Path *Game::getScriptedPathAtCursor(bool withAct)
 
 Path *Game::getNearestPath(const Vector &pos, const std::string &s)
 {
-	Path *closest=0;
-	int smallestDist = -1;
-	Path *cp = 0;
+	Path *closest = 0;
+	float smallestDist = 1e10;
 	std::string st = s;
 	stringToLower(st);
 	for (int i = 0; i < dsq->game->paths.size(); i++)
 	{
-		cp = dsq->game->paths[i];
-		if (cp->nodes.size()>0 && (st.empty() || st == cp->name))
+		Path *cp = dsq->game->paths[i];
+		if (!cp->nodes.empty() && (st.empty() || st == cp->name))
 		{
-			Vector v = cp->nodes[0].position - pos;
-			float dist = v.getSquaredLength2D();
-			if (smallestDist == -1 || dist < smallestDist )
+			const Vector v = cp->nodes[0].position - pos;
+			const float dist = v.getSquaredLength2D();
+			if (dist < smallestDist)
 			{
 				smallestDist = dist;
 				closest = cp;
@@ -3077,18 +3076,16 @@ Path *Game::getNearestPath(const Vector &pos, const std::string &s)
 
 Path *Game::getNearestPath(const Vector &pos, PathType pathType)
 {
-	Path *closest=0;
-	int smallestDist = -1;
-	Path *cp = 0;
-	Vector v;
+	Path *closest = 0;
+	float smallestDist = 1e10;
 	for (int i = 0; i < dsq->game->paths.size(); i++)
 	{
-		cp = dsq->game->paths[i];
+		Path *cp = dsq->game->paths[i];
 		if (cp->pathType == pathType && !cp->nodes.empty())
 		{
-			v = cp->nodes[0].position - pos;
-			float dist = v.getSquaredLength2D();
-			if (smallestDist == -1 || dist < smallestDist )
+			const Vector v = cp->nodes[0].position - pos;
+			const float dist = v.getSquaredLength2D();
+			if (dist < smallestDist)
 			{
 				smallestDist = dist;
 				closest = cp;
