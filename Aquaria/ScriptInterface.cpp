@@ -2149,7 +2149,16 @@ int l_bone_setSegs(lua_State *L)
 {
 	Bone *b = bone(L);
 	if (b)
-		b->setSegs(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), lua_tointeger(L, 9));
+	{
+		int segsx = lua_tointeger(L, 2), segsy = lua_tointeger(L, 3);
+#ifdef BBGE_BUILD_PSP  // Reduce segment count to save update/render time.
+		if (segsx >= 4)
+			segsx /= 2;
+		if (segsy >= 4)
+			segsy /= 2;
+#endif
+		b->setSegs(segsx, segsy, lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), lua_tointeger(L, 9));
+	}
 	lua_pushinteger(L, 0);
 	return 1;
 }
@@ -2158,7 +2167,16 @@ int l_entity_setSegs(lua_State *L)
 {
 	Entity *e = entity(L);
 	if (e)
-		e->setSegs(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), lua_tointeger(L, 9));
+	{
+		int segsx = lua_tointeger(L, 2), segsy = lua_tointeger(L, 3);
+#ifdef BBGE_BUILD_PSP
+		if (segsx >= 4)
+			segsx /= 2;
+		if (segsy >= 4)
+			segsy /= 2;
+#endif
+		e->setSegs(segsx, segsy, lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), lua_tointeger(L, 9));
+	}
 	lua_pushinteger(L, 0);
 	return 1;
 }

@@ -346,6 +346,12 @@ void DSQ::loadElementEffects()
 		{
 			efxType = EFX_SEGS;
 			is >> e.segsx >> e.segsy >> e.segs_dgox >> e.segs_dgoy >> e.segs_dgmx >> e.segs_dgmy >> e.segs_dgtm >> e.segs_dgo;
+#ifdef BBGE_BUILD_PSP  // Reduce segment count to save update/render time.
+			if (e.segsx >= 4)
+				e.segsx /= 2;
+			if (e.segsy >= 4)
+				e.segsy /= 2;
+#endif
 		}
 		else if (type == "EFX_WAVY")
 		{
@@ -353,6 +359,10 @@ void DSQ::loadElementEffects()
 			efxType = EFX_WAVY;
 			is >> e.segsy >> e.wavy_radius >> e.wavy_flip;
 			// >> e.wavy_min >> e.wavy_max >> e.wavy_flip;
+#ifdef BBGE_BUILD_PSP
+			if (e.segsy >= 4)
+				e.segsy /= 2;
+#endif
 		}
 		else if (type == "EFX_ALPHA")
 		{

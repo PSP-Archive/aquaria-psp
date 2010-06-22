@@ -384,7 +384,8 @@ struct ElementEffect
 {
 public:
 	int type;
-	float segsx, segsy, segs_dgox, segs_dgoy, segs_dgmx, segs_dgmy, segs_dgtm, segs_dgo;
+	int segsx, segsy;
+	float segs_dgox, segs_dgoy, segs_dgmx, segs_dgmy, segs_dgtm, segs_dgo;
 	float wavy_radius, wavy_min, wavy_max;
 	bool wavy_flip;
 	InterpolatedVector alpha;
