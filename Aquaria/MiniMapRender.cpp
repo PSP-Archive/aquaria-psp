@@ -37,10 +37,15 @@ namespace MiniMapRenderSpace
 	const float miniMapTileRadius = miniMapRadius * miniMapScale / TILE_SIZE;
 	// 1/2 size (width/height) of minimap GUI
 	const float miniMapGuiSize = miniMapRadius * 1.5f;
+#ifndef BBGE_BUILD_PSP
 	// Base radius of texture (texWaterBit) used to indicate open areas
 	const float waterBitSize = 10;
 	// Distance in tiles between adjacent water bits
 	const int tileStep = 12;
+#else  // PSP => low resolution, so increase these a bit to boost render speed
+	const float waterBitSize = 12.5;
+	const int tileStep = 15;
+#endif
 	// Radius of the health bar circle
 	const int healthBarRadius = miniMapRadius + 4;
 	// Number of steps around health bar at which to draw bits
@@ -181,10 +186,10 @@ void MiniMapRender::slide(int slide)
 	switch(slide)
 	{
 	case 0:
-		dsq->game->miniMapRender->offset.interpolateTo(Vector(0, 0), 0.28, 0, 0, 1);
+		offset.interpolateTo(Vector(0, 0), 0.28, 0, 0, 1);
 	break;
 	case 1:
-		dsq->game->miniMapRender->offset.interpolateTo(Vector(0, -470), 0.28, 0, 0, 1);
+		offset.interpolateTo(Vector(0, scale.y*205-600), 0.28, 0, 0, 1);
 	break;
 	}
 }
@@ -221,6 +226,9 @@ void MiniMapRender::toggle(int t)
 void MiniMapRender::onUpdate(float dt)
 {
 	RenderObject::onUpdate(dt);	
+
+	position.x = core->getVirtualWidth() - core->getVirtualOffX() - scale.x*100;
+	position.y = core->getVirtualHeight() - scale.y*100;
 	position.z = 2.9;
 
 	waterSin += dt * (bitSizeLookupPeriod / (2*PI));
@@ -230,8 +238,6 @@ void MiniMapRender::onUpdate(float dt)
 	{
 		doubleClickDelay -= dt;
 	}
-
-	position.x = core->getVirtualWidth() - 55 - core->getVirtualOffX();
 
 	radarHide = false;
 

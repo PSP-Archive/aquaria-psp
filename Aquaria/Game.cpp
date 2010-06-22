@@ -6847,10 +6847,13 @@ void Game::applyState()
 	miniMapRender = new MiniMapRender;
 
 	//miniMapRender->position = Vector(740,540);
-	// position = vw - 55
-	// set x in minimaprender::onupdate
-	miniMapRender->position = Vector(0,545); // x=745
+	// position = (vw,vh) - (scale*100)
+	// set in minimaprender::onupdate
+#ifdef BBGE_BUILD_PSP
+	miniMapRender->scale = Vector(0.75, 0.75);
+#else
 	miniMapRender->scale = Vector(0.55, 0.55);
+#endif
 
 
 	/*
