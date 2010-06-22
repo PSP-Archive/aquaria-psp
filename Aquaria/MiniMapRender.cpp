@@ -272,7 +272,7 @@ void MiniMapRender::onUpdate(float dt)
 		float v = dsq->game->avatar->health/5.0f;
 		if (v < 0)
 			v = 0;
-		if (!lerp.isInterpolating())
+		if (!lerp.isInterpolating() && lerp.x != v)
 			lerp.interpolateTo(v, 0.1);
 		lerp.update(dt);
 
