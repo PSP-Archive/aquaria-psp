@@ -1556,7 +1556,7 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 
 void Game::pickupIngredientEffects(IngredientData *data)
 {
-	Quad *q = new Quad("gfx/ingredients/" + data->gfx, Vector(800-20 + core->getVirtualOffX(), 460+ingOffY));
+	Quad *q = new Quad("gfx/ingredients/" + data->gfx, Vector(800-20 + core->getVirtualOffX(), (570-2*(100*miniMapRender->scale.y))+ingOffY));
 	q->scale = Vector(0.8, 0.8);
 	q->followCamera = 1;
 	q->alpha.ensureData();
