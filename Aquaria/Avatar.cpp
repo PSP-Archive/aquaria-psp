@@ -102,6 +102,17 @@ const float TUMMY_TIME = 6.0;
 
 const float chargeMax = 2.0;
 
+// Axis input distance (0.0-1.0) at which we start moving
+const float JOYSTICK_LOW_THRESHOLD = 0.2;
+// Axis input distance at which we move full speed
+#ifdef BBGE_BUILD_PSP  // The default doesn't allow enough fine control.
+const float JOYSTICK_HIGH_THRESHOLD = 0.8;
+#else
+const float JOYSTICK_HIGH_THRESHOLD = 0.6;
+#endif
+// Axis input distance at which we accept a note
+const float JOYSTICK_NOTE_THRESHOLD = 0.6;
+
 volatile int micNote = -1;
 bool openedFromMicInput = false;
 
@@ -2222,7 +2233,7 @@ void Avatar::updateSingingInterface(float dt)
 						d.normalize2D();
 						*/
 
-						if (!d.isLength2DIn(0.6))
+						if (!d.isLength2DIn(JOYSTICK_NOTE_THRESHOLD))
 						{
 							d.normalize2D();
 						}
@@ -5469,6 +5480,29 @@ Vector Avatar::getKeyDir()
 	return dir;
 }
 
+Vector Avatar::getFakeCursorPosition()
+{
+	if (dsq->inputMode == INPUT_KEYBOARD)
+	{
+		return getKeyDir() * 350;
+	}
+	if (dsq->inputMode == INPUT_JOYSTICK)
+	{
+		const float axisInput = core->joystick.position.getLength2D();
+		if (axisInput < JOYSTICK_LOW_THRESHOLD)
+		{
+			return Vector(0,0,0);
+		}
+		else
+		{
+			const float axisMult = (maxMouse - minMouse) / (JOYSTICK_HIGH_THRESHOLD - JOYSTICK_LOW_THRESHOLD);
+			const float distance = minMouse + ((axisInput - JOYSTICK_LOW_THRESHOLD) * axisMult);
+			return (core->joystick.position * (distance / axisInput));
+		}
+	}
+	return Vector(0,0,0);
+}
+
 Vector Avatar::getVectorToCursorFromScreenCentre()
 {
 	/*
@@ -5487,14 +5521,8 @@ Vector Avatar::getVectorToCursorFromScreenCentre()
 		return getVectorToCursor();
 	else
 	{
-		if (dsq->inputMode == INPUT_KEYBOARD)
-		{
-			return getKeyDir() * 350;
-		}
-		if (dsq->inputMode == INPUT_JOYSTICK)
-		{
-			return (core->joystick.position * 350);
-		}
+		if (dsq->inputMode != INPUT_MOUSE)
+			return getFakeCursorPosition();
 		return (core->mouse.position+offset) - Vector(400,300);
 	}
 }
@@ -5505,17 +5533,8 @@ Vector Avatar::getVectorToCursor(bool trueMouse)
 	Vector pos = dsq->getGameCursorPosition();
 	
 
-	if (!trueMouse)
-	{
-		if (dsq->inputMode == INPUT_KEYBOARD)
-		{
-			pos = getKeyDir() * 350 + (position+offset);
-		}
-		if (dsq->inputMode == INPUT_JOYSTICK)
-		{
-			pos = core->joystick.position * 350 + (position+offset);
-		}
-	}
+	if (!trueMouse && dsq->inputMode != INPUT_MOUSE)
+		return getFakeCursorPosition();
 
 	return pos - (position+offset);
 	//return core->mouse.position - Vector(400,300);
@@ -8460,7 +8479,6 @@ void Avatar::onUpdate(float dt)
 			static Vector lastMousePos;
 			Vector pos = lastMousePos - dsq->getGameCursorPosition();
 			static bool lastDown;
-			//int maxMouse = 200;
 
 			float len = 0;
 			//dsq->continuity.toggleMoveMode &&
@@ -8516,8 +8534,9 @@ void Avatar::onUpdate(float dt)
 						//if (core->mouse.buttons.left)
 						{
 							len = addVec.getLength2D();
-							if (len > 200)
-								addVec.setLength2D(a *10);
+							// addVec is always overwritten below; I assume this is old code?  --achurch
+							//if (len > 200)
+							//	addVec.setLength2D(a *10);
 							if (len > 100)
 								addVec.setLength2D(a *2);
 							else
