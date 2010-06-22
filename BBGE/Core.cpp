@@ -1255,7 +1255,6 @@ void Core::initRenderObjectLayers(int num)
 	for (int i = 0; i < num; i++)
 	{
 		renderObjectLayerOrder[i] = i;
-		renderObjectLayers[i].index = i;
 	}
 }
 

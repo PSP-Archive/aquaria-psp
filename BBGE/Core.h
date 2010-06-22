@@ -823,13 +823,10 @@ enum FollowCameraLock
 	FCL_VERT		= 2
 };
 
-//RenderObject Layer Type
-enum RLType
-{
-	RLT_DYNAMIC		= 0,
-	RLT_FIXED		= 1,
-	RLT_MAP			= 2
-};
+//RenderObject Layer Type (enable only one)
+#define RLT_DYNAMIC		// Dynamic list
+//#define RLT_FIXED		// Static array
+//#define RLT_MAP		// Mapping
 
 typedef std::vector <RenderObject*> RenderObjects;
 typedef std::list <RenderObject*> RenderObjectList;
@@ -840,20 +837,123 @@ class RenderObjectLayer
 public:
 	RenderObjectLayer();
 	void setSize(int sz);
-	void setType(RLType type);
 	void add(RenderObject* r);
 	void remove(RenderObject* r);
 	void moveToFront(RenderObject *r);
 	void moveToBack(RenderObject *r);
-	void findNextFreeIdx();
 	void setCull(bool c);
-	bool empty();
 	void sort();
-	RenderObject *getFirst();
-	RenderObject *getNext();
 
-	int freeIdx;
-	int index;
+	inline bool empty()
+	{
+	#ifdef RLT_FIXED
+		return renderObjects.empty();
+	#endif
+	#ifdef RLT_DYNAMIC
+		return renderObjectList.empty();
+	#endif
+		return false;
+	}
+
+	inline RenderObject *getFirst()
+	{
+	#ifdef RLT_DYNAMIC
+		if (renderObjectList.empty()) return 0;
+		dynamic_iter = renderObjectList.begin();
+		return *dynamic_iter;
+	#endif
+	#ifdef RLT_MAP
+		if (renderObjectMap.empty()) return 0;
+		map_iter = renderObjectMap.begin();
+		return (*map_iter).second;
+	#endif
+	#ifdef RLT_FIXED
+		/*
+		if (renderObjects.empty()) return 0;
+		fixed_iter = renderObjects.begin();
+		while ((*fixed_iter)==0 && fixed_iter != renderObjects.end())
+		{
+			fixed_iter++;
+		}
+		if (fixed_iter != renderObjects.end())
+			return *fixed_iter;
+		*/
+		int sz = renderObjects.size();
+		fixed_iter = 0;
+		for (; fixed_iter < currentSize && fixed_iter < sz; fixed_iter++)
+		{
+			if (renderObjects[fixed_iter] != 0)
+			{
+				return renderObjects[fixed_iter];
+			}
+		}
+		/*
+		while (renderObjects[fixed_iter]==0 && fixed_iter < sz)
+		{
+			fixed_iter++;
+		}
+		if (fixed_iter >= sz)						return 0;
+		return renderObjects[fixed_iter];
+		*/
+		return 0;
+	#endif
+		return 0;
+	}
+
+	RenderObject *getNext()
+	{
+	#ifdef RLT_DYNAMIC
+		if (dynamic_iter == renderObjectList.end()) return 0;
+		dynamic_iter++;
+		if (dynamic_iter == renderObjectList.end()) return 0;
+		return *dynamic_iter;
+	#endif
+	#ifdef RLT_MAP
+		if (map_iter == renderObjectMap.end()) return 0;
+		map_iter++;
+		if (map_iter == renderObjectMap.end()) return 0;
+		return (*map_iter).second;
+	#endif
+	#ifdef RLT_FIXED
+		int sz = renderObjects.size();
+		fixed_iter++;
+		if (fixed_iter < currentSize && fixed_iter < sz)
+		{
+			if (renderObjects[fixed_iter]==0)
+			{
+				for (; fixed_iter < currentSize && fixed_iter < sz; fixed_iter++)
+				{
+					if (renderObjects[fixed_iter] != 0)
+					{
+						return renderObjects[fixed_iter];
+					}
+				}
+			}
+			else
+			{
+				return renderObjects[fixed_iter];
+			}
+		}
+		return 0;
+		/*
+		while (renderObjects[fixed_iter]==0 && fixed_iter < sz && )
+		{
+			fixed_iter++;
+		}
+		if (fixed_iter >= sz)						return 0;
+		return renderObjects[fixed_iter];
+		*/
+		
+		/*
+		if (fixed_iter == renderObjects.end())		return 0;
+		fixed_iter++;
+		if (fixed_iter == renderObjects.end())		return 0;
+		return *fixed_iter;
+		*/
+	#endif
+		return 0;
+	}
+
 	//inclusive
 	int startPass, endPass, currentPass;
 	bool visible;
@@ -871,15 +971,25 @@ public:
 	bool fastCull;
 	int fastCullDist;
 protected:
+
+#ifdef RLT_FIXED
+	void findNextFreeIdx();
+#endif
 	
-	RLType rlType;
-	RenderObjects renderObjects;
+#ifdef RLT_DYNAMIC
 	RenderObjectList renderObjectList;
-	RenderObjectMap renderObjectMap;
 	RenderObjectList::iterator dynamic_iter;
+#endif
+#ifdef RLT_MAP
+	RenderObjectMap renderObjectMap;
 	RenderObjectMap::iterator map_iter;
+#endif
+#ifdef RLT_FIXED
+	int freeIdx;
+	RenderObjects renderObjects;
 	unsigned int fixed_iter;
 	unsigned int currentSize;
+#endif
 };
 
 class Core : public ActionMapper, public StateManager
