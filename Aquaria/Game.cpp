@@ -6286,14 +6286,25 @@ void Game::action(int id, int state)
 					}
 					else
 					{
+						bool dropped = false;
 						for (int i = 0; i < foodHolders.size(); i++)
 						{
 							if (!foodHolders[i]->isTrash() && !foodHolders[i]->isEmpty())
 							{
 								foodHolders[i]->dropFood();
+								dropped = true;
 								break;
 							}
 						}
+#ifdef BBGE_BUILD_PSP
+						// HACK: Allow food to be dropped with Cook+FoodLeft
+						// when all cooking slots are empty, since the PSP
+						// doesn't have any more buttons to assign.
+						if (!dropped && isActing(ACTION_COOKFOOD))
+						{
+							id = ACTION_FOODDROP;
+						}
+#endif
 					}
 				}
 

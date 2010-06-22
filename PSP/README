@@ -149,6 +149,10 @@ Triangle -- display world map; remove food from cooking slot
 Start    -- open/close in-game menu; pause cutscene
 Select   -- cook food; skip cutscene when paused
 
+While in the food menu, the currently selected food item can be discarded
+into the environment by holding Select and pressing Triangle while the
+cooking slots are empty.
+
 In the world map, use the analog pad to scroll, or hold Circle while
 moving the analog pad up or down to zoom.
 
