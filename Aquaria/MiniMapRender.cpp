@@ -33,6 +33,8 @@ namespace MiniMapRenderSpace
 	const int miniMapRadius = 80;
 	// Minimap scale (actual distance / displayed distance)
 	const float miniMapScale = 40;
+	// View area radius in world tiles
+	const float miniMapTileRadius = miniMapRadius * miniMapScale / TILE_SIZE;
 	// 1/2 size (width/height) of minimap GUI
 	const float miniMapGuiSize = miniMapRadius * 1.5f;
 	// Base radius of texture (texWaterBit) used to indicate open areas
@@ -375,44 +377,65 @@ void MiniMapRender::onRender()
 		if (lightLevel > 0)
 		{
 			texWaterBit->apply();
-		
+
 			glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+			glColor4f(0.1, 0.2, 0.9, 0.4f*lightLevel);
+			bool curColorIsWater = true;
 
-			for (int y = centerTile.y-miniMapRadius*2; y < centerTile.y + miniMapRadius*2; y+=tileStep)
+			const int xmin = int(ceilf(dsq->game->cameraMin.x / TILE_SIZE));
+			const int ymin = int(ceilf(dsq->game->cameraMin.y / TILE_SIZE));
+			const int xmax = int(floorf(dsq->game->cameraMax.x / TILE_SIZE));
+			const int ymax = int(floorf(dsq->game->cameraMax.y / TILE_SIZE));
+
+			int y1 = centerTile.y - miniMapTileRadius;
+			int y2 = centerTile.y + miniMapTileRadius;
+			// Round all coordinates to a multiple of tileStep, so
+			// the minimap doesn't change as you scroll.
+			y1 = (y1 / tileStep) * tileStep;
+			y2 = ((y2 + tileStep-1) / tileStep) * tileStep;
+			for (int y = y1; y <= y2; y += tileStep)
 			{
-				float out = sinf((float(y-(centerTile.y-miniMapRadius*2))/float(miniMapRadius*4)) * PI);
-				int x1 = centerTile.x-int(miniMapRadius*2*out) - tileStep, x2 = centerTile.x+int(miniMapRadius*2*out) + tileStep;
+				if (y < ymin) continue;
+				if (y > ymax) break;
 
-				for (int x = x1; x < x2; x+=tileStep)
-				{	
-					int tileX = (int(x/tileStep))*tileStep, tileY = (int(y/tileStep))*tileStep;
-					TileVector tile(tileX, tileY);
+				const int dy = y - centerTile.y;
+				const float widthFrac = cosf(float(dy) / miniMapTileRadius * (PI/2));
+				const int halfTileWidth = int(ceilf(miniMapTileRadius * widthFrac));
+				int x1 = centerTile.x - halfTileWidth;
+				int x2 = centerTile.x + halfTileWidth;
+				x1 = (x1 / tileStep) * tileStep;
+				x2 = ((x2 + tileStep-1) / tileStep) * tileStep;
+				for (int x = x1; x <= x2; x += tileStep)
+				{
+					if (x < xmin) continue;
+					if (x > xmax) break;
+
+					TileVector tile(x, y);
 					if (!dsq->game->getGrid(tile))
 					{
-						if (tile.worldVector().y < dsq->game->waterLevel.x)
+						const Vector tilePos(tile.worldVector());
+						if (tilePos.y < dsq->game->waterLevel.x)
 						{
-							glColor4f(0.1, 0.2, 0.5, 0.2f*lightLevel);
+							if (curColorIsWater)
+							{
+								glColor4f(0.1, 0.2, 0.5, 0.2f*lightLevel);
+								curColorIsWater = false;
+							}
 						}
 						else
 						{
-							glColor4f(0.1, 0.2, 0.9, 0.4f*lightLevel);
+							if (curColorIsWater)
+							{
+								glColor4f(0.1, 0.2, 0.9, 0.4f*lightLevel);
+								curColorIsWater = true;
+							}
 						}
 
-						Vector tilePos(int(((x*TILE_SIZE)+TILE_SIZE*0.5f)/(tileStep*TILE_SIZE)), int(((y*TILE_SIZE)+TILE_SIZE*0.5f)/(tileStep*TILE_SIZE)));
-						tilePos *= TILE_SIZE*tileStep;
-						tilePos.x += TILE_SIZE*tileStep*0.5f;
-						tilePos.y += TILE_SIZE*tileStep*0.5f;
-
-						if (tilePos.x < dsq->game->cameraMin.x)	continue;
-						if (tilePos.x > dsq->game->cameraMax.x)	continue;
-						if (tilePos.y < dsq->game->cameraMin.y)	continue;
-						if (tilePos.y > dsq->game->cameraMax.y)	continue;
-					
-						const Vector miniMapPos = Vector(tilePos-dsq->game->avatar->position)*Vector(1.0f/miniMapScale, 1.0f/miniMapScale);
+						const Vector miniMapPos = Vector(tilePos - dsq->game->avatar->position) * (1.0f / miniMapScale);
 
 						glTranslatef(miniMapPos.x, miniMapPos.y, 0);
 
-						const float v = sinf(waterSin +  (tilePos.x + tilePos.y*miniMapRadius*2)*0.001f + sqr(tilePos.x+tilePos.y)*0.00001f);
+						const float v = sinf(waterSin +  (tilePos.x + tilePos.y*miniMapTileRadius)*0.001f + sqr(tilePos.x+tilePos.y)*0.00001f);
 						const int bitSize = (1+fabsf(v)) * waterBitSize;
 
 						glBegin(GL_QUADS);
@@ -428,7 +451,6 @@ void MiniMapRender::onRender()
 
 						glTranslatef(-miniMapPos.x, -miniMapPos.y, 0);
 					}
-					
 				}
 			}
 			texWaterBit->unbind();
