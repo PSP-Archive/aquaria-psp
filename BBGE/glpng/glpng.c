@@ -114,6 +114,8 @@ static void Resize(int components, const png_bytep d1, int w1, int h1, png_bytep
 	}
 }
 
+#ifdef SUPPORTS_PALETTE_EXT
+#ifdef _WIN32
 static int ExtSupported(const char *x) {
 	static const GLubyte *ext = NULL;
 	const char *c;
@@ -130,6 +132,8 @@ static int ExtSupported(const char *x) {
 
 	return 0;
 }
+#endif
+#endif
 
 #define GET(o) ((int)*(data + (o)))
 
