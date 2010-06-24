@@ -559,9 +559,9 @@ void Texture::loadTGA(const std::string &file)
 	*/
 
 #ifdef BBGE_BUILD_SDL
-	ImageTGA *imageTGA=0;
+	ImageTGA *imageTGA;
 
-	if (imageTGA = TGAload(file.c_str()))
+	if ((imageTGA = TGAload(file.c_str())) != 0)
 	{
 		glGenTextures(1, &textures[0]);
 		glBindTexture(GL_TEXTURE_2D, textures[0]);

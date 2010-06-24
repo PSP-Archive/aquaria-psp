@@ -1109,7 +1109,7 @@ std::string Core::adjustFilenameCase(const char *_buf)
 
 	char *ptr = buf;
 	char *prevptr = buf;
-	while (ptr = strchr(ptr + 1, '/'))
+	while ((ptr = strchr(ptr + 1, '/')) != 0)
 	{
 		*ptr = '\0';  // block this path section off
 		rc = locateOneElement(buf);

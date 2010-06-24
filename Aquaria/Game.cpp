@@ -6817,11 +6817,11 @@ void Game::applyState()
 	if (avatar->position.isZero() || avatar->position == Vector(1,1))
 	{
 		Path *p = 0;
-		if ((p = getPathByName("NAIJASTART")) || (p = getPathByName("NAIJASTART L")))
+		if ((p = getPathByName("NAIJASTART")) != 0 || (p = getPathByName("NAIJASTART L")) != 0)
 		{
 			avatar->position = p->nodes[0].position;
 		}
-		else if (p = getPathByName("NAIJASTART R"))
+		else if ((p = getPathByName("NAIJASTART R")) != 0)
 		{
 			avatar->position = p->nodes[0].position;
 			avatar->flipHorizontal();
@@ -11132,49 +11132,46 @@ bool Game::collideCircleWithGrid(Vector position, int r, Vector *fill)
 	{
 		for (int y = tile.y-yrange; y <= tile.y+yrange; y++)
 		{
-			int v = 0;
-			if (v = this->getGrid(TileVector(x, y)))
+			int v = this->getGrid(TileVector(x, y));
+			if (v != 0)
 			{
 				//if (tile.x == x && tile.y == y) return true;
-				if (v != 0)
+				TileVector t(x, y);
+				lastCollidePosition = t.worldVector();
+				//if (tile.x == x && tile.y == y) return true;
+				float rx = (x*TILE_SIZE)+TILE_SIZE/2;
+				float ry = (y*TILE_SIZE)+TILE_SIZE/2;
+
+				float rSqr;
+				lastCollideTileType = (ObsType)v;
+
+				rSqr = sqr(position.x - (rx+hsz)) + sqr(position.y - (ry+hsz));
+				if (rSqr < sqr(r))	return true;
+
+				rSqr = sqr(position.x - (rx-hsz)) + sqr(position.y - (ry+hsz));
+				if (rSqr < sqr(r))	return true;
+
+				rSqr = sqr(position.x - (rx-hsz)) + sqr(position.y - (ry-hsz));
+				if (rSqr < sqr(r))	return true;
+
+				rSqr = sqr(position.x - (rx+hsz)) + sqr(position.y - (ry-hsz));
+				if (rSqr < sqr(r))	return true;
+
+
+				if (position.x > rx-hsz && position.x < rx+hsz)
 				{
-					TileVector t(x, y);
-					lastCollidePosition = t.worldVector();
-					//if (tile.x == x && tile.y == y) return true;
-					float rx = (x*TILE_SIZE)+TILE_SIZE/2;
-					float ry = (y*TILE_SIZE)+TILE_SIZE/2;
-
-					float rSqr;
-					lastCollideTileType = (ObsType)v;
-
-					rSqr = sqr(position.x - (rx+hsz)) + sqr(position.y - (ry+hsz));
-					if (rSqr < sqr(r))	return true;
-
-					rSqr = sqr(position.x - (rx-hsz)) + sqr(position.y - (ry+hsz));
-					if (rSqr < sqr(r))	return true;
-
-					rSqr = sqr(position.x - (rx-hsz)) + sqr(position.y - (ry-hsz));
-					if (rSqr < sqr(r))	return true;
-
-					rSqr = sqr(position.x - (rx+hsz)) + sqr(position.y - (ry-hsz));
-					if (rSqr < sqr(r))	return true;
-
-
-					if (position.x > rx-hsz && position.x < rx+hsz)
+					if (fabs(ry - position.y) < r+hsz)
 					{
-						if (fabs(ry - position.y) < r+hsz)
-						{
-							return true;
-						}
+						return true;
 					}
+				}
 
 
-					if (position.y > ry-hsz && position.y < ry+hsz)
+				if (position.y > ry-hsz && position.y < ry+hsz)
+				{
+					if (fabs(rx - position.x) < r+hsz)
 					{
-						if (fabs(rx - position.x) < r+hsz)
-						{
-							return true;
-						}
+						return true;
 					}
 				}
 			}
@@ -11200,25 +11197,21 @@ bool Game::collideBoxWithGrid(Vector position, int hw, int hh)
 	{
 		for (int y = tile.y-yrange; y <= tile.y+yrange; y++)
 		{
-			int v = 0;
-			if (v = this->getGrid(TileVector(x, y)))
+			int v = this->getGrid(TileVector(x, y));
+			if (v == 1)
 			{
-				//if (tile.x == x && tile.y == y) return true;
-				if (v == 1)
+				if (tile.x == x && tile.y == y) return true;
+				float rx = (x*TILE_SIZE)+TILE_SIZE/2;
+				float ry = (y*TILE_SIZE)+TILE_SIZE/2;
+
+
+				if (isBoxIn(position, Vector(hw, hh), Vector(rx, ry), Vector(hsz, hsz)))
 				{
-					if (tile.x == x && tile.y == y) return true;
-					float rx = (x*TILE_SIZE)+TILE_SIZE/2;
-					float ry = (y*TILE_SIZE)+TILE_SIZE/2;
-
-
-					if (isBoxIn(position, Vector(hw, hh), Vector(rx, ry), Vector(hsz, hsz)))
-					{
-						return true;
-					}
-					if (isBoxIn(Vector(rx, ry), Vector(hsz, hsz), position, Vector(hw, hh)))
-					{
-						return true;
-					}
+					return true;
+				}
+				if (isBoxIn(Vector(rx, ry), Vector(hsz, hsz), position, Vector(hw, hh)))
+				{
+					return true;
 				}
 			}
 		}
