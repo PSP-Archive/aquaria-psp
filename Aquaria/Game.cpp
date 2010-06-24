@@ -3054,7 +3054,7 @@ Path *Game::getScriptedPathAtCursor(bool withAct)
 Path *Game::getNearestPath(const Vector &pos, const std::string &s)
 {
 	Path *closest = 0;
-	float smallestDist = 1e10;
+	float smallestDist = HUGE_VALF;
 	std::string st = s;
 	stringToLower(st);
 	for (int i = 0; i < dsq->game->paths.size(); i++)
@@ -3077,7 +3077,7 @@ Path *Game::getNearestPath(const Vector &pos, const std::string &s)
 Path *Game::getNearestPath(const Vector &pos, PathType pathType)
 {
 	Path *closest = 0;
-	float smallestDist = 1e10;
+	float smallestDist = HUGE_VALF;
 	for (int i = 0; i < dsq->game->paths.size(); i++)
 	{
 		Path *cp = dsq->game->paths[i];
