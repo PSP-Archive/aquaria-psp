@@ -553,7 +553,7 @@ static void bark_noise_hybridmp(int n,const long *b,
   int i;
 
   int lo, hi;
-  float R, A, B, D;
+  float R, A=0, B=0, D=0;
   float w, x, y;
 
   tN = tX = tXX = tY = tXY = 0.f;
