@@ -25,20 +25,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 class FlockEntity;
 
-const int MAX_FLOCKPIECE = 6;
-
-struct FlockPiece
+struct Flock
 {
-	FlockPiece()
+	Flock(int id): flockID(id)
 	{
-		for(int i = 0; i < MAX_FLOCKPIECE; i++)
-		{
-			e[i] = 0;
-		}
+		firstEntity = 0;
 	}
-	FlockEntity* e[MAX_FLOCKPIECE];
-};
 
+	int flockID;
+	FlockEntity *firstEntity;
+};
 
 class FlockEntity : public CollideEntity
 {
@@ -48,22 +44,21 @@ public:
 		FLOCK_FISH = 0,
 		MAX_FLOCKTYPES
 	};
+	void addToFlock(int id);
+	void removeFromFlock();
 	void destroy();
+
 	FlockType flockType;
-	int flockID;
-	typedef std::list<FlockEntity*> Flock;
+	Flock *flock;
+	FlockEntity *nextInFlock, *prevInFlock;
 	typedef std::vector<Vector> VectorSet;
 	float angle;
 
-	
 protected:
 
-	
 	Vector getFlockCenter();
 	Vector getFlockHeading();
 	FlockEntity *getNearestFlockEntity();
-	void getFlockInRange(int radius, FlockPiece *f);
-	
+
 	Vector averageVectors(const VectorSet &vectors, int maxNum=0);
-	static Flock flocks;
 };

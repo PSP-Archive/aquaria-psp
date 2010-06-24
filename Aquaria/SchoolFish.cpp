@@ -37,6 +37,7 @@ float maxChange = maxSpeed*maxUrgency;
 
 float velocityScale = 1;
 
+
 SchoolFish::SchoolFish() : FlockEntity()
 {
 	burstDelay = 0;
@@ -113,8 +114,8 @@ void SchoolFish::onEnterState(int action)
 		//rotation.interpolateTo(Vector(0,0,180), 2);
 		vel.setLength2D(vel.getLength2D()*-1);
 
-		oldFlockID = flockID;
-		flockID = -1;
+		oldFlockID = flock ? flock->flockID : -1;
+		removeFromFlock();
 
 		doDeathEffects(0,0,0);
 
@@ -163,7 +164,7 @@ void SchoolFish::onEnterState(int action)
 		alpha.interpolateTo(1, 1);
 		alphaMod = 1;
 		if (oldFlockID != -1)
-			flockID = oldFlockID;
+			addToFlock(oldFlockID);
 	}
 }
 

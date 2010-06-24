@@ -20,32 +20,63 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "FlockEntity.h"
 
-FlockEntity::Flock FlockEntity::flocks;
+const int DEFAULT_MAX_FLOCKS = 20;  // Will be increased as needed
+std::vector<Flock*> flocks(DEFAULT_MAX_FLOCKS);
 
 FlockEntity::FlockEntity() : CollideEntity()
 {
 	flockType = FLOCK_FISH;
-	flockID = 0;
+	flock = 0;
 
 	angle = 0;
-	flocks.push_back(this);
 
 	collideRadius = 8;
 }
 
+void FlockEntity::addToFlock(int id)
+{
+	if (id >= flocks.size())
+	{
+		int curSize = flocks.size();
+		flocks.resize(id+1);
+		for (int i = curSize; i < id+1; i++)
+			flocks[i] = 0;
+	}
+	if (!flocks[id])
+	{
+		flocks[id] = new Flock(id);
+	}
+
+	flock = flocks[id];
+	nextInFlock = flock->firstEntity;
+	prevInFlock = 0;
+	if (flock->firstEntity)
+		flock->firstEntity->prevInFlock = this;
+	flock->firstEntity = this;
+}
+
+void FlockEntity::removeFromFlock()
+{
+	if (flock)
+	{
+		if (nextInFlock)
+			nextInFlock->prevInFlock = prevInFlock;
+		if (prevInFlock)
+			prevInFlock->nextInFlock = nextInFlock;
+		else
+			flock->firstEntity = nextInFlock;
+		if (!flock->firstEntity)
+		{
+			flocks[flock->flockID] = 0;
+			delete flock;
+		}
+	}
+	flock = 0;
+}
+
 void FlockEntity::destroy()
 {
-	/*
-	Flock copy = flocks;
-	flocks.clear();
-	for (Flock::iterator i = copy.begin(); i != flock.copy
-	{
-		if (copy[i] != this)
-			flocks.push_back(copy[i]);
-	}
-	copy.clear();
-	*/
-	flocks.remove(this);
+	removeFromFlock();
 	CollideEntity::destroy();
 }
 
@@ -53,15 +84,12 @@ Vector FlockEntity::getFlockCenter()
 {
 	Vector position;
 	int sz = 0;
-	for (Flock::iterator i = flocks.begin(); i != flocks.end(); i++)
+	for (FlockEntity *e = flock->firstEntity; e; e = e->nextInFlock)
 	{
-		if ((*i)->flockID == this->flockID)
-		{
-			position += (*i)->position;
-			sz++;
-		}
+		position += e->position;
+		sz++;
 	}
-	position/=sz;
+	position /= sz;
 	return position;
 }
 
@@ -69,38 +97,35 @@ Vector FlockEntity::getFlockHeading()
 {
 	Vector v;
 	int sz = 0;
-	for (Flock::iterator i = flocks.begin(); i != flocks.end(); i++)
+	for (FlockEntity *e = flock->firstEntity; e; e = e->nextInFlock)
 	{
-		if ((*i)->flockID == this->flockID)
-		{
-			v += (*i)->vel;
-			sz++;
-		}
+		v += e->vel;
+		sz++;
 	}
-	v/=sz;
+	v /= sz;
 	return v;
 }
 
 FlockEntity *FlockEntity::getNearestFlockEntity()
 {
-	FlockEntity *e = 0;
+	FlockEntity *nearest = 0;
 	float smallDist = -1;
 	float dist = 0;
 	Vector distVec;
-	for (Flock::iterator i = flocks.begin(); i != flocks.end(); i++)
+	for (FlockEntity *e = flock->firstEntity; e; e = e->nextInFlock)
 	{
-		if ((*i)->flockID == flockID && (*i) != this)
+		if (e != this)
 		{
-			distVec = ((*i)->position - position);
+			distVec = (e->position - position);
 			dist = distVec.getSquaredLength2D();
 			if (dist < smallDist || smallDist == -1)
 			{
 				smallDist = dist;
-				e = (*i);
+				nearest = e;
 			}
 		}
 	}
-	return e;
+	return nearest;
 }
 
 Vector FlockEntity::averageVectors(const VectorSet &vectors, int maxNum)
@@ -125,28 +150,4 @@ Vector FlockEntity::averageVectors(const VectorSet &vectors, int maxNum)
 	}
 	//avg.z /= vectors.size();
 	return avg;
-}
-
-void FlockEntity::getFlockInRange(int radius, FlockPiece *f)
-{
-	//f->clear();
-	FlockEntity *ff=0;
-	Vector dist;
-	int fp = 0;
-	for (Flock::iterator i = flocks.begin(); i != flocks.end(); i++)
-	{
-		if (fp >= MAX_FLOCKPIECE) break;
-
-		ff = (*i);
-		if (ff->flockType == this->flockType && ff->flockID == this->flockID)
-		{			
-			dist = this->position - ff->position;
-			if (dist.isLength2DIn(radius))
-			{
-				f->e[fp] = ff;
-				//f->push_front(ff);
-				fp++;
-			}
-		}
-	}
 }

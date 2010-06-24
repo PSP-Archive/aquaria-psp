@@ -4912,7 +4912,7 @@ bool Game::loadSceneXML(std::string scene)
 			{
 				s->position = Vector(x+i*5,y+i*5);
 				s->startPos = s->position;
-				s->flockID = id;
+				s->addToFlock(id);
 				s->setTexture(texture);
 				if (range != 0)
 					s->range = range;
