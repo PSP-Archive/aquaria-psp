@@ -2527,7 +2527,6 @@ void Continuity::loadFile(int slot)
 	}
 
 	/*
-	/*
 	if (debugEntityflags)
 	{
 		for (EntityFlags::iterator i = entityFlags.begin(); i != entityFlags.end(); i++)

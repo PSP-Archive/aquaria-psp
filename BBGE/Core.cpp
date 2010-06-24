@@ -2552,6 +2552,7 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 	D3DXMATRIXA16 matProj;
 	D3DXMatrixOrthoLH(&matProj, 800, 600, -5, 5);
 	g_pd3dDevice->SetTransform( D3DTS_PROJECTION, &matProj );
+	*/
 
 	// Create the viewport
 	/*

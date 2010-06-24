@@ -2303,7 +2303,7 @@ void Avatar::updateSingingInterface(float dt)
 			//core->setMousePosition(Vector(400,300)+dist/*dsq->game->avatar->position + dist - core->screenCenter*/);
 			//HACK: constrain the mouse to the circle
 			/*
-			if (dist.getSquaredLength2D() > sqr(singingInterfaceRadius*core->invGlobalScale))//*core->invGlobalScale))
+			if (dist.getSquaredLength2D() > sqr(singingInterfaceRadius*core->invGlobalScale))
 			{
 
 				dist |= singingInterfaceRadius*core->invGlobalScale-20;
@@ -8923,13 +8923,10 @@ void Avatar::onUpdate(float dt)
 			idleAnimDelay -= dt;
 			if (idleAnimDelay <= 0)
 			{
-				idleAnimDelay = 1.5;/*anim_idle.time*2;*/
+				idleAnimDelay = 1.5;//anim_idle.time*2;
 
-				/*
-				if (currentAction == IDLE && (!skeletalSprite.isAnimating() || skeletalSprite.getCurrentAnimation()->name=="swim"
-					|| skeletalSprite.getCurrentAnimation()->name=="a1"))
-				*/
-			/*
+				//if (currentAction == IDLE && (!skeletalSprite.isAnimating() || skeletalSprite.getCurrentAnimation()->name=="swim"
+				//	|| skeletalSprite.getCurrentAnimation()->name=="a1"))
 				if (currentAction == STATE_IDLE)
 				{
 					skeletalSprite.transitionAnimate("idle", ANIM_TRANSITION);
