@@ -362,9 +362,6 @@ void MiniMapRender::onRender()
 		texMinimapBtm->unbind();
 
 
-		float realSz2 = sz2*scale.x;
-		float factor = float(core->getWindowWidth()) / float(core->getVirtualWidth());
-		
 		if (a > 0)
 		{
 			texWaterBit->apply();
@@ -381,7 +378,6 @@ void MiniMapRender::onRender()
 			Vector rp;
 			for (int y = t.y-sz2*2; y < t.y + sz2*2; y+=skip)
 			{
-				int rowStart = -1;
 				float out = sin((float(y-(t.y-sz2*2))/float(sz2*4)) * 3.14f);
 				int x1= t.x-int(sz2*2*out) - skip, x2 = t.x+int(sz2*2*out) + skip;
 
@@ -627,8 +623,6 @@ void MiniMapRender::onRender()
 	angle = oangle;
 	float eangle = oangle + 3.14*lerp.x;
 	float eangle2 = oangle + 3.14*(dsq->game->avatar->maxHealth/5.0);
-	float steps = (eangle - oangle)/stepSize;
-	float bit = (3.14/5.0);
 	int step = 0;
 
 	Vector gc;

@@ -711,7 +711,6 @@ void SoundManager::update(float dt)
 			itr++;
 			FadeCh *f = &(*i);
 
-			float oldv = f->v;
 			f->v += dt*f->s * f->d;
 
 
@@ -1469,7 +1468,7 @@ void loadCacheSoundsCallback (const std::string &filename, intptr_t param)
 
 		debugLog("trying to load sound " + f);
 
-		Buffer b = sm->loadSoundIntoBank(f, "", "");
+		sm->loadSoundIntoBank(f, "", "");
 
 	}
 }

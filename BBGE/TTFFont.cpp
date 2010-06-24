@@ -143,7 +143,6 @@ void TTFText::updateFormatting()
 			float llx, lly, llz, urx, ury, urz;
 			font->font->BBox(originalText.substr(start, i-start).c_str(), llx, lly, llz, urx, ury, urz);
 			int w = urx - llx;
-			int h = ury - ury;
 			if (width != 0 && w >= width)
 			{
 				if (lastSpace != -1) {

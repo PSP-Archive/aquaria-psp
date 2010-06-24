@@ -898,8 +898,6 @@ void Continuity::loadIngredientData()
 
 	std::ifstream in("data/ingredients.txt");
 
-	int c = 0;
-
 	bool recipes = false;
 	while (std::getline(in, line))
 	{

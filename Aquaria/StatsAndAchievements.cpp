@@ -175,7 +175,6 @@ void StatsAndAchievements::RunFrame()
 
 		// Get generic achievement data...
 		io = fopen("data/achievements.txt", "r");
-		char *ptr = NULL;
 		char buf[1024];
 		for (size_t i = 0; i < max_achievements; i++)
 		{

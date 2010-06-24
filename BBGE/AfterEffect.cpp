@@ -502,9 +502,9 @@ void AfterEffectManager::addEffect(Effect *e)
 		effects.push_back(e);
 	}
 	numEffects++;
-	float lowest = 9999;
+	//float lowest = 9999;
 	Vector base(0,0,0);
-	Vector *newPos = &base;
+	//Vector *newPos = &base;
 	//Vector *v;
 	e->position.x /= screenWidth;
 	//e->position.x *= xDivs;

@@ -1061,8 +1061,6 @@ std::string Core::getUserDataFolder()
 static int locateOneElement(char *buf)
 {
 	char *ptr;
-	char **rc;
-	char **i;
 	DIR *dirp;
 
 	if (access(buf, F_OK) == 0)
@@ -1108,7 +1106,6 @@ std::string Core::adjustFilenameCase(const char *_buf)
 	strcpy(buf, _buf);
 
 	char *ptr = buf;
-	char *prevptr = buf;
 	while ((ptr = strchr(ptr + 1, '/')) != 0)
 	{
 		*ptr = '\0';  // block this path section off

@@ -224,7 +224,7 @@ int l_getNoteColor(lua_State *L)
 
 int l_getRandNote(lua_State *L)
 {
-	int note = lua_tointeger(L, 1);
+	//int note = lua_tointeger(L, 1);
 
 	lua_pushnumber(L, dsq->getRandNote());
 	return 1;
@@ -4904,7 +4904,6 @@ int l_entity_setTarget(lua_State *L)
 {
 	Entity *e = entity(L);
 	Entity *t = 0;
-	int tv=0;
 	if (lua_touserdata(L, 2) != NULL)
 	{
 		t = entity(L, 2);

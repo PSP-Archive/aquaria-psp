@@ -108,10 +108,8 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 	{
 		int hours, minutes, seconds;
 		hours = minutes = seconds = 0;
-		int x = atoi(startData->Attribute("x"));
-		int y = atoi(startData->Attribute("y"));
 
-		int exp, money, time=0;
+		int exp = 0, money = 0, time = 0;
 		if (startData->Attribute("exp"))
 			exp = atoi(startData->Attribute("exp"));
 		if (startData->Attribute("money"))

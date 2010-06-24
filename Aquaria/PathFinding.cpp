@@ -442,7 +442,7 @@ void PathFinding::molestPath(VectorPath &path)
 
 	// kill bowls
 	int start = 0;
-	int minDist = 150;
+	//int minDist = 150;
 	int runs=0;
 	bool hadSuccess = false;
 	int lastSuccessNode = 0;

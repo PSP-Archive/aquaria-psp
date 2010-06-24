@@ -1479,8 +1479,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	loadBit();
 
-	int i = 0;
-
 	renderObjectLayers[LR_ENTITIES].startPass = -2;
 	renderObjectLayers[LR_ENTITIES].endPass = 5;
 
@@ -4931,7 +4929,6 @@ void DSQ::pauseCutscene(bool on)
 
 void DSQ::cutsceneEffects(bool on)
 {
-	const float t = 0.2;
 	if (cutscene_bg && cutscene_text && cutscene_text2)
 	{
 		if (canSkipCutscene())

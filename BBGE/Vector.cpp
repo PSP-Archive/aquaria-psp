@@ -403,7 +403,7 @@ Vector VectorPath::getValue(float percent)
 	}
 	else if (from && target)
 	{
-		bool smoothing = false;
+		//bool smoothing = false;
 		Vector v;
 		float perc=0;
 		perc = ((usePercent - from->percent)/(target->percent-from->percent));

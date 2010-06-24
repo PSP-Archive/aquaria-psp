@@ -214,7 +214,6 @@ void RenderObjectLayer::sort()
 				{
 					RenderObject *temp;
 					temp = renderObjects[j];
-					int temp2 = renderObjects[j]->getIdx();
 					renderObjects[j] = renderObjects[j+1];
 					renderObjects[j+1] = temp;
 
