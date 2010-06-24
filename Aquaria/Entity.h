@@ -677,7 +677,6 @@ protected:
 	void onUpdate(float dt);
 
 	Vector pushVec;
-	Vector lastVel;
 	float pushDamage;
 
 

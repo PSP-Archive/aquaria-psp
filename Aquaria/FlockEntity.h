@@ -65,6 +65,4 @@ protected:
 	FlockEntity *nextInFlock, *prevInFlock;
 	FlockEntity *nearestFlockMate;
 	float nearestDistance;
-
-	Vector averageVectors(const VectorSet &vectors, int maxNum=0);
 };

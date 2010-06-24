@@ -110,30 +110,6 @@ void FlockEntity::destroy()
 	CollideEntity::destroy();
 }
 
-Vector FlockEntity::averageVectors(const VectorSet &vectors, int maxNum)
-{
-	Vector avg;
-	int c= 0;
-	for (VectorSet::const_iterator i = vectors.begin(); i != vectors.end(); i++)
-	{
-		if (maxNum != 0 && c >= maxNum)
-			break;
-		avg.x += (*i).x;
-		avg.y += (*i).y;
-		c++;
-		//avg.z += vectors[i].z;
-	}
-	//int sz = vectors.size();
-
-	if (c != 0)
-	{
-		avg.x /= float(c);
-		avg.y /= float(c);
-	}
-	//avg.z /= vectors.size();
-	return avg;
-}
-
 
 void FlockEntity::updateFlockData(void)
 {
