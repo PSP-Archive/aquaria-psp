@@ -314,8 +314,6 @@ void SchoolFish::applyAvoidance(Vector &accumulator)
 			accumulator += diff;
 		}
 	}
-
-
 }
 
 inline
@@ -368,34 +366,25 @@ void SchoolFish::applySeparation(Vector &accumulator)
 	FlockEntity *e = getNearestFlockEntity();
 	if (e)
 	{
-		Vector change;
-		float ratio;
-		change = e->position - this->position;
-		float nearestFlockEntityDist = change.getLength2D();
-		ratio = nearestFlockEntityDist / separationDistance;
-		if (ratio < minUrgency) ratio = minUrgency;
-		else if (ratio > maxUrgency) ratio = maxUrgency;
-		ratio *= strengthSeparation;
-
-		if (nearestFlockEntityDist < separationDistance)
+		const float dist = getNearestFlockEntityDist();
+		if (dist < separationDistance)
 		{
+			float ratio = dist / separationDistance;
+			if (ratio < minUrgency) ratio = minUrgency;
+			else if (ratio > maxUrgency) ratio = maxUrgency;
+			ratio *= strengthSeparation;
+			Vector change(e->position - this->position);
 			if (!change.isZero())
+			{
 				change.setLength2D(-ratio);
-           //Change.SetMagnitudeOfVector(-Ratio)
-        // Are we too far from nearest flockmate?  Then Move Closer
-		/*
-        else if (nearestFlockEntityDist > separationDistance)
-			change |= ratio;
-			*/
+		        	accumulator += change;
+			}
 		}
-        else
-            change = Vector(0,0,0);
-        // Add Change to Accumulator
+	        // Are we too far from nearest flockmate?  Then Move Closer
 		/*
-        if Flock <> nil then
-           Flock.BoidApplyRule( Self, fbSeparation, Accumulator, Change );
+        	else if (dist > separationDistance)
+			change |= ratio;
 		*/
-        accumulator += change;
 	}
 }
 
@@ -568,13 +557,13 @@ void SchoolFish::onUpdate(float dt)
 
 
 			Vector lastPosition = position;
-			Vector newPosition = position + (vel*velocityScale*dt) + vel2*dt;
-			position = newPosition;
+			position += (vel*velocityScale + vel2) * dt;
 
 			if (dsq->game->isObstructed(position))
 			{
 				position = lastPosition;
 				/*
+				Vector newPosition = position;
 				position = Vector(newPosition.x, lastPosition.y);
 				if (dsq->game->isObstructed(position))
 				{
@@ -637,10 +626,6 @@ void SchoolFish::onUpdate(float dt)
 
 			//rotateToVec(accumulator, 5, 90);
 
-			// FIXME: Changed to atan2f() to avoid potential
-			// division by zero, but kept X positive to keep
-			// the angle within [-90,90].  Can the logic change
-			// to deal with angles in [-180,180]?  --achurch
 			float angle = atan2f(dir.x<0 ? -dir.y : dir.y, fabsf(dir.x));
 			angle = ((angle*180)/PI);
 

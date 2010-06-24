@@ -60,6 +60,7 @@ protected:
 	Vector getFlockCenter() const {return flock ? flock->center : Vector(0,0,0);}
 	Vector getFlockHeading() const {return flock ? flock->heading : Vector(0,0,0);}
 	FlockEntity *getNearestFlockEntity() const {return nearestFlockMate;}
+	float getNearestFlockEntityDist() const {return nearestDistance;}
 
 	Flock *flock;
 	FlockEntity *nextInFlock, *prevInFlock;
