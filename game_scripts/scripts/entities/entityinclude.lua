@@ -50,6 +50,7 @@ BEACON_SONGCAVE			= 7
 PLAT_WIN				= 0
 PLAT_MAC				= 1
 PLAT_LNX				= 2
+PLAT_PSP				= 1000  -- Avoid conflicting with official port IDs
 
 -- ingredient effect types
 IET_NONE		= -1

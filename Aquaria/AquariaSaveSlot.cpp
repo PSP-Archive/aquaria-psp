@@ -64,8 +64,6 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 	*/
 
 
-	bool tmp=false;
-
 	// FIXME: Loading code here is duplicated from Continuity.cpp.
 	// Ideally, we should coalesce them into a single routine.  --achurch
 
@@ -91,6 +89,8 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 	delete[] buffer;
 
 #else  // !BBGE_BUILD_PSP
+
+	bool tmp = false;
 
 	std::string teh_file = dsq->continuity.getSaveFileName(slot, "aqs");
 

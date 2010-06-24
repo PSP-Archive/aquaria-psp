@@ -2271,6 +2271,11 @@ bool Core::createWindow(int width, int height, int bits, bool fullscreen, std::s
 							GetDesktopWindow(), NULL, wc.hInstance, NULL );
 	return true;
 #endif
+
+#ifdef BBGE_BUILD_PSP
+	redBits = greenBits = blueBits = alphaBits = 8;
+	return true;
+#endif
 }
 
 // No longer part of C/C++ standard
@@ -2869,9 +2874,12 @@ void Core::main(float runTime)
 	float dt;
 	float counter = 0;
 	int frames = 0;
-	bool wasInactive = false;
 	float real_dt = 0;
 	//std::ofstream out("debug.log");
+
+#if (!defined(_DEBUG) || defined(BBGE_BUILD_UNIX)) && defined(BBGE_BUILD_SDL)
+	bool wasInactive = false;
+#endif
 
 #ifdef BBGE_BUILD_GLFW
 	if (runTime == -1)

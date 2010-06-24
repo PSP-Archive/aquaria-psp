@@ -555,8 +555,6 @@ FMOD_RESULT PSPSystem::createSound(const char *name_or_data, const FMOD_MODE mod
 {
     assert(!exinfo);
 
-    FMOD_RESULT retval = FMOD_ERR_INTERNAL;
-
     uint32_t fileofs = 0, filesize = 0;
     SoundFormat format;
     SysFile *file = psp_open_sound(name_or_data, fileofs, filesize, format);

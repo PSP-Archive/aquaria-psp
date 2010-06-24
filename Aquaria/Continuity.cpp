@@ -2505,8 +2505,6 @@ void Continuity::loadFile(int slot)
 	dsq->user.save();
 	this->reset();
 
-	bool tmp=false;
-
 	TiXmlDocument doc;
 
 #ifdef BBGE_BUILD_PSP
@@ -2528,6 +2526,8 @@ void Continuity::loadFile(int slot)
 	delete[] buffer;
 
 #else  // !BBGE_BUILD_PSP
+
+	bool tmp = false;
 
 	std::string teh_file = dsq->continuity.getSaveFileName(slot, "aqs");
 

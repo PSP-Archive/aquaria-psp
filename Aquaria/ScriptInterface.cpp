@@ -3084,6 +3084,8 @@ int l_isPlat(lua_State *L)
 	v = (plat == 1);
 #elif BBGE_BUILD_UNIX
 	v = (plat == 2);
+#elif BBGE_BUILD_PSP
+	v = (plat == 1000);
 #endif
 	lua_pushboolean(L, v);
 	return 1;
