@@ -260,15 +260,25 @@ void SchoolFish::applyAvoidance(Vector &accumulator)
 
 	if (avoidTime>0) return;
 
-	int range = 10;
+#ifdef BBGE_BUILD_PSP 
+	// We can't afford the time to check every tile on the PSP, so we only
+	// check one in every three.  This may cause fish to get stuck on small
+	// (1x1 or 2x2) unconnected obstructions.  (FIXME: Is there any other
+	// way we can store obstructions to allow more efficient checking?)
+	const int range = 9;
+	const int step = 3;
+#else
+	const int range = 10;
+	const int step = 1;
+#endif
 	int radius = range*TILE_SIZE;
 	int obsSumX = 0, obsSumY = 0;  // Not a Vector (avoid using floats)
 	int obsCount = 0;
 	const TileVector t0(position);
 	TileVector t;
-	for (t.x = t0.x-range; t.x <= t0.x+range; t.x++)
+	for (t.x = t0.x-range; t.x <= t0.x+range; t.x += step)
 	{
-		for (t.y = t0.y-range; t.y <= t0.y+range; t.y++)
+		for (t.y = t0.y-range; t.y <= t0.y+range; t.y += step)
 		{
 			if (dsq->game->isObstructed(t))
 			{
