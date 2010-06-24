@@ -641,26 +641,6 @@ static int fread_int(FILE *file, int size)
 #endif
 }
 
-static float fread_float(FILE *file)
-{
-	union
-	{
-		int i;
-		float f; 
-	} buffer;
-	
-	//input.read((char *)&buffer.i, 4);
-	if (fread(&buffer, 4, 1, file) != 1)
-		return 0;
-
-#ifdef BBGE_BUILD_SDL
-	buffer.i = SDL_SwapLE32(buffer.i);
-	return buffer.f;
-#else
-	return buffer.f;
-#endif
-}
-
 #ifdef BBGE_BUILD_WINDOWS
 	#define byte char
 #endif
