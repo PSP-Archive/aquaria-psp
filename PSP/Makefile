@@ -45,7 +45,7 @@ USE_INSTALLED_LUA = 1
 
 #-------------------------------------
 
-# CAN_OVERRIDE_STRTOF:  If nonzero, the code will assume it can override
+# CAN_OVERRIDE_STRTOF:  If set to 1, the code will assume it can override
 # the strtof() function provided by libc with a custom, optimized version.
 # This is not the case for the stock distribution of newlib (at least
 # through 1.16.0), but can be fixed by adding __attribute__((weak)) to the
@@ -58,14 +58,14 @@ CAN_OVERRIDE_STRTOF = 1
 
 #-------------------------------------
 
-# WARNINGS_AS_ERRORS:  If nonzero, the PSP-specific code will be compiled
-# with -Werror to cause the build to abort if a warning is detected.
+# WARNINGS_AS_ERRORS:  If set to 1, the source code will be compiled with
+# -Werror to cause the build to abort if a warning is detected.
 
 WARNINGS_AS_ERRORS = 1
 
 #-------------------------------------
 
-# ALLOW_SETTINGS_OVERRIDE:  If nonzero, the program will attempt to open
+# ALLOW_SETTINGS_OVERRIDE:  If set to 1, the program will attempt to open
 # "usersettings.xml" from the installation directory before loading the
 # standard settings file from the PSP save data directory.  If the
 # "usersettings.xml" file is present, its settings will be used instead
@@ -79,10 +79,11 @@ ALLOW_SETTINGS_OVERRIDE = 0
 
 #-------------------------------------
 
-# DISABLE_SOUND_CACHE:  Disable the caching of sound effects in memory.
-# This frees up precious memory for game data, but it will cause the game
-# to freeze every time a sound effect is played unless you use a package
-# file for game data and you have a sufficiently fast Memory Stick.
+# DISABLE_SOUND_CACHE:  If set to 1, caching of sound effects in memory
+# will be disabled.  This frees up precious memory for game data, but
+# it will cause the game to freeze every time a sound effect is played
+# unless you use a package file for game data and you have a sufficiently
+# fast Memory Stick.
 
 DISABLE_SOUND_CACHE = 1
 
@@ -112,7 +113,7 @@ CC       = psp-gcc
 CXX      = psp-g++
 CFLAGS   = -pipe -g -O3 -G0 -I$(PSPSDK)/include \
            -Wall -Wstrict-prototypes -Wmissing-prototypes $(-Werror)
-CXXFLAGS = -pipe -g -O3 -G0 -I$(PSPSDK)/include -fsigned-char
+CXXFLAGS = -pipe -g -O3 -G0 -I$(PSPSDK)/include -fsigned-char -Wall $(-Werror)
 LDFLAGS  = -specs=$(PSPSDK)/lib/prxspecs -Wl,-q,-T$(PSPSDK)/lib/linkfile.prx \
            -L$(PSPSDK)/lib
 LIBS     = $(-llua) $(-lfreetype) $(-lvorbisfile) $(-lvorbis) $(-logg) \
@@ -217,7 +218,9 @@ BBGE_SOURCES     = $(BBGE_DIR)/glfont2/glfont2.cpp \
                    ${BBGE_DIR}/FTGL/src/FTSize.cpp \
                    ${BBGE_DIR}/FTGL/src/FTTextureGlyph.cpp
 BBGE_OBJECTS    := $(BBGE_SOURCES:%.cpp=%.o)
-BBGE_CXXFLAGS    = $(CXXFLAGS) $(-I_freetype) $(-I_libogg) $(-I_libvorbis) \
+BBGE_CXXFLAGS    = $(CXXFLAGS) -Wno-reorder -Wno-sign-compare \
+                   -Wno-strict-overflow -Wno-switch \
+                   $(-I_freetype) $(-I_libogg) $(-I_libvorbis) \
                    -Isrc $(-DCAN_OVERRIDE_STRTOF) \
                    -I$(BBGE_DIR) -I$(BBGE_DIR)/GL -I$(BBGE_DIR)/FTGL/include \
                    -DTIXML_USE_STL=1 -DBBGE_BUILD_PSP=1 -DBBGE_BUILD_OPENGL=1 \
