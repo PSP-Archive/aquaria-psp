@@ -250,8 +250,9 @@ const int spreadCheck = 128;
 // travel the list until you find an empty or give up
 Particle *ParticleManager::stomp()
 {
-	int c = 0, idx = -1, bFree = free;
-	Particle *p=0;
+	int c = 0, idx = -1;
+	//int bFree = free;
+	Particle *p = 0;
 	bool exceed = false;
 
 

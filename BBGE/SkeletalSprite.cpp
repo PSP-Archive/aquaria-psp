@@ -115,7 +115,7 @@ Quad* Bone::addFrame(const std::string &gfx)
 
 void Bone::showFrame(int idx)
 {
-	float t = 0.1;
+	//float t = 0.1;
 	int c = 0;
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
 	{

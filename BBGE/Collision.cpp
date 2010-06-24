@@ -98,8 +98,6 @@ CollisionResult CollisionShape::findOverlap(CollisionShape &collisionShape)
 		case AABB:
 		{
 			
-			float tx = collisionShape.position.x;
-			float ty = collisionShape.position.y;
 			float txw = collisionShape.xw;
 			float tyw = collisionShape.yw;
 							

@@ -553,7 +553,7 @@ static void bark_noise_hybridmp(int n,const long *b,
   int i;
 
   int lo, hi;
-  float R, A, B, D;
+  float R, A=0, B=0, D=0;
   float w, x, y;
 
   tN = tX = tXX = tY = tXY = 0.f;
@@ -1214,7 +1214,7 @@ void hf_reduction(vorbis_info_psy_global *g,
  
   int i,j,n=p->n, de=0.3*p->m_val;
   int limit=g->coupling_pointlimit[p->vi->blockflag][PACKETBLOBS/2];
-  int start=p->vi->normal_start;
+  /* int start=p->vi->normal_start; */
   
   for(i=0; i<vi->coupling_steps; i++){
     /* for(j=start; j<limit; j++){} // ???*/

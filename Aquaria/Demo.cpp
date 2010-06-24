@@ -82,7 +82,7 @@ void Demo::save(const std::string &name)
 	// UNFINISHED
 	for (int i = 0; i < frames.size(); i++)
 	{
-		DemoFrame *frame = &frames[i];
+		//DemoFrame *frame = &frames[i];
 		TiXmlElement xmlDemoFrame("DemoFrame");
 		std::ostringstream os;
 		//os << frame->avatarPos.x << " " << frame->avatarPos.y << " " << frame->mouse;

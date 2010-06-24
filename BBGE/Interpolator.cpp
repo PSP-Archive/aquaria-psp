@@ -142,11 +142,8 @@ void Interpolator::update (float dt)
 				if (pingPong)
 				{
 					interpolateTo (from, timePeriod, loopType);
-					/*
-					if(*updatee > to) *updatee = 0;
-					if(*updatee < from) *updatee = 255;
-					*/
-			/*
+					//if(*updatee > to) *updatee = 0;
+					//if(*updatee < from) *updatee = 255;
 				}
 				else
 				{

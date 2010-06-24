@@ -63,7 +63,7 @@ void CurrentRender::onRender()
 #ifdef BBGE_BUILD_OPENGL
 	// note: Leave cull_face disabled!?
 	glDisable(GL_CULL_FACE);
-	int qs = 0;
+	//int qs = 0;
 	for (Path *p = dsq->game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
 	{
 		if (p->active)
@@ -165,7 +165,7 @@ void CurrentRender::onRender()
 					p2 += d*0.75f;
 					diff = p2 - p1;
 
-					bool edge = false;
+					//bool edge = false;
 
 					/*
 					if (n == 0)
@@ -202,7 +202,7 @@ void CurrentRender::onRender()
 						Vector r8 = p2+pr;
 						float len = diff.getLength2D();
 						float texScale = len/256.0f;
-						float texScale2 = texScale;
+						//float texScale2 = texScale;
 
 						/*
 						if (edge)

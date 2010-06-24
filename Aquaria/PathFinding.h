@@ -85,9 +85,11 @@ public:
 
 //#define USE_FSA_MEMORY 1
 
+#ifdef _MSC_VER
 // disable warning that debugging information has lines that are truncated
 // occurs in stl headers
 #pragma warning( disable : 4786 )
+#endif
 
 #define UserState MapSearchNode
 // The AStar search class. UserState is the users state space type

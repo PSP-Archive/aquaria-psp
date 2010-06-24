@@ -390,7 +390,7 @@ void PathFinding::molestPath(VectorPath &path)
 				/*
 				if (dist > maxDist)
 					maxDist = dist;
-				n *= (maxDist-dist);//*(1.0f-coverage);
+				n *= (maxDist-dist); // *(1.0-coverage);
 				*/
 				n.setLength2D(200);
 				TileVector test(node + n);
@@ -444,7 +444,7 @@ void PathFinding::molestPath(VectorPath &path)
 
 	// kill bowls
 	int start = 0;
-	int minDist = 150;
+	//int minDist = 150;
 	int runs=0;
 	bool hadSuccess = false;
 	int lastSuccessNode = 0;

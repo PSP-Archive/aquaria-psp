@@ -2318,7 +2318,7 @@ void Avatar::updateSingingInterface(float dt)
 			//core->setMousePosition(Vector(400,300)+dist/*dsq->game->avatar->position + dist - core->screenCenter*/);
 			//HACK: constrain the mouse to the circle
 			/*
-			if (dist.getSquaredLength2D() > sqr(singingInterfaceRadius*core->invGlobalScale))//*core->invGlobalScale))
+			if (dist.getSquaredLength2D() > sqr(singingInterfaceRadius*core->invGlobalScale))
 			{
 
 				dist |= singingInterfaceRadius*core->invGlobalScale-20;
@@ -2675,7 +2675,6 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 	if (targetUpdateDelay < 0)
 		targetUpdateDelay = 0;
 	//bool big = false;
-	Entity *target = 0;
 
 	Vector dir;
 	Vector p = position;
@@ -2694,10 +2693,7 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 	bool aimAt = (dir.z == 1.0f);
 	//bool aimAt = true;
 	dir.z = 0;
-	Entity *closest = 0;
 	Vector targetPosition;
-
-	int maxTargets = 1;
 
 	//std::vector<Target>targets;
 
@@ -2863,7 +2859,7 @@ void Avatar::spawnSeed()
 	{
 		if (!dsq->game->isObstructed(TileVector(position)))
 		{
-			Entity *seed = dsq->game->createEntity("SporeChild", 0, position, 0, 0, "");
+			dsq->game->createEntity("SporeChild", 0, position, 0, 0, "");
 		}
 	}
 	else
@@ -3115,7 +3111,7 @@ void Avatar::formAbility(int ability)
 					else if (chargeLevelAttained == 2)
 						seedName = "SeedUberVine";
 
-					Shot *s = dsq->game->fireShot(seedName, this, 0, pos, getAim());
+					dsq->game->fireShot(seedName, this, 0, pos, getAim());
 
 
 					/*
@@ -3204,7 +3200,6 @@ void Avatar::formAbility(int ability)
 						Entity *target = 0;
 						if (s->shotData->homing > 0)
 						{
-							int sml = -1;
 							Vector p = dsq->getGameCursorPosition();
 							target = dsq->game->getNearestEntity(p, 800, this, ET_ENEMY, s->shotData->damageType);
 						}
@@ -3524,7 +3519,6 @@ void Avatar::doShock(const std::string &shotName)
 	Vector aim = getAim();
 	aim.normalize2D();
 	int sz = entitiesToHit.size();
-	float spread = PI;
 
 
 
@@ -5856,7 +5850,7 @@ void Avatar::doRangePull(float dt)
 
 	if (total.x != 0 || total.y != 0)
 	{
-		float vlen = vel.getLength2D();
+		//float vlen = vel.getLength2D();
 		//float len = (range*TILE_SIZE - avgDist)/range*TILE_SIZE;
 		//if (len > 0)
 		{
@@ -6307,7 +6301,7 @@ void Avatar::clampVelocity()
 
 
 	setMaxSpeed(currentMaxSpeed * useSpeedMult);
-	float cheatLen = vel.getSquaredLength2D();
+	//float cheatLen = vel.getSquaredLength2D();
 	vel.capLength2D(getMaxSpeed());
 	/*
 	if (cheatLen > sqr(getMaxSpeed()))
@@ -7431,7 +7425,7 @@ void Avatar::onUpdate(float dt)
 		if (waterBubble)
 			fallOutSpeed = 400;
 		*/
-		bool waterBubbleRect = (waterBubble && waterBubble->pathShape == PATHSHAPE_RECT);
+		//bool waterBubbleRect = (waterBubble && waterBubble->pathShape == PATHSHAPE_RECT);
 
 		//&& !waterBubbleRect
 		if (!riding && (!bursting && vel.isLength2DIn(fallOutSpeed)))
@@ -8342,7 +8336,7 @@ void Avatar::onUpdate(float dt)
 					{
 						urchinDelay = 0.1;
 
-						Shot *s = dsq->game->fireShot("urchin", this, 0, position + offset);
+						dsq->game->fireShot("urchin", this, 0, position + offset);
 					}
 				}
 			}
@@ -8387,7 +8381,7 @@ void Avatar::onUpdate(float dt)
 				{
 					shot = "SuperBite";
 				}
-				Shot *s = dsq->game->fireShot(shot, this, 0, p);
+				dsq->game->fireShot(shot, this, 0, p);
 				//s->setAimVector(getNormal());
 			}
 		}
@@ -8401,7 +8395,7 @@ void Avatar::onUpdate(float dt)
 				if (fishPoison > 0.2f)
 				{
 					fishPoison = 0;
-					Shot *s = dsq->game->fireShot("FishPoison", this, 0, position);
+					dsq->game->fireShot("FishPoison", this, 0, position);
 				}
 			}
 		}
@@ -8808,7 +8802,7 @@ void Avatar::onUpdate(float dt)
 			}
 		}
 
-		int currentSwimSpeed = 400;
+		//int currentSwimSpeed = 400;
 		//if (dsq->continuity.getWorldType() == WT_SPIRIT)
 		/*
 		if (dsq->continuity.form == FORM_SPIRIT)
@@ -8942,13 +8936,10 @@ void Avatar::onUpdate(float dt)
 			idleAnimDelay -= dt;
 			if (idleAnimDelay <= 0)
 			{
-				idleAnimDelay = 1.5;/*anim_idle.time*2;*/
+				idleAnimDelay = 1.5;//anim_idle.time*2;
 
-				/*
-				if (currentAction == IDLE && (!skeletalSprite.isAnimating() || skeletalSprite.getCurrentAnimation()->name=="swim"
-					|| skeletalSprite.getCurrentAnimation()->name=="a1"))
-				*/
-			/*
+				//if (currentAction == IDLE && (!skeletalSprite.isAnimating() || skeletalSprite.getCurrentAnimation()->name=="swim"
+				//	|| skeletalSprite.getCurrentAnimation()->name=="a1"))
 				if (currentAction == STATE_IDLE)
 				{
 					skeletalSprite.transitionAnimate("idle", ANIM_TRANSITION);
@@ -8977,7 +8968,8 @@ void Avatar::onUpdate(float dt)
 		//static bool lastSpreadUp = false;
 		if (!rolling && !internalOffset.isInterpolating())
 		{
-			int spread = 8, rotSpread = 45;
+			int spread = 8;
+			//int rotSpread = 45;
 			float t = 1;
 
 			internalOffset = Vector(-spread, 0);
@@ -9063,7 +9055,6 @@ void Avatar::onUpdate(float dt)
 		}
 
 		Vector targetScale(1,1);
-		float zoomVel = 0;
 		if (zoomOverriden || isEntityDead() || core->globalScale.isInterpolating())
 		{
 
@@ -9316,7 +9307,6 @@ void Avatar::onUpdate(float dt)
 							}
 							else
 							{
-								float len = vel.getLength2D();
 								position = lastPosition;
 
 								// works as long as not buried in wall ... yep. =(
@@ -9634,7 +9624,6 @@ bool Avatar::checkWarpAreas()
 				if (!p->warpMap.empty() && p->pathType == PATH_WARP)
 				{
 					int range = 512;
-					int width = 128;
 					switch(p->warpType)
 					{
 					case 'C':

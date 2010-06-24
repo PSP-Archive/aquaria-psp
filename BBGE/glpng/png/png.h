@@ -94,10 +94,9 @@
 #ifndef _PNG_H
 #define _PNG_H
 
-/*
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+//#ifdef __cplusplus
+//extern "C" {
+//#endif /* __cplusplus */
 
 /* This is not the place to learn how to use libpng.  The file libpng.txt
  * describes how to use libpng, and the file example.c summarizes it

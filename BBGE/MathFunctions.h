@@ -20,9 +20,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Base.h"
 
+#ifdef __GNUC__
+	#define UNUSED __attribute__((unused))  // Avoid "unused function" warnings
+#else
+	#define UNUSED //nothing
+#endif
+
 namespace MathFunctions
 {
-	static void calculateAngleBetweenVectorsInDegrees(const Vector &vector1, const Vector &vector2, float &solutionAngle)
+	UNUSED static void calculateAngleBetweenVectorsInDegrees(const Vector &vector1, const Vector &vector2, float &solutionAngle)
 	{
 		Vector dist = vector1 - vector2;
 
@@ -38,12 +44,12 @@ namespace MathFunctions
 		solutionAngle += 90;
 	}
 
-	static float toRadians(float rot)
+	UNUSED static float toRadians(float rot)
 	{
 		return PI-(rot*PI)/180.0f;
 	}
 
-	static float getAngleToVector(const Vector &addVec, float offsetAngle = 0)
+	UNUSED static float getAngleToVector(const Vector &addVec, float offsetAngle = 0)
 	{
 		float angle=0;
 		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), addVec, angle);
@@ -52,7 +58,7 @@ namespace MathFunctions
 		return angle;
 	}
 
-	static void calculateAngleBetweenVectorsInRadians(Vector vector1, Vector vector2, float &solutionAngle)
+	UNUSED static void calculateAngleBetweenVectorsInRadians(Vector vector1, Vector vector2, float &solutionAngle)
 	{
 		Vector dist = vector1 - vector2;		
 		

@@ -668,7 +668,8 @@ void ScriptedEntity::sporesDropped(const Vector &pos, int type)
 	lua_pushnumber(L, pos.x);
 	lua_pushnumber(L, pos.y);
 	lua_pushnumber(L, type);
-	int fail = lua_pcall(L, 4, 0, 0);
+	//int fail =
+	lua_pcall(L, 4, 0, 0);
 	//if (fail) debugLog(name + " : " + lua_tostring(L, -1) + " sporesDropped");
 }
 
@@ -1069,7 +1070,7 @@ void ScriptedEntity::onDieNormal()
 	Entity::onDieNormal();
 	lua_getfield(L, LUA_GLOBALSINDEX, "dieNormal");
 	luaPushPointer(L, this);
-	int fail = lua_pcall(L, 1, 0, 0);
+	lua_pcall(L, 1, 0, 0);
 }
 
 void ScriptedEntity::onDieEaten()
@@ -1077,7 +1078,7 @@ void ScriptedEntity::onDieEaten()
 	Entity::onDieEaten();
 	lua_getfield(L, LUA_GLOBALSINDEX, "dieEaten");
 	luaPushPointer(L, this);
-	int fail = lua_pcall(L, 1, 0, 0);
+	lua_pcall(L, 1, 0, 0);
 }
 
 void ScriptedEntity::onEnterState(int action)
