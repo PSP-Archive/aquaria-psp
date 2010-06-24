@@ -10471,6 +10471,8 @@ void Game::update(float dt)
 		(*j)->postUpdate(dt);
 	}
 
+	FlockEntity::updateFlockData();
+
 	updateCurrentVisuals(dt);
 	updateCursor(dt);
 

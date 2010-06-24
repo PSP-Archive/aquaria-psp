@@ -27,6 +27,9 @@ FlockEntity::FlockEntity() : CollideEntity()
 {
 	flockType = FLOCK_FISH;
 	flock = 0;
+	nextInFlock = prevInFlock = 0;
+	nearestFlockMate = 0;
+	nearestDistance = HUGE_VALF;
 
 	angle = 0;
 
@@ -53,6 +56,30 @@ void FlockEntity::addToFlock(int id)
 	if (flock->firstEntity)
 		flock->firstEntity->prevInFlock = this;
 	flock->firstEntity = this;
+
+	nearestFlockMate = 0;
+	nearestDistance = HUGE_VALF;
+	int numEntities = 1;
+	for (FlockEntity *e = nextInFlock; e; e = e->nextInFlock)
+	{
+		numEntities++;
+		const float distance = (e->position - position).getLength2D();
+		if (distance < nearestDistance)
+		{
+			nearestFlockMate = e;
+			nearestDistance = distance;
+		}
+	}
+	if (numEntities == 1)
+	{
+		flock->center = position;
+		flock->heading = vel;
+	}
+	else
+	{
+		flock->center = (flock->center*(numEntities-1) + position) / numEntities;
+		flock->heading = (flock->heading*(numEntities-1) + vel) / numEntities;
+	}
 }
 
 void FlockEntity::removeFromFlock()
@@ -72,60 +99,15 @@ void FlockEntity::removeFromFlock()
 		}
 	}
 	flock = 0;
+	nextInFlock = prevInFlock = 0;
+	nearestFlockMate = 0;
+	nearestDistance = HUGE_VALF;
 }
 
 void FlockEntity::destroy()
 {
 	removeFromFlock();
 	CollideEntity::destroy();
-}
-
-Vector FlockEntity::getFlockCenter()
-{
-	Vector position;
-	int sz = 0;
-	for (FlockEntity *e = flock->firstEntity; e; e = e->nextInFlock)
-	{
-		position += e->position;
-		sz++;
-	}
-	position /= sz;
-	return position;
-}
-
-Vector FlockEntity::getFlockHeading()
-{
-	Vector v;
-	int sz = 0;
-	for (FlockEntity *e = flock->firstEntity; e; e = e->nextInFlock)
-	{
-		v += e->vel;
-		sz++;
-	}
-	v /= sz;
-	return v;
-}
-
-FlockEntity *FlockEntity::getNearestFlockEntity()
-{
-	FlockEntity *nearest = 0;
-	float smallDist = -1;
-	float dist = 0;
-	Vector distVec;
-	for (FlockEntity *e = flock->firstEntity; e; e = e->nextInFlock)
-	{
-		if (e != this)
-		{
-			distVec = (e->position - position);
-			dist = distVec.getSquaredLength2D();
-			if (dist < smallDist || smallDist == -1)
-			{
-				smallDist = dist;
-				nearest = e;
-			}
-		}
-	}
-	return nearest;
 }
 
 Vector FlockEntity::averageVectors(const VectorSet &vectors, int maxNum)
@@ -150,4 +132,48 @@ Vector FlockEntity::averageVectors(const VectorSet &vectors, int maxNum)
 	}
 	//avg.z /= vectors.size();
 	return avg;
+}
+
+
+void FlockEntity::updateFlockData(void)
+{
+	for (int flockID = 0; flockID < flocks.size(); flockID++)
+	{
+		Flock *flock = flocks[flockID];
+		if (flock)
+		{
+			flock->center = Vector(0,0,0);
+			flock->heading = Vector(0,0,0);
+			int numEntities = 0;
+			for (FlockEntity *e = flock->firstEntity; e; e = e->nextInFlock)
+			{
+				flock->center += e->position;
+				flock->heading += e->vel;
+				e->nearestFlockMate = 0;
+				e->nearestDistance = HUGE_VALF;
+				for (FlockEntity *e2 = flock->firstEntity; e2 != e; e2 = e2->nextInFlock)
+				{
+					const float distanceSqr = (e2->position - e->position).getSquaredLength2D();
+					if (distanceSqr < e->nearestDistance)
+					{
+						e->nearestFlockMate = e2;
+						// Record the square for now (we'll sqrt it later)
+						e->nearestDistance = distanceSqr;
+					}
+					if (distanceSqr < e2->nearestDistance)
+					{
+						e2->nearestFlockMate = e;
+						e2->nearestDistance = distanceSqr;
+					}
+				}
+				numEntities++;
+			}
+			for (FlockEntity *e = flock->firstEntity; e; e = e->nextInFlock)
+			{
+				e->nearestDistance = sqrtf(e->nearestDistance);
+			}
+			flock->center /= numEntities;
+			flock->heading /= numEntities;
+		}
+	}
 }

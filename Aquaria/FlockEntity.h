@@ -34,6 +34,7 @@ struct Flock
 
 	int flockID;
 	FlockEntity *firstEntity;
+	Vector center, heading;
 };
 
 class FlockEntity : public CollideEntity
@@ -48,17 +49,22 @@ public:
 	void removeFromFlock();
 	void destroy();
 
+	static void updateFlockData(void);
+
 	FlockType flockType;
-	Flock *flock;
-	FlockEntity *nextInFlock, *prevInFlock;
 	typedef std::vector<Vector> VectorSet;
 	float angle;
 
 protected:
 
-	Vector getFlockCenter();
-	Vector getFlockHeading();
-	FlockEntity *getNearestFlockEntity();
+	Vector getFlockCenter() const {return flock ? flock->center : Vector(0,0,0);}
+	Vector getFlockHeading() const {return flock ? flock->heading : Vector(0,0,0);}
+	FlockEntity *getNearestFlockEntity() const {return nearestFlockMate;}
+
+	Flock *flock;
+	FlockEntity *nextInFlock, *prevInFlock;
+	FlockEntity *nearestFlockMate;
+	float nearestDistance;
 
 	Vector averageVectors(const VectorSet &vectors, int maxNum=0);
 };
