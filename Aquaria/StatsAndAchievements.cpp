@@ -122,10 +122,12 @@ const int FLAG_MINIBOSS_END					= 720;
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
+#ifdef _MSC_VER
 #pragma warning( push )
 //  warning C4355: 'this' : used in base member initializer list
 //  This is OK because it's warning on setting up the Steam callbacks, they won't use this until after construction is done
 #pragma warning( disable : 4355 ) 
+#endif
 StatsAndAchievements::StatsAndAchievements()
 {
 	/*
@@ -158,7 +160,9 @@ StatsAndAchievements::StatsAndAchievements()
 		OutputDebugString( "Stats font was not created properly, text won't draw\n" );
 	*/
 }
+#ifdef _MSC_VER
 #pragma warning( pop )
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Run a frame for the CStatsAndAchievements
