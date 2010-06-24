@@ -7268,13 +7268,9 @@ luab(dsq->isInCutscene())
 
 luaf(toggleSteam)
 	bool on = getBool(L, 1);
-	for (int i = 0; i < dsq->game->paths.size(); i++)
+	for (Path *p = dsq->game->getFirstPathOfType(PATH_STEAM); p; p = p->nextOfType)
 	{
-		Path *p = dsq->game->paths[i];
-		if (p->pathType == PATH_STEAM)
-		{
-			p->setEffectOn(on);
-		}
+		p->setEffectOn(on);
 	}
 luab(on)
 

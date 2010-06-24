@@ -51,6 +51,7 @@ enum PathType
 	PATH_SETENT			= 13,
 	PATH_ZOOM			= 14
 };
+#define NUM_PATH_TYPES  (PATH_ZOOM+1)
 
 enum LocalWarpType
 {
@@ -120,6 +121,7 @@ public:
 	float animOffset;
 
 	PathType pathType;
+	Path *nextOfType;
 
 	int toFlip;
 

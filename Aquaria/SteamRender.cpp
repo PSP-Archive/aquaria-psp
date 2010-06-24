@@ -44,10 +44,9 @@ void SteamRender::onRender()
 	glDisable(GL_CULL_FACE);
 	//int qs = 0;
 
-	for (int i = 0; i < dsq->game->paths.size(); i++)
+	for (Path *p = dsq->game->getFirstPathOfType(PATH_STEAM); p; p = p->nextOfType)
 	{
-		Path *p = dsq->game->paths[i];
-		if (p->pathType == PATH_STEAM && p->effectOn)
+		if (p->effectOn)
 		{
 
 			int w2 = p->rect.getWidth()/2;

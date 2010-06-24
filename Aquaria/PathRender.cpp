@@ -31,13 +31,13 @@ PathRender::PathRender() : RenderObject()
 void PathRender::onRender()
 {	
 #ifdef BBGE_BUILD_OPENGL
-	const int pathcount = dsq->game->paths.size();
+	const int pathcount = dsq->game->getNumPaths();
 	if (pathcount <= 0)
 		return;
 
 	for (int i = 0; i < pathcount; i++)
 	{
-		Path *p = dsq->game->paths[i];
+		Path *p = dsq->game->getPath(i);
 		if (dsq->game->sceneEditor.selectedIdx == i)
 			glColor4f(1, 1, 1, 0.75);
 		else

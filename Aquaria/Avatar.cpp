@@ -614,9 +614,9 @@ void SongIcon::openNote()
 				e->songNote(note);
 			}
 		}
-		for (int i = 0; i < dsq->game->paths.size(); i++)
+		for (int i = 0; i < dsq->game->getNumPaths(); i++)
 		{
-			Path *p = dsq->game->paths[i];
+			Path *p = dsq->game->getPath(i);
 			if (!p->nodes.empty())
 			{
 				if ((p->nodes[0].position - dsq->game->avatar->position).getSquaredLength2D() < sqr(1000))
@@ -665,9 +665,9 @@ void SongIcon::closeNote()
 				e->songNoteDone(note, len);
 			}
 		}
-		for (int i = 0; i < dsq->game->paths.size(); i++)
+		for (int i = 0; i < dsq->game->getNumPaths(); i++)
 		{
-			Path *p = dsq->game->paths[i];
+			Path *p = dsq->game->getPath(i);
 			if (!p->nodes.empty())
 			{
 				if ((p->nodes[0].position - dsq->game->avatar->position).getSquaredLength2D() < sqr(1000))
@@ -9606,10 +9606,10 @@ void Avatar::onWarp()
 bool Avatar::checkWarpAreas()
 {
 	int i = 0;
-	for (i = 0; i < dsq->game->paths.size(); i++)
+	for (i = 0; i < dsq->game->getNumPaths(); i++)
 	{
 		bool warp = false;
-		Path *p = dsq->game->paths[i];
+		Path *p = dsq->game->getPath(i);
 		if (!p->nodes.empty())
 		{
 			PathNode *n = &p->nodes[0];

@@ -914,9 +914,9 @@ void SceneEditor::addSpringPlant()
 
 Path *SceneEditor::getSelectedPath()
 {
-	if (selectedIdx >=0 && selectedIdx < dsq->game->paths.size())
+	if (selectedIdx >= 0 && selectedIdx < dsq->game->getNumPaths())
 	{
-		return dsq->game->paths[selectedIdx];
+		return dsq->game->getPath(selectedIdx);
 	}
 	return 0;
 }
@@ -1187,7 +1187,7 @@ void SceneEditor::deleteSelected()
 		{
 			if (selectedIdx != -1)
 			{
-				Path *p = dsq->game->paths[selectedIdx];
+				Path *p = dsq->game->getPath(selectedIdx);
 				if (p->nodes.size() == 1)
 				{
 					dsq->game->removePath(selectedIdx);
@@ -1337,7 +1337,7 @@ void SceneEditor::enterMoveState()
 	}
 	else if (editType == ET_PATHS)
 	{
-		oldPosition = dsq->game->paths[selectedIdx]->nodes[selectedNode].position;
+		oldPosition = dsq->game->getPath(selectedIdx)->nodes[selectedNode].position;
 		cursorOffset = oldPosition - dsq->getGameCursorPosition();
 	}
 }
@@ -1729,9 +1729,9 @@ void SceneEditor::mouseButtonLeft()
 		/*
 		else if (selectedIdx != -1)
 		{
-			if (selectedIdx >= 0 && selectedIdx < dsq->game->paths.size())
+			if (selectedIdx >= 0 && selectedIdx < dsq->game->getNumPaths())
 			{
-				Path *p = dsq->game->paths[selectedIdx];
+				Path *p = dsq->game->getPath(selectedIdx);
 				PathNode n;
 				n.position = dsq->getGameCursorPosition();
 				p->nodes.push_back(n);
@@ -1739,9 +1739,9 @@ void SceneEditor::mouseButtonLeft()
 		}
 				else if (selectedIdx != -1)
 		{
-			if (selectedIdx >= 0 && selectedIdx < dsq->game->paths.size())
+			if (selectedIdx >= 0 && selectedIdx < dsq->game->getNumPaths())
 			{
-				Path *p = dsq->game->paths[selectedIdx];
+				Path *p = dsq->game->getPath(selectedIdx);
 				p->nodes[selectedNode] =
 				PathNode n;
 				n.position = dsq->getGameCursorPosition();
@@ -1770,7 +1770,7 @@ void SceneEditor::mouseButtonRight()
 		if (selectedIdx != -1)
 		{
 			debugLog("path scaling HERE!");
-			Path *p = dsq->game->paths[selectedIdx];
+			Path *p = dsq->game->getPath(selectedIdx);
 			editingPath = p;
 			if (core->getShiftState())
 			{
@@ -3124,8 +3124,8 @@ void SceneEditor::placeElement()
 			PathNode n;
 			n.position = dsq->getGameCursorPosition();
 			p->nodes.push_back(n);
-			dsq->game->paths.push_back(p);
-			selectedIdx = dsq->game->paths.size()-1;
+			dsq->game->addPath(p);
+			selectedIdx = dsq->game->getNumPaths()-1;
 		}
 		else
 		{
@@ -3135,9 +3135,9 @@ void SceneEditor::placeElement()
 				p->addNode(selectedNode);
 			}
 			/*
-			if (selectedIdx >= 0 && selectedIdx < dsq->game->paths.size())
+			if (selectedIdx >= 0 && selectedIdx < dsq->game->getNumPaths())
 			{
-				Path *p = dsq->game->paths[selectedIdx];
+				Path *p = dsq->game->getPath(selectedIdx);
 				PathNode n;
 				n.position = dsq->getGameCursorPosition();
 				p->nodes.push_back(n);
@@ -3205,8 +3205,8 @@ void SceneEditor::cloneSelectedElement()
 			newp->pathShape = p->pathShape;
 			newp->nodes[0].position += Vector(64,64);
 
-			dsq->game->paths.push_back(newp);
-			selectedIdx = dsq->game->paths.size()-1;
+			dsq->game->addPath(newp);
+			selectedIdx = dsq->game->getNumPaths()-1;
 		}
 	}
 
@@ -3535,11 +3535,11 @@ void SceneEditor::update(float dt)
 				selectedIdx = -1;
 				selectedNode = -1;
 				int smallestDist = -1;
-				for (int i = 0; i < dsq->game->paths.size(); i++)
+				for (int i = 0; i < dsq->game->getNumPaths(); i++)
 				{
-					for (int n = dsq->game->paths[i]->nodes.size()-1; n >=0; n--)
+					for (int n = dsq->game->getPath(i)->nodes.size()-1; n >=0; n--)
 					{
-						Vector v = dsq->game->paths[i]->nodes[n].position - dsq->getGameCursorPosition();
+						Vector v = dsq->game->getPath(i)->nodes[n].position - dsq->getGameCursorPosition();
 						int dist = v.getSquaredLength2D();
 						if (dist < sqr(64))
 						{
@@ -3573,7 +3573,7 @@ void SceneEditor::update(float dt)
 			}
 			break;
 			case ES_MOVING:
-				dsq->game->paths[selectedIdx]->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
+				dsq->game->getPath(selectedIdx)->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
 			break;
 			}
 		}

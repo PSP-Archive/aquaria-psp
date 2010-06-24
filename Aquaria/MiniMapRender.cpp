@@ -522,9 +522,10 @@ void MiniMapRender::onRender()
 	{
 		const int iconSize = sinf(game->getTimer()*PI)*6 + 14;
 		texRipple->apply();
-		for (int i = 0; i < dsq->game->paths.size(); i++)
+		// FIXME: use getFirstPathOfType?
+		for (int i = 0; i < dsq->game->getNumPaths(); i++)
 		{
-			Path *p = dsq->game->paths[i];
+			Path *p = dsq->game->getPath(i);
 			if (!p->nodes.empty() && (p->pathType==PATH_COOK || p->pathType==PATH_SAVEPOINT || p->pathType==PATH_WARP))
 			{
 				bool render = true;
