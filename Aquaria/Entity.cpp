@@ -3069,7 +3069,6 @@ bool Entity::updateLocalWarpAreas(bool affectAvatar)
 	int i = 0;
 	for (i = 0; i < dsq->game->paths.size(); i++)
 	{
-		bool warp = false;
 		Path *p = dsq->game->paths[i];
 		if (!p->nodes.empty())
 		{

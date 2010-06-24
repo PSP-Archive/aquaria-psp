@@ -76,12 +76,10 @@ void precacherCallback(const std::string &file, intptr_t param)
 	p->precacheTex(file);
 }
 
-/*
-precacheTex
-caches one texture 
-also support simple wildcard to cache multiple textures
-e.g. naija/*.png
-*/
+// precacheTex
+// caches one texture 
+// also support simple wildcard to cache multiple textures
+// e.g. naija/*.png
 void Precacher::precacheTex(const std::string &tex)
 {
 	if (tex.find("txt") != std::string::npos)

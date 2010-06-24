@@ -1102,9 +1102,7 @@ void RenderObject::lookAt(const Vector &pos, float t, float minAngle, float maxA
 		*/
 		offset = -offset;
 	}
-	float a = angle;
 	angle += offset;
-	float offsetAngle = angle;
 	if (angle < minAngle)
 		angle = minAngle;
 	if (angle > maxAngle)

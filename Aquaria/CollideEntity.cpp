@@ -103,7 +103,6 @@ void CollideEntity::updateMovement(float dt)
 {	
 	if (isEntityDead()) return;
 	if (position.isFollowingPath()) return;
-	bool setFromWater=false;
 	vel.capLength2D(getMaxSpeed()*maxSpeedLerp.x);
 	/*
 	if (vel.getSquaredLength2D() > sqr(getMaxSpeed()))

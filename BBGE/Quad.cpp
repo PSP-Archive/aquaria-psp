@@ -237,7 +237,6 @@ void Quad::spawnChildClone(float t)
 	//q->renderBeforeParent = false;
 	core->getTopStateData()->addRenderObject(q, this->layer);
 	//addChild(q);
-	int c = children.size();
 }
 /*
 smoothly transition to texture

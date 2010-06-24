@@ -661,8 +661,9 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	tophud->alpha = 0;
 	dsq->game->addRenderObject(tophud, LR_WORLDMAPHUD);
 
-	int fontSize = 6, aly=26, aly2=18;
-	float sz=0.6;
+	//int fontSize = 6;
+	float aly = 26, aly2 = 18;
+	float sz = 0.6;
 
 	//hover
 	areaLabel = new BitmapText(&dsq->smallFont);
@@ -865,8 +866,6 @@ void WorldMapRender::onUpdate(float dt)
 						{
 							if ((activeTile != selectedTile) && selectedTile->q)
 							{
-								WorldMapTile *oldTile = activeTile;
-
 								activeTile->q->deleteGrid();
 
 								activeTile = selectedTile;

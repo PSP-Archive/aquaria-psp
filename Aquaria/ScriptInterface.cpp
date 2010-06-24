@@ -233,7 +233,7 @@ int l_getNoteColor(lua_State *L)
 
 int l_getRandNote(lua_State *L)
 {
-	int note = lua_tointeger(L, 1);
+	//int note = lua_tointeger(L, 1);
 
 	lua_pushnumber(L, dsq->getRandNote());
 	return 1;
@@ -2826,12 +2826,12 @@ SkeletalSprite *getSkeletalSprite(Entity *e)
 	Avatar *a;
 	ScriptedEntity *se;
 	SkeletalSprite *skel = 0;
-	if (a=dynamic_cast<Avatar*>(e))
+	if ((a = dynamic_cast<Avatar*>(e)) != 0)
 	{
 		//a->skeletalSprite.transitionAnimate(lua_tostring(L, 2), 0.15, lua_tointeger(L, 3));
 		skel = &a->skeletalSprite;
 	}
-	else if (se=dynamic_cast<ScriptedEntity*>(e))
+	else if ((se = dynamic_cast<ScriptedEntity*>(e)) != 0)
 	{
 		skel = &se->skeletalSprite;
 	}
@@ -4915,7 +4915,6 @@ int l_entity_setTarget(lua_State *L)
 {
 	Entity *e = entity(L);
 	Entity *t = 0;
-	int tv=0;
 	if (lua_touserdata(L, 2) != NULL)
 	{
 		t = entity(L, 2);
@@ -7226,7 +7225,7 @@ int l_entity_getNearestEntity(lua_State *L)
 						if (damageTarget == 0 || e->isDamageTarget((DamageType)damageTarget))
 						{
 							int dist = (me->position - e->position).getSquaredLength2D();
-							if ((range == 0 || dist < range) && smallestDist == -1 || dist < smallestDist)
+							if ((range == 0 || dist < range) && (smallestDist == -1 || dist < smallestDist))
 							{
 								smallestDist = dist;
 								closest = e;
@@ -8083,9 +8082,8 @@ int l_getBeacon(lua_State *L)
 {
 	int index = lua_tointeger(L, 1);
 	bool v = false;
-	BeaconData *b = 0;
 
-	if (b = dsq->continuity.getBeaconByIndex(index))
+	if (dsq->continuity.getBeaconByIndex(index))
 	{
 		v = true;
 	}

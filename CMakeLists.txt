@@ -277,7 +277,6 @@ SET(BBGE_SRCS
     ${BBGEDIR}/LightCone.cpp
     ${BBGEDIR}/Light.cpp
     ${BBGEDIR}/Math.cpp
-    ${BBGEDIR}/PackRead.cpp
     ${BBGEDIR}/ParticleEffect.cpp
     ${BBGEDIR}/ParticleManager.cpp
     ${BBGEDIR}/Particles.cpp
@@ -317,6 +316,7 @@ SET(BBGE_SRCS_UNUSED
     ${BBGEDIR}/FileVars.cpp
     ${BBGEDIR}/Model.cpp
     ${BBGEDIR}/OggStream.cpp
+    ${BBGEDIR}/PackRead.cpp
     ${BBGEDIR}/PointSprites.cpp
 )
 
@@ -414,9 +414,16 @@ IF(MSVC)
         PROPERTIES COMPILE_FLAGS "-DFT_CONFIG_OPTION_SYSTEM_ZLIB -DFT2_BUILD_LIBRARY -I${FREETYPE2SRCDIR} -I${FREETYPE2DIR}/include/freetype/config -DHAVE_FCNTL_H"
     )
 ELSE(MSVC)
+    # FT2 seems to not be strict-aliasing safe, so disable that in GCC.
+    CHECK_C_COMPILER_FLAG("-fno-strict-aliasing" COMPILER_HAS_NOSTRICTALIAS)
+    IF(COMPILER_HAS_NOSTRICTALIAS)
+        SET(NOSTRICTALIAS "-fno-strict-aliasing")
+    ELSE(COMPILER_HAS_NOSTRICTALIAS)
+        SET(NOSTRICTALIAS "")
+    ENDIF(COMPILER_HAS_NOSTRICTALIAS)
     SET_SOURCE_FILES_PROPERTIES(
         ${FREETYPE2_SRCS}
-        PROPERTIES COMPILE_FLAGS "-DFT_CONFIG_OPTION_SYSTEM_ZLIB -DFT_CONFIG_CONFIG_H='\"${FREETYPE2DIR}/include/freetype/config/ftconfig.h\"' -DFT2_BUILD_LIBRARY -DFT_CONFIG_MODULES_H='\"${FREETYPE2DIR}/include/freetype/config/ftmodule.h\"' -I${FREETYPE2SRCDIR} -I${FREETYPE2DIR}/include/freetype/config -DHAVE_FCNTL_H"
+        PROPERTIES COMPILE_FLAGS "-DFT_CONFIG_OPTION_SYSTEM_ZLIB -DFT_CONFIG_CONFIG_H='\"${FREETYPE2DIR}/include/freetype/config/ftconfig.h\"' -DFT2_BUILD_LIBRARY -DFT_CONFIG_MODULES_H='\"${FREETYPE2DIR}/include/freetype/config/ftmodule.h\"' -I${FREETYPE2SRCDIR} -I${FREETYPE2DIR}/include/freetype/config -DHAVE_FCNTL_H ${NOSTRICTALIAS}"
     )
 ENDIF(MSVC)
 

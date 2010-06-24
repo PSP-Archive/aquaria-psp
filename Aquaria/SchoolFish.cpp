@@ -539,9 +539,6 @@ void SchoolFish::onUpdate(float dt)
 		*/
 
 
-		float seperation = 1;
-		float alignment = 0;
-		float cohesion = 0.75;
 		/*
 		FlockPiece flock;
 		getFlockInRange(160, &flock);

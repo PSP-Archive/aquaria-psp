@@ -1024,7 +1024,8 @@ void Core::initPlatform(const std::string &filesystem)
 		{
 			*ptr = '\0';
 			debugLog(path);
-			chdir(path);
+			if (chdir(path) != 0)
+				debugLog("Failed to chdir to executable path" + std::string(path));
 		}
 	}
 #endif
@@ -1060,8 +1061,6 @@ std::string Core::getUserDataFolder()
 static int locateOneElement(char *buf)
 {
 	char *ptr;
-	char **rc;
-	char **i;
 	DIR *dirp;
 
 	if (access(buf, F_OK) == 0)
@@ -1107,8 +1106,7 @@ std::string Core::adjustFilenameCase(const char *_buf)
 	strcpy(buf, _buf);
 
 	char *ptr = buf;
-	char *prevptr = buf;
-	while (ptr = strchr(ptr + 1, '/'))
+	while ((ptr = strchr(ptr + 1, '/')) != 0)
 	{
 		*ptr = '\0';  // block this path section off
 		rc = locateOneElement(buf);
@@ -2552,6 +2550,7 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 	D3DXMATRIXA16 matProj;
 	D3DXMatrixOrthoLH(&matProj, 800, 600, -5, 5);
 	g_pd3dDevice->SetTransform( D3DTS_PROJECTION, &matProj );
+	*/
 
 	// Create the viewport
 	/*
@@ -4865,22 +4864,22 @@ int Core::tgaSave(	char 		*filename,
 		type = 3;
 
 // write the header
-	fwrite(&cGarbage, sizeof(unsigned char), 1, file);
-	fwrite(&cGarbage, sizeof(unsigned char), 1, file);
-
-	fwrite(&type, sizeof(unsigned char), 1, file);
-
-	fwrite(&iGarbage, sizeof(short int), 1, file);
-	fwrite(&iGarbage, sizeof(short int), 1, file);
-	fwrite(&cGarbage, sizeof(unsigned char), 1, file);
-	fwrite(&iGarbage, sizeof(short int), 1, file);
-	fwrite(&iGarbage, sizeof(short int), 1, file);
-
-	fwrite(&width, sizeof(short int), 1, file);
-	fwrite(&height, sizeof(short int), 1, file);
-	fwrite(&pixelDepth, sizeof(unsigned char), 1, file);
-
-	fwrite(&cGarbage, sizeof(unsigned char), 1, file);
+	if (fwrite(&cGarbage, sizeof(unsigned char), 1, file) != 1
+		|| fwrite(&cGarbage, sizeof(unsigned char), 1, file) != 1
+		|| fwrite(&type, sizeof(unsigned char), 1, file) != 1
+		|| fwrite(&iGarbage, sizeof(short int), 1, file) != 1
+		|| fwrite(&iGarbage, sizeof(short int), 1, file) != 1
+		|| fwrite(&cGarbage, sizeof(unsigned char), 1, file) != 1
+		|| fwrite(&iGarbage, sizeof(short int), 1, file) != 1
+		|| fwrite(&iGarbage, sizeof(short int), 1, file) != 1
+		|| fwrite(&width, sizeof(short int), 1, file) != 1
+		|| fwrite(&height, sizeof(short int), 1, file) != 1
+		|| fwrite(&pixelDepth, sizeof(unsigned char), 1, file) != 1
+		|| fwrite(&cGarbage, sizeof(unsigned char), 1, file))
+	{
+		fclose(file);
+		return (int)false;
+	}
 
 // convert the image data from RGB(a) to BGR(A)
 	if (mode >= 3)
@@ -4891,8 +4890,13 @@ int Core::tgaSave(	char 		*filename,
 	}
 
 // save the image data
-	fwrite(imageData, sizeof(unsigned char),
-			width * height * mode, file);
+	if (fwrite(imageData, sizeof(unsigned char),
+			width * height * mode, file) != width * height * mode)
+	{
+		fclose(file);
+		return (int)false;
+	}
+
 	fclose(file);
 
 // release the memory

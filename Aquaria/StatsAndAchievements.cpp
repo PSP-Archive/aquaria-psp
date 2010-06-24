@@ -122,10 +122,12 @@ const int FLAG_MINIBOSS_END					= 720;
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
+#ifdef _MSC_VER
 #pragma warning( push )
 //  warning C4355: 'this' : used in base member initializer list
 //  This is OK because it's warning on setting up the Steam callbacks, they won't use this until after construction is done
 #pragma warning( disable : 4355 ) 
+#endif
 StatsAndAchievements::StatsAndAchievements()
 {
 	/*
@@ -158,7 +160,9 @@ StatsAndAchievements::StatsAndAchievements()
 		OutputDebugString( "Stats font was not created properly, text won't draw\n" );
 	*/
 }
+#ifdef _MSC_VER
 #pragma warning( pop )
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Run a frame for the CStatsAndAchievements
@@ -175,7 +179,6 @@ void StatsAndAchievements::RunFrame()
 
 		// Get generic achievement data...
 		io = fopen("data/achievements.txt", "r");
-		char *ptr = NULL;
 		char buf[1024];
 		for (size_t i = 0; i < max_achievements; i++)
 		{
@@ -845,6 +848,16 @@ void StatsAndAchievements::StoreStatsIfNecessary()
 #ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
 		storeStats = false;  // only ever try once.
 
+		// FIXME: We should use a temporary file to ensure that data
+		// isn't lost if the filesystem gets full.  The canonical
+		// method is to write to a new file, then call
+		// rename("new.file", "existing.file") after the new file has
+		// been successfully written; POSIX specifies that such a call
+		// atomically replaces "existing.file" with "new.file".
+		// However, I've heard that Windows doesn't allow this sort of
+		// file replacement.  Will this work on Windows and MacOS?
+		// Please advise.  --achurch
+
 		const std::string fname(core->getUserDataFolder() + "/achievements.bin");
 		FILE *io = fopen(fname.c_str(), "wb");
 		if (io == NULL)
@@ -859,13 +872,16 @@ void StatsAndAchievements::StoreStatsIfNecessary()
 			buf[i] = ((unsigned char) (val + ((int)i))) ^ 0xFF;
 		}
 
-		fwrite(buf, sizeof (buf[0]), max_achievements, io);
+		if (fwrite(buf, sizeof (buf[0]), max_achievements, io) != max_achievements)
+			debugLog("Failed to write achievements 1");
 		delete[] buf;
 
 		char cruft[101];
 		for (size_t i = 0; i < sizeof (cruft); i++)
 			cruft[i] = (char) rand();
-		fwrite(cruft, sizeof (cruft[0]), ARRAYSIZE(cruft), io);
+		if (fwrite(cruft, sizeof (cruft[0]), ARRAYSIZE(cruft), io) != ARRAYSIZE(cruft))
+			debugLog("Failed to write achievements 2");
+
 		fclose(io);
 #endif
 	}

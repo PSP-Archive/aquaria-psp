@@ -25,6 +25,9 @@
 #define VORBIS_IEEE_FLOAT32 1
 #ifdef VORBIS_IEEE_FLOAT32
 
+#ifdef __GNUC__
+__attribute__((unused))
+#endif
 static float unitnorm(float x){
   union {
     ogg_uint32_t i;
@@ -36,6 +39,9 @@ static float unitnorm(float x){
 }
 
 /* Segher was off (too high) by ~ .3 decibel.  Center the conversion correctly. */
+#ifdef __GNUC__
+__attribute__((unused))
+#endif
 static float todB(const float *x){
   union {
     ogg_uint32_t i;
@@ -50,6 +56,9 @@ static float todB(const float *x){
 
 #else
 
+#ifdef __GNUC__
+__attribute__((unused))
+#endif
 static float unitnorm(float x){
   if(x<0)return(-1.f);
   return(1.f);

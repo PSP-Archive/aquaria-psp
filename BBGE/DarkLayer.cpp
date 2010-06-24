@@ -166,7 +166,6 @@ void DarkLayer::render()
 		//float percentX = (float)core->width/(float)quality;
 		//float percentY = (float)core->height/(float)quality;
 		
-		float spost = 0.0;
 		glEnable(GL_TEXTURE_2D);
 		if (useFrameBuffer)
 			frameBuffer.bindTexture();
