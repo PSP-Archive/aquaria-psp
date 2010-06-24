@@ -89,7 +89,7 @@ FlockEntity *FlockEntity::getNearestFlockEntity()
 	Vector distVec;
 	for (Flock::iterator i = flocks.begin(); i != flocks.end(); i++)
 	{
-		if ((*i) != this)
+		if ((*i)->flockID == flockID && (*i) != this)
 		{
 			distVec = ((*i)->position - position);
 			dist = distVec.getSquaredLength2D();
