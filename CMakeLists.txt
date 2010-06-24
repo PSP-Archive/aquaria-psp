@@ -277,7 +277,6 @@ SET(BBGE_SRCS
     ${BBGEDIR}/LightCone.cpp
     ${BBGEDIR}/Light.cpp
     ${BBGEDIR}/Math.cpp
-    ${BBGEDIR}/PackRead.cpp
     ${BBGEDIR}/ParticleEffect.cpp
     ${BBGEDIR}/ParticleManager.cpp
     ${BBGEDIR}/Particles.cpp
@@ -317,6 +316,7 @@ SET(BBGE_SRCS_UNUSED
     ${BBGEDIR}/FileVars.cpp
     ${BBGEDIR}/Model.cpp
     ${BBGEDIR}/OggStream.cpp
+    ${BBGEDIR}/PackRead.cpp
     ${BBGEDIR}/PointSprites.cpp
 )
 

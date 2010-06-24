@@ -1024,7 +1024,8 @@ void Core::initPlatform(const std::string &filesystem)
 		{
 			*ptr = '\0';
 			debugLog(path);
-			chdir(path);
+			if (chdir(path) != 0)
+				debugLog("Failed to chdir to executable path" + std::string(path));
 		}
 	}
 #endif
@@ -4864,22 +4865,22 @@ int Core::tgaSave(	char 		*filename,
 		type = 3;
 
 // write the header
-	fwrite(&cGarbage, sizeof(unsigned char), 1, file);
-	fwrite(&cGarbage, sizeof(unsigned char), 1, file);
-
-	fwrite(&type, sizeof(unsigned char), 1, file);
-
-	fwrite(&iGarbage, sizeof(short int), 1, file);
-	fwrite(&iGarbage, sizeof(short int), 1, file);
-	fwrite(&cGarbage, sizeof(unsigned char), 1, file);
-	fwrite(&iGarbage, sizeof(short int), 1, file);
-	fwrite(&iGarbage, sizeof(short int), 1, file);
-
-	fwrite(&width, sizeof(short int), 1, file);
-	fwrite(&height, sizeof(short int), 1, file);
-	fwrite(&pixelDepth, sizeof(unsigned char), 1, file);
-
-	fwrite(&cGarbage, sizeof(unsigned char), 1, file);
+	if (fwrite(&cGarbage, sizeof(unsigned char), 1, file) != 1
+		|| fwrite(&cGarbage, sizeof(unsigned char), 1, file) != 1
+		|| fwrite(&type, sizeof(unsigned char), 1, file) != 1
+		|| fwrite(&iGarbage, sizeof(short int), 1, file) != 1
+		|| fwrite(&iGarbage, sizeof(short int), 1, file) != 1
+		|| fwrite(&cGarbage, sizeof(unsigned char), 1, file) != 1
+		|| fwrite(&iGarbage, sizeof(short int), 1, file) != 1
+		|| fwrite(&iGarbage, sizeof(short int), 1, file) != 1
+		|| fwrite(&width, sizeof(short int), 1, file) != 1
+		|| fwrite(&height, sizeof(short int), 1, file) != 1
+		|| fwrite(&pixelDepth, sizeof(unsigned char), 1, file) != 1
+		|| fwrite(&cGarbage, sizeof(unsigned char), 1, file))
+	{
+		fclose(file);
+		return (int)false;
+	}
 
 // convert the image data from RGB(a) to BGR(A)
 	if (mode >= 3)
@@ -4890,8 +4891,13 @@ int Core::tgaSave(	char 		*filename,
 	}
 
 // save the image data
-	fwrite(imageData, sizeof(unsigned char),
-			width * height * mode, file);
+	if (fwrite(imageData, sizeof(unsigned char),
+			width * height * mode, file) != width * height * mode)
+	{
+		fclose(file);
+		return (int)false;
+	}
+
 	fclose(file);
 
 // release the memory

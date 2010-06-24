@@ -974,14 +974,16 @@ void crunchFile(const std::string &file, const std::string &out, bool deleteOrig
 
 		while (true)
 		{
-			if (feof(f) != 0)
+			if (fread(&buf, sizeof(char), 1, f) != 1)
 				break;
-
-			fread(&buf, sizeof(char), 1, f);
 
 			buf += encode[rot] + add;
 
-			fwrite(&buf, sizeof(char), 1, o);
+			if (fwrite(&buf, sizeof(char), 1, o) != 1)
+			{
+				errorLog("Failed to write to " + out);
+				break;
+			}
 
 			rot++;
 			if (rot>=8)
@@ -1012,15 +1014,17 @@ void uncrunchFile(const std::string &file, const std::string &out)
 		int rot=0, add=0;
 		while (true)
 		{
-			if (feof(f) != 0)
+			if (fread(&buf, sizeof(char), 1, f) != 1)
 				break;
-
-			fread(&buf, sizeof(char), 1, f);
 
 			buf -= encode[rot] + add;
 
-			fwrite(&buf, sizeof(char), 1, o);
-			
+			if (fwrite(&buf, sizeof(char), 1, o) != 1)
+			{
+				errorLog("Failed to write to " + out);
+				break;
+			}
+
 			rot++;
 			if (rot>=8)
 			{ rot=0; add++; }
@@ -1052,7 +1056,8 @@ void openURL(const std::string &url)
 	std::string cmd("PATH=$PATH:. xdg-open '");
 	cmd += url;
 	cmd += "'";
-	system(cmd.c_str());
+	if (system(cmd.c_str()) != 0)
+		debugLog("system(xdg_open '" + url + "') failed");
 #endif
 }
 
