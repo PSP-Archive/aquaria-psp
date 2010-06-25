@@ -296,34 +296,20 @@ Vector RenderObject::getInvRotPosition(const Vector &vec)
 
 void RenderObject::matrixChain()
 {	
-	std::vector<RenderObject*>chain;
-	RenderObject *p = this;
-	while(p)
-	{
-		chain.push_back(p);
-		p = p->parent;
-	}
+	if (parent)
+		parent->matrixChain();
 	
 #ifdef BBGE_BUILD_OPENGL
-	for (int i = chain.size()-1; i >= 0; i--)
-	{		
-		glTranslatef(chain[i]->position.x, chain[i]->position.y, 0);
-		glTranslatef(chain[i]->offset.x, chain[i]->offset.y, 0);
-		glRotatef(chain[i]->rotation.z+chain[i]->rotationOffset.z, 0, 0, 1);
-		glTranslatef(chain[i]->beforeScaleOffset.x, chain[i]->beforeScaleOffset.y, 0);		
-		glScalef(chain[i]->scale.x, chain[i]->scale.y, 0);
-		
-		if (chain[i]->isfh())
-		{
-			//glDisable(GL_CULL_FACE);
-			glRotatef(180, 0, 1, 0);
-		}
-		glTranslatef(chain[i]->internalOffset.x, chain[i]->internalOffset.y, 0);
-		
+	glTranslatef(position.x+offset.x, position.y+offset.y, 0);
+	glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
+	glTranslatef(beforeScaleOffset.x, beforeScaleOffset.y, 0);
+	glScalef(scale.x, scale.y, 0);
+	if (isfh())
+	{
+		//glDisable(GL_CULL_FACE);
+		glRotatef(180, 0, 1, 0);
 	}
-
-	if (collidePosition.x != 0 || collidePosition.y != 0)
-		glTranslatef(collidePosition.x, collidePosition.y, 0);
+	glTranslatef(internalOffset.x, internalOffset.y, 0);
 #endif
 }
 
@@ -343,20 +329,15 @@ Vector RenderObject::getWorldCollidePosition(const Vector &vec)
 	glLoadIdentity();
 
 	matrixChain();
-
-	if (vec.x != 0 || vec.y != 0)
-	{
-		glTranslatef(vec.x, vec.y, 0);
-	}
+	glTranslatef(collidePosition.x+vec.x, collidePosition.y+vec.y, 0);
 
 	float m[16];
 	glGetFloatv(GL_MODELVIEW_MATRIX, m);
 	float x = m[12];
 	float y = m[13];
-	float z = m[14];
 
 	glPopMatrix();
-	return Vector(x,y,z);
+	return Vector(x,y,0);
 #elif BBGE_BUILD_DIRECTX
 	return vec;
 #endif
