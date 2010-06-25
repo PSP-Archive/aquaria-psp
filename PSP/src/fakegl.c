@@ -1248,7 +1248,12 @@ void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
     }
 
     float c, s;
-    dsincosf(angle, &s, &c);
+    if (angle == 180) {  // Special case for Aquaria (horizontal flipping)
+        c = -1;
+        s = 0;
+    } else {
+        dsincosf(angle, &s, &c);
+    }
 
     if (x == 0 && y == 0 && z == 1) {
         /* [+c +s  0  0]
