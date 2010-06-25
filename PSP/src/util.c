@@ -214,7 +214,9 @@ CONST_FUNCTION float dsinf(const float angle)
 {
     const float angle_15 = floorf(angle / 15);
     if (angle == 15 * angle_15) {
-        int index = (int)fmodf(angle_15, 24);
+        /* int型をオーバーフローするような値では、そもそも正確性が失われて
+         * いるので、fmodf()を回避して直接intに変換する */
+        int index = (int)angle_15 % 24;
         if (index < 0) {
             index += 24;
         }
@@ -227,7 +229,7 @@ CONST_FUNCTION float dcosf(const float angle)
 {
     const float angle_15 = floorf(angle / 15);
     if (angle == 15 * angle_15) {
-        int index = (int)fmodf(angle_15, 24);
+        int index = (int)angle_15 % 24;
         if (index < 0) {
             index += 24;
         }
@@ -240,7 +242,7 @@ CONST_FUNCTION float dtanf(const float angle)
 {
     const float angle_15 = floorf(angle / 15);
     if (angle == 15 * angle_15) {
-        int index = (int)fmodf(angle_15, 12);
+        int index = (int)angle_15 % 12;
         if (index < 0) {
             index += 12;
         }
@@ -253,7 +255,7 @@ void dsincosf(const float angle, float *sin_ret, float *cos_ret)
 {
     const float angle_15 = floorf(angle / 15);
     if (angle == 15 * angle_15) {
-        int index = (int)fmodf(angle_15, 24);
+        int index = (int)angle_15 % 24;
         if (index < 0) {
             index += 24;
         }
