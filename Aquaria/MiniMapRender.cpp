@@ -73,8 +73,8 @@ namespace MiniMapRenderSpace
 	const float jumpTime = 1.5;
 	float incr = 0;
 
-	int *widthLookup;
-	const int widthLookupLimit = miniMapTileRadius + tileStep;
+	int *heightLookup;
+	const int heightLookupLimit = miniMapTileRadius + tileStep;
 	float *bitSizeLookup;
 	const int bitSizeLookupPeriod = 256;
 	float *healthLookupAngle, *healthLookupX, *healthLookupY;
@@ -121,17 +121,17 @@ MiniMapRender::MiniMapRender() : RenderObject()
 
 	addChild(q, PM_POINTER, RBP_OFF);
 
-	widthLookup = new int[widthLookupLimit];
-	for (int i = 0; i < widthLookupLimit; i++)
+	heightLookup = new int[heightLookupLimit];
+	for (int i = 0; i < heightLookupLimit; i++)
 	{
 		if (i < miniMapTileRadius)
 		{
-			const float widthFrac = cosf(float(i) / miniMapTileRadius * (PI/2));
-			widthLookup[i] = int(ceilf(miniMapTileRadius * widthFrac));
+			const float heightFrac = cosf(float(i) / miniMapTileRadius * (PI/2));
+			heightLookup[i] = int(ceilf(miniMapTileRadius * heightFrac));
 		}
 		else
 		{
-			widthLookup[i] = 0;
+			heightLookup[i] = 0;
 		}
 	}
 
@@ -164,8 +164,8 @@ void MiniMapRender::destroy()
 	UNREFTEX(texHealthBar);
 	UNREFTEX(texMarker);
 
-	delete[] widthLookup;
-	widthLookup = 0;
+	delete[] heightLookup;
+	heightLookup = 0;
 	delete[] bitSizeLookup;
 	bitSizeLookup = 0;
 	delete[] healthLookupAngle;
@@ -440,29 +440,30 @@ void MiniMapRender::onRender()
 			const int xmax = int(floorf(dsq->game->cameraMax.x / TILE_SIZE));
 			const int ymax = int(floorf(dsq->game->cameraMax.y / TILE_SIZE));
 
-			int y1 = centerTile.y - miniMapTileRadius;
-			int y2 = centerTile.y + miniMapTileRadius;
+			int x1 = centerTile.x - miniMapTileRadius;
+			int x2 = centerTile.x + miniMapTileRadius;
 			// Round all coordinates to a multiple of tileStep, so
 			// the minimap doesn't change as you scroll.
-			y1 = (y1 / tileStep) * tileStep;
-			y2 = ((y2 + tileStep-1) / tileStep) * tileStep;
-			for (int y = y1; y <= y2; y += tileStep)
+			x1 = (x1 / tileStep) * tileStep;
+			x2 = ((x2 + tileStep-1) / tileStep) * tileStep;
+			for (int x = x1; x <= x2; x += tileStep)
 			{
-				if (y < ymin) continue;
-				if (y > ymax) break;
+				if (x < xmin) continue;
+				if (x > xmax) break;
 
-				int dy = y - centerTile.y;
-				if (dy < 0)
-					dy = -dy;
-				const int halfTileWidth = widthLookup[dy];
-				int x1 = centerTile.x - halfTileWidth;
-				int x2 = centerTile.x + halfTileWidth;
-				x1 = (x1 / tileStep) * tileStep;
-				x2 = ((x2 + tileStep-1) / tileStep) * tileStep;
-				for (int x = x1; x <= x2; x += tileStep)
+				int dx = x - centerTile.x;
+				if (dx < 0)
+					dx = -dx;
+				const int halfTileHeight = heightLookup[dx];
+
+				int y1 = centerTile.y - halfTileHeight;
+				int y2 = centerTile.y + halfTileHeight;
+				y1 = (y1 / tileStep) * tileStep;
+				y2 = ((y2 + tileStep-1) / tileStep) * tileStep;
+				for (int y = y1; y <= y2; y += tileStep)
 				{
-					if (x < xmin) continue;
-					if (x > xmax) break;
+					if (y < ymin) continue;
+					if (y > ymax) break;
 
 					TileVector tile(x, y);
 					if (!dsq->game->getGrid(tile))
