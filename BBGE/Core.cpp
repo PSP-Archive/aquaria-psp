@@ -4891,7 +4891,7 @@ int Core::tgaSave(	const char	*filename,
 		|| fwrite(&width, sizeof(short int), 1, file) != 1
 		|| fwrite(&height, sizeof(short int), 1, file) != 1
 		|| fwrite(&pixelDepth, sizeof(unsigned char), 1, file) != 1
-		|| fwrite(&cGarbage, sizeof(unsigned char), 1, file))
+		|| fwrite(&cGarbage, sizeof(unsigned char), 1, file) != 1)
 	{
 		fclose(file);
 		return (int)false;
