@@ -40,7 +40,26 @@ void GridRender::onUpdate(float dt)
 }
 
 void GridRender::onRender()
-{	
+{
+	switch(obsType)
+	{
+	case OT_INVISIBLE:
+		core->setColor(1, 0, 0, alpha.getValue());
+	break;
+	case OT_INVISIBLEIN:
+		core->setColor(1, 0.5, 0, alpha.getValue());
+	break;
+	case OT_BLACK:
+		core->setColor(0, 0, 0, 1);
+	break;
+	case OT_HURT:
+		core->setColor(1, 1, 0, alpha.getValue());
+	break;
+	default:
+	break;
+	}
+
+	const int obsType = int(this->obsType);
 	Vector camPos = core->cameraPos;
 	camPos.x -= core->getVirtualOffX() * (core->invGlobalScale);
 	const TileVector ct(camPos);
@@ -48,43 +67,37 @@ void GridRender::onRender()
 	const int width = int((core->getVirtualWidth() * (core->invGlobalScale))/TILE_SIZE) + 1;
 	const int height = int((600 * (core->invGlobalScale))/TILE_SIZE) + 1;
 
-	const int endX = ct.x+width+1;
-	for (int x = ct.x-1; x <= endX; x++)
+	int startX = ct.x-1, endX = ct.x+width+1;
+	int startY = ct.y-1, endY = ct.y+height+1;
+	if (startX < 0)
+		startX = 0;
+	if (endX >= MAX_GRID)
+		endX = MAX_GRID-1;
+	if (startY < 0)
+		startY = 0;
+	if (endY >= MAX_GRID)
+		endY = MAX_GRID-1;
+	for (int x = startX; x <= endX; x++)
 	{
-		if (x < 0) continue;
+		const signed char *gridColumn = dsq->game->getGridColumn(x);
 		int startCol = -1, endCol;
-		const int endY = ct.y+height+1;
-		for (int y = ct.y-1; y <= endY; y++)
-		{			
-			if (y < 0) continue;
-			int v = dsq->game->getGrid(TileVector(x, y));
-			if (v == int(obsType) && startCol == -1)
+		for (int y = startY; y <= endY; y++)
+		{
+			int v = gridColumn[y];
+			if (v == obsType && startCol == -1)
 			{
 				startCol = y;
 			}
-			else if ((v != int(obsType) || y == endY) && startCol != -1)
+			else if ((v != obsType || y == endY) && startCol != -1)
 			{
 				endCol = y;
-				if (v != int(obsType))
+				if (v != obsType)
 					endCol--;
-				switch(obsType)
+
+				if (obsType == OT_BLACK)
 				{
-				case OT_INVISIBLE:
-					core->setColor(1, 0, 0, alpha.getValue());
-				break;
-				case OT_INVISIBLEIN:
-					core->setColor(1, 0.5, 0, alpha.getValue());
-				break;
-				case OT_BLACK:
-					core->setColor(0, 0, 0, 1);
 					startCol++;
 					endCol--;
-				break;
-				case OT_HURT:
-					core->setColor(1, 1, 0, alpha.getValue());
-				break;
-				default:
-				break;
 				}
 
 				const float drawx1 = x*TILE_SIZE;

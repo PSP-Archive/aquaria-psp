@@ -638,6 +638,7 @@ public:
 	std::string getSelectedChoice() { return selectedChoice; }
 
 	int getGrid(const TileVector &tile);
+	const signed char *getGridColumn(int tileX);
 	void setGrid(const TileVector &tile, int v);
 	bool isObstructed(const TileVector &tile, int t = -1);
 
@@ -1213,6 +1214,17 @@ int Game::getGrid(const TileVector &tile)
 {
 	if (tile.x < 0 || tile.x >= MAX_GRID || tile.y < 0 || tile.y >= MAX_GRID) return 1;
 	return grid[tile.x][tile.y];
+}
+
+inline
+const signed char *Game::getGridColumn(int tileX)
+{
+	if (tileX < 0)
+		return grid[0];
+	else if (tileX >= MAX_GRID)
+		return grid[MAX_GRID-1];
+	else
+		return grid[tileX];
 }
 
 inline
