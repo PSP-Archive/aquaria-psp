@@ -94,12 +94,6 @@ void GridRender::onRender()
 				if (v != obsType)
 					endCol--;
 
-				if (obsType == OT_BLACK)
-				{
-					startCol++;
-					endCol--;
-				}
-
 				const float drawx1 = x*TILE_SIZE;
 				const float drawx2 = (x+1)*TILE_SIZE;
 				const float drawy1 = startCol*TILE_SIZE;
