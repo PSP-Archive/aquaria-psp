@@ -660,7 +660,7 @@ static void delete_array(LallocArray *array)
     if (array->prev) {
         array->prev->next = array->next;
     } else {
-        array_list[index] = array;
+        array_list[index] = array->next;
     }
 
     /* Free the array memory and return. */
