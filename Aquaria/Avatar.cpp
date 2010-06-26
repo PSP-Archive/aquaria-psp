@@ -316,7 +316,7 @@ SongIconParticle::SongIconParticle(Vector color, Vector pos, int note)
 	//if (rand()%6 <= 2)
 	setBlendType(RenderObject::BLEND_ADD);
 
-	float smallestDist = -1;
+	float smallestDist = HUGE_VALF;
 	SongIcon *closest = 0;
 	for (int i = 0; i < avatar->songIcons.size(); i++)
 	{
@@ -324,7 +324,7 @@ SongIconParticle::SongIconParticle(Vector color, Vector pos, int note)
 		{
 			Vector diff = (position - avatar->songIcons[i]->position);
 			float dist = diff.getSquaredLength2D();
-			if (smallestDist == -1 || dist < smallestDist)
+			if (dist < smallestDist)
 			{
 				smallestDist = dist;
 				closest = avatar->songIcons[i];
@@ -2112,12 +2112,12 @@ void Avatar::updateSingingInterface(float dt)
 		{
 			if (dsq->game->songLineRender && songIcons[0]->alpha.x == 1)
 			{
-				int smallestDist = -1;
-				int closest =-1;
+				float smallestDist = HUGE_VALF;
+				int closest = -1;
 				for (int i = 0; i < songIcons.size(); i++)
 				{
-					int dist = (songIcons[i]->position - core->mouse.position).getSquaredLength2D();
-					if (smallestDist == -1 || dist < smallestDist)
+					float dist = (songIcons[i]->position - core->mouse.position).getSquaredLength2D();
+					if (dist < smallestDist)
 					{
 						smallestDist = dist;
 						closest = i;
@@ -2359,7 +2359,7 @@ Target Avatar::getNearestTarget(const Vector &checkPos, const Vector &distPos, E
 	int targetPt = -1;
 	Entity *closest = 0;
 	int highestPriority = -999;
-	int smallestDist = -1;
+	float smallestDist = HUGE_VALF;
 	Entity *e = 0;
 	FOR_ENTITIES(i)
 	{
@@ -2424,14 +2424,14 @@ Target Avatar::getNearestTarget(const Vector &checkPos, const Vector &distPos, E
 								}
 								if (j != ignore->size()) continue;
 							}
-							int dist = (e->getTargetPoint(i) - distPos).getSquaredLength2D();
-							//int dist = (e->getTargetPoint(i) - distPos).getLength2D();
+							float dist = (e->getTargetPoint(i) - distPos).getSquaredLength2D();
+							//float dist = (e->getTargetPoint(i) - distPos).getLength2D();
 							if (dist < sqr(TARGET_RANGE+e->getTargetRange()))
 							{
 								if (override || (checkPos - e->getTargetPoint(i)).isLength2DIn(64))
 								{
 									dist = (e->getTargetPoint(i) - checkPos).getSquaredLength2D();
-									if (smallestDist == -1 || dist < smallestDist)
+									if (dist < smallestDist)
 									{
 										highestPriority = e->targetPriority;
 										targetPosition = e->getTargetPoint(i);
@@ -4531,8 +4531,8 @@ void Avatar::setBlind(float time)
 
 void Avatar::setNearestPullTarget()
 {
-	int smallestDist = -1;
-	int maxDist = 800;
+	const float maxDistSqr = sqr(800);
+	float smallestDist = maxDistSqr;
 	Entity *closest = 0;
 	FOR_ENTITIES(i)
 	{
@@ -4542,7 +4542,7 @@ void Avatar::setNearestPullTarget()
 			if ((e->isPullable()) && e->life == 1)
 			{
 				float dist = (e->position - position).getSquaredLength2D();
-				if (dist < sqr(maxDist) && (smallestDist == -1 || dist < smallestDist))
+				if (dist < smallestDist)
 				{
 					closest = e;
 					smallestDist = dist;
@@ -5810,7 +5810,7 @@ void Avatar::doRangePull(float dt)
 	int i = 0;
 	for (i = 0; i < smallestDists.size(); i++)
 	{
-		smallestDists[i] = -1;
+		smallestDists[i] = 0x7FFFFFFF;
 	}
 	std::vector<Vector> closestVectors;
 	closestVectors.resize(amount);
@@ -5820,7 +5820,7 @@ void Avatar::doRangePull(float dt)
 		int dist = diff.getSquaredLength2D();
 		for (int j = 0; j < smallestDists.size(); j++)
 		{
-			if (dist < smallestDists[j] || smallestDists[j] == -1)
+			if (dist < smallestDists[j])
 			{
 				for (int k = smallestDists.size()-1; k > j; k--)
 				{
@@ -5914,7 +5914,7 @@ void Avatar::doRangePush(float dt)
 	smallestDists.resize(amount);
 	for (int i = 0; i < smallestDists.size(); i++)
 	{
-		smallestDists[i] = -1;
+		smallestDists[i] = 0x7FFFFFFF;
 	}
 	std::vector<Vector> closestVectors;
 	closestVectors.resize(amount);
@@ -5924,7 +5924,7 @@ void Avatar::doRangePush(float dt)
 		int dist = diff.getSquaredLength2D();
 		for (int j = 0; j < smallestDists.size(); j++)
 		{
-			if (dist < smallestDists[j] || smallestDists[j] == -1)
+			if (dist < smallestDists[j])
 			{
 				for (int k = smallestDists.size()-1; k > j; k--)
 				{
@@ -5941,7 +5941,7 @@ void Avatar::doRangePush(float dt)
 	int c = 0;
 	for (int i = 0; i < smallestDists.size(); i++)
 	{
-		if (smallestDists[i] != -1)
+		if (smallestDists[i] < HUGE_VALF)
 		{
 			tot += smallestDists[i];
 			c++;
@@ -7858,7 +7858,7 @@ void Avatar::onUpdate(float dt)
 	{
 		//debugLog("picking pull target");
 		Entity *closest = 0;
-		int smallestDist = -1;
+		float smallestDist = HUGE_VALF;
 		FOR_ENTITIES(i)
 		{
 			Entity *e = *i;
@@ -7867,8 +7867,8 @@ void Avatar::onUpdate(float dt)
 			{
 				if (e->isCoordinateInside(dsq->getGameCursorPosition()))
 				{
-					int dist = (e->position - dsq->getGameCursorPosition()).getSquaredLength2D();
-					if (dist < smallestDist || smallestDist == -1)
+					float dist = (e->position - dsq->getGameCursorPosition()).getSquaredLength2D();
+					if (dist < smallestDist)
 					{
 						smallestDist = dist;
 						closest = e;

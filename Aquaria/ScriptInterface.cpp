@@ -1167,15 +1167,15 @@ int l_entity_findNearestEntityOfType(lua_State *L)
 	{
 		int et = (EntityType)lua_tointeger(L, 2);
 		int maxRange = lua_tointeger(L, 3);
-		int smallestDist = -1;
+		float smallestDist = HUGE_VALF;
 		Entity *closest = 0;
 		FOR_ENTITIES(i)
 		{
 			Entity *ee = *i;
 			if (ee != e)
 			{
-				int dist = (ee->position - e->position).getSquaredLength2D();
-				if (ee->health > 0 && !ee->isEntityDead() && ee->getEntityType() == et && (smallestDist == -1 || dist < smallestDist))
+				float dist = (ee->position - e->position).getSquaredLength2D();
+				if (ee->health > 0 && !ee->isEntityDead() && ee->getEntityType() == et && dist < smallestDist)
 				{
 					smallestDist = dist;
 					closest = ee;
@@ -7090,7 +7090,7 @@ int l_node_getNearestEntity(lua_State *L)
 		if (lua_isstring(L, 2))
 			name = lua_tostring(L, 2);
 
-		int smallestDist = -1;
+		float smallestDist = HUGE_VALF;
 		FOR_ENTITIES(i)
 		{
 			Entity *e = *i;
@@ -7098,8 +7098,8 @@ int l_node_getNearestEntity(lua_State *L)
 			{
 				if (name.empty() || (nocasecmp(e->name, name)==0))
 				{
-					int dist = (pos - e->position).getSquaredLength2D();
-					if (smallestDist == -1 || dist < smallestDist)
+					float dist = (pos - e->position).getSquaredLength2D();
+					if (dist < smallestDist)
 					{
 						smallestDist = dist;
 						closest = e;
@@ -7132,15 +7132,15 @@ int l_entity_getNearestBoneToPosition(lua_State *L)
 {
 	Entity *me = entity(L);
 	Vector p(lua_tonumber(L, 2), lua_tonumber(L, 3));
-	int smallestDist = -1;
+	float smallestDist = HUGE_VALF;
 	Bone *closest = 0;
 	if (me)
 	{
 		for (int i = 0; i < me->skeletalSprite.bones.size(); i++)
 		{
 			Bone *b = me->skeletalSprite.bones[i];
-			int dist = (b->getWorldPosition() - p).getSquaredLength2D();
-			if (smallestDist == -1 || dist < smallestDist)
+			float dist = (b->getWorldPosition() - p).getSquaredLength2D();
+			if (dist < smallestDist)
 			{
 				smallestDist = dist;
 				closest = b;
@@ -7194,7 +7194,7 @@ int l_entity_getNearestEntity(lua_State *L)
 	int damageTarget = lua_tointeger(L, 5);
 	range = sqr(range);
 	Entity *closest=0;
-	int smallestDist = -1;
+	float smallestDist = HUGE_VALF;
 	FOR_ENTITIES(i)
 	{
 		Entity *e = *i;
@@ -7208,8 +7208,8 @@ int l_entity_getNearestEntity(lua_State *L)
 					{
 						if (damageTarget == 0 || e->isDamageTarget((DamageType)damageTarget))
 						{
-							int dist = (me->position - e->position).getSquaredLength2D();
-							if ((range == 0 || dist < range) && (smallestDist == -1 || dist < smallestDist))
+							float dist = (me->position - e->position).getSquaredLength2D();
+							if ((range == 0 || dist < range) && dist < smallestDist)
 							{
 								smallestDist = dist;
 								closest = e;

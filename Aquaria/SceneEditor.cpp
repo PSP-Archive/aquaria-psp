@@ -3534,22 +3534,19 @@ void SceneEditor::update(float dt)
 			{
 				selectedIdx = -1;
 				selectedNode = -1;
-				int smallestDist = -1;
+				float smallestDist = sqr(64);
 				for (int i = 0; i < dsq->game->getNumPaths(); i++)
 				{
 					for (int n = dsq->game->getPath(i)->nodes.size()-1; n >=0; n--)
 					{
 						Vector v = dsq->game->getPath(i)->nodes[n].position - dsq->getGameCursorPosition();
-						int dist = v.getSquaredLength2D();
-						if (dist < sqr(64))
+						float dist = v.getSquaredLength2D();
+						if (dist < smallestDist)
 						{
-							if (smallestDist == -1 || dist < smallestDist)
-							{
-								smallestDist = dist;
-								selectedIdx = i;
-								selectedNode = n;
-								//return;
-							}
+							smallestDist = dist;
+							selectedIdx = i;
+							selectedNode = n;
+							//return;
 						}
 					}
 				}
@@ -3613,12 +3610,13 @@ void SceneEditor::update(float dt)
 			{
 			case ES_SELECTING:
 			{
-				int closest = -1, idx = -1, i = 0;
+				float closest = sqr(800);
+				int idx = -1, i = 0;
 				for (i = 0; i < dsq->getNumElements(); i++)
 				{
 					Vector dist = dsq->getElement(i)->getFollowCameraPosition() - dsq->getGameCursorPosition();
 					float len = dist.getSquaredLength2D();
-					if (len < sqr(800) && (len < closest || closest == -1))
+					if (len < closest)
 					{
 						closest = len;
 						idx = i;

@@ -676,11 +676,11 @@ public:
 
 	bool collideCircleVsCircle(Entity *a, Entity *b);
 	Bone *collideSkeletalVsCircle(Entity *skeletal, Entity *circle);
-	Bone *collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, int radius);
-	bool collideCircleVsLine(Entity *ent, Vector start, Vector end, int radius);
-	bool collideCircleVsLineAngle(Entity *ent, float angle, int startLen, int endLen, int radius, Vector basePos);
-	Bone *collideSkeletalVsCircle(Entity *skeletal, Vector pos, int radius);
-	CollideData collideCircleWithAllEntities(Vector pos, int r, Entity *me=0, int spellType=0, bool checkAvatarFlag=false);//, bool checkSpellFlag=0, bool checkHitEntitiesFlag=1);
+	Bone *collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, float radius);
+	bool collideCircleVsLine(Entity *ent, Vector start, Vector end, float radius);
+	bool collideCircleVsLineAngle(Entity *ent, float angle, float startLen, float endLen, float radius, Vector basePos);
+	Bone *collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius);
+	CollideData collideCircleWithAllEntities(Vector pos, float r, Entity *me=0, int spellType=0, bool checkAvatarFlag=false);//, bool checkSpellFlag=0, bool checkHitEntitiesFlag=1);
 	void handleShotCollisions(Entity *e, bool hasShield=false);
 	void handleShotCollisionsSkeletal(Entity *e);
 	void handleShotCollisionsHair(Entity *e, int num = 0);
