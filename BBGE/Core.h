@@ -1170,10 +1170,11 @@ public:
 	bool minimized;
 	std::string getEnqueuedJumpState();
 	int cullRadius;
+	float cullRadiusSqr;
 	Vector cullCenter;
 	int screenCullX1, screenCullY1, screenCullX2, screenCullY2;
 	unsigned int renderObjectCount, processedRenderObjectCount, totalRenderObjectCount;
-	float invGlobalScale;
+	float invGlobalScale, invGlobalScaleSqr;
 
 	void screenshot();
 

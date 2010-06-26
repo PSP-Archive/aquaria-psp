@@ -972,6 +972,7 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
 	afterEffectManagerLayer = 0;
 	renderObjectLayers.resize(1);
 	invGlobalScale = 1.0;
+	invGlobalScaleSqr = 1.0;
 	renderObjectCount = 0;
 	avgFPS.resize(1);
 	minimized = false;
@@ -3913,6 +3914,7 @@ void Core::updateCullData()
 	// update cull data
 	//this->cullRadius = int((getVirtualWidth())*invGlobalScale);
 	this->cullRadius = baseCullRadius * invGlobalScale;
+	this->cullRadiusSqr = (float)this->cullRadius * (float)this->cullRadius;
 	this->cullCenter = cameraPos + Vector(400.0f*invGlobalScale,300.0f*invGlobalScale);
 	screenCullX1 = cameraPos.x;
 	screenCullX2 = cameraPos.x + 800*invGlobalScale;
@@ -3941,6 +3943,7 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 	onRender();
 
 	invGlobalScale = 1.0f/globalScale.x;
+	invGlobalScaleSqr = invGlobalScale * invGlobalScale;
 
 	RenderObject::lastTextureApplied = 0;
 

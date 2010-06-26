@@ -164,7 +164,7 @@ RenderObject::RenderObject()
 	ignoreUpdate = false;
 	overrideRenderPass = OVERRIDE_NONE;
 	renderPass = 0;
-	overrideCullRadius = 0;
+	overrideCullRadiusSqr = 0;
 	repeatTexture = false;
 	alphaMod = 1;
 	collisionMaskRadius = 0;
@@ -577,43 +577,6 @@ void RenderObject::render()
 	}
 	else
 		renderCall();
-}
-
-Vector RenderObject::getFollowCameraPosition()
-{
-	Vector pos = position;
-	float f = followCamera;
-	int fcl=0;
-	
-	if (layer != -1)
-	{
-		if (f == 0)	f = core->renderObjectLayers[layer].followCamera;
-		fcl = core->renderObjectLayers[layer].followCameraLock;
-	}
-
-
-	if (f > 0 && f < 1)
-	{
-		switch (fcl)
-		{
-		case FCL_HORZ:
-			pos.x = position.x - core->screenCenter.x;
-			pos.x *= f;
-			pos.x = core->screenCenter.x + pos.x;
-		break;
-		case FCL_VERT:
-			pos.y = position.y - core->screenCenter.y;
-			pos.y *= f;
-			pos.y = core->screenCenter.y + pos.y;
-		break;
-		default:
-			pos = position - core->screenCenter;
-			pos *= f;
-			pos = core->screenCenter + pos;
-		break;
-		}
-	}
-	return pos;
 }
 
 void RenderObject::renderCall()
@@ -1484,9 +1447,9 @@ void RenderObject::setPositionSnapTo(InterpolatedVector *positionSnapTo)
 	this->positionSnapTo = positionSnapTo;
 }
 
-void RenderObject::setOverrideCullRadius(int ovr)
+void RenderObject::setOverrideCullRadius(float ovr)
 {
-	overrideCullRadius = ovr;
+	overrideCullRadiusSqr = ovr * ovr;
 }
 
 void RenderObject::propogateParentManagedStatic()

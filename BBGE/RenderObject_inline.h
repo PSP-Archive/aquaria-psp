@@ -26,7 +26,47 @@ inline bool RenderObject::isOnScreen()
 	//if (followCamera != 0) return true;
 
 	// note: radii are sqr-ed for speed
-	int checkRadius = getCullRadius();
+	const float cullRadiusSqr = (getCullRadiusSqr() * core->invGlobalScaleSqr) + core->cullRadiusSqr;
 
-	return ((this->getFollowCameraPosition() - core->cullCenter).getSquaredLength2D() < ((checkRadius*checkRadius)*core->invGlobalScale + (core->cullRadius*core->cullRadius)));
+	return ((this->getFollowCameraPosition() - core->cullCenter).getSquaredLength2D() < cullRadiusSqr);
+}
+
+Vector RenderObject::getFollowCameraPosition() const
+{
+	float f = followCamera;
+	if (f == 0 && layer != -1)
+		f = core->renderObjectLayers[layer].followCamera;
+
+	if (f <= 0)
+	{
+		return position;
+	}
+	else
+	{
+		Vector pos = position;
+		int fcl = 0;
+		if (layer != -1)
+			fcl = core->renderObjectLayers[layer].followCameraLock;
+
+		switch (fcl)
+		{
+		case FCL_HORZ:
+			pos.x = position.x - core->screenCenter.x;
+			pos.x *= f;
+			pos.x = core->screenCenter.x + pos.x;
+		break;
+		case FCL_VERT:
+			pos.y = position.y - core->screenCenter.y;
+			pos.y *= f;
+			pos.y = core->screenCenter.y + pos.y;
+		break;
+		default:
+			pos = position - core->screenCenter;
+			pos *= f;
+			pos = core->screenCenter + pos;
+		break;
+		}
+
+		return pos;
+	}
 }

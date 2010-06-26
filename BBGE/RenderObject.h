@@ -138,15 +138,15 @@ public:
 	void moveToFront();
 	void moveToBack();
 
-	inline int getCullRadius() const
+	inline float getCullRadiusSqr() const
 	{
-		if (overrideCullRadius)
-			return overrideCullRadius;
+		if (overrideCullRadiusSqr)
+			return overrideCullRadiusSqr;
 		if (width == 0 || height == 0)
 			return 0;
-		int w = int(width*scale.x)+1;
-		int h = int(height*scale.y)+1;
-		return w + h;
+		const float w = width*scale.x;
+		const float h = height*scale.y;
+		return w*w + h*h;
 	}
 
 	int getTopLayer();
@@ -202,14 +202,16 @@ public:
 	Vector getAbsoluteRotation();
 	float getWorldRotation();
 	Vector getNormal();
-	Vector getFollowCameraPosition();
 	Vector getForward();
-	void setOverrideCullRadius(int ovr);
+	void setOverrideCullRadius(float ovr);
 	void setRenderPass(int pass) { renderPass = pass; }
 	int getRenderPass() { return renderPass; }
 	void setOverrideRenderPass(int pass) { overrideRenderPass = pass; }
 	int getOverrideRenderPass() { return overrideRenderPass; }
 	enum { RENDER_ALL=314, OVERRIDE_NONE=315 };
+
+	// Defined in RenderObject_inline.h
+	inline Vector getFollowCameraPosition() const;
 
 	void lookAt(const Vector &pos, float t, float minAngle, float maxAngle, float offset=0);
 	RenderObject *getParent() const {return parent;}
@@ -344,7 +346,7 @@ protected:
 	RenderObjectList deathNotifications;
 	int overrideRenderPass;
 	int renderPass;
-	int overrideCullRadius;
+	float overrideCullRadiusSqr;
 	float motionBlurTransitionTimer;
 	int motionBlurFrameOffsetCounter, motionBlurFrameOffset;
 	std::vector<MotionBlurFrame>motionBlurPositions;
