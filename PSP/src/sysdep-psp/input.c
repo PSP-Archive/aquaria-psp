@@ -76,7 +76,7 @@ void sys_input_update(void)
     mem_clear(buttons, sizeof(buttons));
     unsigned int i;
     for (i = 0; i < lenof(buttons); i++) {
-        buttons[i] = (pad_data.Buttons & (1 << i)) ? 1 : 0;
+        buttons[i] = (pad_data.Buttons >> i) & 1;
     }
 }
 

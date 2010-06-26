@@ -41,16 +41,15 @@ void input_update(void)
     sys_input_update();
 
     /* ジョイスティックボタンの押下状況を取得する */
-    uint8_t new_buttons[INPUT_MAX_BUTTONS];
     pressed_button = -1;
     unsigned int i;
-    for (i = 0; i < lenof(new_buttons); i++) {
-        new_buttons[i] = sys_input_buttonstate(i);
-        if (pressed_button < 0 && new_buttons[i] && !cur_buttons[i]) {
+    for (i = 0; i < lenof(cur_buttons); i++) {
+        const uint8_t new_button = sys_input_buttonstate(i);
+        if (pressed_button < 0 && new_button && !cur_buttons[i]) {
             pressed_button = i;
         }
+        cur_buttons[i] = new_button;
     }
-    memcpy(cur_buttons, new_buttons, sizeof(new_buttons));
 
 #ifdef DEBUG
     /* Ctrl+[MC]、PSPでは□＋[LR]ボタンでメモリ・CPUのデバッグ表示を切り

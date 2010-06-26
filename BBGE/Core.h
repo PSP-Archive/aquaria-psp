@@ -781,7 +781,11 @@ struct Mouse
 	int scrollWheel, scrollWheelChange, lastScrollWheel;
 };
 
+#ifdef BBGE_BUILD_PSP
+const int maxJoyBtns = 16;
+#else
 const int maxJoyBtns = 64;
+#endif
 
 class Joystick
 {
