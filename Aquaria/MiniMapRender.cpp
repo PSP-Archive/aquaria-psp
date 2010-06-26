@@ -406,8 +406,6 @@ void MiniMapRender::onRender()
 
 	const TileVector centerTile(dsq->game->avatar->position);
 
-	glLineWidth(1);
-	
 	if (alphaValue > 0)
 	{
 		texMinimapBtm->apply();
@@ -652,8 +650,6 @@ void MiniMapRender::onRender()
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-
-	glLineWidth(10 * (core->width / 1024.0f));
 
 	const int curHealthSteps = int((lerp.x/2) * healthSteps);
 	const int maxHealthSteps = int((dsq->game->avatar->maxHealth/10.0f) * healthSteps);
