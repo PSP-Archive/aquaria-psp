@@ -973,17 +973,21 @@ luaFunc(toggleLiCombat)
 	luaReturnNum(0);
 }
 
+#if 0
 luaFunc(toggleConversationWindow)
 {
 	//dsq->toggleConversationWindow((bool)lua_tointeger(L, 1));
 	luaReturnNum(0);
 }
+#endif
 
+#if 0
 luaFunc(toggleConversationWindowSoft)
 {
 	//dsq->toggleConversationWindow((bool)lua_tointeger(L, 1), true);
 	luaReturnNum(0);
 }
+#endif
 
 luaFunc(getNoteName)
 {
@@ -1310,6 +1314,7 @@ luaFunc(entity_getCollideRadius)
 	luaReturnNum(ret);
 }
 
+#if 0
 luaFunc(entity_setRegisterEntityDied)
 {
 	debugLog("entity_setRegisterEntityDied is deceased!");
@@ -1322,6 +1327,7 @@ luaFunc(entity_setRegisterEntityDied)
 	luaReturnBool(b);
 	*/
 }
+#endif
 
 luaFunc(entity_setDropChance)
 {
@@ -1339,6 +1345,7 @@ luaFunc(entity_setDropChance)
 	luaReturnNum(0);
 }
 
+#if 0
 luaFunc(entity_setAffectedBySpell)
 {
 
@@ -1354,6 +1361,7 @@ luaFunc(entity_setAffectedBySpell)
 	debugLog("entity_setAffectedBySpell is deprecated");
 	luaReturnNum(0);
 }
+#endif
 
 luaFunc(entity_setAffectedBySpells)
 {
@@ -1779,10 +1787,12 @@ luaFunc(hasSong)
 	luaReturnBool(b);
 }
 
+#if 0
 luaFunc(isInConversation)
 {
 	luaReturnBool(0);
 }
+#endif
 
 luaFunc(loadSound)
 {
@@ -2920,6 +2930,8 @@ luaFunc(createEntity)
 	*/
 	luaReturnPtr(e);
 }
+
+#if 0
 // moveEntity(name, x, y, time, ease)
 luaFunc(moveEntity)
 {
@@ -2943,6 +2955,7 @@ luaFunc(moveEntity)
 	*/
 	luaReturnNum(0);
 }
+#endif
 
 luaFunc(savePoint)
 {
@@ -5129,6 +5142,7 @@ luaFunc(entity_followEntity)
 	luaReturnNum(0);
 }
 
+#if 0
 luaFunc(setEntityScript)
 {
 	errorLog ("setentityScript is deprecated");
@@ -5145,6 +5159,7 @@ luaFunc(setEntityScript)
 
 	luaReturnNum(0);
 }
+#endif
 
 luaFunc(toggleInput)
 {
@@ -5227,11 +5242,13 @@ luaFunc(registerSporeChildData)
 	luaReturnNum(0);
 }
 
+#if 0
 luaFunc(streamSfx)
 {
 	//core->sound->streamSfx(lua_tostring(L, 1));
 	luaReturnNum(0);
 }
+#endif
 
 luaFunc(entity_setDamageTarget)
 {
@@ -5264,6 +5281,7 @@ luaFunc(entity_isDamageTarget)
 	luaReturnBool(v);
 }
 
+#if 0
 luaFunc(entity_setEnergyShotTarget)
 {
 	/*
@@ -5276,6 +5294,7 @@ luaFunc(entity_setEnergyShotTarget)
 	debugLog("setEnergyShotTarget antiquated");
 	luaReturnNum(0);
 }
+#endif
 
 luaFunc(entity_setTargetRange)
 {
@@ -5327,6 +5346,7 @@ luaFunc(entity_getRandomTargetPoint)
 	luaReturnNum(idx);
 }
 
+#if 0
 luaFunc(entity_setEnergyShotTargetPosition)
 {
 	/*
@@ -5339,7 +5359,9 @@ luaFunc(entity_setEnergyShotTargetPosition)
 	errorLog("entity_setEnergyShotTargetPosition is obsolete!");
 	luaReturnNum(0);
 }
+#endif
 
+#if 0
 luaFunc(entity_setEnergyChargeTarget)
 {
 	/*
@@ -5352,6 +5374,7 @@ luaFunc(entity_setEnergyChargeTarget)
 	debugLog("setEnergyChargeTarget antiquated");
 	luaReturnNum(0);
 }
+#endif
 
 luaFunc(playVisualEffect)
 {
@@ -7893,8 +7916,6 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(entity_setClampOnSwitchDir);
 
-	luaRegister(entity_setRegisterEntityDied);
-
 	luaRegister(entity_setBeautyFlip);
 	luaRegister(entity_setInvincible);
 
@@ -7992,17 +8013,12 @@ void ScriptInterface::createBaseLuaVM()
 
 
 
-	luaRegister(entity_setEnergyShotTarget);
-	luaRegister(entity_setEnergyShotTargetPosition);
-	//luaRegister(entity_getEnergyShotTargetPosition);
 	luaRegister(entity_getRandomTargetPoint);
 	luaRegister(entity_getTargetPoint);
 
 
 	luaRegister(entity_setTargetRange);
 
-
-	luaRegister(entity_setEnergyChargeTarget);
 
 	luaRegister(entity_setCollideWithAvatar);
 	luaRegister(entity_setPauseInConversation);
@@ -8030,8 +8046,6 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(bone_scale);
 	luaRegister(bone_setBlendType);
-
-	//luaRegister(bone_setRotation);
 
 
 	luaRegister(entity_partSetSegs);
@@ -8159,15 +8173,12 @@ void ScriptInterface::createBaseLuaVM()
 	luaRegister(entity_partRotate);
 	luaRegister(entity_partAlpha);
 
-	luaRegister(entity_fireAtTarget);
-
 	luaRegister(entity_getHealth);
 	luaRegister(entity_pushTarget);
 	luaRegister(entity_flipHorizontal);
 	luaRegister(entity_flipVertical);
 	lua_register(baseState, "entity_fh", l_entity_flipHorizontal);
 	luaRegister(entity_fhTo);
-	lua_register(baseState, "entity_fv", l_entity_flipVertical);
 	luaRegister(entity_update);
 	luaRegister(entity_msg);
 	luaRegister(entity_updateMovement);
@@ -8274,7 +8285,6 @@ void ScriptInterface::createBaseLuaVM()
 	luaRegister(entity_setAnimLayerTimeMult);
 
 	luaRegister(entity_setCurrentTarget);
-	//luaRegister(entity_spawnParticleEffect);
 	luaRegister(entity_warpToPathStart);
 	luaRegister(entity_stopInterpolating);
 
@@ -8322,7 +8332,6 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(emote);
 
-	lua_register(baseState, "playVfx", l_playVisualEffect);
 	luaRegister(playVisualEffect);
 	luaRegister(playNoEffect);
 
@@ -8354,7 +8363,6 @@ void ScriptInterface::createBaseLuaVM()
 	luaRegister(stopCursorGlow);
 
 	luaRegister(entityFollowEntity);
-	luaRegister(setEntityScript);
 
 	luaRegister(setMiniMapHint);
 	luaRegister(bedEffects);
@@ -8364,8 +8372,6 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(setNaijaHeadTexture);
 	lua_register(baseState, "avatar_setHeadTexture", l_setNaijaHeadTexture);
-
-	//luaRegister(hurtEntity);
 
 	luaRegister(incrFlag);
 	luaRegister(decrFlag);
@@ -8393,7 +8399,6 @@ void ScriptInterface::createBaseLuaVM()
 
 
 	luaRegister(savePoint);
-	luaRegister(moveEntity);
 	luaRegister(wait);
 	luaRegister(watch);
 
@@ -8446,10 +8451,6 @@ void ScriptInterface::createBaseLuaVM()
 	luaRegister(fadeOutMusic);
 
 
-	/*
-	luaRegister(options);
-	lua_register(baseState, "opt", l_options);
-	*/
 	luaRegister(isStreamingVoice);
 	lua_register(baseState, "isPlayingVoice", l_isStreamingVoice);
 
@@ -8491,9 +8492,6 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(avatar_toggleMovement);
 
-	luaRegister(toggleConversationWindow);
-	lua_register(baseState, "toggleDialogWindow", l_toggleConversationWindow);
-
 
 	luaRegister(showInGameMenu);
 	luaRegister(hideInGameMenu);
@@ -8525,7 +8523,6 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(isStory);
 
-	lua_register(baseState, "isInDialog", l_isInConversation);
 	luaRegister(entity_damage);
 	luaRegister(entity_heal);
 
@@ -8565,7 +8562,6 @@ void ScriptInterface::createBaseLuaVM()
 	luaRegister(createShot);
 	luaRegister(entity_fireShot);
 
-	luaRegister(entity_setAffectedBySpells);
 	luaRegister(entity_isHit);
 
 
@@ -8584,7 +8580,6 @@ void ScriptInterface::createBaseLuaVM()
 	luaRegister(shot_setAimVector);
 	luaRegister(shot_setOut);
 	luaRegister(shot_setLifeTime);
-	luaRegister(shot_setNice);
 	luaRegister(shot_setVel);
 	luaRegister(shot_setBounceType);
 	luaRegister(entity_pathBurst);
@@ -8636,9 +8631,6 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(isNested);
 
-	lua_register(baseState, "wnd",	l_toggleConversationWindow);
-	lua_register(baseState, "wnds",	l_toggleConversationWindowSoft);
-
 	luaRegister(entity_idle);
 	luaRegister(entity_stopAllAnimations);
 
@@ -8649,11 +8641,6 @@ void ScriptInterface::createBaseLuaVM()
 
 
 	lua_register(baseState, "inp", l_toggleInput);
-
-	//luaRegister(CM);
-	//luaRegister(isIDHighest);
-	//luaRegister(isEGOHighest);
-	//luaRegister(isSUPHighest);
 
 	luaRegister(entity_setTarget);
 	luaRegister(getNodeFromEntity);
@@ -8736,9 +8723,7 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(entity_isAnimating);
 	luaRegister(entity_getAnimationName);
-	lua_register(baseState, "entity_getAnimName", l_entity_getAnimationName);
 	luaRegister(entity_getAnimationLength);
-	lua_register(baseState, "entity_getAnimLen", l_entity_getAnimationLength);
 
 	luaRegister(entity_setCull);
 
@@ -8752,7 +8737,7 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(entity_isFlippedHorizontal);
 	lua_register(baseState, "entity_isfh", l_entity_isFlippedHorizontal);
-	lua_register(baseState, "entity_isfv", l_entity_isFlippedVertical);
+	luaRegister(entity_isFlippedVertical);
 
 	luaRegister(entity_setWidth);
 	luaRegister(entity_setHeight);
@@ -8769,8 +8754,6 @@ void ScriptInterface::createBaseLuaVM()
 
 
 	luaRegister(spawnAroundEntity);
-
-	luaRegister(entity_setAffectedBySpell);
 
 	luaRegister(entity_toggleBone);
 
@@ -8824,10 +8807,6 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(randAngle360);
 	luaRegister(randVector);
-	lua_register(baseState, "getRandVector", l_randVector);
-
-
-	lua_register(baseState, "getAvatar", l_getNaija);
 
 	luaRegister(entity_getNearestEntity);
 	luaRegister(entity_getNearestBoneToPosition);
@@ -8839,8 +8818,6 @@ void ScriptInterface::createBaseLuaVM()
 
 
 	luaRegister(entity_getRotation);
-
-	luaRegister(streamSfx);
 
 	luaRegister(node_isEntityIn);
 
@@ -8861,6 +8838,47 @@ void ScriptInterface::createBaseLuaVM()
 
 
 	// ============== deprecated
+
+	//luaRegister(entity_setRegisterEntityDied);
+
+	//luaRegister(entity_setEnergyShotTarget);
+	//luaRegister(entity_setEnergyShotTargetPosition);
+	//luaRegister(entity_setEnergyChargeTarget);
+
+	luaRegister(entity_fireAtTarget);  // FIXME: still used by several scripts
+
+	//lua_register(baseState, "entity_fv", l_entity_flipVertical);
+
+	//lua_register(baseState, "playVfx", l_playVisualEffect);
+
+	//luaRegister(setEntityScript);
+
+	//luaRegister(moveEntity);
+
+	//luaRegister(options);
+	//lua_register(baseState, "opt", l_options);
+
+	//luaRegister(toggleConversationWindow);
+	//lua_register(baseState, "toggleDialogWindow", l_toggleConversationWindow);
+	//lua_register(baseState, "wnd",	l_toggleConversationWindow);
+	//lua_register(baseState, "wnds",	l_toggleConversationWindowSoft);
+	//lua_register(baseState, "isInDialog", l_isInConversation);
+
+	//lua_register(baseState, "entity_getAnimName", l_entity_getAnimationName);
+	//lua_register(baseState, "entity_getAnimLen", l_entity_getAnimationLength);
+
+	//lua_register(baseState, "entity_isfv", l_entity_isFlippedVertical);
+
+	//luaRegister(entity_setAffectedBySpell);
+	luaRegister(entity_setAffectedBySpells);  // FIXME: still used by several scripts
+
+	luaRegister(shot_setNice);  // FIXME: still used by loper.lua, toad.lua
+
+	//lua_register(baseState, "getRandVector", l_randVector);
+
+	//lua_register(baseState, "getAvatar", l_getNaija);
+
+	//luaRegister(streamSfx);
 }
 
 void ScriptInterface::destroyBaseLuaVM()
