@@ -641,15 +641,6 @@ luaFunc(entity_warpLastPosition)
 }
 
 
-/*
-luaFunc(mod_setActive)
-{
-	bool b = getBool(L);
-	dsq->mod.setActive(b);
-	luaReturnBool(b);
-}
-*/
-
 luaFunc(entity_velTowards)
 {
 	Entity *e = entity(L);
@@ -972,22 +963,6 @@ luaFunc(toggleLiCombat)
 	dsq->continuity.toggleLiCombat(getBool(L));
 	luaReturnNum(0);
 }
-
-#if 0
-luaFunc(toggleConversationWindow)
-{
-	//dsq->toggleConversationWindow((bool)lua_tointeger(L, 1));
-	luaReturnNum(0);
-}
-#endif
-
-#if 0
-luaFunc(toggleConversationWindowSoft)
-{
-	//dsq->toggleConversationWindow((bool)lua_tointeger(L, 1), true);
-	luaReturnNum(0);
-}
-#endif
 
 luaFunc(getNoteName)
 {
@@ -1314,21 +1289,6 @@ luaFunc(entity_getCollideRadius)
 	luaReturnNum(ret);
 }
 
-#if 0
-luaFunc(entity_setRegisterEntityDied)
-{
-	debugLog("entity_setRegisterEntityDied is deceased!");
-	luaReturnNum(0);
-	/*
-	Entity *e = entity(L);
-	bool b = getBool(L, 2);
-	if (e)
-		e->registerEntityDied = b;
-	luaReturnBool(b);
-	*/
-}
-#endif
-
 luaFunc(entity_setDropChance)
 {
 	Entity *e = entity(L);
@@ -1344,24 +1304,6 @@ luaFunc(entity_setDropChance)
 	}
 	luaReturnNum(0);
 }
-
-#if 0
-luaFunc(entity_setAffectedBySpell)
-{
-
-	/*
-	Entity *e = entity(L);
-	SpellType st = (SpellType)int(lua_tonumber(L, 2));
-	int v = lua_tonumber(L, 3);
-	if (e)
-	{
-		e->setAffectedBySpell(st, v);
-	}
-	*/
-	debugLog("entity_setAffectedBySpell is deprecated");
-	luaReturnNum(0);
-}
-#endif
 
 luaFunc(entity_setAffectedBySpells)
 {
@@ -1452,196 +1394,6 @@ luaFunc(entity_swimToPosition)
 	luaReturnNum(0);
 }
 
-
-/*
-luaFunc(options)
-{
-
-	dsq->game->avatar->disableInput();
-	std::string file = dsq->getDialogueFilename(dsq->dialogueFile);
-	std::ifstream inFile(file.c_str());
-	std::string s;
-	std::vector<DialogOption> options;
-
-	dsq->continuity.cm.figureCase();
-
-	// less than big number
-	// get pairs of either string + bool or string + string
-	for (int i = 1; i < 19; i+=2)
-	{
-		DialogOption option;
-		int idx = i;
-		// first part of the pair is a dialogue file section
-		if (lua_isstring(L, idx))
-			option.section = lua_tostring(L, idx);
-		// second part of pair is either boolean/integer or string
-		bool addOption = true;
-		if (lua_isboolean(L, idx+1) || lua_isnumber(L, idx+1))
-		{
-			if (lua_isboolean(L, idx+1))
-				option.used = lua_toboolean(L, idx+1);
-			else if (lua_isnumber(L, idx+1))
-				option.used= bool(lua_tointeger(L, idx+1));
-		}
-		else if (lua_isstring(L, idx+1))
-		{
-			// if the second part of the pair is a string, it means we used a min function
-			// here we parse the min function
-			// we expect a string of length 4 ([type] [ID] [EGO] [SEGO])
-			option.cmString = lua_tostring(L, idx+1);
-			if (option.cmString.empty())
-			{
-				debugLog("[option] error parsing cmString");
-			}
-			else
-			{
-				std::istringstream is(option.cmString);
-				int v;
-				is >> v >> option.id >> option.ego >> option.sego;
-				option.cmType = (CMType)v;
-
-				// figure out if it should be used
-				switch(option.cmType)
-				{
-				case CMT_TRUE:
-					option.used = true;
-				break;
-				case CMT_FALSE:
-					option.used = false;
-				break;
-				default:
-				{
-					int sz = dsq->continuity.cm.allowedOptionTypes.size();
-					int i;
-					for (i = 0; i < sz; i++)
-					{
-						CMType c = dsq->continuity.cm.allowedOptionTypes[i];
-						if (option.cmType == CMT_MIN_EGOSEGO && (c == CMT_MIN_EGO || c == CMT_MIN_SEGO))
-						{
-							option.used = true;
-							break;
-						}
-						else if (option.cmType == CMT_MAJ_EGOSEGO && (c == CMT_MAJ_EGO || c == CMT_MAJ_SEGO))
-						{
-							option.used = true;
-							break;
-						}
-						else if (c == option.cmType)
-						{
-							option.used = true;
-							break;
-						}
-					}
-					if (i == sz)
-					{
-						std::ostringstream os;
-						os << dsq->dialogueFile << " - option dropped, choice (" << int((idx-1)/2) << ") function type :"
-							<< dsq->continuity.cm.getVerbose(option.cmType);
-						debugLog(os.str());
-						option.used = false;
-					}
-				}
-				break;
-				}
-
-			}
-		}
-		else
-		{
-			addOption = false;
-		}
-		if (option.used)
-		{
-			if (option.section.find(':') == std::string::npos)
-				option.text = option.section;
-			else
-			{
-				// read the text
-				std::ifstream inFile;
-				dsq->jumpToSection(inFile, option.section);
-				std::getline(inFile, option.text);
-				if (option.text.empty())
-				{
-					option.text = "NOTFOUND";
-				}
-				else
-				{
-					int pos = option.text.find(':');
-					if (pos!=std::string::npos)
-					{
-						option.text = option.text.substr(pos+2, option.text.size());
-					}
-				}
-			}
-		}
-		if (addOption)
-			options.push_back(option);
-	}
-
-	// display the options
-
-
-	dsq->game->avatar->disableInput();
-
-	dsq->toggleCursor(true);
-	while (core->getNestedMains() > 1)
-		core->quitNestedMain();
-
-	std::vector<AquariaMenuItem*> menu;
-	if (!options.empty())
-	{
-		int c = 0;
-		for (int i = 0; i < options.size(); i++)
-		{
-			if (options[i].used)
-			{
-				AquariaMenuItem* a = new AquariaMenuItem;
-				a->setLabel(options[i].text);
-				a->choice = i;
-				//150
-				a->position = Vector(400,100 + c*40);
-				dsq->game->addRenderObject(a, LR_MENU);
-				menu.push_back(a);
-				c++;
-			}
-		}
-		core->main();
-		for (int i = 0; i < menu.size(); i++)
-		{
-			menu[i]->alpha = 0;
-			menu[i]->safeKill();
-		}
-		menu.clear();
-	}
-
-	DialogOption *d = &(options[dsq->lastChoice]);
-	// ADD IN THE STATS HERE
-	switch (d->cmType)
-	{
-	case CMT_TRUE:
-	case CMT_FALSE:
-	break;
-	default:
-		dsq->continuity.cm.addID(d->id);
-		dsq->continuity.cm.addEGO(d->ego);
-		dsq->continuity.cm.addSEGO(d->sego);
-		// add stats
-		//d->id
-		//d->ego
-		//d->sego
-	break;
-	}
-
-
-
-	if (d->text != d->section)
-		dsq->simpleConversation(d->section);
-
-
-	dsq->toggleCursor(false);
-	luaReturnNum(0);
-}
-*/
 
 luaFunc(avatar_setCanDie)
 {
@@ -1787,13 +1539,6 @@ luaFunc(hasSong)
 	luaReturnBool(b);
 }
 
-#if 0
-luaFunc(isInConversation)
-{
-	luaReturnBool(0);
-}
-#endif
-
 luaFunc(loadSound)
 {
 	void *handle = core->sound->loadLocalSound(getString(L, 1));
@@ -1878,16 +1623,6 @@ luaFunc(entity_warpToPathStart)
 	luaReturnNum(0);
 }
 
-/*
-luaFunc(entity_spawnParticleEffect)
-{
-	Entity *e = entity(L);
-	if (e)
-		dsq->spawnParticleEffect(lua_tointeger(L, 2), e->position + Vector(lua_tointeger(L, 3), lua_tointeger(L, 4)), 0, lua_tonumber(L, 5));
-	luaReturnNum(0);
-}
-*/
-
 luaFunc(getIngredientGfx)
 {
 	luaReturnStr(dsq->continuity.getIngredientGfx(getString(L, 1)).c_str());
@@ -1908,14 +1643,6 @@ luaFunc(getNearestIngredient)
 	Ingredient *i = dsq->game->getNearestIngredient(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)), lua_tonumber(L, 3));
 	luaReturnPtr(i);
 }
-
-/*
-luaFunc(dropIngredients)
-{
-	//dsq->continuity.dropIngredients(lua_tonumber(L, 1));
-	luaReturnNum(0);
-}
-*/
 
 luaFunc(spawnAllIngredients)
 {
@@ -2564,14 +2291,6 @@ luaFunc(cam_setPosition)
 	luaReturnNum(0);
 }
 
-/*
-luaFunc(cam_restore)
-{
-	dsq->game->setCameraFollow(dsq->game->avatar);
-	luaReturnNum(0);
-}
-*/
-
 
 luaFunc(entity_spawnParticlesFromCollisionMask)
 {
@@ -2930,32 +2649,6 @@ luaFunc(createEntity)
 	*/
 	luaReturnPtr(e);
 }
-
-#if 0
-// moveEntity(name, x, y, time, ease)
-luaFunc(moveEntity)
-{
-	errorLog ("moveEntity is deprecated");
-	/*
-	Entity *e = dsq->getEntityByName(lua_tostring(L, 1));
-	bool ease = lua_tointeger(L, 5);
-	Vector p(lua_tointeger(L, 2), lua_tointeger(L, 3));
-	if (lua_tonumber(L, 5))
-	{
-		p = e->position + p;
-	}
-	if (ease)
-	{
-		e->position.interpolateTo(p, lua_tonumber(L, 4));
-	}
-	else
-	{
-		e->position.interpolateTo(p, lua_tonumber(L, 4), 0, 0, 1);
-	}
-	*/
-	luaReturnNum(0);
-}
-#endif
 
 luaFunc(savePoint)
 {
@@ -4271,18 +3964,6 @@ luaFunc(entity_setDeathParticleEffect)
 	luaReturnNum(0);
 }
 
-/*
-luaFunc(entity)
-{
-	ScriptedEntity *se = scriptedEntity(L);
-	if (se)
-	{
-		se->deathParticleEffect = lua_tostring(L, 2);
-	}
-	luaReturnNum(0);
-}
-*/
-
 luaFunc(entity_setNaijaReaction)
 {
 	Entity *e = entity(L);
@@ -5142,25 +4823,6 @@ luaFunc(entity_followEntity)
 	luaReturnNum(0);
 }
 
-#if 0
-luaFunc(setEntityScript)
-{
-	errorLog ("setentityScript is deprecated");
-	if (false)
-	{
-		/*
-		Entity *e = dsq->getEntityByName(lua_tostring(L, 1));
-		if (e)
-		{
-			e->convo = lua_tostring(L, 2);
-		}
-		*/
-	}
-
-	luaReturnNum(0);
-}
-#endif
-
 luaFunc(toggleInput)
 {
 	int v = lua_tointeger(L, 1);
@@ -5242,14 +4904,6 @@ luaFunc(registerSporeChildData)
 	luaReturnNum(0);
 }
 
-#if 0
-luaFunc(streamSfx)
-{
-	//core->sound->streamSfx(lua_tostring(L, 1));
-	luaReturnNum(0);
-}
-#endif
-
 luaFunc(entity_setDamageTarget)
 {
 	Entity *e = entity(L);
@@ -5280,21 +4934,6 @@ luaFunc(entity_isDamageTarget)
 	}
 	luaReturnBool(v);
 }
-
-#if 0
-luaFunc(entity_setEnergyShotTarget)
-{
-	/*
-	Entity *e = entity(L);
-	if (e)
-	{
-		e->energyShotTarget = lua_toboolean(L, 2);
-	}
-	*/
-	debugLog("setEnergyShotTarget antiquated");
-	luaReturnNum(0);
-}
-#endif
 
 luaFunc(entity_setTargetRange)
 {
@@ -5345,36 +4984,6 @@ luaFunc(entity_getRandomTargetPoint)
 	}
 	luaReturnNum(idx);
 }
-
-#if 0
-luaFunc(entity_setEnergyShotTargetPosition)
-{
-	/*
-	Entity *e = entity(L);
-	if (e)
-	{
-		e->energyShotTargetPosition = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
-	}
-	*/
-	errorLog("entity_setEnergyShotTargetPosition is obsolete!");
-	luaReturnNum(0);
-}
-#endif
-
-#if 0
-luaFunc(entity_setEnergyChargeTarget)
-{
-	/*
-	Entity *e = entity(L);
-	if (e)
-	{
-		e->energyChargeTarget = lua_toboolean(L, 2);
-	}
-	*/
-	debugLog("setEnergyChargeTarget antiquated");
-	luaReturnNum(0);
-}
-#endif
 
 luaFunc(playVisualEffect)
 {
@@ -6180,19 +5789,6 @@ luaFunc(entity_touchAvatarDamage)
 	luaReturnBool(v);
 }
 
-/*
-luaFunc(entity_touchAvatarDamageRect)
-{
-	Entity *e = entity(L);
-	bool v = false;
-	if (e)
-	{
-		v = e->touchAvatarDamageRect(lua_tonumber(L, 2), 
-	}
-	luaReturnBool(v);
-}
-*/
-
 luaFunc(entity_getDistanceToEntity)
 {
 	Entity *e = entity(L);
@@ -6456,15 +6052,6 @@ luaFunc(getEntityByID)
 	}
 	luaReturnPtr(found);
 }
-
-/*
-luaFunc(node_toggleElements)
-{
-	// disable the elements found within
-	errorLog("node_disableElements not yet written");
-	luaReturnNum(0);
-}
-*/
 
 luaFunc(node_setEffectOn)
 {
@@ -7678,18 +7265,6 @@ luaFunc(getPetPower)
 	luaReturnNum(dsq->continuity.petPower);
 }
 
-/*
-luaFunc(getPlantGrabNode)
-{
-	ScriptedEntity *se = scriptedEntity(L);
-	if (se)
-	{
-		//se->springPlant.
-	}
-	luaReturnNum(0);
-}
-*/
-
 luaFunc(showControls)
 {
 	std::string keygfx = lua_tostring(L, 1);
@@ -7964,7 +7539,6 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(entity_setUpdateCull);
 	luaRegister(entity_flipHToAvatar);
-	//luaRegister(entity_fhTo);
 
 	luaRegister(entity_switchLayer);
 
@@ -8636,7 +8210,6 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(entity_getBoneByIdx);
 	luaRegister(entity_getBoneByName);
-	//luaRegister(bone_getWorldPosition);
 
 
 
@@ -8666,7 +8239,6 @@ void ScriptInterface::createBaseLuaVM()
 	luaRegister(node_getSize);
 	luaRegister(node_setEffectOn);
 
-	//luaRegister(node_setEffectOn);
 	luaRegister(toggleSteam);
 	luaRegister(toggleVersionLabel);
 	luaRegister(setVersionLabelText);
@@ -8839,46 +8411,9 @@ void ScriptInterface::createBaseLuaVM()
 
 	// ============== deprecated
 
-	//luaRegister(entity_setRegisterEntityDied);
-
-	//luaRegister(entity_setEnergyShotTarget);
-	//luaRegister(entity_setEnergyShotTargetPosition);
-	//luaRegister(entity_setEnergyChargeTarget);
-
 	luaRegister(entity_fireAtTarget);  // FIXME: still used by several scripts
-
-	//lua_register(baseState, "entity_fv", l_entity_flipVertical);
-
-	//lua_register(baseState, "playVfx", l_playVisualEffect);
-
-	//luaRegister(setEntityScript);
-
-	//luaRegister(moveEntity);
-
-	//luaRegister(options);
-	//lua_register(baseState, "opt", l_options);
-
-	//luaRegister(toggleConversationWindow);
-	//lua_register(baseState, "toggleDialogWindow", l_toggleConversationWindow);
-	//lua_register(baseState, "wnd",	l_toggleConversationWindow);
-	//lua_register(baseState, "wnds",	l_toggleConversationWindowSoft);
-	//lua_register(baseState, "isInDialog", l_isInConversation);
-
-	//lua_register(baseState, "entity_getAnimName", l_entity_getAnimationName);
-	//lua_register(baseState, "entity_getAnimLen", l_entity_getAnimationLength);
-
-	//lua_register(baseState, "entity_isfv", l_entity_isFlippedVertical);
-
-	//luaRegister(entity_setAffectedBySpell);
 	luaRegister(entity_setAffectedBySpells);  // FIXME: still used by several scripts
-
 	luaRegister(shot_setNice);  // FIXME: still used by loper.lua, toad.lua
-
-	//lua_register(baseState, "getRandVector", l_randVector);
-
-	//lua_register(baseState, "getAvatar", l_getNaija);
-
-	//luaRegister(streamSfx);
 }
 
 void ScriptInterface::destroyBaseLuaVM()
