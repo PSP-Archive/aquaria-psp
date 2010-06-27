@@ -43,7 +43,7 @@ const bool throwLuaErrors = false;
 // S C R I P T  C O M M A N D S
 //============================================================================================
 
-void luaErrorMsg(lua_State *L, const std::string &msg)
+static void luaErrorMsg(lua_State *L, const std::string &msg)
 {
 	debugLog(msg);
 
@@ -54,6 +54,7 @@ void luaErrorMsg(lua_State *L, const std::string &msg)
 	}
 }
 
+// Also called from Path.cpp
 void luaPushPointer(lua_State *L, void *ptr)
 {
 	// All the scripts do this:
@@ -69,7 +70,7 @@ void luaPushPointer(lua_State *L, void *ptr)
 		lua_pushnumber(L, 0);
 }
 
-inline
+static inline
 ScriptedEntity *scriptedEntity(lua_State *L, int slot = 1)
 {
 	ScriptedEntity *se = (ScriptedEntity*)lua_touserdata(L, slot);
@@ -78,7 +79,7 @@ ScriptedEntity *scriptedEntity(lua_State *L, int slot = 1)
 	return se;
 }
 
-inline
+static inline
 CollideEntity *collideEntity(lua_State *L, int slot = 1)
 {
 	CollideEntity *ce = (CollideEntity*)lua_touserdata(L, slot);
@@ -87,7 +88,7 @@ CollideEntity *collideEntity(lua_State *L, int slot = 1)
 	return ce ;
 }
 
-inline
+static inline
 RenderObject *object(lua_State *L, int slot = 1)
 {
 	//RenderObject *obj = dynamic_cast<RenderObject*>((RenderObject*)(int(lua_tonumber(L, slot))));
@@ -97,7 +98,7 @@ RenderObject *object(lua_State *L, int slot = 1)
 	return obj;
 }
 
-inline
+static inline
 Beam *beam(lua_State *L, int slot = 1)
 {
 	Beam *b = (Beam*)lua_touserdata(L, slot);
@@ -106,7 +107,7 @@ Beam *beam(lua_State *L, int slot = 1)
 	return b;
 }
 
-inline
+static inline
 std::string getString(lua_State *L, int slot = 1)
 {
 	std::string sr;
@@ -117,27 +118,27 @@ std::string getString(lua_State *L, int slot = 1)
 	return sr;
 }
 
-inline
+static inline
 Shot *getShot(lua_State *L, int slot = 1)
 {
 	Shot *shot = (Shot*)lua_touserdata(L, slot);
 	return shot;
 }
 
-inline
+static inline
 Web *getWeb(lua_State *L, int slot = 1)
 {
 	Web *web = (Web*)lua_touserdata(L, slot);
 	return web;
 }
 
-inline
+static inline
 Ingredient *getIng(lua_State *L, int slot = 1)
 {
 	return (Ingredient*)lua_touserdata(L, slot);
 }
 
-inline
+static inline
 bool getBool(lua_State *L, int slot = 1)
 {
 	if (lua_isnumber(L, slot))
@@ -155,7 +156,7 @@ bool getBool(lua_State *L, int slot = 1)
 	return false;
 }
 
-inline
+static inline
 Entity *entity(lua_State *L, int slot = 1)
 {
 	Entity *ent = (Entity*)lua_touserdata(L, slot);
@@ -166,7 +167,7 @@ Entity *entity(lua_State *L, int slot = 1)
 	return ent;
 }
 
-inline
+static inline
 Vector getVector(lua_State *L, int slot = 1)
 {
 	Vector v(lua_tonumber(L, slot), lua_tonumber(L, slot+1));
@@ -174,7 +175,7 @@ Vector getVector(lua_State *L, int slot = 1)
 }
 
 
-inline
+static inline
 Bone *bone(lua_State *L, int slot = 1)
 {
 	Bone *b = (Bone*)lua_touserdata(L, slot);
@@ -185,7 +186,7 @@ Bone *bone(lua_State *L, int slot = 1)
 	return b;
 }
 
-inline
+static inline
 Path *pathFromName(lua_State *L, int slot = 1)
 {
 	std::string s = lua_tostring(L, slot);
@@ -198,26 +199,26 @@ Path *pathFromName(lua_State *L, int slot = 1)
 	return p;
 }
 
-inline
+static inline
 Path *path(lua_State *L, int slot = 1)
 {
 	Path *p = (Path*)lua_touserdata(L, slot);
 	return p;
 }
 
-RenderObject *entityToRenderObject(lua_State *L, int slot = 1)
+static RenderObject *entityToRenderObject(lua_State *L, int slot = 1)
 {
 	Entity *e = entity(L, slot);
 	return dynamic_cast<RenderObject*>(e);
 }
 
-RenderObject *boneToRenderObject(lua_State *L, int slot = 1)
+static RenderObject *boneToRenderObject(lua_State *L, int slot = 1)
 {
 	Bone *b = bone(L, slot);
 	return dynamic_cast<RenderObject*>(b);
 }
 
-PauseQuad *getPauseQuad(lua_State *L, int slot = 1)
+static PauseQuad *getPauseQuad(lua_State *L, int slot = 1)
 {
 	PauseQuad *q = (PauseQuad*)lua_touserdata(L, slot);
 	if (q)
@@ -227,7 +228,7 @@ PauseQuad *getPauseQuad(lua_State *L, int slot = 1)
 	return 0;
 }
 
-SkeletalSprite *getSkeletalSprite(Entity *e)
+static SkeletalSprite *getSkeletalSprite(Entity *e)
 {
 	Avatar *a;
 	ScriptedEntity *se;
@@ -246,7 +247,7 @@ SkeletalSprite *getSkeletalSprite(Entity *e)
 
 //----------------------------------//
 
-#define luaFunc(func)		int l_##func(lua_State *L)
+#define luaFunc(func)		static int l_##func(lua_State *L)
 #define luaReturnBool(bool)	do {lua_pushboolean(L, (bool)); return 1;} while(0)
 #define luaReturnInt(num)	do {lua_pushinteger(L, (num)); return 1;} while(0)
 #define luaReturnNum(num)	do {lua_pushnumber(L, (num)); return 1;} while(0)
@@ -258,7 +259,7 @@ SkeletalSprite *getSkeletalSprite(Entity *e)
 #define luaRegister(func)	lua_register(baseState, #func, l_##func);
 
 
-static luaFunc(dofile_caseinsensitive)
+luaFunc(dofile_caseinsensitive)
 {
 	// This is Lua's dofile(), with some tweaks.  --ryan.
 	std::string fname(core->adjustFilenameCase(luaL_checkstring(L, 1)));
@@ -1898,11 +1899,13 @@ luaFunc(getNearestIngredient)
 	luaReturnPtr(i);
 }
 
+/*
 luaFunc(dropIngredients)
 {
 	//dsq->continuity.dropIngredients(lua_tonumber(L, 1));
 	luaReturnNum(0);
 }
+*/
 
 luaFunc(spawnAllIngredients)
 {
@@ -7652,6 +7655,7 @@ luaFunc(getPetPower)
 	luaReturnNum(dsq->continuity.petPower);
 }
 
+/*
 luaFunc(getPlantGrabNode)
 {
 	ScriptedEntity *se = scriptedEntity(L);
@@ -7661,6 +7665,7 @@ luaFunc(getPlantGrabNode)
 	}
 	luaReturnNum(0);
 }
+*/
 
 luaFunc(showControls)
 {
