@@ -70,11 +70,11 @@ static int l_dofile_caseinsensitive(lua_State *L)
 }
 
 
-#define luaf(func)		int l_##func(lua_State *L) {
-#define luap(ptr)		luaPushPointer(L, ptr); return 1; }
-#define luab(bool)		lua_pushboolean(L, bool); return 1; }
+#define luaFunc(func)		int l_##func(lua_State *L)
+#define luaReturnPtr(ptr)	do {luaPushPointer(L, (ptr)); return 1;} while(0)
+#define luaReturnBool(bool)	do {lua_pushboolean(L, (bool)); return 1;} while(0)
 
-#define luar(func)		lua_register(baseState, #func, l_##func);
+#define luaRegister(func)	lua_register(baseState, #func, l_##func);
 
 void luaErrorMsg(lua_State *L, const std::string &msg)
 {
@@ -7256,33 +7256,46 @@ int l_toggleVersionLabel(lua_State *L)
 	return 1;
 }
 
-luaf(setVersionLabelText)
+luaFunc(setVersionLabelText)
+{
 	dsq->setVersionLabelText();
-luap(NULL)
+	luaReturnPtr(NULL);
+}
 
-luaf(setCutscene)
+luaFunc(setCutscene)
+{
 	dsq->setCutscene(getBool(L, 1), getBool(L, 2));
-luap(NULL)
+	luaReturnPtr(NULL);
+}
 
-luaf(isInCutscene)
-luab(dsq->isInCutscene())
+luaFunc(isInCutscene)
+{
+	luaReturnBool(dsq->isInCutscene());
+}
 
-luaf(toggleSteam)
+luaFunc(toggleSteam)
+{
 	bool on = getBool(L, 1);
 	for (Path *p = dsq->game->getFirstPathOfType(PATH_STEAM); p; p = p->nextOfType)
 	{
 		p->setEffectOn(on);
 	}
-luab(on)
+	luaReturnBool(on);
+}
 
-luaf(getFirstEntity)
-luap(dsq->getFirstEntity())
+luaFunc(getFirstEntity)
+{
+	luaReturnPtr(dsq->getFirstEntity());
+}
 
-luaf(getNextEntity)
-luap(dsq->getNextEntity())
+luaFunc(getNextEntity)
+{
+	luaReturnPtr(dsq->getNextEntity());
+}
 
-luaf(getEntity)
-	Entity *ent =0;
+luaFunc(getEntity)
+{
+	Entity *ent = 0;
 	// THIS WAS IMPORTANT: this was for getting entity by NUMBER IN LIST used for looping through all entities in script
 	if (lua_isnumber(L, 1))
 	{
@@ -7294,7 +7307,8 @@ luaf(getEntity)
 		std::string s = lua_tostring(L, 1);
 		ent = dsq->getEntityByName(s);
 	}
-luap(ent)
+	luaReturnPtr(ent);
+}
 
 int _alpha(lua_State *L, RenderObject *r)
 {
@@ -9335,15 +9349,15 @@ void ScriptInterface::createBaseLuaVM()
 	lua_register( baseState, "node_getSize",									l_node_getSize);
 	lua_register( baseState, "node_setEffectOn",								l_node_setEffectOn);
 
-	//luar(	node_setEffectOn				);
-	luar(	toggleSteam						);
-	luar(	toggleVersionLabel				);
-	luar(	setVersionLabelText				);
+	//luaRegister(	node_setEffectOn				);
+	luaRegister(	toggleSteam						);
+	luaRegister(	toggleVersionLabel				);
+	luaRegister(	setVersionLabelText				);
 	
-	luar(	appendUserDataPath				);
+	luaRegister(	appendUserDataPath				);
 
-	luar(	setCutscene						);
-	luar(	isInCutscene					);
+	luaRegister(	setCutscene						);
+	luaRegister(	isInCutscene					);
 
 		
 
