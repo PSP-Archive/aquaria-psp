@@ -43,13 +43,13 @@ const bool throwLuaErrors = false;
 // S C R I P T  C O M M A N D S
 //============================================================================================
 
-static void luaErrorMsg(lua_State *L, const std::string &msg)
+static void luaErrorMsg(lua_State *L, const char *msg)
 {
 	debugLog(msg);
 
 	if (throwLuaErrors)
 	{
-		lua_pushstring(L, msg.c_str());
+		lua_pushstring(L, msg);
 		lua_error(L);
 	}
 }
@@ -1032,9 +1032,9 @@ luaFunc(setNaijaModel)
 
 luaFunc(debugLog)
 {
-	std::string s = lua_tostring(L, 1);
+	const char *s = lua_tostring(L, 1);
 	debugLog(s);
-	luaReturnStr(s.c_str());
+	luaReturnStr(s);
 }
 
 luaFunc(reconstructGrid)
@@ -2033,16 +2033,16 @@ luaFunc(entity_isAnimating)
 luaFunc(entity_getAnimationName)
 {
 	Entity *e = entity(L);
-	std::string ret;
+	const char *ret = "";
 	int layer = lua_tonumber(L, 2);
 	if (e)
 	{
 		if (Animation *anim = e->skeletalSprite.getCurrentAnimation(layer))
 		{
-			ret = anim->name;
+			ret = anim->name.c_str();
 		}
 	}
-	luaReturnStr(ret.c_str());
+	luaReturnStr(ret);
 }
 
 luaFunc(entity_getAnimationLength)
@@ -2322,7 +2322,6 @@ luaFunc(entity_startEmitter)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	int e = lua_tointeger(L, 2);
-	std::string pfile = getString(L, 3);
 	if (se)
 	{
 		se->startEmitter(e);
@@ -2334,7 +2333,6 @@ luaFunc(entity_stopEmitter)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	int e = lua_tointeger(L, 2);
-	std::string pfile = getString(L, 3);
 	if (se)
 	{
 		se->stopEmitter(e);
@@ -3099,23 +3097,23 @@ luaFunc(entity_isName)
 luaFunc(entity_getName)
 {
 	Entity *e = entity(L);
-	std::string s;
+	const char *s = "";
 	if (e)
 	{
-		s = e->name;
+		s = e->name.c_str();
 	}
-	luaReturnStr(s.c_str());
+	luaReturnStr(s);
 }
 
 luaFunc(node_getContent)
 {
 	Path *p = path(L);
-	std::string s;
+	const char *s = "";
 	if (p)
 	{
-		s = p->content;
+		s = p->content.c_str();
 	}
-	luaReturnStr(s.c_str());
+	luaReturnStr(s);
 }
 
 luaFunc(node_getAmount)
@@ -3144,12 +3142,12 @@ luaFunc(node_getSize)
 luaFunc(node_getName)
 {
 	Path *p = path(L);
-	std::string s;
+	const char *s = "";
 	if (p)
 	{
-		s = p->name;
+		s = p->name.c_str();
 	}
-	luaReturnStr(s.c_str());
+	luaReturnStr(s);
 }
 
 luaFunc(node_getPathPosition)
@@ -4621,13 +4619,13 @@ luaFunc(bone_getidx)
 
 luaFunc(bone_getName)
 {
-	std::string n;
+	const char *n = "";
 	Bone *b = bone(L);
 	if (b)
 	{
-		n = b->name;
+		n = b->name.c_str();
 	}
-	luaReturnStr(n.c_str());
+	luaReturnStr(n);
 }
 
 luaFunc(bone_isName)
