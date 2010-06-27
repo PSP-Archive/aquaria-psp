@@ -37,8 +37,7 @@ extern "C"
 #include "../BBGE/MathFunctions.h"
 
 ScriptInterface *si = 0;
-bool conversationStarted = false;
-bool throwLuaErrors = false;
+const bool throwLuaErrors = false;
 
 //============================================================================================
 // S C R I P T  C O M M A N D S
@@ -471,7 +470,7 @@ luaFunc(createSpore)
 		luaReturnPtr(spore);
 	}
 	else
-		luaReturnNum(0);
+		luaReturnPtr(NULL);
 }
 
 luaFunc(web_addPoint)
@@ -1761,8 +1760,6 @@ luaFunc(hideInGameMenu)
 	luaReturnNum(0);
 }
 
-Quad *image=0;
-
 luaFunc(showImage)
 {
 	dsq->game->showImage(getString(L));
@@ -2086,12 +2083,11 @@ luaFunc(entity_stopTimer)
 	luaReturnInt(0);
 }
 
-Vector createEntityOffset(0, 0);
 luaFunc(entity_createEntity)
 {
 	Entity *e = entity(L);
 	if (e)
-		dsq->game->createEntity(dsq->getEntityTypeIndexByName(lua_tostring(L, 2)), 0, e->position+createEntityOffset, 0, false, "", ET_ENEMY, BT_NORMAL, 0, 0, true);
+		dsq->game->createEntity(dsq->getEntityTypeIndexByName(lua_tostring(L, 2)), 0, e->position, 0, false, "", ET_ENEMY, BT_NORMAL, 0, 0, true);
 	luaReturnInt(0);
 }
 
@@ -5325,8 +5321,7 @@ luaFunc(entity_getRandomTargetPoint)
 	{
 		idx = e->getRandomTargetPoint();
 	}
-	lua_pushnumber(L, idx);
-	return 2;
+	luaReturnNum(idx);
 }
 
 luaFunc(entity_setEnergyShotTargetPosition)
@@ -5727,7 +5722,7 @@ luaFunc(entity_releaseTarget)
 	luaReturnNum(0);
 }
 
-luaFunc(e_setv)
+luaFunc(esetv)
 {
 	Entity *e = entity(L);
 	EV ev = (EV)lua_tointeger(L, 2);
@@ -5737,14 +5732,14 @@ luaFunc(e_setv)
 	luaReturnNum(n);
 }
 
-luaFunc(e_getv)
+luaFunc(egetv)
 {
 	Entity *e = entity(L);
 	EV ev = (EV)lua_tointeger(L, 2);
 	luaReturnNum(e->getv(ev));
 }
 
-luaFunc(e_setvf)
+luaFunc(esetvf)
 {
 	Entity *e = entity(L);
 	EV ev = (EV)lua_tointeger(L, 2);
@@ -5754,14 +5749,14 @@ luaFunc(e_setvf)
 	luaReturnNum(n);
 }
 
-luaFunc(e_getvf)
+luaFunc(egetvf)
 {
 	Entity *e = entity(L);
 	EV ev = (EV)lua_tointeger(L, 2);
 	luaReturnNum(e->getvf(ev));
 }
 
-luaFunc(e_isv)
+luaFunc(eisv)
 {
 	Entity *e = entity(L);
 	EV ev = (EV)lua_tointeger(L, 2);
@@ -6850,7 +6845,7 @@ luaFunc(entity_switchLayer)
 		toLayer = LR_ENTITIES;
 
 	core->switchRenderObjectLayer(e, toLayer);
-	return 1;
+	luaReturnNum(0);
 }
 
 luaFunc(entity_isScaling)
@@ -7644,7 +7639,7 @@ luaFunc(setLiPower)
 	float m = lua_tonumber(L, 1);
 	float t = lua_tonumber(L, 2);
 	dsq->continuity.setLiPower(m, t); 
-	return 1;
+	luaReturnNum(0);
 }
 
 luaFunc(getLiPower)
@@ -7870,11 +7865,11 @@ void ScriptInterface::createBaseLuaVM()
 	luaRegister(ing_hasIET);
 
 
-	lua_register(baseState, "esetv",	l_e_setv);
-	lua_register(baseState, "esetvf",	l_e_setvf);
-	lua_register(baseState, "egetv",	l_e_getv);
-	lua_register(baseState, "egetvf",	l_e_getvf);
-	lua_register(baseState, "eisv",		l_e_isv);
+	luaRegister(esetv);
+	luaRegister(esetvf);
+	luaRegister(egetv);
+	luaRegister(egetvf);
+	luaRegister(eisv);
 
 	luaRegister(entity_addIgnoreShotDamageType);
 	luaRegister(entity_ensureLimit);
