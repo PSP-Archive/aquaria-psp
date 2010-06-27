@@ -279,7 +279,7 @@ function enterState(me)
 		entity_setStateTime(me, -1)
 		entity_idle(n)
 		entity_clearVel(n)
-		entity_flipTo(n, me)
+		entity_flipToEntity(n, me)
 		for i=1,10 do
 			killJellies(me)
 			watch(0.1)

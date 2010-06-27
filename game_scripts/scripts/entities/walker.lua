@@ -68,10 +68,10 @@ function init(me)
 	BackLeg2Bottom = entity_getBoneByName(me, "BackLeg2Bottom")
 	backLeg2Top = entity_getBoneByName(me, "BackLeg2Top")
 	cl = 0.64
-	bone_color(backLeg1Bottom, cl, cl, cl)
-	bone_color(backLeg1Top, cl, cl, cl)
-	bone_color(BackLeg2Bottom, cl, cl, cl)
-	bone_color(backLeg2Top, cl, cl, cl)
+	bone_setColor(backLeg1Bottom, cl, cl, cl)
+	bone_setColor(backLeg1Top, cl, cl, cl)
+	bone_setColor(BackLeg2Bottom, cl, cl, cl)
+	bone_setColor(backLeg2Top, cl, cl, cl)
 	
 	entity_scale(me, 1.23, 1.23)
 	

@@ -844,7 +844,7 @@ function cutscene(me)
 	
 	setBeacon(BEACON_LI, false)
 	
-	inp(0)
+	toggleInput(0)
 	overrideZoom(0.8, 5)
 	entity_animate(me, "helmetFlyOff", 0, 3)
 	entity_idle(n)
@@ -895,7 +895,7 @@ function cutscene(me)
 	entity_offset(n, 0, 8, 2, -1, 1)
 	entity_offset(me, 0, 8, 2, -1, 1)
 	]]--
-	avatar_setHeadTexture("blink")
+	setNaijaHeadTexture("blink")
 	expression(me, surprise, 2)
 	entity_animate(n, "kissLiLoop", LOOP_INF)
 	entity_animate(me, "kissLiLoop", LOOP_INF)
@@ -966,7 +966,7 @@ function cutscene(me)
 	entity_setPosition(me, 0, 0)
 	
 	-- warp naija to sleep position
-	avatar_setHeadTexture("")
+	setNaijaHeadTexture("")
 	sleepNode = getNode("NAIJAWAKE")
 	entity_setPosition(n, node_x(sleepNode), node_y(sleepNode))
 	entity_animate(n, "sleep", -1)
@@ -1086,7 +1086,7 @@ function cutscene(me)
 	-- end test
 	fade(0, 1)
 	watch(1)
-	inp(1)
+	toggleInput(1)
 	
 	overrideZoom(0)
 	
@@ -1301,10 +1301,10 @@ function refreshWeaponGlow(me)
 	f = 3
 	if isFlag(FLAG_LICOMBAT, 1) then
 		bone_alpha(bone_weaponGlow, 1, 0.5)
-		bone_color(bone_weaponGlow, 1, 0.5, 0.5, t)
+		bone_setColor(bone_weaponGlow, 1, 0.5, 0.5, t)
 	else
 		bone_alpha(bone_weaponGlow, 0.5, 0.5)
-		bone_color(bone_weaponGlow, 0.5, 0.5, 1, t)
+		bone_setColor(bone_weaponGlow, 0.5, 0.5, 1, t)
 	end
 	--[[
 	bone_scale(bone_weaponGlow, bwgsz, bwgsz)

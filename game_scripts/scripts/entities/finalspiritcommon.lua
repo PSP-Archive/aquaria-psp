@@ -68,7 +68,7 @@ function commonInit(me, skel, num, f, r, g, b)
 	bone_scale(glow, 4, 4)
 	bone_scale(glow, 8, 8, 0.5, -1, 1, 1)
 	
-	bone_color(glow, r*0.5 + 0.5, g*0.5 + 0.5, b*0.5 + 0.5)
+	bone_setColor(glow, r*0.5 + 0.5, g*0.5 + 0.5, b*0.5 + 0.5)
 	
 	bone_setAnimated(noteBone, ANIM_POS)
 	bone_setAnimated(glow, ANIM_POS)
@@ -245,7 +245,7 @@ function songNote(me, note)
 	bone_alpha(noteBone, 0, t)
 	bone_scale(noteBone, 4, 4)
 	bone_scale(noteBone, 8, 8, t, 0, 0, 1)
-	bone_color(noteBone, getNoteColor(note))
+	bone_setColor(noteBone, getNoteColor(note))
 	--quad_setPosition(noteQuad, entity_x(me), entity_y(me))
 	--quad_delete(noteQuad, t)
 	nqtimer = t

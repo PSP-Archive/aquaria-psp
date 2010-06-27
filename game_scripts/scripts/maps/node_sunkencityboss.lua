@@ -27,8 +27,8 @@ didInit = false
 
 function init(me)
 	door = node_getNearestEntity(me, "EnergyDoor")
-	dad = getEntityByName("SunkenDad")
-	mom = getEntityByName("SunkenMom")	
+	dad = getEntity("SunkenDad")
+	mom = getEntity("SunkenMom")	
 	if isFlag(FLAG_SUNKENCITY_BOSS, 1) then
 		entity_delete(dad)
 		entity_delete(mom)

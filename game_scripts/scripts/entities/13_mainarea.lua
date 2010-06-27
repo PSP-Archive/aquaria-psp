@@ -146,7 +146,7 @@ function update(me, dt)
 				while entity_isAnimating(me) do
 					watch(FRAME_TIME)
 				end
-				avatar_setHeadTexture("Blink")
+				setNaijaHeadTexture("Blink")
 				watch(1)
 				
 				vision("EnergyTemple", 4)
@@ -222,7 +222,7 @@ function update(me, dt)
 				--entity_setPosition(me)
 				entity_setInvincible(n, false)
 				watch(1)
-				avatar_setHeadTexture("")
+				setNaijaHeadTexture("")
 				entity_setState(me, STATE_TRANS, 2)
 			else
 				lastNode = getNode(string.format("13_%d", curNode))

@@ -33,7 +33,7 @@ running = false
 -- SEE ENERGYTEMPLE_FIRSTSLOT
 
 function singSong(me)
-	node = getNodeByName("SONGMOUTH")				
+	node = getNode("SONGMOUTH")				
 	spawnParticleEffect("EnergyGodSong", node_x(node), node_y(node))
 	playSfx("EnergyGodSong")
 end
@@ -44,7 +44,7 @@ function init(me)
 	naija = getNaija()
 	
 	if isFlag(FLAG_ENERGYGODENCOUNTER, 3) then
-		templeStatue = getEntityByName("TempleStatue")
+		templeStatue = getEntity("TempleStatue")
 		entity_setState(templeStatue, STATE_BROKEN)
 		
 		door = node_getNearestEntity(getNode("STATUEEXITDOOR"), "energydoor")
@@ -54,7 +54,7 @@ function init(me)
 	loadSound("CrumbleFall")
 	
 	if isFlag(FLAG_ENERGYGODENCOUNTER, 1) then		
-		pn = getNodeByName("SONGMOUTH")	
+		pn = getNode("SONGMOUTH")	
 		ent = createEntity("EnergyGodSpirit", "", node_x(pn), node_y(pn))
 		fadeOutMusic(1)
 	end
@@ -103,10 +103,10 @@ function transformScene(me)
 	watch(0.5)
 	cam_toNode(camNode)
 	
-	templeStatue = getEntityByName("TempleStatue")
+	templeStatue = getEntity("TempleStatue")
 	entity_setState(templeStatue, STATE_BREAK)
 	playSfx("CrumbleFall")
-	crumbleNode = getNodeByName("CRUMBLEPARTICLES")	
+	crumbleNode = getNode("CRUMBLEPARTICLES")	
 	spawnParticleEffect("EnergyGodStatueCrumble", node_x(crumbleNode), node_y(crumbleNode))
 	
 	watch(2.3)
@@ -228,7 +228,7 @@ function update(me, dt)
 			
 			
 			
-			pn = getNodeByName("SONGMOUTH")	
+			pn = getNode("SONGMOUTH")	
 			ent = createEntity("EnergyGodSpirit", "", node_x(pn), node_y(pn))
 			
 			emote(EMOTE_NAIJAWOW)

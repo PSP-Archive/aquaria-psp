@@ -4608,7 +4608,7 @@ luaFunc(bone_setTouchDamage)
 	luaReturnNum(0);
 }
 
-luaFunc(bone_getidx)
+luaFunc(bone_getIndex)
 {
 	Bone *b = bone(L);
 	int idx = -1;
@@ -5730,7 +5730,7 @@ luaFunc(entity_setSayPosition)
 	luaReturnNum(0);
 }
 
-luaFunc(entity_setOverrideCullRadius)
+luaFunc(entity_setCullRadius)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -7532,10 +7532,9 @@ void ScriptInterface::createBaseLuaVM()
 	luaRegister(entity_addTargetPoint);
 
 
-	luaRegister(entity_setOverrideCullRadius);
-	lua_register(baseState, "entity_setCullRadius", l_entity_setOverrideCullRadius);
-
+	luaRegister(entity_setCullRadius);
 	luaRegister(entity_setUpdateCull);
+
 	luaRegister(entity_flipHToAvatar);
 
 	luaRegister(entity_switchLayer);
@@ -7943,7 +7942,6 @@ void ScriptInterface::createBaseLuaVM()
 	luaRegister(warpNaijaToEntity);
 
 	luaRegister(setNaijaHeadTexture);
-	lua_register(baseState, "avatar_setHeadTexture", l_setNaijaHeadTexture);
 
 	luaRegister(incrFlag);
 	luaRegister(decrFlag);
@@ -8009,7 +8007,6 @@ void ScriptInterface::createBaseLuaVM()
 	luaRegister(musicVolume);
 
 	luaRegister(voice);
-	lua_register(baseState, "playVoice", l_voice);
 	luaRegister(voiceOnce);
 	luaRegister(voiceInterupt);
 
@@ -8024,7 +8021,6 @@ void ScriptInterface::createBaseLuaVM()
 
 
 	luaRegister(isStreamingVoice);
-	lua_register(baseState, "isPlayingVoice", l_isStreamingVoice);
 
 	luaRegister(changeForm);
 	luaRegister(getForm);
@@ -8078,8 +8074,6 @@ void ScriptInterface::createBaseLuaVM()
 
 
 	luaRegister(getEntity);
-	lua_register(baseState, "getEntityByName", l_getEntity);
-
 	luaRegister(getFirstEntity);
 	luaRegister(getNextEntity);
 
@@ -8104,7 +8098,6 @@ void ScriptInterface::createBaseLuaVM()
 	luaRegister(getNearestNodeByType);
 
 	luaRegister(getNode);
-	lua_register(baseState, "getNodeByName", l_getNode);
 	luaRegister(getNodeToActivate);
 	luaRegister(setNodeToActivate);
 	luaRegister(setActivation);
@@ -8120,7 +8113,6 @@ void ScriptInterface::createBaseLuaVM()
 	luaRegister(cam_setPosition);
 
 
-	lua_register(baseState, "entity_flipTo", l_entity_flipToEntity);
 	luaRegister(entity_flipToEntity);
 	luaRegister(entity_flipToSame);
 
@@ -8211,7 +8203,7 @@ void ScriptInterface::createBaseLuaVM()
 
 
 
-	lua_register(baseState, "inp", l_toggleInput);
+	luaRegister(toggleInput);
 
 	luaRegister(entity_setTarget);
 	luaRegister(getNodeFromEntity);
@@ -8329,7 +8321,6 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(bone_damageFlash);
 	luaRegister(bone_setColor);
-	lua_register(baseState, "bone_color", l_bone_setColor);
 	luaRegister(bone_setPosition);
 	luaRegister(bone_rotate);
 	luaRegister(bone_rotateOffset);
@@ -8349,8 +8340,7 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(bone_getName);
 	luaRegister(bone_isName);
-	luaRegister(bone_getidx);
-	lua_register(baseState, "bone_getIndex", l_bone_getidx);
+	luaRegister(bone_getIndex);
 	luaRegister(node_x);
 	luaRegister(node_y);
 	luaRegister(node_isEntityPast);

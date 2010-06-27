@@ -66,7 +66,7 @@ function activate(me)
 		if not isForm(FORM_NORMAL) then
 			changeForm(FORM_NORMAL)
 		end
-		node = getNodeByName("CHANGE")
+		node = getNode("CHANGE")
 		avatar_fallOffWall()
 		watch(0.5)
 		entity_swimToNode(getNaija(), node)
@@ -98,7 +98,7 @@ function activate(me)
 
 		--watch(0.5)
 		entity_setColor(getNaija(), 1, 1, 1, 0.5)
-		entity_swimToNode(getNaija(), getNodeByName("CHANGEEXIT"))
+		entity_swimToNode(getNaija(), getNode("CHANGEEXIT"))
 		entity_watchForPath(getNaija())	
 		if chance(50) then
 			emote(EMOTE_NAIJAGIGGLE)

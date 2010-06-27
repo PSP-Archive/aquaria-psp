@@ -29,10 +29,10 @@ curNote = 1
 function init(me)
 	n = getNaija()
 	
-	l1 = getEntityByName("SongLamp3")
-	l2 = getEntityByName("SongLamp2")
-	l3 = getEntityByName("SongLamp7")
-	l4 = getEntityByName("SongLamp1")
+	l1 = getEntity("SongLamp3")
+	l2 = getEntity("SongLamp2")
+	l3 = getEntity("SongLamp7")
+	l4 = getEntity("SongLamp1")
 	
 	door = node_getNearestEntity(me, "EnergyDoor")
 	

@@ -98,7 +98,7 @@ function update(me, dt)
 		fade2(0,0.8,1,1,1)
 		entity_setPosition(thir, 0, 0)
 		
-		playVoice("mia-and-naija")
+		voice("mia-and-naija")
 		
 		watch(22)
 		

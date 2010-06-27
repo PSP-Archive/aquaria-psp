@@ -285,7 +285,7 @@ end
 
 function songNote(me, note)
 	bone_alpha(eyeglow, 0.5, 1)
-	bone_color(eyeglow, getNoteColor(note))
+	bone_setColor(eyeglow, getNoteColor(note))
 end
 
 function songNoteDone(me, note, timer)

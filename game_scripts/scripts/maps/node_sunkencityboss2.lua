@@ -27,8 +27,8 @@ didInit = false
 
 function init(me)
 	door = node_getNearestEntity(me, "EnergyDoor")
-	dad = getEntityByName("SunkenDad")
-	mom = getEntityByName("SunkenMom")
+	dad = getEntity("SunkenDad")
+	mom = getEntity("SunkenMom")
 	
 	
 	toggleSteam(false)
@@ -62,8 +62,8 @@ function update(me, dt)
 		toggleSteam(true)
 		
 		setFlag(FLAG_SUNKENCITY_PUZZLE, SUNKENCITY_BOSSFIGHT)
-		dadSpawn = getNodeByName("DADSPAWN")
-		momSpawn = getNodeByName("MOMSPAWN")
+		dadSpawn = getNode("DADSPAWN")
+		momSpawn = getNode("MOMSPAWN")
 		
 		entity_setPosition(dad, node_x(dadSpawn), node_y(dadSpawn))
 		entity_setPosition(mom, node_x(momSpawn), node_y(momSpawn))

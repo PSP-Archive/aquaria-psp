@@ -129,8 +129,8 @@ function commonInit(me, turType)
 	-- MAKE BACK PARTS DARKER
 	--[[backFrontFlipper = entity_getBoneByName(me, "FrontFlipperBack")
 	backBackFlipper = entity_getBoneByName(me, "BackFlipperBack")
-	bone_color(backFrontFlipper, 0.69, 0.69, 0.69)
-	bone_color(backBackFlipper, 0.69, 0.69, 0.69)]]--
+	bone_setColor(backFrontFlipper, 0.69, 0.69, 0.69)
+	bone_setColor(backBackFlipper, 0.69, 0.69, 0.69)]]--
 	
 	entity_setCullRadius(me, 800)
 	

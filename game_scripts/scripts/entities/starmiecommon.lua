@@ -245,15 +245,15 @@ function enterState(me)
 		s = createShot("StarFire", me, entity_getTarget(me))
 		shot_setOut(s, 12)	
 		
-		bone_color(pupil, 2, 2, 0)
-		bone_color(pupil, 1, 1, 1, 0.15)
+		bone_setColor(pupil, 2, 2, 0)
+		bone_setColor(pupil, 1, 1, 1, 0.15)
 		bone_alpha(pupil, 0.45)
 		bone_alpha(pupil, 1, 0.5)
 		bone_scale(pupil, 1.27, 1.27)
 		bone_scale(pupil, 1, 1, 0.32)
 		
-		bone_color(eye, 1, 1, 0)
-		bone_color(eye, 1, 1, 1, 0.04)
+		bone_setColor(eye, 1, 1, 0)
+		bone_setColor(eye, 1, 1, 1, 0.04)
 		
 		shotDelay = sD
 	end

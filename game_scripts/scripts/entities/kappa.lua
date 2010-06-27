@@ -51,18 +51,18 @@ function enterState(me)
 	elseif entity_isState(me, STATE_CHARGE1) then
 		playSfx("MenuNote0")
 		bone_alpha(glow, 1)
-		bone_color(glow, 1, 0.5, 0.5)
+		bone_setColor(glow, 1, 0.5, 0.5)
 		bone_alpha(glow, 0, 1)
 	elseif entity_isState(me, STATE_CHARGE2) then
 		playSfx("MenuNote0")
 		bone_alpha(glow, 1)
-		bone_color(glow, 1, 1, 0.5)
+		bone_setColor(glow, 1, 1, 0.5)
 		
 		bone_alpha(glow, 0, 1)
 	elseif entity_isState(me, STATE_CHARGE3) then
 		playSfx("MenuNote7")
 		bone_alpha(glow, 1)
-		bone_color(glow, 0.5, 1, 0.5)		
+		bone_setColor(glow, 0.5, 1, 0.5)		
 		bone_alpha(glow, 0, 1)
 		entity_setStateTime(me, 1)
 	end

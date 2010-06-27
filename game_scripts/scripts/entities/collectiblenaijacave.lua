@@ -33,10 +33,10 @@ function enterState(me, state)
 	commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		-- spawn a bunch o' plants
-		node = getNodeByName("PLANT1")
+		node = getNode("PLANT1")
 		ent = createEntity("SongStalk", "", node_x(node), node_y(node))
 		entity_rotate(ent, -45)
-		node = getNodeByName("PLANT2")
+		node = getNode("PLANT2")
 		ent = createEntity("Phonograph", "", node_x(node), node_y(node))		
 		entity_rotate(ent, -45)
 		setElementLayerVisible(7, true)

@@ -33,7 +33,7 @@ function init()
 	
 	if doScene then
 	
-		ship = getEntityByName("airship")
+		ship = getEntity("airship")
 		
 		start = getNode("naijastart")
 		l1 = getNode("l1")

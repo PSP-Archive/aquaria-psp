@@ -29,7 +29,7 @@ end
 
 function update(me, dt)
 	if not spawned then
-		naut = getEntityByName("nautilusprime")
+		naut = getEntity("nautilusprime")
 		
 		-- if nautilus prime exists...
 		if naut ~= 0 then
