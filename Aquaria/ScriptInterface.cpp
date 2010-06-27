@@ -1792,8 +1792,7 @@ luaFunc(entity_stopFollowingPath)
 			e->stopFollowingPath();
 		}
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
 luaFunc(entity_slowToStopPath)
@@ -1811,8 +1810,7 @@ luaFunc(entity_slowToStopPath)
 			debugLog("wasn't following path");
 		}
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
 luaFunc(entity_stopTimer)
@@ -2402,8 +2400,7 @@ luaFunc(entity_setAnimLayerTimeMult)
 			l->timeMultiplier.interpolateTo(t, lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
 		}
 	}
-	lua_pushnumber(L, t);
-	return 1;
+	luaReturnNum(t);
 }
 
 luaFunc(entity_animate)
