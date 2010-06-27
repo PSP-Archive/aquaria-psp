@@ -44,6 +44,17 @@ bool throwLuaErrors = false;
 // S C R I P T  C O M M A N D S
 //============================================================================================
 
+void luaErrorMsg(lua_State *L, const std::string &msg)
+{
+	debugLog(msg);
+
+	if (throwLuaErrors)
+	{
+		lua_pushstring(L, msg.c_str());
+		lua_error(L);
+	}
+}
+
 void luaPushPointer(lua_State *L, void *ptr)
 {
 	// All the scripts do this:
@@ -59,6 +70,190 @@ void luaPushPointer(lua_State *L, void *ptr)
 		lua_pushnumber(L, 0);
 }
 
+inline
+ScriptedEntity *scriptedEntity(lua_State *L, int slot = 1)
+{
+	ScriptedEntity *se = (ScriptedEntity*)lua_touserdata(L, slot);
+	if (!se)
+		debugLog("ScriptedEntity invalid pointer.");
+	return se;
+}
+
+inline
+CollideEntity *collideEntity(lua_State *L, int slot = 1)
+{
+	CollideEntity *ce = (CollideEntity*)lua_touserdata(L, slot);
+	if (!ce)
+		debugLog("CollideEntity invalid pointer.");
+	return ce ;
+}
+
+inline
+RenderObject *object(lua_State *L, int slot = 1)
+{
+	//RenderObject *obj = dynamic_cast<RenderObject*>((RenderObject*)(int(lua_tonumber(L, slot))));
+	RenderObject *obj = static_cast<RenderObject*>(lua_touserdata(L, slot));
+	if (!obj)
+		debugLog("RenderObject invalid pointer");
+	return obj;
+}
+
+inline
+Beam *beam(lua_State *L, int slot = 1)
+{
+	Beam *b = (Beam*)lua_touserdata(L, slot);
+	if (!b)
+		debugLog("Beam invalid pointer.");
+	return b;
+}
+
+inline
+std::string getString(lua_State *L, int slot = 1)
+{
+	std::string sr;
+	if (lua_isstring(L, slot))
+	{
+		sr = lua_tostring(L, slot);
+	}
+	return sr;
+}
+
+inline
+Shot *getShot(lua_State *L, int slot = 1)
+{
+	Shot *shot = (Shot*)lua_touserdata(L, slot);
+	return shot;
+}
+
+inline
+Web *getWeb(lua_State *L, int slot = 1)
+{
+	Web *web = (Web*)lua_touserdata(L, slot);
+	return web;
+}
+
+inline
+Ingredient *getIng(lua_State *L, int slot = 1)
+{
+	return (Ingredient*)lua_touserdata(L, slot);
+}
+
+inline
+bool getBool(lua_State *L, int slot = 1)
+{
+	if (lua_isnumber(L, slot))
+	{
+		return bool(lua_tonumber(L, slot));
+	}
+	else if (lua_islightuserdata(L, slot))
+	{
+		return (lua_touserdata(L, slot) != NULL);
+	}
+	else if (lua_isboolean(L, slot))
+	{
+		return lua_toboolean(L, slot);
+	}
+	return false;
+}
+
+inline
+Entity *entity(lua_State *L, int slot = 1)
+{
+	Entity *ent = (Entity*)lua_touserdata(L, slot);
+	if (!ent)
+	{
+		luaErrorMsg(L, "Entity Invalid Pointer");
+	}
+	return ent;
+}
+
+inline
+Vector getVector(lua_State *L, int slot = 1)
+{
+	Vector v(lua_tonumber(L, slot), lua_tonumber(L, slot+1));
+	return v;
+}
+
+
+inline
+Bone *bone(lua_State *L, int slot = 1)
+{
+	Bone *b = (Bone*)lua_touserdata(L, slot);
+	if (!b)
+	{
+		luaErrorMsg(L, "Bone Invalid Pointer");
+	}
+	return b;
+}
+
+inline
+Path *pathFromName(lua_State *L, int slot = 1)
+{
+	std::string s = lua_tostring(L, slot);
+	stringToLowerUserData(s);
+	Path *p = dsq->game->getPathByName(s);
+	if (!p)
+	{
+		debugLog("Could not find path [" + s + "]");
+	}
+	return p;
+}
+
+inline
+Path *path(lua_State *L, int slot = 1)
+{
+	Path *p = (Path*)lua_touserdata(L, slot);
+	return p;
+}
+
+RenderObject *entityToRenderObject(lua_State *L, int slot = 1)
+{
+	Entity *e = entity(L, slot);
+	return dynamic_cast<RenderObject*>(e);
+}
+
+RenderObject *boneToRenderObject(lua_State *L, int slot = 1)
+{
+	Bone *b = bone(L, slot);
+	return dynamic_cast<RenderObject*>(b);
+}
+
+PauseQuad *getPauseQuad(lua_State *L, int slot = 1)
+{
+	PauseQuad *q = (PauseQuad*)lua_touserdata(L, slot);
+	if (q)
+		return q;
+	else
+		errorLog("Invalid PauseQuad/Particle");
+	return 0;
+}
+
+SkeletalSprite *getSkeletalSprite(Entity *e)
+{
+	Avatar *a;
+	ScriptedEntity *se;
+	SkeletalSprite *skel = 0;
+	if ((a = dynamic_cast<Avatar*>(e)) != 0)
+	{
+		//a->skeletalSprite.transitionAnimate(lua_tostring(L, 2), 0.15, lua_tointeger(L, 3));
+		skel = &a->skeletalSprite;
+	}
+	else if ((se = dynamic_cast<ScriptedEntity*>(e)) != 0)
+	{
+		skel = &se->skeletalSprite;
+	}
+	return skel;
+}
+
+//----------------------------------//
+
+#define luaFunc(func)		int l_##func(lua_State *L)
+#define luaReturnPtr(ptr)	do {luaPushPointer(L, (ptr)); return 1;} while(0)
+#define luaReturnBool(bool)	do {lua_pushboolean(L, (bool)); return 1;} while(0)
+
+#define luaRegister(func)	lua_register(baseState, #func, l_##func);
+
+
 static int l_dofile_caseinsensitive(lua_State *L)
 {
 	// This is Lua's dofile(), with some tweaks.  --ryan.
@@ -67,24 +262,6 @@ static int l_dofile_caseinsensitive(lua_State *L)
 	if (luaL_loadfile(L, fname.c_str()) != 0) lua_error(L);
 	lua_call(L, 0, LUA_MULTRET);
 	return lua_gettop(L) - n;
-}
-
-
-#define luaFunc(func)		int l_##func(lua_State *L)
-#define luaReturnPtr(ptr)	do {luaPushPointer(L, (ptr)); return 1;} while(0)
-#define luaReturnBool(bool)	do {lua_pushboolean(L, (bool)); return 1;} while(0)
-
-#define luaRegister(func)	lua_register(baseState, #func, l_##func);
-
-void luaErrorMsg(lua_State *L, const std::string &msg)
-{
-	debugLog(msg);
-
-	if (throwLuaErrors)
-	{
-		lua_pushstring(L, msg.c_str());
-		lua_error(L);
-	}
 }
 
 int l_randRange(lua_State *L)
@@ -292,68 +469,6 @@ int l_setStory(lua_State *L)
 	return 1;
 }
 
-inline
-ScriptedEntity *scriptedEntity(lua_State *L, int s = 1)
-{
-	ScriptedEntity *se = (ScriptedEntity*)lua_touserdata(L, s);
-	if (!se)
-		debugLog("ScriptedEntity invalid pointer.");
-	return se;
-}
-
-inline
-CollideEntity *collideEntity(lua_State *L, int s = 1)
-{
-	CollideEntity *ce = (CollideEntity*)lua_touserdata(L, s);
-	if (!ce)
-		debugLog("CollideEntity invalid pointer.");
-	return ce ;
-}
-
-inline
-RenderObject *object(lua_State *L, int s=1)
-{
-	//RenderObject *obj = dynamic_cast<RenderObject*>((RenderObject*)(int(lua_tonumber(L, s))));
-	RenderObject *obj = static_cast<RenderObject*>(lua_touserdata(L, s));
-	if (!obj)
-		debugLog("RenderObject invalid pointer");
-	return obj;
-}
-
-inline
-Beam *beam(lua_State *L, int s = 1)
-{
-	Beam *b = (Beam*)lua_touserdata(L, s);
-	if (!b)
-		debugLog("Beam invalid pointer.");
-	return b;
-}
-
-inline
-std::string getString(lua_State *L, int s = 1)
-{
-	std::string sr;
-	if (lua_isstring(L, s))
-	{
-		sr = lua_tostring(L, s);
-	}
-	return sr;
-}
-
-inline
-Shot *getShot(lua_State *L, int s = 1)
-{
-	Shot *shot = (Shot*)lua_touserdata(L, s);
-	return shot;
-}
-
-inline
-Web *getWeb(lua_State *L, int s = 1)
-{
-	Web *web = (Web*)lua_touserdata(L, s);
-	return web;
-}
-
 int l_confirm(lua_State *L)
 {
 	std::string s1 = getString(L, 1);
@@ -541,92 +656,6 @@ int l_shot_setNice(lua_State *L)
 
 	lua_pushnumber(L, 0);
 	return 1;
-}
-
-inline
-Ingredient *getIng(lua_State *L, int s = 1)
-{
-	return (Ingredient*)lua_touserdata(L, 1);
-}
-
-inline
-bool getBool(lua_State *L, int s = 1)
-{
-	if (lua_isnumber(L, s))
-	{
-		return bool(lua_tonumber(L, s));
-	}
-	else if (lua_islightuserdata(L, s))
-	{
-		return (lua_touserdata(L, s) != NULL);
-	}
-	else if (lua_isboolean(L, s))
-	{
-		return lua_toboolean(L, s);
-	}
-	return false;
-}
-
-inline
-Entity *entity(lua_State *L, int s = 1)
-{
-	Entity *ent = (Entity*)lua_touserdata(L, s);
-	if (!ent)
-	{
-		luaErrorMsg(L, "Entity Invalid Pointer");
-	}
-	return ent;
-}
-
-inline
-Vector getVector(lua_State *L, int s = 1)
-{
-	Vector v(lua_tonumber(L, s), lua_tonumber(L, s+1));
-	return v;
-}
-
-
-inline
-Bone *bone(lua_State *L, int s = 1)
-{
-	Bone *b = (Bone*)lua_touserdata(L, s);
-	if (!b)
-	{
-		luaErrorMsg(L, "Bone Invalid Pointer");
-	}
-	return b;
-}
-
-inline
-Path *pathFromName(lua_State *L, int slot = 1)
-{
-	std::string s = lua_tostring(L, slot);
-	stringToLowerUserData(s);
-	Path *p = dsq->game->getPathByName(s);
-	if (!p)
-	{
-		debugLog("Could not find path [" + s + "]");
-	}
-	return p;
-}
-
-inline
-Path *path(lua_State *L, int slot = 1)
-{
-	Path *p = (Path*)lua_touserdata(L, slot);
-	return p;
-}
-
-RenderObject *entityToRenderObject(lua_State *L, int i = 1)
-{
-	Entity *e = entity(L, i);
-	return dynamic_cast<RenderObject*>(e);
-}
-
-RenderObject *boneToRenderObject(lua_State *L, int i = 1)
-{
-	Bone *b = bone(L, i);
-	return dynamic_cast<RenderObject*>(b);
 }
 
 int l_entity_addIgnoreShotDamageType(lua_State *L)
@@ -2839,23 +2868,6 @@ int l_entity_initSkeletal(lua_State* L)
 }
 
 
-SkeletalSprite *getSkeletalSprite(Entity *e)
-{
-	Avatar *a;
-	ScriptedEntity *se;
-	SkeletalSprite *skel = 0;
-	if ((a = dynamic_cast<Avatar*>(e)) != 0)
-	{
-		//a->skeletalSprite.transitionAnimate(lua_tostring(L, 2), 0.15, lua_tointeger(L, 3));
-		skel = &a->skeletalSprite;
-	}
-	else if ((se = dynamic_cast<ScriptedEntity*>(e)) != 0)
-	{
-		skel = &se->skeletalSprite;
-	}
-	return skel;
-}
-
 int l_entity_idle(lua_State *L)
 {
 	Entity *e = entity(L);
@@ -4403,16 +4415,6 @@ int l_entity_flipVertical(lua_State* L)
 		e->flipVertical();
 	lua_pushnumber(L, 0);
 	return 1;
-}
-
-PauseQuad *getPauseQuad(lua_State *L, int n=1)
-{
-	PauseQuad *q = (PauseQuad*)lua_touserdata(L, n);
-	if (q)
-		return q;
-	else
-		errorLog("Invalid PauseQuad/Particle");
-	return 0;
 }
 
 int l_createQuad(lua_State *L)
