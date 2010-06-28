@@ -6539,7 +6539,7 @@ void Game::applyState()
 	StateObject::applyState();
 	//core->enable2D(800);
 
-	dsq->entities.clear();
+	dsq->clearEntities();
 	dsq->clearElements();
 	elementWithMenu = 0;
 	//dsq->gui.menu.clearEntries();
@@ -10415,9 +10415,9 @@ void Game::update(float dt)
 		}
 		*/
 		/*
-		for (int i = 0; i < dsq->entities.size(); i++)
+		FOR_ENTITIES (i)
 		{
-			Entity *e = dsq->entities[i];
+			Entity *e = *i;
 			if (e->getEntityType() != ET_AVATAR && e->collideRadius > 0)
 			{
 				Emitter::addInfluence(ParticleInfluence(e->position, 200, e->collideRadius, false));
@@ -11191,7 +11191,7 @@ void Game::removeState()
 
 	StateObject::removeState();
 	dsq->clearElements();
-	dsq->entities.clear();
+	dsq->clearEntities();
 	avatar = 0;
 	//items.clear();
 #ifdef BUILD_SCENEEDITOR

@@ -6019,7 +6019,7 @@ luaFunc(getEntityByID)
 		std::ostringstream os;
 		os << "searching for entity with id: " << v;
 		debugLog(os.str());
-		FOR_ENTITIES_EXTERN(i)
+		FOR_ENTITIES(i)
 		{
 			Entity *e = *i;
 			if (e->getID() == v)
@@ -6028,7 +6028,7 @@ luaFunc(getEntityByID)
 				break;
 			}
 		}
-		if (i == dsq->entities.end())
+		if (!found)
 		{
 			std::ostringstream os;
 			os << "entity with id: " << v << " not found!";

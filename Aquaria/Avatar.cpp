@@ -2348,11 +2348,9 @@ void Avatar::setSongIconPositions()
 
 const int chkDist = 2500*2500;
 
-Target Avatar::getNearestTarget(const Vector &checkPos, const Vector &distPos, Entity *source, DamageType dt, bool override, std::vector<Target> *ignore, EntityList *entityList)
+Target Avatar::getNearestTarget(const Vector &checkPos, const Vector &distPos, Entity *source, DamageType dt, bool override, std::vector<Target> *ignore, /*FIXME:unused*/ EntityList *entityList)
 {
 	BBGE_PROF(Avatar_getNearestTarget);
-	if (!entityList)
-		entityList = &dsq->entities;
 	Target t;
 
 	Vector targetPosition;
@@ -3156,9 +3154,9 @@ void Avatar::formAbility(int ability)
 					// attack = charge1
 					// something = charge2
 					/*
-					for (int i = 0; i < dsq->entities.size(); i++)
+					FOR_ENTITIES (i)
 					{
-						Entity *e = dsq->entities[i];
+						Entity *e = *i;
 						if (e && e->getEntityType() == ET_ENEMY && e->isDamageTarget(DT_AVATAR_NATURE))
 						{
 							if ((e->position - pos).isLength2DIn(128))
@@ -3281,10 +3279,9 @@ void Avatar::formAbility(int ability)
 				offset.setLength2D(128);
 				bitePos += offset;
 
-				for (int i = 0; i < dsq->entities.size(); i++)
+				FOR_ENTITIES (i)
 				{
-					Entity *e = dsq->entities[i];
-
+					Entity *e = *i;
 					if (e && (e->position - bitePos).getSquaredLength2D() < sqr(64))
 					{
 						DamageData d;
@@ -3692,9 +3689,9 @@ void Avatar::formAbilityUpdate(float dt)
 
 
 			int maxHit = 2 + dsq->continuity.getSpellLevel(SPELL_SHOCK)*2;
-			for (int i = 0; i < dsq->entities.size(); i++)
+			FOR_ENTITIES (i)
 			{
-				Entity *e = dsq->entities[i];
+				Entity *e = *i;
 				Vector d = e->position - this->position;
 				if (e != this && !e->isEntityDead() && e->isAffectedBySpell(SPELL_SHOCK) && d.getSquaredLength2D() < sqr(400+(dsq->continuity.getSpellLevel(SPELL_SHOCK)-1)*100))
 				{
@@ -6722,9 +6719,9 @@ void Avatar::updateRoll(float dt)
 	if (rolling)
 	{
 		/*
-		for (int i = 0; i < dsq->entities.size(); i++)
+		FOR_ENTITIES (i)
 		{
-			Entity *e = dsq->entities[i];
+			Entity *e = *i;
 			if (e->getEntityType() == ET_ENEMY && (e->position - this->position).isLength2DIn(350))
 			{
 				//e->move(dt, 500, 1, this);
@@ -8061,9 +8058,9 @@ void Avatar::onUpdate(float dt)
 			if (charging && !targets.empty() && targets[0] == 0 && state.spellCharge > 0.2f
 				&& dsq->continuity.form == FORM_ENERGY)
 			{
-				for (int i = 0; i < dsq->entities.size(); i++)
+				FOR_ENTITIES (i)
 				{
-					Entity *e = dsq->entities[i];
+					Entity *e = *i;
 					if (e && e != this && e->isAvatarAttackTarget() && !e->isEntityDead() && e->isAffectedBySpell(SPELL_ENERGYBLAST))
 					{
 						ScriptedEntity *se = (ScriptedEntity*)e;
@@ -9512,9 +9509,9 @@ void Avatar::checkSpecial()
 	if (dsq->continuity.getFlag("VedhaFollow1") == 7)
 	{
 		int total = 0, c = 0;
-		for (int i = 0; i < dsq->entities.size(); i++)
+		FOR_ENTITIES (i)
 		{
-			Entity *e = dsq->entities[i];
+			Entity *e = *i;
 			if (e->name == "PracticeEnemy")
 			{
 				total++;

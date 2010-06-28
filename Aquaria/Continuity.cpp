@@ -1537,7 +1537,6 @@ void Continuity::castSong(int num)
 	}
 	for (int i = 0; i < dsq->game->getNumPaths(); i++)
 	{
-		//Entity *e = dsq->entities[i];
 		Path *p = dsq->game->getPath(i);
 		if (p && !p->nodes.empty())
 		{

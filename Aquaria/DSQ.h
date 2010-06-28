@@ -172,8 +172,7 @@ const EditorLock editorLock = EDITORLOCK_USER;
 typedef std::list<Entity*> EntityList;
 typedef std::vector<Entity*> EntityContainer;
 
-#define FOR_ENTITIES(i) for (EntityList::iterator i = dsq->entities.begin(); i != dsq->entities.end(); i++)
-#define FOR_ENTITIES_EXTERN(i) EntityList::iterator i = dsq->entities.begin(); for (; i != dsq->entities.end(); i++)
+#define FOR_ENTITIES(i) for (Entity **i = &dsq->entities[0]; *i != 0; i++)
 
 
 enum MenuPage
@@ -1285,7 +1284,6 @@ public:
 	NagType nagType;
 
 	int getEntityLayerToLayer(int layer);
-	void removeEntity(Entity *e);
 
 	void addElement(Element *e);
 	int getNumElements() const {return elements.size();}
@@ -1298,12 +1296,18 @@ public:
 	void removeElement(Element *e);
 	ElementContainer getElementsCopy() const {return elements;}
 
-	bool useFrameBuffer;
 protected:  // These should never be accessed from outside (use the functions above).
 	ElementContainer elements;
 	Element *firstElementOnLayer[16];
 public:
-	EntityList entities;
+
+	void addEntity(Entity *entity);
+	void removeEntity(Entity *e);
+	void clearEntities();
+
+	EntityContainer entities;
+
+	bool useFrameBuffer;
 	Continuity continuity;
 	GameplayVariables v;
 	Emote emote;
@@ -1574,7 +1578,7 @@ protected:
 	void onPlayVoice();
 	void onStopVoice();
 
-	EntityList::iterator iter;
+	Entity **iter;
 	Quad *blackout;
 	void updatepecue(float dt);
 	std::vector<PECue> pecue;

@@ -357,9 +357,9 @@ Entity::Entity() : StateMachine(), DFSprite()
 	canStickInStream = false;
 	pushDamage = 0;
 
-	//debugLog("dsq->entities.push_back()");
+	//debugLog("dsq->addEntity()");
 
-	dsq->entities.push_back(this);
+	dsq->addEntity(this);
 	maxSpeed = oldMaxSpeed = 300;
 	entityDead = false;
 	takeDamage = true;
@@ -3437,16 +3437,20 @@ void Entity::assignUniqueID()
 	int c=1;
 	while (1)
 	{
-		FOR_ENTITIES_EXTERN(i)
+		bool found = false;
+		FOR_ENTITIES(i)
 		{
 			Entity *e = *i;
 			if (e != this)
 			{
 				if (e->getID() == c)
+				{
+					found = true;
 					break;
+				}
 			}
 		}
-		if (i == dsq->entities.end())
+		if (found)
 		{
 			break;
 		}
