@@ -774,7 +774,7 @@ public:
 
 protected:
 	std::vector<Path*> paths;
-	Path *firstPathOfType[NUM_PATH_TYPES];
+	Path *firstPathOfType[PATH_MAX];
 public:
 	void addPath(Path *p);
 	void removePath(int idx);

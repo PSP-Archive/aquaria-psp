@@ -2972,7 +2972,7 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 void Game::addPath(Path *p)
 {
 	paths.push_back(p);
-	if (p->pathType >= 0 && p->pathType < NUM_PATH_TYPES)
+	if (p->pathType >= 0 && p->pathType < PATH_MAX)
 	{
 		p->nextOfType = firstPathOfType[p->pathType];
 		firstPathOfType[p->pathType] = p;
@@ -2994,7 +2994,7 @@ void Game::removePath(int idx)
 void Game::clearPaths()
 {
 	paths.clear();
-	for (int i = 0; i < NUM_PATH_TYPES; i++)
+	for (int i = 0; i < PATH_MAX; i++)
 		firstPathOfType[i] = 0;
 }
 
