@@ -1250,6 +1250,9 @@ Game::Game() : StateObject()
 
 	worldMapRender = 0;
 
+	for (int i = 0; i < PATH_MAX; i++)
+		firstPathOfType[i] = 0;
+
 	loadEntityTypeList();
 
 

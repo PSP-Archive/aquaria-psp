@@ -45,6 +45,7 @@ RenderObjectLayer::RenderObjectLayer()
 	const int size = renderObjects.size();
 	for (int i = 0; i < size; i++)
 		renderObjects[i] = 0;
+	objectCount = 0;
 	firstFreeIdx = 0;
 #endif
 }
