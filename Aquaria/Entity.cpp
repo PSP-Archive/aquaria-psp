@@ -3419,29 +3419,29 @@ void Entity::fillGrid()
 
 void Entity::assignUniqueID()
 {
-	int c=1;
+	int id = 1;
 	while (1)
 	{
-		bool found = false;
+		bool isFree = true;
 		FOR_ENTITIES(i)
 		{
 			Entity *e = *i;
 			if (e != this)
 			{
-				if (e->getID() == c)
+				if (e->getID() == id)
 				{
-					found = true;
+					isFree = false;
 					break;
 				}
 			}
 		}
-		if (found)
+		if (isFree)
 		{
 			break;
 		}
-		c++;
+		id++;
 	}
-	entityID = c;
+	entityID = id;
 }
 
 void Entity::setID(int id)
