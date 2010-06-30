@@ -35,6 +35,9 @@
 static uint8_t display_mode;
 static uint8_t display_bpp;
 
+/* フレーム描画中フラグ（sys_display_start()とfinish()の間のみゼロ以外） */
+static uint8_t in_frame;
+
 /* ガンマ補正値。PSPでは色データに任意の指数を適用するのは無理な話なので、
  * out = in * (k*in + (1-k)*1) として計算する。gamma_level変数がこの数式の
  * 定数kとなる。gamma_level==0では効果無し（out = in）、gamma_level==1で
@@ -95,14 +98,10 @@ static void display_ge_debug_info(void);
  */
 void sys_display_start(int *width_ret, int *height_ret)
 {
-    if (buffer_flip_thread) {
-        SceUInt timeout = 5*1001000/60;  // 5フレーム
-        if (sceKernelWaitThreadEnd(buffer_flip_thread, &timeout) < 0) {
-            sceKernelTerminateThread(buffer_flip_thread);
-        }
-        sceKernelDeleteThread(buffer_flip_thread);
-        buffer_flip_thread = 0;
-    }
+    /* 前のフレームの描画が終了していることを確認する。こうしないと、
+     * 新しいフレームの描画バッファが表示されたまま描画が開始されて
+     * しまう可能性がある */
+    sys_display_sync();
 
     gamma_level = 0;
 
@@ -118,6 +117,8 @@ void sys_display_start(int *width_ret, int *height_ret)
     if (height_ret) {
         *height_ret = DISPLAY_HEIGHT;
     }
+
+    in_frame = 1;
 }
 
 /*-----------------------------------------------------------------------*/
@@ -182,6 +183,8 @@ void sys_display_finish(void)
     }
 #endif
 
+    in_frame = 0;
+
 #ifndef GE_SYNC_IN_THREAD
     ge_end_frame();
     sceDisplaySetFrameBuf(work_pixels, DISPLAY_STRIDE, display_mode,
@@ -214,13 +217,13 @@ void sys_display_finish(void)
 void sys_display_sync(void)
 {
     if (buffer_flip_thread) {
-        SceUInt timeout = 2*1001000/60;  // 2フレーム
+        SceUInt timeout = 5*1001000/60;  // 5フレーム
         if (sceKernelWaitThreadEnd(buffer_flip_thread, &timeout) < 0) {
             sceKernelTerminateThread(buffer_flip_thread);
         }
         sceKernelDeleteThread(buffer_flip_thread);
         buffer_flip_thread = 0;
-    } else {
+    } else if (in_frame) {
         ge_sync();
     }
 }
