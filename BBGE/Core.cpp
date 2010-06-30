@@ -1860,7 +1860,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 #endif
 	}
 
-	setWindowCaption(appName, "");
+	setWindowCaption(appName, appName);
 
 	initIcon();
     // Create window
@@ -1896,7 +1896,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 #endif
 	}
 
-	setWindowCaption(appName, "");
+	setWindowCaption(appName, appName);
 
 	SDL_WM_GrabInput(grabInputOnReentry==0 ? SDL_GRAB_OFF : SDL_GRAB_ON);
 	char name[256];
