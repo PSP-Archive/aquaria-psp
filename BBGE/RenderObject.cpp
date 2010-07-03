@@ -120,7 +120,6 @@ void RenderObject::setColorMult(const Vector &color, const float alpha)
 {
 	if (colorIsSaved)
 	{
-printf("setColorMult() WARNING: can't do nested multiplies\n");//FIXME temp
 		debugLog("setColorMult() WARNING: can't do nested multiplies");
 		return;
 	}
@@ -141,7 +140,6 @@ void RenderObject::clearColorMult()
 {
 	if (!colorIsSaved)
 	{
-printf("clearColorMult() WARNING: no saved color to restore\n");//FIXME temp
 		debugLog("clearColorMult() WARNING: no saved color to restore");
 		return;
 	}
