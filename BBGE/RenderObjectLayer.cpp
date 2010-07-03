@@ -82,7 +82,9 @@ void RenderObjectLayer::sort()
 	}
 	if (to != objectCount)
 	{
-		errorLog("Objects lost in sort!");
+		std::ostringstream os;
+		os << "Objects lost in sort! (" << to << " != " << objectCount << ")";
+		errorLog(os.str());
 		objectCount = to;
 	}
 	const int count = objectCount;
@@ -141,7 +143,7 @@ void RenderObjectLayer::add(RenderObject* r)
 	objectCount++;
 	r->setIdx(firstFreeIdx);
 
-	for (; firstFreeIdx <= size; firstFreeIdx++)
+	for (; firstFreeIdx < size; firstFreeIdx++)
 	{
 		if (!renderObjects[firstFreeIdx])
 			break;
