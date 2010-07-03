@@ -92,148 +92,148 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 class SimpleIStringStream {
 
   public:
-    /* Reuse flag passed to StringStream(char *,int). */
-    enum {
-	/* Make a copy of the buffer (default action). */
-        COPY,
-	/* Use the passed-in string pointer as is.  Requires the string
-	 * pointer to remain valid over the life of this object. */
-	REUSE,
-	/* Take over the passed-in string buffer, which must have been
-	 * allocated with new[].  The buffer will be deleted on object
-         * destruction. */
-	TAKE_OVER,
-    };
+	/* Reuse flag passed to StringStream(char *,int). */
+	enum {
+		/* Make a copy of the buffer (default action). */
+		COPY,
+		/* Use the passed-in string pointer as is.  Requires the string
+		 * pointer to remain valid over the life of this object. */
+		REUSE,
+		/* Take over the passed-in string buffer, which must have been
+		 * allocated with new[].  The buffer will be deleted on object
+		 * destruction. */
+		TAKE_OVER,
+	};
 
-    /*-------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------*/
 
-    /**
-     * SimpleIStringStream():  Basic object constructor.  No extraction is
-     * possible until a string has been assigned.
-     */
-    inline SimpleIStringStream();
+	/**
+	 * SimpleIStringStream():  Basic object constructor.  No extraction is
+	 * possible until a string has been assigned.
+	 */
+	inline SimpleIStringStream();
 
-    /**
-     * SimpleIStringStream(...):  Create a new SimpleIStringStream from a
-     * C-style or STL string.  Each of these constructors is exactly
-     * equivalent to creating a SimpleIString with the default constructor
-     * and then calling setString() with the same parameters.
-     */
-    inline SimpleIStringStream(char *string, int reuse_flag = COPY);
-    inline SimpleIStringStream(const char *string, int reuse_flag = COPY);
-    inline SimpleIStringStream(std::string string);
+	/**
+	 * SimpleIStringStream(...):  Create a new SimpleIStringStream from a
+	 * C-style or STL string.  Each of these constructors is exactly
+	 * equivalent to creating a SimpleIString with the default constructor
+	 * and then calling setString() with the same parameters.
+	 */
+	inline SimpleIStringStream(char *string, int reuse_flag = COPY);
+	inline SimpleIStringStream(const char *string, int reuse_flag = COPY);
+	inline SimpleIStringStream(std::string string);
 
-    /**
-     * ~SimpleIStringStream():  Object destructor.
-     */
-    inline ~SimpleIStringStream();
+	/**
+	 * ~SimpleIStringStream():  Object destructor.
+	 */
+	inline ~SimpleIStringStream();
 
-    /*------------------------------*/
+	/*------------------------------*/
 
-    /**
-     * setString(...):  Set the string from which data will be extracted,
-     * replacing any existing string.
-     *
-     * [Parameters]
-     *         string: String to use for extraction.
-     *     reuse_flag: Flag indicating buffer reuse semantics for "char *"
-     *                    string buffers.
-     * [Return value]
-     *     None
-     */
-    inline void setString(char *string, int reuse_flag = COPY);
-    inline void setString(const char *string, int reuse_flag = COPY);
-    inline void setString(const std::string &string);
+	/**
+	 * setString(...):  Set the string from which data will be extracted,
+	 * replacing any existing string.
+	 *
+	 * [Parameters]
+	 *         string: String to use for extraction.
+	 *     reuse_flag: Flag indicating buffer reuse semantics for "char *"
+	 *                    string buffers.
+	 * [Return value]
+	 *     None
+	 */
+	inline void setString(char *string, int reuse_flag = COPY);
+	inline void setString(const char *string, int reuse_flag = COPY);
+	inline void setString(const std::string &string);
 
-    /**
-     * operator=(char *), operator=(const char *), operator=(std::string):
-     * Set the string from which data will be extracted.  Exactly
-     * equivalent to setString(string).
-     *
-     * [Parameters]
-     *     string: Assignment source
-     * [Return value]
-     *     this
-     */
-    inline SimpleIStringStream &operator=(char *string);
-    inline SimpleIStringStream &operator=(const char *string);
-    inline SimpleIStringStream &operator=(const std::string &string);
+	/**
+	 * operator=(char *), operator=(const char *), operator=(std::string):
+	 * Set the string from which data will be extracted.  Exactly
+	 * equivalent to setString(string).
+	 *
+	 * [Parameters]
+	 *     string: Assignment source
+	 * [Return value]
+	 *     this
+	 */
+	inline SimpleIStringStream &operator=(char *string);
+	inline SimpleIStringStream &operator=(const char *string);
+	inline SimpleIStringStream &operator=(const std::string &string);
 
-    /**
-     * operator=(SimpleIStringStream):  Make a copy of an existing stream.
-     * The input string buffer (if any) will always be copied, regardless
-     * of any reuse_flag passed to the original stream.
-     *
-     * [Parameters]
-     *     stream: Assignment source
-     * [Return value]
-     *     this
-     */
-    inline SimpleIStringStream &operator=(const SimpleIStringStream &stream);
+	/**
+	 * operator=(SimpleIStringStream):  Make a copy of an existing stream.
+	 * The input string buffer (if any) will always be copied, regardless
+	 * of any reuse_flag passed to the original stream.
+	 *
+	 * [Parameters]
+	 *     stream: Assignment source
+	 * [Return value]
+	 *     this
+	 */
+	inline SimpleIStringStream &operator=(const SimpleIStringStream &stream);
 
-    /*------------------------------*/
+	/*------------------------------*/
 
-    /**
-     * operator bool:  Evaluate the stream as a boolean.  Returns false if
-     * an error has occurred, true otherwise.  (This allows the stream to
-     * be used in a while loop like "while (stream >> var)", like ordinary
-     * std::istringstream objects.)
-     *
-     * [Parameters]
-     *     None
-     * [Return value]
-     *     False if an error has occurred, else true
-     */
-    inline operator bool() const;
+	/**
+	 * operator bool:  Evaluate the stream as a boolean.  Returns false if
+	 * an error has occurred, true otherwise.  (This allows the stream to
+	 * be used in a while loop like "while (stream >> var)", in the same
+	 * way as ordinary std::istringstream objects.)
+	 *
+	 * [Parameters]
+	 *     None
+	 * [Return value]
+	 *     False if an error has occurred, else true
+	 */
+	inline operator bool() const;
 
-    /**
-     * operator>>:  Extract a value from a stream.  String extraction skips
-     * leading whitespace and stops at the first following whitespace
-     * character.
-     *
-     * [Parameters]
-     *     target: Target for storing extracted value (right-hand operand)
-     * [Return value]
-     *     this
-     */
-    inline SimpleIStringStream &operator>>(bool &target);
-    inline SimpleIStringStream &operator>>(short &target);
-    inline SimpleIStringStream &operator>>(unsigned short &target);
-    inline SimpleIStringStream &operator>>(int &target);
-    inline SimpleIStringStream &operator>>(unsigned int &target);
-    inline SimpleIStringStream &operator>>(long &target);
-    inline SimpleIStringStream &operator>>(unsigned long &target);
-    inline SimpleIStringStream &operator>>(float &target);
-    inline SimpleIStringStream &operator>>(double &target);
-    inline SimpleIStringStream &operator>>(char &target);
-    inline SimpleIStringStream &operator>>(signed char &target);
-    inline SimpleIStringStream &operator>>(unsigned char &target);
-    inline SimpleIStringStream &operator>>(std::string &target);
+	/**
+	 * operator>>:  Extract a value from a stream.  String extraction skips
+	 * leading whitespace and stops at the first following whitespace
+	 * character.
+	 *
+	 * [Parameters]
+	 *     target: Target for storing extracted value (right-hand operand)
+	 * [Return value]
+	 *     this
+	 */
+	inline SimpleIStringStream &operator>>(bool &target);
+	inline SimpleIStringStream &operator>>(short &target);
+	inline SimpleIStringStream &operator>>(unsigned short &target);
+	inline SimpleIStringStream &operator>>(int &target);
+	inline SimpleIStringStream &operator>>(unsigned int &target);
+	inline SimpleIStringStream &operator>>(long &target);
+	inline SimpleIStringStream &operator>>(unsigned long &target);
+	inline SimpleIStringStream &operator>>(float &target);
+	inline SimpleIStringStream &operator>>(double &target);
+	inline SimpleIStringStream &operator>>(char &target);
+	inline SimpleIStringStream &operator>>(signed char &target);
+	inline SimpleIStringStream &operator>>(unsigned char &target);
+	inline SimpleIStringStream &operator>>(std::string &target);
 
-    /*-------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------*/
 
   private:
-    char *buffer;       // The buffer we're parsing.
-    char *position;     // Our current position in the buffer.
-    bool freeOnDestroy; // Should we free the buffer when we're destroyed?
-    bool error;         // Current error status.
+	char *buffer;       // The buffer we're parsing.
+	char *position;     // Our current position in the buffer.
+	bool freeOnDestroy; // Should we free the buffer when we're destroyed?
+	bool error;         // Current error status.
 
 #ifdef SISS_VERIFY
-    std::istringstream std_is;
-    unsigned long ispos;
+	std::istringstream std_is;
+	unsigned long ispos;
 #endif
 
-    /* Is the given character a whitespace character? */
-    inline bool my_isspace(char c) const {
-        return c==' ' || c=='\t' || c=='\r' || c=='\n' || c=='\v';
-    };
+	/* Is the given character a whitespace character? */
+	inline bool my_isspace(char c) const {
+		return c==' ' || c=='\t' || c=='\r' || c=='\n' || c=='\v';
+	};
 
-    /* Skip over leading whitespace.  Assumes "position" is valid. */
-    inline void skip_spaces() {
-        while (my_isspace(*position)) {
-            position++;
-        }
-    }
+	/* Skip over leading whitespace.  Assumes "position" is valid. */
+	inline void skip_spaces() {
+		while (my_isspace(*position)) {
+			position++;
+		}
+	}
 
 };  // class SimpleIStringStream
 
@@ -250,24 +250,24 @@ class SimpleIStringStream {
 extern void debugLog(const std::string &s);
 
 #define VERIFY_SETUP \
-    char *old_position = position;
+	char *old_position = position;
 
 #define VERIFY(type,def_value)  do {                                    \
-    unsigned long old_ispos = ispos;                                    \
-    type test;                                                          \
-    std_is >> test;                                                     \
-    ispos += std_is.gcount();                                           \
-    if (std_is.fail()) {                                                \
-        test = def_value;                                               \
-    }                                                                   \
-    if (test != target) {                                               \
-        std::ostringstream os_target; os_target << target;              \
-        std::ostringstream os_test;   os_test   << test;                \
-        debugLog(std::string("SimpleIStringStream >> " #type ": MISMATCH") \
-                 + " (us=" + os_target.str()                            \
-                 + " STL=" + (std_is.fail() ? "<<FAIL>>" : os_test.str()) \
-                 + ") at: [" + std::string(old_position).substr(0,100) + "]");\
-    }                                                                   \
+	unsigned long old_ispos = ispos;                                    \
+	type test;                                                          \
+	std_is >> test;                                                     \
+	ispos += std_is.gcount();                                           \
+	if (std_is.fail()) {                                                \
+		test = def_value;                                               \
+	}                                                                   \
+	if (test != target) {                                               \
+		std::ostringstream os_target; os_target << target;              \
+		std::ostringstream os_test;   os_test   << test;                \
+		debugLog(std::string("SimpleIStringStream >> " #type ": MISMATCH") \
+		         + " (us=" + os_target.str()                            \
+		         + " STL=" + (std_is.fail() ? "<<FAIL>>" : os_test.str()) \
+		         + ") at: [" + std::string(old_position).substr(0,100) + "]");\
+	}                                                                   \
 } while (0)
 
 #else
@@ -281,137 +281,137 @@ extern void debugLog(const std::string &s);
 
 inline SimpleIStringStream::SimpleIStringStream()
 {
-    buffer = NULL;
-    position = NULL;
-    freeOnDestroy = false;
-    error = false;
+	buffer = NULL;
+	position = NULL;
+	freeOnDestroy = false;
+	error = false;
 }
 
 inline SimpleIStringStream::SimpleIStringStream(char *string, int reuse_flag)
 {
-    freeOnDestroy = false;  // Don't try to free the uninitialized pointer.
-    setString(string, reuse_flag);
+	freeOnDestroy = false;  // Don't try to free the uninitialized pointer.
+	setString(string, reuse_flag);
 }
 
 inline SimpleIStringStream::SimpleIStringStream(const char *string, int reuse_flag)
 {
-    freeOnDestroy = false;
-    setString(string, reuse_flag);
+	freeOnDestroy = false;
+	setString(string, reuse_flag);
 }
 
 inline SimpleIStringStream::SimpleIStringStream(std::string string)
 {
-    freeOnDestroy = false;
-    setString(string);
+	freeOnDestroy = false;
+	setString(string);
 }
 
 inline SimpleIStringStream::~SimpleIStringStream()
 {
-    if (freeOnDestroy) {
-        delete[] buffer;
-    }
+	if (freeOnDestroy) {
+		delete[] buffer;
+	}
 }
 
 /*-----------------------------------------------------------------------*/
 
 inline void SimpleIStringStream::setString(char *string, int reuse_flag)
 {
-    if (freeOnDestroy) {
-        delete[] buffer;
-    }
+	if (freeOnDestroy) {
+		delete[] buffer;
+	}
 
-    if (reuse_flag == REUSE) {
-        buffer = string;
-        freeOnDestroy = false;
-    } else if (reuse_flag == TAKE_OVER) {
-        buffer = string;
-        freeOnDestroy = true;
-    } else {
-        const size_t size = strlen(string) + 1;
-        buffer = new char[size];
-        freeOnDestroy = true;
-        if (buffer) {
-            memcpy(buffer, string, size);
-        }
-    }
-    position = buffer;
-    error = false;
+	if (reuse_flag == REUSE) {
+		buffer = string;
+		freeOnDestroy = false;
+	} else if (reuse_flag == TAKE_OVER) {
+		buffer = string;
+		freeOnDestroy = true;
+	} else {
+		const size_t size = strlen(string) + 1;
+		buffer = new char[size];
+		freeOnDestroy = true;
+		if (buffer) {
+			memcpy(buffer, string, size);
+		}
+	}
+	position = buffer;
+	error = false;
 #ifdef SISS_VERIFY
-    if (buffer) {
-        std_is.str(buffer);
-        std_is.clear();
-        ispos = 0;
-    }
+	if (buffer) {
+		std_is.str(buffer);
+		std_is.clear();
+		ispos = 0;
+	}
 #endif
 }
 
 inline void SimpleIStringStream::setString(const char *string, int reuse_flag)
 {
-    if (freeOnDestroy) {
-        delete[] buffer;
-    }
+	if (freeOnDestroy) {
+		delete[] buffer;
+	}
 
-    if (reuse_flag == REUSE) {
-        /* We never actually write to the buffer, and we won't attempt to
-         * free it, so this cast is safe. */
-        buffer = const_cast<char *>(string);
-        freeOnDestroy = false;
-    } else {
-        /* It makes no sense to TAKE_OVER a const char *, since we could
-         * never free it, so we treat TAKE_OVER like COPY. */
-        const size_t size = strlen(string) + 1;
-        buffer = new char[size];
-        freeOnDestroy = true;
-        if (buffer) {
-            memcpy(buffer, string, size);
-        }
-    }
-    position = buffer;
-    error = false;
+	if (reuse_flag == REUSE) {
+		/* We never actually write to the buffer, and we won't attempt to
+		 * free it, so this cast is safe. */
+		buffer = const_cast<char *>(string);
+		freeOnDestroy = false;
+	} else {
+		/* It makes no sense to TAKE_OVER a const char *, since we could
+		 * never free it, so we treat TAKE_OVER like COPY. */
+		const size_t size = strlen(string) + 1;
+		buffer = new char[size];
+		freeOnDestroy = true;
+		if (buffer) {
+			memcpy(buffer, string, size);
+		}
+	}
+	position = buffer;
+	error = false;
 #ifdef SISS_VERIFY
-    if (buffer) {
-        std_is.str(buffer);
-        std_is.clear();
-        ispos = 0;
-    }
+	if (buffer) {
+		std_is.str(buffer);
+		std_is.clear();
+		ispos = 0;
+	}
 #endif
 }
 
 inline void SimpleIStringStream::setString(const std::string &string)
 {
-    setString(string.c_str(), COPY);
+	setString(string.c_str(), COPY);
 }
 
 inline SimpleIStringStream &SimpleIStringStream::operator=(char *string)
 {
-    setString(string);
-    return *this;
+	setString(string);
+	return *this;
 }
 
 inline SimpleIStringStream &SimpleIStringStream::operator=(const char *string)
 {
-    setString(string);
-    return *this;
+	setString(string);
+	return *this;
 }
 
 inline SimpleIStringStream &SimpleIStringStream::operator=(
-    const std::string &string)
+	const std::string &string)
 {
-    setString(string);
-    return *this;
+	setString(string);
+	return *this;
 }
 
 inline SimpleIStringStream &SimpleIStringStream::operator=(
-    const SimpleIStringStream &stream)
+	const SimpleIStringStream &stream)
 {
-    /* Watch out that we don't try to assign ourselves, or we'll raise a
-     * use-after-free bug. */
-    if (&stream == this) {
-        return *this;
-    }
+	/* Watch out that we don't try to assign ourselves, or we'll raise a
+	 * use-after-free bug. */
+	if (&stream == this) {
+		return *this;
+	}
 
-    setString(stream.buffer, COPY);
-    return *this;
+	setString(stream.buffer, COPY);
+	return *this;
 }
 
 /*-----------------------------------------------------------------------*/
@@ -419,300 +419,300 @@ inline SimpleIStringStream &SimpleIStringStream::operator=(
 inline SimpleIStringStream::operator bool() const
 {
 #ifdef SISS_VERIFY
-    if (!error != bool(std_is)) {
-        debugLog(std::string("SimpleIStringStream bool MISMATCH: us=")
-                 + (!error ? "true" : "false") + " STL="
-                 + (std_is ? "true" : "false"));
-    }
+	if (!error != bool(std_is)) {
+		debugLog(std::string("SimpleIStringStream bool MISMATCH: us=")
+		         + (!error ? "true" : "false") + " STL="
+		         + (std_is ? "true" : "false"));
+	}
 #endif
-    return !error;
+	return !error;
 }
 
 /*-----------------------------------------------------------------------*/
 
 inline SimpleIStringStream &SimpleIStringStream::operator>>(bool &target)
 {
-    if (position) {
-        char *old_position = position;
-        if (error) {
-            target = false;
-        } else {
-            skip_spaces();
-            unsigned long longval = strtoul(position, &position, 10);
-            target = (longval == 1);
-            error = (position == old_position);
-        }
-        VERIFY(bool, false);
-    } else {
-        target = false;
-        error = true;
-    }
-    return *this;
+	if (position) {
+		char *old_position = position;
+		if (error) {
+			target = false;
+		} else {
+			skip_spaces();
+			unsigned long longval = strtoul(position, &position, 10);
+			target = (longval == 1);
+			error = (position == old_position);
+		}
+		VERIFY(bool, false);
+	} else {
+		target = false;
+		error = true;
+	}
+	return *this;
 }
 
 /*----------------------------------*/
 
 inline SimpleIStringStream &SimpleIStringStream::operator>>(short &target)
 {
-    if (position) {
-        char *old_position = position;
-        if (error) {
-            target = 0;
-        } else {
-            skip_spaces();
-            target = (short)strtol(position, &position, 0);
-            error = (position == old_position);
-        }
-        VERIFY(short, 0);
-    } else {
-        target = 0;
-        error = true;
-    }
-    return *this;
+	if (position) {
+		char *old_position = position;
+		if (error) {
+			target = 0;
+		} else {
+			skip_spaces();
+			target = (short)strtol(position, &position, 0);
+			error = (position == old_position);
+		}
+		VERIFY(short, 0);
+	} else {
+		target = 0;
+		error = true;
+	}
+	return *this;
 }
 
 inline SimpleIStringStream &SimpleIStringStream::operator>>(unsigned short &target)
 {
-    if (position) {
-        char *old_position = position;
-        if (error) {
-            target = 0;
-        } else {
-            skip_spaces();
-            target = (unsigned short)strtoul(position, &position, 0);
-            error = (position == old_position);
-        }
-        VERIFY(unsigned short, 0);
-    } else {
-        target = 0;
-        error = true;
-    }
-    return *this;
+	if (position) {
+		char *old_position = position;
+		if (error) {
+			target = 0;
+		} else {
+			skip_spaces();
+			target = (unsigned short)strtoul(position, &position, 0);
+			error = (position == old_position);
+		}
+		VERIFY(unsigned short, 0);
+	} else {
+		target = 0;
+		error = true;
+	}
+	return *this;
 }
 
 /*----------------------------------*/
 
 inline SimpleIStringStream &SimpleIStringStream::operator>>(int &target)
 {
-    if (position) {
-        char *old_position = position;
-        if (error) {
-            target = 0;
-        } else {
-            skip_spaces();
-            target = (int)strtol(position, &position, 0);
-            error = (position == old_position);
-        }
-        VERIFY(int, 0);
-    } else {
-        target = 0;
-        error = true;
-    }
-    return *this;
+	if (position) {
+		char *old_position = position;
+		if (error) {
+			target = 0;
+		} else {
+			skip_spaces();
+			target = (int)strtol(position, &position, 0);
+			error = (position == old_position);
+		}
+		VERIFY(int, 0);
+	} else {
+		target = 0;
+		error = true;
+	}
+	return *this;
 }
 
 inline SimpleIStringStream &SimpleIStringStream::operator>>(unsigned int &target)
 {
-    if (position) {
-        char *old_position = position;
-        if (error) {
-            target = 0;
-        } else {
-            skip_spaces();
-            target = (unsigned int)strtoul(position, &position, 0);
-            error = (position == old_position);
-        }
-        VERIFY(unsigned int, 0);
-    } else {
-        target = 0;
-        error = true;
-    }
-    return *this;
+	if (position) {
+		char *old_position = position;
+		if (error) {
+			target = 0;
+		} else {
+			skip_spaces();
+			target = (unsigned int)strtoul(position, &position, 0);
+			error = (position == old_position);
+		}
+		VERIFY(unsigned int, 0);
+	} else {
+		target = 0;
+		error = true;
+	}
+	return *this;
 }
 
 /*----------------------------------*/
 
 inline SimpleIStringStream &SimpleIStringStream::operator>>(long &target)
 {
-    if (position) {
-        char *old_position = position;
-        if (error) {
-            target = 0;
-        } else {
-            skip_spaces();
-            target = strtol(position, &position, 0);
-            error = (position == old_position);
-        }
-        VERIFY(long, 0);
-    } else {
-        target = 0;
-        error = true;
-    }
-    return *this;
+	if (position) {
+		char *old_position = position;
+		if (error) {
+			target = 0;
+		} else {
+			skip_spaces();
+			target = strtol(position, &position, 0);
+			error = (position == old_position);
+		}
+		VERIFY(long, 0);
+	} else {
+		target = 0;
+		error = true;
+	}
+	return *this;
 }
 
 inline SimpleIStringStream &SimpleIStringStream::operator>>(unsigned long &target)
 {
-    if (position) {
-        char *old_position = position;
-        if (error) {
-            target = 0;
-        } else {
-            skip_spaces();
-            target = strtoul(position, &position, 0);
-            error = (position == old_position);
-        }
-        VERIFY(unsigned long, 0);
-    } else {
-        target = 0;
-        error = true;
-    }
-    return *this;
+	if (position) {
+		char *old_position = position;
+		if (error) {
+			target = 0;
+		} else {
+			skip_spaces();
+			target = strtoul(position, &position, 0);
+			error = (position == old_position);
+		}
+		VERIFY(unsigned long, 0);
+	} else {
+		target = 0;
+		error = true;
+	}
+	return *this;
 }
 
 /*----------------------------------*/
 
 inline SimpleIStringStream &SimpleIStringStream::operator>>(float &target)
 {
-    if (position) {
-        char *old_position = position;
-        if (error) {
-            target = 0;
-        } else {
-            skip_spaces();
-            target = strtof(position, &position);
-            error = (position == old_position);
-        }
-        VERIFY(float, 0);
-    } else {
-        target = 0;
-        error = true;
-    }
-    return *this;
+	if (position) {
+		char *old_position = position;
+		if (error) {
+			target = 0;
+		} else {
+			skip_spaces();
+			target = strtof(position, &position);
+			error = (position == old_position);
+		}
+		VERIFY(float, 0);
+	} else {
+		target = 0;
+		error = true;
+	}
+	return *this;
 }
 
 inline SimpleIStringStream &SimpleIStringStream::operator>>(double &target)
 {
-    if (position) {
-        char *old_position = position;
-        if (error) {
-            target = 0;
-        } else {
-            skip_spaces();
-            target = strtod(position, &position);
-            error = (position == old_position);
-        }
-        VERIFY(double, 0);
-    } else {
-        target = 0;
-        error = true;
-    }
-    return *this;
+	if (position) {
+		char *old_position = position;
+		if (error) {
+			target = 0;
+		} else {
+			skip_spaces();
+			target = strtod(position, &position);
+			error = (position == old_position);
+		}
+		VERIFY(double, 0);
+	} else {
+		target = 0;
+		error = true;
+	}
+	return *this;
 }
 
 /*----------------------------------*/
 
 inline SimpleIStringStream &SimpleIStringStream::operator>>(char &target)
 {
-    if (position) {
+	if (position) {
 #ifdef SISS_VERIFY
-        char *old_position = position;
+		char *old_position = position;
 #endif
-        if (error) {
-            target = 0;
-        } else {
-            target = *position;
-            if (*position) {
-                position++;
-            } else {
-                error = true;
-            }
-        }
-        VERIFY(char, 0);
-    } else {
-        target = 0;
-        error = true;
-    }
-    return *this;
+		if (error) {
+			target = 0;
+		} else {
+			target = *position;
+			if (*position) {
+				position++;
+			} else {
+				error = true;
+			}
+		}
+		VERIFY(char, 0);
+	} else {
+		target = 0;
+		error = true;
+	}
+	return *this;
 }
 
 inline SimpleIStringStream &SimpleIStringStream::operator>>(signed char &target)
 {
-    if (position) {
+	if (position) {
 #ifdef SISS_VERIFY
-        char *old_position = position;
+		char *old_position = position;
 #endif
-        if (error) {
-            target = 0;
-        } else {
-            target = *position;
-            if (*position) {
-                position++;
-            } else {
-                error = true;
-            }
-        }
-        VERIFY(signed char, 0);
-    } else {
-        target = 0;
-        error = true;
-    }
-    return *this;
+		if (error) {
+			target = 0;
+		} else {
+			target = *position;
+			if (*position) {
+				position++;
+			} else {
+				error = true;
+			}
+		}
+		VERIFY(signed char, 0);
+	} else {
+		target = 0;
+		error = true;
+	}
+	return *this;
 }
 
 inline SimpleIStringStream &SimpleIStringStream::operator>>(unsigned char &target)
 {
-    if (position) {
+	if (position) {
 #ifdef SISS_VERIFY
-        char *old_position = position;
+		char *old_position = position;
 #endif
-        if (error) {
-            target = 0;
-        } else {
-            target = *position;
-            if (*position) {
-                position++;
-            } else {
-                error = true;
-            }
-        }
-        VERIFY(unsigned char, 0);
-    } else {
-        target = 0;
-        error = true;
-    }
-    return *this;
+		if (error) {
+			target = 0;
+		} else {
+			target = *position;
+			if (*position) {
+				position++;
+			} else {
+				error = true;
+			}
+		}
+		VERIFY(unsigned char, 0);
+	} else {
+		target = 0;
+		error = true;
+	}
+	return *this;
 }
 
 /*----------------------------------*/
 
 inline SimpleIStringStream &SimpleIStringStream::operator>>(std::string &target)
 {
-    if (position) {
+	if (position) {
 #ifdef SISS_VERIFY
-        char *old_position = position;
+		char *old_position = position;
 #endif
-        if (error) {
-            target = "";
-        } else {
-            skip_spaces();
-            if (!*position) {
-                target = "";
-                error = true;
-            } else {
-                char *start = position;
-                while (*position && !my_isspace(*position)) {
-                    position++;
-                }
-                target.assign(start, position - start);
-            }
-            VERIFY(std::string, "");
-        }
-    } else {
-        target = "";
-        error = true;
-    }
-    return *this;
+		if (error) {
+			target = "";
+		} else {
+			skip_spaces();
+			if (!*position) {
+				target = "";
+				error = true;
+			} else {
+				char *start = position;
+				while (*position && !my_isspace(*position)) {
+					position++;
+				}
+				target.assign(start, position - start);
+			}
+			VERIFY(std::string, "");
+		}
+	} else {
+		target = "";
+		error = true;
+	}
+	return *this;
 }
 
 /*************************************************************************/
@@ -725,10 +725,9 @@ inline SimpleIStringStream &SimpleIStringStream::operator>>(std::string &target)
 
 /*
  * Local variables:
- *   c-file-style: "stroustrup"
- *   c-file-offsets: ((case-label . *) (statement-case-intro . *))
- *   indent-tabs-mode: nil
+ *   indent-tabs-mode: t
+ *   tab-width: 4
  * End:
  *
- * vim: expandtab shiftwidth=4:
+ * vim: shiftwidth=4:
  */
