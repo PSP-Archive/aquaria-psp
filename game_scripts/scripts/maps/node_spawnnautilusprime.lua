@@ -22,7 +22,7 @@ dofile("scripts/entities/entityinclude.lua")
 nauty = 0
 
 function spawnEgg(me)
-	node = getNodeByName("COLLECTIBLENAUTILUSPRIMELOCATION")
+	node = getNode("COLLECTIBLENAUTILUSPRIMELOCATION")
 	createEntity("CollectibleNautilusPrime", "", node_x(node), node_y(node))
 end
 

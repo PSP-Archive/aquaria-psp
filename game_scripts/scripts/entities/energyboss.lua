@@ -119,9 +119,9 @@ function init(me)
 	bone_head = entity_getBoneByName(me, "Head")
 	bone_body = entity_getBoneByName(me, "Body")
 	
-	maxMove = getNodeByName("ENERGYBOSSMAXMOVE")
-	maxMove2 = getNodeByName("ENERGYBOSSMAXMOVE2")
-	minMove = getNodeByName("ENERGYBOSSMINMOVE")
+	maxMove = getNode("ENERGYBOSSMAXMOVE")
+	maxMove2 = getNode("ENERGYBOSSMAXMOVE2")
+	minMove = getNode("ENERGYBOSSMINMOVE")
 	
 	entity_setDamageTarget(me, DT_AVATAR_LIZAP, false)
 	entity_setDamageTarget(me, DT_AVATAR_PET, false)
@@ -183,7 +183,7 @@ function update(me, dt)
 				fade2(1, 1, 1, 1, 1)
 				watch(1)
 				
-				collectibleNode = getNodeByName("COLLECTIBLE")
+				collectibleNode = getNode("COLLECTIBLE")
 				ent = createEntity("CollectibleEnergyBoss", "", node_x(collectibleNode), node_y(collectibleNode))
 				entity_alpha(ent, 0)
 				entity_alpha(ent, 1, 2)
@@ -222,7 +222,7 @@ function update(me, dt)
 				emote(EMOTE_NAIJAUGH)
 				playedMusic = true
 				playMusic("BigBoss")
-				--avatar_setHeadTexture("shock", 4)
+				--setNaijaHeadTexture("shock", 4)
 				entity_setState(me, STATE_INTRO)
 			end
 		end
@@ -486,7 +486,7 @@ function enterState(me)
 		if orb and holder then
 			entity_setPosition(orb, entity_x(holder), entity_y(holder))
 		end
-		collectibleNode = getNodeByName("COLLECTIBLE")
+		collectibleNode = getNode("COLLECTIBLE")
 		createEntity("CollectibleEnergyBoss", "", node_x(collectibleNode), node_y(collectibleNode))
 		--debugLog("animating dead")
 		entity_setDamageTarget(me, DT_AVATAR_ENERGYBLAST, false)

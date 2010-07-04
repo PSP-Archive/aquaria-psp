@@ -52,7 +52,7 @@ function init()
 		fadeIn(1)
 		watch(1)
 		
-		playVoice("naija_endingpart1b")
+		voice("naija_endingpart1b")
 		
 		watch(7)
 		
@@ -73,7 +73,7 @@ function init()
 		fade2(0, 1, 1, 1, 1)
 		watch(2)
 		
-		playVoice("naija_endingpart1c")
+		voice("naija_endingpart1c")
 		
 		watchForVoice()
 		

@@ -44,7 +44,7 @@ function init(me)
 	
 	bone_setBlendType(normal, BLEND_ADD)
 	bone_alpha(normal, 1)
-	bone_color(normal, 0.5, 0.6, 1)
+	bone_setColor(normal, 0.5, 0.6, 1)
 	
 	bone_alpha(spirit, 0)
 	

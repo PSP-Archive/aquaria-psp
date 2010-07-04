@@ -96,7 +96,7 @@ function init(me)
 	
 	entity_setMaxSpeed(me, 100)
 	
-	--entity_setOverrideCullRadius(me, 1024)
+	--entity_setCullRadius(me, 1024)
 end
 
 function postInit(me)

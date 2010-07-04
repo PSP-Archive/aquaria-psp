@@ -57,7 +57,7 @@ function init()
 		
 		watch(1.5)
 		
-		playVoice("naija_endingpart1a")
+		voice("naija_endingpart1a")
 		
 		watch(1.5)
 		

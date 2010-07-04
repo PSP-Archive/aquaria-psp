@@ -58,7 +58,7 @@ function init()
 		
 		overrideZoom(1)
 		
-		bg = getEntityByName("falsebg")
+		bg = getEntity("falsebg")
 		
 		n = getNaija()
 		
@@ -132,7 +132,7 @@ function init()
 		
 		
 		if isFlag(FLAG_SKIPSECRETCHECK, 0) then
-			playVoice("naija_endingpart2")
+			voice("naija_endingpart2")
 			watchForVoice()
 		end
 		

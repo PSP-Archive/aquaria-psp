@@ -285,7 +285,7 @@ function songNote(me, note)
 	b = 0.5 + b*0.5
 	entity_color(me, r, g, b, 0.1)
 	]]--
-	bone_color(glowBody, r, g, b, 0.2)
+	bone_setColor(glowBody, r, g, b, 0.2)
 	bone_alpha(glowBody, 0.5)
 	
 	bone_scale(glowBody, 2, 2)

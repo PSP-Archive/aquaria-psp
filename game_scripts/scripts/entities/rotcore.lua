@@ -346,7 +346,7 @@ function damage(me, attacker, bone, damageType, dmg)
 		return true
 	end
 	if not entity_isState(me, STATE_OPEN) and not entity_isState(me, STATE_MOVING) then
-		idx = bone_getidx(bone)
+		idx = bone_getIndex(bone)
 		if idx >= 1 and idx <= 6 then
 			-- is an eye!
 			eyeHits[idx] = eyeHits[idx] + dmg

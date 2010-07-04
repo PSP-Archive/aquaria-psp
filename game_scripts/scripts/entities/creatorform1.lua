@@ -194,7 +194,7 @@ function qws(me, t)
 	
 	if t == -1 then
 		--debugLog("WATCH FOR VOICE!!!")
-		while isPlayingVoice() do
+		while isStreamingVoice() do
 			watch(FRAME_TIME)
 			-- old skip method
 			--[[

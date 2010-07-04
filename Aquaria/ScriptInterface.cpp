@@ -37,13 +37,24 @@ extern "C"
 #include "../BBGE/MathFunctions.h"
 
 ScriptInterface *si = 0;
-bool conversationStarted = false;
-bool throwLuaErrors = false;
+const bool throwLuaErrors = false;
 
 //============================================================================================
 // S C R I P T  C O M M A N D S
 //============================================================================================
 
+static void luaErrorMsg(lua_State *L, const char *msg)
+{
+	debugLog(msg);
+
+	if (throwLuaErrors)
+	{
+		lua_pushstring(L, msg);
+		lua_error(L);
+	}
+}
+
+// Also called from Path.cpp
 void luaPushPointer(lua_State *L, void *ptr)
 {
 	// All the scripts do this:
@@ -59,7 +70,196 @@ void luaPushPointer(lua_State *L, void *ptr)
 		lua_pushnumber(L, 0);
 }
 
-static int l_dofile_caseinsensitive(lua_State *L)
+static inline
+ScriptedEntity *scriptedEntity(lua_State *L, int slot = 1)
+{
+	ScriptedEntity *se = (ScriptedEntity*)lua_touserdata(L, slot);
+	if (!se)
+		debugLog("ScriptedEntity invalid pointer.");
+	return se;
+}
+
+static inline
+CollideEntity *collideEntity(lua_State *L, int slot = 1)
+{
+	CollideEntity *ce = (CollideEntity*)lua_touserdata(L, slot);
+	if (!ce)
+		debugLog("CollideEntity invalid pointer.");
+	return ce ;
+}
+
+static inline
+RenderObject *object(lua_State *L, int slot = 1)
+{
+	//RenderObject *obj = dynamic_cast<RenderObject*>((RenderObject*)(int(lua_tonumber(L, slot))));
+	RenderObject *obj = static_cast<RenderObject*>(lua_touserdata(L, slot));
+	if (!obj)
+		debugLog("RenderObject invalid pointer");
+	return obj;
+}
+
+static inline
+Beam *beam(lua_State *L, int slot = 1)
+{
+	Beam *b = (Beam*)lua_touserdata(L, slot);
+	if (!b)
+		debugLog("Beam invalid pointer.");
+	return b;
+}
+
+static inline
+std::string getString(lua_State *L, int slot = 1)
+{
+	std::string sr;
+	if (lua_isstring(L, slot))
+	{
+		sr = lua_tostring(L, slot);
+	}
+	return sr;
+}
+
+static inline
+Shot *getShot(lua_State *L, int slot = 1)
+{
+	Shot *shot = (Shot*)lua_touserdata(L, slot);
+	return shot;
+}
+
+static inline
+Web *getWeb(lua_State *L, int slot = 1)
+{
+	Web *web = (Web*)lua_touserdata(L, slot);
+	return web;
+}
+
+static inline
+Ingredient *getIng(lua_State *L, int slot = 1)
+{
+	return (Ingredient*)lua_touserdata(L, slot);
+}
+
+static inline
+bool getBool(lua_State *L, int slot = 1)
+{
+	if (lua_isnumber(L, slot))
+	{
+		return bool(lua_tonumber(L, slot));
+	}
+	else if (lua_islightuserdata(L, slot))
+	{
+		return (lua_touserdata(L, slot) != NULL);
+	}
+	else if (lua_isboolean(L, slot))
+	{
+		return lua_toboolean(L, slot);
+	}
+	return false;
+}
+
+static inline
+Entity *entity(lua_State *L, int slot = 1)
+{
+	Entity *ent = (Entity*)lua_touserdata(L, slot);
+	if (!ent)
+	{
+		luaErrorMsg(L, "Entity Invalid Pointer");
+	}
+	return ent;
+}
+
+static inline
+Vector getVector(lua_State *L, int slot = 1)
+{
+	Vector v(lua_tonumber(L, slot), lua_tonumber(L, slot+1));
+	return v;
+}
+
+
+static inline
+Bone *bone(lua_State *L, int slot = 1)
+{
+	Bone *b = (Bone*)lua_touserdata(L, slot);
+	if (!b)
+	{
+		luaErrorMsg(L, "Bone Invalid Pointer");
+	}
+	return b;
+}
+
+static inline
+Path *pathFromName(lua_State *L, int slot = 1)
+{
+	std::string s = lua_tostring(L, slot);
+	stringToLowerUserData(s);
+	Path *p = dsq->game->getPathByName(s);
+	if (!p)
+	{
+		debugLog("Could not find path [" + s + "]");
+	}
+	return p;
+}
+
+static inline
+Path *path(lua_State *L, int slot = 1)
+{
+	Path *p = (Path*)lua_touserdata(L, slot);
+	return p;
+}
+
+static RenderObject *entityToRenderObject(lua_State *L, int slot = 1)
+{
+	Entity *e = entity(L, slot);
+	return dynamic_cast<RenderObject*>(e);
+}
+
+static RenderObject *boneToRenderObject(lua_State *L, int slot = 1)
+{
+	Bone *b = bone(L, slot);
+	return dynamic_cast<RenderObject*>(b);
+}
+
+static PauseQuad *getPauseQuad(lua_State *L, int slot = 1)
+{
+	PauseQuad *q = (PauseQuad*)lua_touserdata(L, slot);
+	if (q)
+		return q;
+	else
+		errorLog("Invalid PauseQuad/Particle");
+	return 0;
+}
+
+static SkeletalSprite *getSkeletalSprite(Entity *e)
+{
+	Avatar *a;
+	ScriptedEntity *se;
+	SkeletalSprite *skel = 0;
+	if ((a = dynamic_cast<Avatar*>(e)) != 0)
+	{
+		//a->skeletalSprite.transitionAnimate(lua_tostring(L, 2), 0.15, lua_tointeger(L, 3));
+		skel = &a->skeletalSprite;
+	}
+	else if ((se = dynamic_cast<ScriptedEntity*>(e)) != 0)
+	{
+		skel = &se->skeletalSprite;
+	}
+	return skel;
+}
+
+//----------------------------------//
+
+#define luaFunc(func)		static int l_##func(lua_State *L)
+#define luaReturnBool(bool)	do {lua_pushboolean(L, (bool)); return 1;} while(0)
+#define luaReturnInt(num)	do {lua_pushinteger(L, (num)); return 1;} while(0)
+#define luaReturnNum(num)	do {lua_pushnumber(L, (num)); return 1;} while(0)
+#define luaReturnPtr(ptr)	do {luaPushPointer(L, (ptr)); return 1;} while(0)
+#define luaReturnStr(str)	do {lua_pushstring(L, (str)); return 1;} while(0)
+#define luaReturnVec2(x,y)	do {lua_pushnumber(L, (x)); lua_pushnumber(L, (y)); return 2;} while(0)
+#define luaReturnVec3(x,y,z)	do {lua_pushnumber(L, (x)); lua_pushnumber(L, (y)); lua_pushnumber(L, (z)); return 3;} while(0)
+
+#define luaRegister(func)	lua_register(baseState, #func, l_##func);
+
+
+luaFunc(dofile_caseinsensitive)
 {
 	// This is Lua's dofile(), with some tweaks.  --ryan.
 	std::string fname(core->adjustFilenameCase(luaL_checkstring(L, 1)));
@@ -69,25 +269,7 @@ static int l_dofile_caseinsensitive(lua_State *L)
 	return lua_gettop(L) - n;
 }
 
-
-#define luaf(func)		int l_##func(lua_State *L) {
-#define luap(ptr)		luaPushPointer(L, ptr); return 1; }
-#define luab(bool)		lua_pushboolean(L, bool); return 1; }
-
-#define luar(func)		lua_register(baseState, #func, l_##func);
-
-void luaErrorMsg(lua_State *L, const std::string &msg)
-{
-	debugLog(msg);
-
-	if (throwLuaErrors)
-	{
-		lua_pushstring(L, msg.c_str());
-		lua_error(L);
-	}
-}
-
-int l_randRange(lua_State *L)
+luaFunc(randRange)
 {
 	int n1 = lua_tointeger(L, 1);
 	int n2 = lua_tointeger(L, 2);
@@ -96,156 +278,131 @@ int l_randRange(lua_State *L)
 	int r = rand()%spread;
 	r += n1;
 
-	lua_pushnumber(L, r);
-	return 1;
+	luaReturnNum(r);
 }
 
-int l_upgradeHealth(lua_State *L)
+luaFunc(upgradeHealth)
 {
 	dsq->continuity.upgradeHealth();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_shakeCamera(lua_State *L)
+luaFunc(shakeCamera)
 {
 	dsq->shakeCamera(lua_tonumber(L,1), lua_tonumber(L, 2));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_changeForm(lua_State *L)
+luaFunc(changeForm)
 {
 	dsq->game->avatar->changeForm((FormType)lua_tointeger(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_getWaterLevel(lua_State *L)
+luaFunc(getWaterLevel)
 {
-	lua_pushnumber(L, dsq->game->getWaterLevel());
-	return 1;
+	luaReturnNum(dsq->game->getWaterLevel());
 }
 
-int l_setPoison(lua_State *L)
+luaFunc(setPoison)
 {
 	dsq->continuity.setPoison(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_cureAllStatus(lua_State *L)
+luaFunc(cureAllStatus)
 {
 	dsq->continuity.cureAllStatus();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setMusicToPlay(lua_State *L)
+luaFunc(setMusicToPlay)
 {
 	if (lua_isstring(L, 1))
 		dsq->game->setMusicToPlay(lua_tostring(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setActivePet(lua_State *L)
+luaFunc(setActivePet)
 {
 	Entity *e = dsq->game->setActivePet(lua_tonumber(L, 1));
 
-	luaPushPointer(L, e);
-	return 1;
+	luaReturnPtr(e);
 }
 
-int l_setWaterLevel(lua_State *L)
+luaFunc(setWaterLevel)
 {
 	dsq->game->waterLevel.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	lua_pushnumber(L, dsq->game->waterLevel.x);
-	return 1;
+	luaReturnNum(dsq->game->waterLevel.x);
 }
 
-int l_getForm(lua_State *L)
+luaFunc(getForm)
 {
-	lua_pushnumber(L, dsq->continuity.form);
-	return 1;
+	luaReturnNum(dsq->continuity.form);
 }
 
-int l_isForm(lua_State *L)
+luaFunc(isForm)
 {
 	FormType form = FormType(lua_tointeger(L, 1));
 	bool v = (form == dsq->continuity.form);
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_learnFormUpgrade(lua_State *L)
+luaFunc(learnFormUpgrade)
 {
 	dsq->continuity.learnFormUpgrade((FormUpgradeType)lua_tointeger(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_hasLi(lua_State *L)
+luaFunc(hasLi)
 {
-	lua_pushboolean(L, dsq->continuity.hasLi());
-	return 1;
+	luaReturnBool(dsq->continuity.hasLi());
 }
 
-int l_hasFormUpgrade(lua_State *L)
+luaFunc(hasFormUpgrade)
 {
-	lua_pushboolean(L, dsq->continuity.hasFormUpgrade((FormUpgradeType)lua_tointeger(L, 1)));
-	return 1;
+	luaReturnBool(dsq->continuity.hasFormUpgrade((FormUpgradeType)lua_tointeger(L, 1)));
 }
 
-int l_castSong(lua_State *L)
+luaFunc(castSong)
 {
 	dsq->continuity.castSong(lua_tonumber(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_isStory(lua_State *L)
+luaFunc(isStory)
 {
-	lua_pushboolean(L, dsq->continuity.isStory(lua_tonumber(L, 1)));
-	return 1;
+	luaReturnBool(dsq->continuity.isStory(lua_tonumber(L, 1)));
 }
 
-int l_getNoteVector(lua_State *L)
+luaFunc(getNoteVector)
 {
 	int note = lua_tointeger(L, 1);
 	float mag = lua_tonumber(L, 2);
 	Vector v = dsq->getNoteVector(note, mag);
-	lua_pushnumber(L, v.x);
-	lua_pushnumber(L, v.y);
-	return 2;
+	luaReturnVec2(v.x, v.y);
 }
 
-int l_getNoteColor(lua_State *L)
+luaFunc(getNoteColor)
 {
 	int note = lua_tointeger(L, 1);
 	Vector v = dsq->getNoteColor(note);
-
-	lua_pushnumber(L, v.x);
-	lua_pushnumber(L, v.y);
-	lua_pushnumber(L, v.z);
-	return 3;
+	luaReturnVec3(v.x, v.y, v.z);
 }
 
-int l_getRandNote(lua_State *L)
+luaFunc(getRandNote)
 {
 	//int note = lua_tointeger(L, 1);
 
-	lua_pushnumber(L, dsq->getRandNote());
-	return 1;
+	luaReturnNum(dsq->getRandNote());
 }
 
-int l_getStory(lua_State *L)
+luaFunc(getStory)
 {
-	lua_pushnumber(L, dsq->continuity.getStory());
-	return 1;
+	luaReturnNum(dsq->continuity.getStory());
 }
 
-int l_foundLostMemory(lua_State *L)
+luaFunc(foundLostMemory)
 {
 	int num = 0;
 	if (dsq->continuity.getFlag(FLAG_SECRET01)) num++;
@@ -257,11 +414,10 @@ int l_foundLostMemory(lua_State *L)
 
 	dsq->sound->playSfx("memory-found");
 
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_setGameOver(lua_State *L)
+luaFunc(setGameOver)
 {
 	bool v = false;
 	if (lua_isnumber(L, 0))
@@ -271,122 +427,54 @@ int l_setGameOver(lua_State *L)
 
 	dsq->game->runGameOverScript = !v;
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_reloadTextures(lua_State *L)
+luaFunc(reloadTextures)
 {
 	dsq->precacher.clean();
 	dsq->precacher.precacheList("data/precache.txt");
 	dsq->reloadResources();
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setStory(lua_State *L)
+luaFunc(setStory)
 {
 	dsq->continuity.setStory(lua_tonumber(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-inline
-ScriptedEntity *scriptedEntity(lua_State *L, int s = 1)
-{
-	ScriptedEntity *se = (ScriptedEntity*)lua_touserdata(L, s);
-	if (!se)
-		debugLog("ScriptedEntity invalid pointer.");
-	return se;
-}
-
-inline
-CollideEntity *collideEntity(lua_State *L, int s = 1)
-{
-	CollideEntity *ce = (CollideEntity*)lua_touserdata(L, s);
-	if (!ce)
-		debugLog("CollideEntity invalid pointer.");
-	return ce ;
-}
-
-inline
-RenderObject *object(lua_State *L, int s=1)
-{
-	//RenderObject *obj = dynamic_cast<RenderObject*>((RenderObject*)(int(lua_tonumber(L, s))));
-	RenderObject *obj = static_cast<RenderObject*>(lua_touserdata(L, s));
-	if (!obj)
-		debugLog("RenderObject invalid pointer");
-	return obj;
-}
-
-inline
-Beam *beam(lua_State *L, int s = 1)
-{
-	Beam *b = (Beam*)lua_touserdata(L, s);
-	if (!b)
-		debugLog("Beam invalid pointer.");
-	return b;
-}
-
-inline
-std::string getString(lua_State *L, int s = 1)
-{
-	std::string sr;
-	if (lua_isstring(L, s))
-	{
-		sr = lua_tostring(L, s);
-	}
-	return sr;
-}
-
-inline
-Shot *getShot(lua_State *L, int s = 1)
-{
-	Shot *shot = (Shot*)lua_touserdata(L, s);
-	return shot;
-}
-
-inline
-Web *getWeb(lua_State *L, int s = 1)
-{
-	Web *web = (Web*)lua_touserdata(L, s);
-	return web;
-}
-
-int l_confirm(lua_State *L)
+luaFunc(confirm)
 {
 	std::string s1 = getString(L, 1);
 	std::string s2 = getString(L, 2);
 	bool b = dsq->confirm(s1, s2);
-	lua_pushboolean(L, b);
-	return 1;
+	luaReturnBool(b);
 }
 
-int l_createWeb(lua_State *L)
+luaFunc(createWeb)
 {
 	Web *web = new Web();
 	dsq->game->addRenderObject(web, LR_PARTICLES);
-	luaPushPointer(L, web);
-	return 1;
+	luaReturnPtr(web);
 }
 
 // spore has base entity
-int l_createSpore(lua_State *L)
+luaFunc(createSpore)
 {
 	Vector pos(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	if (Spore::isPositionClear(pos))
 	{
 		Spore *spore = new Spore(pos);
 		dsq->game->addRenderObject(spore, LR_ENTITIES);
-		luaPushPointer(L, spore);
+		luaReturnPtr(spore);
 	}
 	else
-		lua_pushnumber(L, 0);
-	return 1;
+		luaReturnPtr(NULL);
 }
 
-int l_web_addPoint(lua_State *L)
+luaFunc(web_addPoint)
 {
 	Web *w = getWeb(L);
 	float x = lua_tonumber(L, 2);
@@ -396,11 +484,10 @@ int l_web_addPoint(lua_State *L)
 	{
 		r = w->addPoint(Vector(x,y));
 	}
-	lua_pushnumber(L, r);
-	return 1;
+	luaReturnNum(r);
 }
 
-int l_web_setPoint(lua_State *L)
+luaFunc(web_setPoint)
 {
 	Web *w = getWeb(L);
 	int pt = lua_tonumber(L, 2);
@@ -410,11 +497,10 @@ int l_web_setPoint(lua_State *L)
 	{
 		w->setPoint(pt, Vector(x, y));
 	}
-	lua_pushnumber(L, pt);
-	return 1;
+	luaReturnNum(pt);
 }
 
-int l_web_getNumPoints(lua_State *L)
+luaFunc(web_getNumPoints)
 {
 	Web *web = getWeb(L);
 	int num = 0;
@@ -422,11 +508,10 @@ int l_web_getNumPoints(lua_State *L)
 	{
 		num = web->getNumPoints();
 	}
-	lua_pushnumber(L, num);
-	return 1;
+	luaReturnNum(num);
 }
 
-int l_web_delete(lua_State *L)
+luaFunc(web_delete)
 {
 	Web *e = getWeb(L);
 	if (e)
@@ -445,11 +530,10 @@ int l_web_delete(lua_State *L)
 			e->setDecayRate(1.0/time);
 		}
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_shot_getPosition(lua_State *L)
+luaFunc(shot_getPosition)
 {
 	float x=0,y=0;
 	Shot *shot = getShot(L);
@@ -458,23 +542,20 @@ int l_shot_getPosition(lua_State *L)
 		x = shot->position.x;
 		y = shot->position.y;
 	}
-	lua_pushnumber(L, x);
-	lua_pushnumber(L, y);
-	return 2;
+	luaReturnVec2(x, y);
 }
 
-int l_shot_setLifeTime(lua_State *L)
+luaFunc(shot_setLifeTime)
 {
 	Shot *shot = getShot(L);
 	if (shot)
 	{
 		shot->setLifeTime(lua_tonumber(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_shot_setVel(lua_State *L)
+luaFunc(shot_setVel)
 {
 	Shot *shot = getShot(L);
 	float vx = lua_tonumber(L, 2);
@@ -483,11 +564,10 @@ int l_shot_setVel(lua_State *L)
 	{
 		shot->velocity = Vector(vx, vy);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_shot_setOut(lua_State *L)
+luaFunc(shot_setOut)
 {
 	Shot *shot = getShot(L);
 	float outness = lua_tonumber(L, 2);
@@ -502,11 +582,10 @@ int l_shot_setOut(lua_State *L)
 		debugLog(os.str());
 		*/
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_shot_setAimVector(lua_State *L)
+luaFunc(shot_setAimVector)
 {
 	Shot *shot = getShot(L);
 	float ax = lua_tonumber(L, 2);
@@ -515,13 +594,12 @@ int l_shot_setAimVector(lua_State *L)
 	{
 		shot->setAimVector(Vector(ax, ay));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 // shot, texture, particles
 // (kills segs)
-int l_shot_setNice(lua_State *L)
+luaFunc(shot_setNice)
 {
 	/*
 	Shot *shot = getShot(L);
@@ -539,130 +617,31 @@ int l_shot_setNice(lua_State *L)
 	*/
 	debugLog("shot_setNice is deprecated");
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-inline
-Ingredient *getIng(lua_State *L, int s = 1)
-{
-	return (Ingredient*)lua_touserdata(L, 1);
-}
-
-inline
-bool getBool(lua_State *L, int s = 1)
-{
-	if (lua_isnumber(L, s))
-	{
-		return bool(lua_tonumber(L, s));
-	}
-	else if (lua_islightuserdata(L, s))
-	{
-		return (lua_touserdata(L, s) != NULL);
-	}
-	else if (lua_isboolean(L, s))
-	{
-		return lua_toboolean(L, s);
-	}
-	return false;
-}
-
-inline
-Entity *entity(lua_State *L, int s = 1)
-{
-	Entity *ent = (Entity*)lua_touserdata(L, s);
-	if (!ent)
-	{
-		luaErrorMsg(L, "Entity Invalid Pointer");
-	}
-	return ent;
-}
-
-inline
-Vector getVector(lua_State *L, int s = 1)
-{
-	Vector v(lua_tonumber(L, s), lua_tonumber(L, s+1));
-	return v;
-}
-
-
-inline
-Bone *bone(lua_State *L, int s = 1)
-{
-	Bone *b = (Bone*)lua_touserdata(L, s);
-	if (!b)
-	{
-		luaErrorMsg(L, "Bone Invalid Pointer");
-	}
-	return b;
-}
-
-inline
-Path *pathFromName(lua_State *L, int slot = 1)
-{
-	std::string s = lua_tostring(L, slot);
-	stringToLowerUserData(s);
-	Path *p = dsq->game->getPathByName(s);
-	if (!p)
-	{
-		debugLog("Could not find path [" + s + "]");
-	}
-	return p;
-}
-
-inline
-Path *path(lua_State *L, int slot = 1)
-{
-	Path *p = (Path*)lua_touserdata(L, slot);
-	return p;
-}
-
-RenderObject *entityToRenderObject(lua_State *L, int i = 1)
-{
-	Entity *e = entity(L, i);
-	return dynamic_cast<RenderObject*>(e);
-}
-
-RenderObject *boneToRenderObject(lua_State *L, int i = 1)
-{
-	Bone *b = bone(L, i);
-	return dynamic_cast<RenderObject*>(b);
-}
-
-int l_entity_addIgnoreShotDamageType(lua_State *L)
+luaFunc(entity_addIgnoreShotDamageType)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->addIgnoreShotDamageType((DamageType)lua_tointeger(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_warpLastPosition(lua_State *L)
+luaFunc(entity_warpLastPosition)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->warpLastPosition();
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 
-/*
-int l_mod_setActive(lua_State *L)
-{
-	bool b = getBool(L);
-	dsq->mod.setActive(b);
-	lua_pushboolean(L, b);
-	return 1;
-}
-*/
-
-int l_entity_velTowards(lua_State *L)
+luaFunc(entity_velTowards)
 {
 	Entity *e = entity(L);
 	int x = lua_tonumber(L, 2);
@@ -679,11 +658,10 @@ int l_entity_velTowards(lua_State *L)
 			e->vel2 += add;
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_getBoneLockEntity(lua_State *L)
+luaFunc(entity_getBoneLockEntity)
 {
 	Entity *e = entity(L);
 	Entity *ent = NULL;
@@ -693,37 +671,33 @@ int l_entity_getBoneLockEntity(lua_State *L)
 		ent = b->entity;
 		//ent = e->boneLock.entity;
 	}
-	luaPushPointer(L, ent);
-	return 1;
+	luaReturnPtr(ent);
 }
 
-int l_entity_ensureLimit(lua_State *L)
+luaFunc(entity_ensureLimit)
 {
 	Entity *e = entity(L);
 	dsq->game->ensureLimit(e, lua_tonumber(L, 2), lua_tonumber(L, 3));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setRidingPosition(lua_State *L)
+luaFunc(entity_setRidingPosition)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->setRidingPosition(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setRidingData(lua_State *L)
+luaFunc(entity_setRidingData)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->setRidingData(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), getBool(L, 5));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setBoneLock(lua_State *L)
+luaFunc(entity_setBoneLock)
 {
 	Entity *e = entity(L);
 	Entity *e2 = entity(L, 2);
@@ -738,32 +712,29 @@ int l_entity_setBoneLock(lua_State *L)
 		bl.collisionMaskIndex = dsq->game->lastCollideMaskIndex;
 		ret = e->setBoneLock(bl);
 	}
-	lua_pushboolean(L, ret);
-	return 1;
+	luaReturnBool(ret);
 }
 
-int l_entity_setIngredient(lua_State *L)
+luaFunc(entity_setIngredient)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->setIngredientData(getString(L,2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setSegsMaxDist(lua_State *L)
+luaFunc(entity_setSegsMaxDist)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	if (se)
 		se->setMaxDist(lua_tonumber(L, 2));
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setBounceType(lua_State *L)
+luaFunc(entity_setBounceType)
 {
 	Entity *e = entity(L);
 	int v = lua_tointeger(L, 2);
@@ -771,11 +742,10 @@ int l_entity_setBounceType(lua_State *L)
 	{
 		e->setBounceType((BounceType)v);
 	}
-	lua_pushnumber(L, v);
-	return 1;
+	luaReturnNum(v);
 }
 
-int l_shot_setBounceType(lua_State *L)
+luaFunc(shot_setBounceType)
 {
 	Shot *s = getShot(L);
 	int v = lua_tointeger(L, 2);
@@ -783,38 +753,34 @@ int l_shot_setBounceType(lua_State *L)
 	{
 		s->setBounceType((BounceType)v);
 	}
-	lua_pushnumber(L, v);
-	return 1;
+	luaReturnNum(v);
 }
 
 
-int l_user_set_demo_intro(lua_State *L)
+luaFunc(user_set_demo_intro)
 {
 #ifndef AQUARIA_DEMO
 	dsq->user.demo.intro = lua_tonumber(L, 1);
 #endif
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_user_save(lua_State *L)
+luaFunc(user_save)
 {
 	dsq->user.save();
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_setAutoSkeletalUpdate(lua_State *L)
+luaFunc(entity_setAutoSkeletalUpdate)
 {
 	ScriptedEntity *e = scriptedEntity(L);
 	bool v = getBool(L, 2);
 	if (e)
 		e->setAutoSkeletalUpdate(v);
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_getBounceType(lua_State *L)
+luaFunc(entity_getBounceType)
 {
 	Entity *e = entity(L);
 	BounceType bt=BOUNCE_SIMPLE;
@@ -822,33 +788,30 @@ int l_entity_getBounceType(lua_State *L)
 	{
 		bt = (BounceType)e->getBounceType();
 	}
-	lua_pushinteger(L, (int)bt);
-	return 1;
+	luaReturnInt((int)bt);
 }
 
-int l_entity_setDieTimer(lua_State *L)
+luaFunc(entity_setDieTimer)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->setDieTimer(lua_tonumber(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setLookAtPoint(lua_State *L)
+luaFunc(entity_setLookAtPoint)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->lookAtPoint = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_getLookAtPoint(lua_State *L)
+luaFunc(entity_getLookAtPoint)
 {
 	Entity *e = entity(L);
 	Vector pos;
@@ -856,24 +819,21 @@ int l_entity_getLookAtPoint(lua_State *L)
 	{
 		pos = e->getLookAtPoint();
 	}
-	lua_pushnumber(L, pos.x);
-	lua_pushnumber(L, pos.y);
-	return 2;
+	luaReturnVec2(pos.x, pos.y);
 }
 
 
-int l_entity_setLife(lua_State *L)
+luaFunc(entity_setLife)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->setLife(lua_tonumber(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
-
+	luaReturnNum(0);
 }
-int l_entity_setRiding(lua_State *L)
+
+luaFunc(entity_setRiding)
 {
 	Entity *e = entity(L);
 	Entity *e2 = 0;
@@ -883,11 +843,10 @@ int l_entity_setRiding(lua_State *L)
 	{
 		e->setRiding(e2);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_getHealthPerc(lua_State *L)
+luaFunc(entity_getHealthPerc)
 {
 	Entity *e = entity(L);
 	float p = 0;
@@ -895,32 +854,29 @@ int l_entity_getHealthPerc(lua_State *L)
 	{
 		p = e->getHealthPerc();
 	}
-	lua_pushnumber(L, p);
-	return 1;
+	luaReturnNum(p);
 }
 
-int l_entity_getRiding(lua_State *L)
+luaFunc(entity_getRiding)
 {
 	Entity *e = entity(L);
 	Entity *ret = 0;
 	if (e)
 		ret = e->getRiding();
-	luaPushPointer(L, ret);
-	return 1;
+	luaReturnPtr(ret);
 }
 
-int l_entity_setTargetPriority(lua_State *L)
+luaFunc(entity_setTargetPriority)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->targetPriority = lua_tonumber(L, 2);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setNodeGroupActive(lua_State *L)
+luaFunc(entity_setNodeGroupActive)
 {
 	errorLog("setNodeGroup unsupported!");
 	Entity *e = entity(L);
@@ -930,34 +886,29 @@ int l_entity_setNodeGroupActive(lua_State *L)
 	{
 		e->setNodeGroupActive(group, v);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_isQuitFlag(lua_State *L)
+luaFunc(isQuitFlag)
 {
-	lua_pushboolean(L, dsq->isQuitFlag());
-	return 1;
+	luaReturnBool(dsq->isQuitFlag());
 }
 
-int l_isDeveloperKeys(lua_State *L)
+luaFunc(isDeveloperKeys)
 {
-	lua_pushboolean(L, dsq->isDeveloperKeys());
-
-	return 1;
+	luaReturnBool(dsq->isDeveloperKeys());
 }
 
-int l_isDemo(lua_State *L)
+luaFunc(isDemo)
 {
 #ifdef AQUARIA_DEMO
-	lua_pushboolean(L, true);
+	luaReturnBool(true);
 #else
-	lua_pushboolean(L, false);
+	luaReturnBool(false);
 #endif
-	return 1;
 }
 
-int l_isWithin(lua_State *L)
+luaFunc(isWithin)
 {
 	Vector v1 = getVector(L, 1);
 	Vector v2 = getVector(L, 3);
@@ -973,90 +924,66 @@ int l_isWithin(lua_State *L)
 	{
 		v = true;
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_stopCursorGlow(lua_State *L)
+luaFunc(stopCursorGlow)
 {
 	//dsq->stopCursorGlow();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_toggleDamageSprite(lua_State *L)
+luaFunc(toggleDamageSprite)
 {
 	dsq->game->toggleDamageSprite(getBool(L));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_toggleCursor(lua_State *L)
+luaFunc(toggleCursor)
 {
 	dsq->toggleCursor(getBool(L, 1), lua_tonumber(L, 2));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_toggleBlackBars(lua_State *L)
+luaFunc(toggleBlackBars)
 {
 	dsq->toggleBlackBars(getBool(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setBlackBarsColor(lua_State *L)
+luaFunc(setBlackBarsColor)
 {
 	Vector c(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3));
 	dsq->setBlackBarsColor(c);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_toggleLiCombat(lua_State *L)
+luaFunc(toggleLiCombat)
 {
 	dsq->continuity.toggleLiCombat(getBool(L));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_toggleConversationWindow(lua_State *L)
+luaFunc(getNoteName)
 {
-	//dsq->toggleConversationWindow((bool)lua_tointeger(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnStr(dsq->game->getNoteName(lua_tonumber(L, 1), getString(L, 2)).c_str());
 }
 
-int l_toggleConversationWindowSoft(lua_State *L)
+luaFunc(getWorldType)
 {
-	//dsq->toggleConversationWindow((bool)lua_tointeger(L, 1), true);
-	lua_pushnumber(L, 0);
-	return 1;
-}
-
-int l_getNoteName(lua_State *L)
-{
-	lua_pushstring(L, dsq->game->getNoteName(lua_tonumber(L, 1), getString(L, 2)).c_str());
-	return 1;
-}
-
-int l_getWorldType(lua_State *L)
-{
-	lua_pushnumber(L, (int)dsq->continuity.getWorldType());
-	return 1;
+	luaReturnNum((int)dsq->continuity.getWorldType());
 }
 	
-int l_getNearestNodeByType(lua_State *L)
+luaFunc(getNearestNodeByType)
 {
 	int x = lua_tonumber(L, 1);
 	int y = lua_tonumber(L, 2);
 	int type = lua_tonumber(L, 3);
 
-	luaPushPointer(L, dsq->game->getNearestPath(Vector(x,y), (PathType)type));
-	return 1;
+	luaReturnPtr(dsq->game->getNearestPath(Vector(x,y), (PathType)type));
 }
 
-int l_getNearestNode(lua_State *L)
+luaFunc(getNearestNode)
 {
 	//Entity *e = entity(L);
 	std::string s;
@@ -1065,74 +992,64 @@ int l_getNearestNode(lua_State *L)
 		s = lua_tostring(L, 2);
 	}
 	Path *p = path(L);
-	luaPushPointer(L, dsq->game->getNearestPath(p, s));
-	return 1;
+	luaReturnPtr(dsq->game->getNearestPath(p, s));
 }
 
-int l_fadeOutMusic(lua_State *L)
+luaFunc(fadeOutMusic)
 {
 	dsq->sound->fadeMusic(SFT_OUT, lua_tonumber(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_getNode(lua_State *L)
+luaFunc(getNode)
 {
-	luaPushPointer(L, pathFromName(L));
-	return 1;
+	luaReturnPtr(pathFromName(L));
 }
 
-int l_getNodeToActivate(lua_State *L)
+luaFunc(getNodeToActivate)
 {
-	luaPushPointer(L, dsq->game->avatar->pathToActivate);
-	return 1;
+	luaReturnPtr(dsq->game->avatar->pathToActivate);
 }
 
-int l_setNodeToActivate(lua_State *L)
+luaFunc(setNodeToActivate)
 {
 	dsq->game->avatar->pathToActivate = path(L, 1);
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_setActivation(lua_State *L)
+luaFunc(setActivation)
 {
 	dsq->game->activation = getBool(L, 1);
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_setNaijaModel(lua_State *L)
+luaFunc(setNaijaModel)
 {
 	std::string s = lua_tostring(L, 1);
 	dsq->continuity.setNaijaModel(s);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_debugLog(lua_State *L)
+luaFunc(debugLog)
 {
-	std::string s = lua_tostring(L, 1);
+	const char *s = lua_tostring(L, 1);
 	debugLog(s);
-	lua_pushstring(L, s.c_str());
-	return 1;
+	luaReturnStr(s);
 }
 
-int l_reconstructGrid(lua_State *L)
+luaFunc(reconstructGrid)
 {
 	dsq->game->reconstructGrid(true);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_reconstructEntityGrid(lua_State *L)
+luaFunc(reconstructEntityGrid)
 {
 	dsq->game->reconstructEntityGrid();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setCanLeaveWater(lua_State *L)
+luaFunc(entity_setCanLeaveWater)
 {
 	Entity *e = entity(L);
 	bool v = getBool(L, 2);
@@ -1140,11 +1057,10 @@ int l_entity_setCanLeaveWater(lua_State *L)
 	{
 		e->setCanLeaveWater(v);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setSegmentTexture(lua_State *L)
+luaFunc(entity_setSegmentTexture)
 {
 	ScriptedEntity *e = scriptedEntity(L);
 	if (e)
@@ -1155,11 +1071,10 @@ int l_entity_setSegmentTexture(lua_State *L)
 			ro->setTexture(lua_tostring(L, 3));
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_findNearestEntityOfType(lua_State *L)
+luaFunc(entity_findNearestEntityOfType)
 {
 	Entity *e = entity(L);
 	Entity *nearest = 0;
@@ -1187,11 +1102,10 @@ int l_entity_findNearestEntityOfType(lua_State *L)
 			nearest = closest;
 		}
 	}
-	luaPushPointer(L, nearest);
-	return 1;
+	luaReturnPtr(nearest);
 }
 
-int l_createShot(lua_State *L)
+luaFunc(createShot)
 {
 	std::string shotData = lua_tostring(L, 1);
 	Entity *e = entity(L,2);
@@ -1208,12 +1122,11 @@ int l_createShot(lua_State *L)
 
 	s = dsq->game->fireShot(shotData, e, t, pos, aim);
 
-	luaPushPointer(L, s);
-	return 1;
+	luaReturnPtr(s);
 }
 
 
-int l_entity_fireShot(lua_State *L)
+luaFunc(entity_fireShot)
 {
 	Entity *e = entity(L);
 	Shot *s = 0;
@@ -1233,45 +1146,41 @@ int l_entity_fireShot(lua_State *L)
 		}
 		s = dsq->game->fireShot(e, particle, e->position, lua_tointeger(L, 3), Vector(lua_tonumber(L, 4),lua_tonumber(L, 5),0), e2, homing, maxSpeed);
 	}
-	luaPushPointer(L, s);
-	return 1;
+	luaReturnPtr(s);
 }
 
-int l_entity_sound(lua_State *L)
+luaFunc(entity_sound)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->sound(lua_tostring(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 
-int l_entity_soundFreq(lua_State *L)
+luaFunc(entity_soundFreq)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->soundFreq(lua_tostring(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setSpiritFreeze(lua_State *L)
+luaFunc(entity_setSpiritFreeze)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->setSpiritFreeze(getBool(L,2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setFillGrid(lua_State *L)
+luaFunc(entity_setFillGrid)
 {
 	Entity *e = entity(L);
 	bool b = getBool(L,2);
@@ -1279,44 +1188,40 @@ int l_entity_setFillGrid(lua_State *L)
 	{
 		e->fillGridFromQuad = b;
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setTouchDamage(lua_State *L)
+luaFunc(entity_setTouchDamage)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->touchDamage = lua_tonumber(L, 2);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setTouchPush(lua_State *L)
+luaFunc(entity_setTouchPush)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->pushAvatar = lua_tonumber(L, 2);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setCollideRadius(lua_State *L)
+luaFunc(entity_setCollideRadius)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->collideRadius = lua_tonumber(L, 2);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_getNormal(lua_State *L)
+luaFunc(entity_getNormal)
 {
 	float nx=0, ny=1;
 	Entity *e = entity(L);
@@ -1326,12 +1231,10 @@ int l_entity_getNormal(lua_State *L)
 		nx = v.x;
 		ny = v.y;
 	}
-	lua_pushnumber(L, nx);
-	lua_pushnumber(L, ny);
-	return 2;
+	luaReturnVec2(nx, ny);
 }
 
-int l_entity_getAimVector(lua_State *L)
+luaFunc(entity_getAimVector)
 {
 	Entity *e = entity(L);
 	Vector aim;
@@ -1357,30 +1260,25 @@ int l_entity_getAimVector(lua_State *L)
 		a = MathFunctions::toRadians(a);
 		aim = Vector(sinf(a)*len, cosf(a)*len);
 	}
-	lua_pushnumber(L, aim.x);
-	lua_pushnumber(L, aim.y);
-	return 2;
+	luaReturnVec2(aim.x, aim.y);
 }
 
-int l_entity_getVectorToEntity(lua_State *L)
+luaFunc(entity_getVectorToEntity)
 {
 	Entity *e1 = entity(L);
 	Entity *e2 = entity(L, 2);
 	if (e1 && e2)
 	{
-		Vector diff = e2->position -	e1->position;
-		lua_pushnumber(L, diff.x);
-		lua_pushnumber(L, diff.y);
+		Vector diff = e2->position - e1->position;
+		luaReturnVec2(diff.x, diff.y);
 	}
 	else
 	{
-		lua_pushnumber(L, 0);
-		lua_pushnumber(L, 0);
+		luaReturnVec2(0, 0);
 	}
-	return 2;
 }
 
-int l_entity_getCollideRadius(lua_State *L)
+luaFunc(entity_getCollideRadius)
 {
 	Entity *e = entity(L);
 	int ret = 0;
@@ -1388,27 +1286,10 @@ int l_entity_getCollideRadius(lua_State *L)
 	{
 		ret = e->collideRadius;
 	}
-	lua_pushnumber(L, ret);
-	return 1;
+	luaReturnNum(ret);
 }
 
-int l_entity_setRegisterEntityDied(lua_State *L)
-{
-	debugLog("entity_setRegisterEntityDied is deceased!");
-	lua_pushnumber(L, 0);
-	/*
-	Entity *e = entity(L);
-	bool b = getBool(L, 2);
-	if (e)
-		e->registerEntityDied = b;
-		lua_pushboolean(L, b);
-	*/
-
-
-	return 1;
-}
-
-int l_entity_setDropChance(lua_State *L)
+luaFunc(entity_setDropChance)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -1421,28 +1302,10 @@ int l_entity_setDropChance(lua_State *L)
 			se->manaBallAmount = amount;
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setAffectedBySpell(lua_State *L)
-{
-
-	/*
-	Entity *e = entity(L);
-	SpellType st = (SpellType)int(lua_tonumber(L, 2));
-	int v = lua_tonumber(L, 3);
-	if (e)
-	{
-		e->setAffectedBySpell(st, v);
-	}
-	*/
-	debugLog("entity_setAffectedBySpell is deprecated");
-	lua_pushnumber(L, 0);
-	return 1;
-}
-
-int l_entity_setAffectedBySpells(lua_State *L)
+luaFunc(entity_setAffectedBySpells)
 {
 	/*
 	Entity *e = entity(L);
@@ -1452,11 +1315,10 @@ int l_entity_setAffectedBySpells(lua_State *L)
 	}
 	*/
 	debugLog("entity_setAffectedBySpells is deprecated");
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_warpToNode(lua_State *L)
+luaFunc(entity_warpToNode)
 {
 	Entity *e = entity(L);
 	Path *p = path(L, 2);
@@ -1466,31 +1328,28 @@ int l_entity_warpToNode(lua_State *L)
 		e->position = p->nodes[0].position;
 		e->rotateToVec(Vector(0,-1), 0.1);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_stopPull(lua_State *L)
+luaFunc(entity_stopPull)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->stopPull();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_stopInterpolating(lua_State *L)
+luaFunc(entity_stopInterpolating)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->position.stop();
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_moveToNode(lua_State *L)
+luaFunc(entity_moveToNode)
 {
 	Entity *e = entity(L);
 	Path *p = path(L, 2);
@@ -1498,11 +1357,10 @@ int l_entity_moveToNode(lua_State *L)
 	{
 		e->moveToNode(p, lua_tointeger(L, 3), lua_tointeger(L, 4), 0);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_swimToNode(lua_State *L)
+luaFunc(entity_swimToNode)
 {
 	Entity *e = entity(L);
 	Path *p = path(L, 2);
@@ -1514,11 +1372,10 @@ int l_entity_swimToNode(lua_State *L)
 		se->swimPath = true;
 		*/
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_swimToPosition(lua_State *L)
+luaFunc(entity_swimToPosition)
 {
 	Entity *e = entity(L);
 	//Path *p = path(L, 2);
@@ -1534,387 +1391,161 @@ int l_entity_swimToPosition(lua_State *L)
 		se->swimPath = true;
 		*/
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 
-/*
-int l_options(lua_State *L)
-{
-
-	dsq->game->avatar->disableInput();
-	std::string file = dsq->getDialogueFilename(dsq->dialogueFile);
-	std::ifstream inFile(file.c_str());
-	std::string s;
-	std::vector<DialogOption> options;
-
-	dsq->continuity.cm.figureCase();
-
-	// less than big number
-	// get pairs of either string + bool or string + string
-	for (int i = 1; i < 19; i+=2)
-	{
-		DialogOption option;
-		int idx = i;
-		// first part of the pair is a dialogue file section
-		if (lua_isstring(L, idx))
-			option.section = lua_tostring(L, idx);
-		// second part of pair is either boolean/integer or string
-		bool addOption = true;
-		if (lua_isboolean(L, idx+1) || lua_isnumber(L, idx+1))
-		{
-			if (lua_isboolean(L, idx+1))
-				option.used = lua_toboolean(L, idx+1);
-			else if (lua_isnumber(L, idx+1))
-				option.used= bool(lua_tointeger(L, idx+1));
-		}
-		else if (lua_isstring(L, idx+1))
-		{
-			// if the second part of the pair is a string, it means we used a min function
-			// here we parse the min function
-			// we expect a string of length 4 ([type] [ID] [EGO] [SEGO])
-			option.cmString = lua_tostring(L, idx+1);
-			if (option.cmString.empty())
-			{
-				debugLog("[option] error parsing cmString");
-			}
-			else
-			{
-				std::istringstream is(option.cmString);
-				int v;
-				is >> v >> option.id >> option.ego >> option.sego;
-				option.cmType = (CMType)v;
-
-				// figure out if it should be used
-				switch(option.cmType)
-				{
-				case CMT_TRUE:
-					option.used = true;
-				break;
-				case CMT_FALSE:
-					option.used = false;
-				break;
-				default:
-				{
-					int sz = dsq->continuity.cm.allowedOptionTypes.size();
-					int i;
-					for (i = 0; i < sz; i++)
-					{
-						CMType c = dsq->continuity.cm.allowedOptionTypes[i];
-						if (option.cmType == CMT_MIN_EGOSEGO && (c == CMT_MIN_EGO || c == CMT_MIN_SEGO))
-						{
-							option.used = true;
-							break;
-						}
-						else if (option.cmType == CMT_MAJ_EGOSEGO && (c == CMT_MAJ_EGO || c == CMT_MAJ_SEGO))
-						{
-							option.used = true;
-							break;
-						}
-						else if (c == option.cmType)
-						{
-							option.used = true;
-							break;
-						}
-					}
-					if (i == sz)
-					{
-						std::ostringstream os;
-						os << dsq->dialogueFile << " - option dropped, choice (" << int((idx-1)/2) << ") function type :"
-							<< dsq->continuity.cm.getVerbose(option.cmType);
-						debugLog(os.str());
-						option.used = false;
-					}
-				}
-				break;
-				}
-
-			}
-		}
-		else
-		{
-			addOption = false;
-		}
-		if (option.used)
-		{
-			if (option.section.find(':') == std::string::npos)
-				option.text = option.section;
-			else
-			{
-				// read the text
-				std::ifstream inFile;
-				dsq->jumpToSection(inFile, option.section);
-				std::getline(inFile, option.text);
-				if (option.text.empty())
-				{
-					option.text = "NOTFOUND";
-				}
-				else
-				{
-					int pos = option.text.find(':');
-					if (pos!=std::string::npos)
-					{
-						option.text = option.text.substr(pos+2, option.text.size());
-					}
-				}
-			}
-		}
-		if (addOption)
-			options.push_back(option);
-	}
-
-	// display the options
-
-
-	dsq->game->avatar->disableInput();
-
-	dsq->toggleCursor(true);
-	while (core->getNestedMains() > 1)
-		core->quitNestedMain();
-
-	std::vector<AquariaMenuItem*> menu;
-	if (!options.empty())
-	{
-		int c = 0;
-		for (int i = 0; i < options.size(); i++)
-		{
-			if (options[i].used)
-			{
-				AquariaMenuItem* a = new AquariaMenuItem;
-				a->setLabel(options[i].text);
-				a->choice = i;
-				//150
-				a->position = Vector(400,100 + c*40);
-				dsq->game->addRenderObject(a, LR_MENU);
-				menu.push_back(a);
-				c++;
-			}
-		}
-		core->main();
-		for (int i = 0; i < menu.size(); i++)
-		{
-			menu[i]->alpha = 0;
-			menu[i]->safeKill();
-		}
-		menu.clear();
-	}
-
-	DialogOption *d = &(options[dsq->lastChoice]);
-	// ADD IN THE STATS HERE
-	switch (d->cmType)
-	{
-	case CMT_TRUE:
-	case CMT_FALSE:
-	break;
-	default:
-		dsq->continuity.cm.addID(d->id);
-		dsq->continuity.cm.addEGO(d->ego);
-		dsq->continuity.cm.addSEGO(d->sego);
-		// add stats
-		//d->id
-		//d->ego
-		//d->sego
-	break;
-	}
-
-
-
-	if (d->text != d->section)
-		dsq->simpleConversation(d->section);
-
-
-	dsq->toggleCursor(false);
-	lua_pushnumber(L, 0);
-	return 1;
-}
-*/
-
-int l_avatar_setCanDie(lua_State *L)
+luaFunc(avatar_setCanDie)
 {
 	dsq->game->avatar->canDie = getBool(L, 1);
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setGLNearest(lua_State *L)
+luaFunc(setGLNearest)
 {
 	Texture::filter = GL_NEAREST;
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_avatar_toggleCape(lua_State *L)
+luaFunc(avatar_toggleCape)
 {
 	dsq->game->avatar->toggleCape(getBool(L,1));
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_avatar_setBlockSinging(lua_State *L)
+luaFunc(avatar_setBlockSinging)
 {
 	bool b = getBool(L);
 	dsq->game->avatar->setBlockSinging(b);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_avatar_fallOffWall(lua_State *L)
+luaFunc(avatar_fallOffWall)
 {
 	dsq->game->avatar->fallOffWall();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_avatar_isBursting(lua_State *L)
+luaFunc(avatar_isBursting)
 {
-	lua_pushboolean(L, dsq->game->avatar->bursting);
-	return 1;
+	luaReturnBool(dsq->game->avatar->bursting);
 }
 
-int l_avatar_isLockable(lua_State *L)
+luaFunc(avatar_isLockable)
 {
-	lua_pushboolean(L, dsq->game->avatar->isLockable());
-	return 1;
+	luaReturnBool(dsq->game->avatar->isLockable());
 }
 
-int l_avatar_isRolling(lua_State *L)
+luaFunc(avatar_isRolling)
 {
-	lua_pushboolean(L, dsq->game->avatar->isRolling());
-	return 1;
+	luaReturnBool(dsq->game->avatar->isRolling());
 }
 
-int l_avatar_isOnWall(lua_State *L)
+luaFunc(avatar_isOnWall)
 {
 	bool v = dsq->game->avatar->state.lockedToWall;
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_avatar_isShieldActive(lua_State *L)
+luaFunc(avatar_isShieldActive)
 {
 	bool v = (dsq->game->avatar->activeAura == AURA_SHIELD);
-	lua_pushboolean(L, v);
-	return 1;
-
+	luaReturnBool(v);
 }
 
-int l_avatar_getStillTimer(lua_State *L)
+luaFunc(avatar_getStillTimer)
 {
-	lua_pushnumber(L, dsq->game->avatar->stillTimer.getValue());
-	return 1;
+	luaReturnNum(dsq->game->avatar->stillTimer.getValue());
 }
 
-int l_avatar_getRollDirection(lua_State *L)
+luaFunc(avatar_getRollDirection)
 {
 	int v = 0;
 	if (dsq->game->avatar->isRolling())
 		v = dsq->game->avatar->rollDir;
-	lua_pushnumber(L, v);
-	return 1;
+	luaReturnNum(v);
 }
 
-int l_avatar_getSpellCharge(lua_State *L)
+luaFunc(avatar_getSpellCharge)
 {
-	lua_pushnumber(L, dsq->game->avatar->state.spellCharge);
-	return 1;
+	luaReturnNum(dsq->game->avatar->state.spellCharge);
 }
 
-int l_jumpState(lua_State *L)
+luaFunc(jumpState)
 {
 	dsq->enqueueJumpState(lua_tostring(L, 1), getBool(L, 2));
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_goToTitle(lua_State *L)
+luaFunc(goToTitle)
 {
 	dsq->title();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_getEnqueuedState(lua_State *L)
+luaFunc(getEnqueuedState)
 {
-	lua_pushstring(L, dsq->getEnqueuedJumpState().c_str());
-	return 1;
+	luaReturnStr(dsq->getEnqueuedJumpState().c_str());
 }
 
-int l_learnSpell(lua_State* L)
+luaFunc(learnSpell)
 {
 	//dsq->continuity.learnSpell((SpellType)lua_tointeger(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_learnSong(lua_State* L)
+luaFunc(learnSong)
 {
 	dsq->continuity.learnSong(lua_tointeger(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_unlearnSong(lua_State *L)
+luaFunc(unlearnSong)
 {
 	dsq->continuity.unlearnSong(lua_tointeger(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_showInGameMenu(lua_State *L)
+luaFunc(showInGameMenu)
 {
 	dsq->game->showInGameMenu(getBool(L, 1), getBool(L, 2), (MenuPage)lua_tointeger(L, 3));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_hideInGameMenu(lua_State *L)
+luaFunc(hideInGameMenu)
 {
 	dsq->game->hideInGameMenu();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-Quad *image=0;
-
-int l_showImage(lua_State *L)
+luaFunc(showImage)
 {
 	dsq->game->showImage(getString(L));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_hideImage(lua_State *L)
+luaFunc(hideImage)
 {
 	dsq->game->hideImage();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_hasSong(lua_State* L)
+luaFunc(hasSong)
 {
 	bool b = dsq->continuity.hasSong(lua_tointeger(L, 1));
-	lua_pushboolean(L, b);
-	return 1;
+	luaReturnBool(b);
 }
 
-int l_isInConversation(lua_State *L)
-{
-	lua_pushboolean(L, 0);
-	return 1;
-}
-
-int l_loadSound(lua_State *L)
+luaFunc(loadSound)
 {
 	void *handle = core->sound->loadLocalSound(getString(L, 1));
-	luaPushPointer(L, handle);
-	return 1;
+	luaReturnPtr(handle);
 }
 
-int l_loadMap(lua_State *L)
+luaFunc(loadMap)
 {
 	std::string s = getString(L, 1);
 	std::string n = getString(L, 2);
@@ -1934,11 +1565,10 @@ int l_loadMap(lua_State *L)
 			dsq->game->transitionToScene(s);
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_followPath(lua_State *L)
+luaFunc(entity_followPath)
 {
 	/*
 	std::ostringstream os2;
@@ -1957,29 +1587,26 @@ int l_entity_followPath(lua_State *L)
 
 		e->followPath(p, speedType, dir);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_enableMotionBlur(lua_State *L)
+luaFunc(entity_enableMotionBlur)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->enableMotionBlur(10, 2);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_disableMotionBlur(lua_State *L)
+luaFunc(entity_disableMotionBlur)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->disableMotionBlur();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_warpToPathStart(lua_State *L)
+luaFunc(entity_warpToPathStart)
 {
 	ScriptedEntity *e = scriptedEntity(L);
 	std::string s;
@@ -1993,107 +1620,79 @@ int l_entity_warpToPathStart(lua_State *L)
 		e->warpToPathStart();
 		e->stopFollowingPath();
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-/*
-int l_entity_spawnParticleEffect(lua_State *L)
+luaFunc(getIngredientGfx)
 {
-	Entity *e = entity(L);
-	if (e)
-		dsq->spawnParticleEffect(lua_tointeger(L, 2), e->position + Vector(lua_tointeger(L, 3), lua_tointeger(L, 4)), 0, lua_tonumber(L, 5));
-	lua_pushnumber(L, 0);
-	return 1;
-}
-*/
-
-int l_getIngredientGfx(lua_State *L)
-{
-	lua_pushstring(L, dsq->continuity.getIngredientGfx(getString(L, 1)).c_str());
-	return 1;
+	luaReturnStr(dsq->continuity.getIngredientGfx(getString(L, 1)).c_str());
 }
 
-int l_spawnIngredient(lua_State *L)
+luaFunc(spawnIngredient)
 {
 	int times = lua_tonumber(L, 4);
 	if (times == 0) times = 1;
 	bool out = getBool(L, 5);
 	Entity *e = dsq->game->spawnIngredient(getString(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), times, out);
 	
-	luaPushPointer(L, e);
-	return 1;
+	luaReturnPtr(e);
 }
 
-int l_getNearestIngredient(lua_State *L)
+luaFunc(getNearestIngredient)
 {
 	Ingredient *i = dsq->game->getNearestIngredient(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)), lua_tonumber(L, 3));
-	luaPushPointer(L, i);
-	return 1;
+	luaReturnPtr(i);
 }
 
-int l_dropIngredients(lua_State *L)
-{
-	//dsq->continuity.dropIngredients(lua_tonumber(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
-}
-
-int l_spawnAllIngredients(lua_State *L)
+luaFunc(spawnAllIngredients)
 {
 	dsq->game->spawnAllIngredients(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_spawnParticleEffect(lua_State *L)
+luaFunc(spawnParticleEffect)
 {
 	dsq->spawnParticleEffect(getString(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 5), lua_tonumber(L, 4));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_showFrame(lua_State *L)
+luaFunc(bone_showFrame)
 {
 	Bone *b = bone(L);
 	if (b)
 		b->showFrame(lua_tointeger(L, 2));
-	lua_pushnumber(L, 1);
-	return 1;
+	luaReturnNum(1);
 }
 
-int l_bone_setRenderPass(lua_State *L)
+luaFunc(bone_setRenderPass)
 {
 	Bone *b = bone(L);
 	if (b)
 	{
 		b->setRenderPass(lua_tonumber(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_setSegmentOffset(lua_State *L)
+luaFunc(bone_setSegmentOffset)
 {
 	Bone *b = bone(L);
 	if (b)
 		b->segmentOffset = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_setSegmentProps(lua_State *L)
+luaFunc(bone_setSegmentProps)
 {
 	Bone *b = bone(L);
 	if (b)
 	{
 		b->setSegmentProps(lua_tonumber(L, 2), lua_tonumber(L, 3), getBool(L, 4));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_setSegmentChainHead(lua_State *L)
+luaFunc(bone_setSegmentChainHead)
 {
 	Bone *b = bone(L);
 	if (b)
@@ -2103,32 +1702,29 @@ int l_bone_setSegmentChainHead(lua_State *L)
 		else
 			b->segmentChain = 0;
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_addSegment(lua_State *L)
+luaFunc(bone_addSegment)
 {
 	Bone *b = bone(L);
 	Bone *b2 = bone(L, 2);
 	if (b && b2)
 		b->addSegment(b2);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_setAnimated(lua_State *L)
+luaFunc(bone_setAnimated)
 {
 	Bone *b = bone(L);
 	if (b)
 	{
 		b->setAnimated(lua_tointeger(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_lookAtEntity(lua_State *L)
+luaFunc(bone_lookAtEntity)
 {
 	Bone *b = bone(L);
 	Entity *e = entity(L, 2);
@@ -2141,38 +1737,34 @@ int l_bone_lookAtEntity(lua_State *L)
 		}
 		b->lookAt(pos, lua_tonumber(L, 3), lua_tonumber(L, 4),lua_tonumber(L, 5), lua_tonumber(L, 6));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_setSegs(lua_State *L)
+luaFunc(bone_setSegs)
 {
 	Bone *b = bone(L);
 	if (b)
 		b->setSegs(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), lua_tointeger(L, 9));
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_setSegs(lua_State *L)
+luaFunc(entity_setSegs)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->setSegs(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), lua_tointeger(L, 9));
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_resetTimer(lua_State *L)
+luaFunc(entity_resetTimer)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	if (se)
 		se->resetTimer(lua_tonumber(L, 2));
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_stopFollowingPath(lua_State *L)
+luaFunc(entity_stopFollowingPath)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -2182,11 +1774,10 @@ int l_entity_stopFollowingPath(lua_State *L)
 			e->stopFollowingPath();
 		}
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_slowToStopPath(lua_State *L)
+luaFunc(entity_slowToStopPath)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -2201,30 +1792,26 @@ int l_entity_slowToStopPath(lua_State *L)
 			debugLog("wasn't following path");
 		}
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_stopTimer(lua_State *L)
+luaFunc(entity_stopTimer)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	if (se)
 		se->stopTimer();
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-Vector createEntityOffset(0, 0);
-int l_entity_createEntity(lua_State* L)
+luaFunc(entity_createEntity)
 {
 	Entity *e = entity(L);
 	if (e)
-		dsq->game->createEntity(dsq->getEntityTypeIndexByName(lua_tostring(L, 2)), 0, e->position+createEntityOffset, 0, false, "", ET_ENEMY, BT_NORMAL, 0, 0, true);
-	lua_pushinteger(L, 0);
-	return 1;
+		dsq->game->createEntity(dsq->getEntityTypeIndexByName(lua_tostring(L, 2)), 0, e->position, 0, false, "", ET_ENEMY, BT_NORMAL, 0, 0, true);
+	luaReturnInt(0);
 }
 
-int l_entity_checkSplash(lua_State *L)
+luaFunc(entity_checkSplash)
 {
 	Entity *e = entity(L);
 	bool ret = false;
@@ -2232,12 +1819,11 @@ int l_entity_checkSplash(lua_State *L)
 	float y = lua_tonumber(L, 3);
 	if (e)
 		ret = e->checkSplash(Vector(x,y));
-	lua_pushboolean(L, ret);
-	return 1;
+	luaReturnBool(ret);
 }
 
 
-int l_entity_isUnderWater(lua_State *L)
+luaFunc(entity_isUnderWater)
 {
 	Entity *e = entity(L);
 	bool b = false;
@@ -2245,21 +1831,19 @@ int l_entity_isUnderWater(lua_State *L)
 	{
 		b = e->isUnderWater();
 	}
-	lua_pushboolean(L, b);
-	return 1;
+	luaReturnBool(b);
 }
 
-int l_entity_isBeingPulled(lua_State *L)
+luaFunc(entity_isBeingPulled)
 {
 	Entity *e = entity(L);
 	bool v= false;
 	if (e)
 		v = (dsq->game->avatar->pullTarget == e);
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_avatar_setPullTarget(lua_State *L)
+luaFunc(avatar_setPullTarget)
 {
 	Entity *e = 0;
 	if (lua_tonumber(L, 1) != 0)
@@ -2273,11 +1857,10 @@ int l_avatar_setPullTarget(lua_State *L)
 	if (e)
 		e->startPull();
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_isDead(lua_State *L)
+luaFunc(entity_isDead)
 {
 	Entity *e = entity(L);
 	bool v= false;
@@ -2285,19 +1868,16 @@ int l_entity_isDead(lua_State *L)
 	{
 		v = e->isEntityDead();
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
 
-int l_getLastCollidePosition(lua_State *L)
+luaFunc(getLastCollidePosition)
 {
-	lua_pushnumber(L, dsq->game->lastCollidePosition.x);
-	lua_pushnumber(L, dsq->game->lastCollidePosition.y);
-	return 2;
+	luaReturnVec2(dsq->game->lastCollidePosition.x, dsq->game->lastCollidePosition.y);
 }
 
-int l_entity_isNearGround(lua_State *L)
+luaFunc(entity_isNearGround)
 {
 	Entity *e = entity(L);
 	int sampleArea = 0;
@@ -2333,45 +1913,40 @@ int l_entity_isNearGround(lua_State *L)
 		}
 		*/
 	}
-	lua_pushboolean(L, value);
-	return 1;
+	luaReturnBool(value);
 }
 
-int l_entity_isHit(lua_State *L)
+luaFunc(entity_isHit)
 {
 	Entity *e = entity(L);
 	bool v = false;
 	if (e)
 		v = e->isHit();
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_waitForPath(lua_State *L)
+luaFunc(entity_waitForPath)
 {
 	Entity *e = entity(L);
 	while (e && e->isFollowingPath())
 	{
 		core->main(FRAME_TIME);
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_quitNestedMain(lua_State *L)
+luaFunc(quitNestedMain)
 {
 	core->quitNestedMain();
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_isNestedMain(lua_State *L)
+luaFunc(isNestedMain)
 {
-	lua_pushboolean(L, core->isNested());
-	return 1;
+	luaReturnBool(core->isNested());
 }
 
-int l_entity_watchForPath(lua_State *L)
+luaFunc(entity_watchForPath)
 {
 	dsq->game->avatar->disableInput();
 
@@ -2382,12 +1957,11 @@ int l_entity_watchForPath(lua_State *L)
 	}
 
 	dsq->game->avatar->enableInput();
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
 
-int l_watchForVoice(lua_State *L)
+luaFunc(watchForVoice)
 {
 	int quit = lua_tointeger(L, 1);
 	while (dsq->sound->isPlayingVoice())
@@ -2399,12 +1973,11 @@ int l_watchForVoice(lua_State *L)
 			break;
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 
-int l_entity_isSlowingToStopPath(lua_State *L)
+luaFunc(entity_isSlowingToStopPath)
 {
 	Entity *e = entity(L);
 	bool v = false;
@@ -2412,22 +1985,20 @@ int l_entity_isSlowingToStopPath(lua_State *L)
 	{
 		v = e->isSlowingToStopPath();
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_resumePath(lua_State *L)
+luaFunc(entity_resumePath)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->position.resumePath();
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_isAnimating(lua_State *L)
+luaFunc(entity_isAnimating)
 {
 	Entity *e = entity(L);
 	bool v= false;
@@ -2435,28 +2006,26 @@ int l_entity_isAnimating(lua_State *L)
 	{
 		v = e->skeletalSprite.isAnimating(lua_tonumber(L, 2));
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
 
-int l_entity_getAnimationName(lua_State *L)
+luaFunc(entity_getAnimationName)
 {
 	Entity *e = entity(L);
-	std::string ret;
+	const char *ret = "";
 	int layer = lua_tonumber(L, 2);
 	if (e)
 	{
 		if (Animation *anim = e->skeletalSprite.getCurrentAnimation(layer))
 		{
-			ret = anim->name;
+			ret = anim->name.c_str();
 		}
 	}
-	lua_pushstring(L, ret.c_str());
-	return 1;
+	luaReturnStr(ret);
 }
 
-int l_entity_getAnimationLength(lua_State *L)
+luaFunc(entity_getAnimationLength)
 {
 	Entity *e = entity(L);
 	float ret=0;
@@ -2468,27 +2037,24 @@ int l_entity_getAnimationLength(lua_State *L)
 			ret = anim->getAnimationLength();
 		}
 	}
-	lua_pushnumber(L, ret);
-	return 1;
+	luaReturnNum(ret);
 }
 
-int l_entity_isFollowingPath(lua_State *L)
+luaFunc(entity_isFollowingPath)
 {
 	Entity *e = entity(L);
 	if (e)
-		lua_pushboolean(L, e->isFollowingPath());
+		luaReturnBool(e->isFollowingPath());
 	else
-		lua_pushboolean(L, false);
-	return 1;
+		luaReturnBool(false);
 }
 
-int l_entity_setBehaviorType(lua_State* L)
+luaFunc(entity_setBehaviorType)
 {
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_toggleBone(lua_State *L)
+luaFunc(entity_toggleBone)
 {
 	Entity *e = entity(L);
 	Bone *b = bone(L, 2);
@@ -2496,17 +2062,15 @@ int l_entity_toggleBone(lua_State *L)
 	{
 		e->skeletalSprite.toggleBone(e->skeletalSprite.getBoneIdx(b), lua_tonumber(L, 3));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_getBehaviorType(lua_State* L)
+luaFunc(entity_getBehaviorType)
 {
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_setColor(lua_State *L)
+luaFunc(entity_setColor)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -2514,11 +2078,10 @@ int l_entity_setColor(lua_State *L)
 		//e->color = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
 		e->color.interpolateTo(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4)), lua_tonumber(L, 5));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_bone_scale(lua_State *L)
+luaFunc(bone_scale)
 {
 	Bone *e = bone(L);
 	if (e)
@@ -2526,29 +2089,26 @@ int l_bone_scale(lua_State *L)
 		//e->color = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
 		e->scale.interpolateTo(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_bone_setBlendType(lua_State *L)
+luaFunc(bone_setBlendType)
 {
 	Bone *b = bone(L);
 	if (b)
 	{
 		b->setBlendType(lua_tonumber(L, 2));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_bone_update(lua_State *L)
+luaFunc(bone_update)
 {
 	bone(L)->update(lua_tonumber(L, 2));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_setColor(lua_State *L)
+luaFunc(bone_setColor)
 {
 	Bone *e = bone(L);
 	if (e)
@@ -2556,51 +2116,46 @@ int l_bone_setColor(lua_State *L)
 		//e->color = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
 		e->color.interpolateTo(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4)), lua_tonumber(L, 5));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_bone_rotate(lua_State *L)
+luaFunc(bone_rotate)
 {
 	Bone *e = bone(L);
 	if (e)
 		e->rotation.interpolateTo(Vector(0,0,lua_tonumber(L, 2)), lua_tonumber(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5), lua_tointeger(L, 6));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_rotateOffset(lua_State *L)
+luaFunc(bone_rotateOffset)
 {
 	Bone *e = bone(L);
 	if (e)
 		e->rotationOffset.interpolateTo(Vector(0,0,lua_tonumber(L, 2)), lua_tonumber(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5), lua_tointeger(L, 6));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_getRotation(lua_State *L)
+luaFunc(bone_getRotation)
 {
 	Bone *e = bone(L);
 	if (e)
-		lua_pushnumber(L, e->rotation.z);
+		luaReturnNum(e->rotation.z);
 	else
-		lua_pushnumber(L, 0);
-	return 1;
+		luaReturnNum(0);
 }
 
 
-int l_bone_setPosition(lua_State* L)
+luaFunc(bone_setPosition)
 {
 	Bone *b = bone(L);
 	if (b)
 	{
 		b->position.interpolateTo(Vector(lua_tointeger(L, 2), lua_tointeger(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_bone_getWorldRotation(lua_State *L)
+luaFunc(bone_getWorldRotation)
 {
 	Bone *b = bone(L);
 	float rot = 0;
@@ -2609,63 +2164,56 @@ int l_bone_getWorldRotation(lua_State *L)
 		//rot = b->getAbsoluteRotation().z;
 		rot = b->getWorldRotation();
 	}
-	lua_pushnumber(L, rot);
-	return 1;
+	luaReturnNum(rot);
 }
 
-int l_bone_getWorldPosition(lua_State *L)
+luaFunc(bone_getWorldPosition)
 {
 	Bone *b = bone(L);
-	float x=0,y=0;
+	float x = 0, y = 0;
 	if (b)
 	{
 		Vector v = b->getWorldPosition();
 		x = v.x;
 		y = v.y;
 	}
-	lua_pushnumber(L, x);
-	lua_pushnumber(L, y);
-	return 2;
+	luaReturnVec2(x, y);
 }
 
-int l_entity_setBlendType(lua_State *L)
+luaFunc(entity_setBlendType)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->setBlendType(lua_tonumber(L, 2));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_setEntityType(lua_State *L)
+luaFunc(entity_setEntityType)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->setEntityType(EntityType(lua_tointeger(L, 2)));
-	lua_pushinteger(L, 1);
-	return 1;
+	luaReturnInt(1);
 }
 
-int l_entity_getEntityType(lua_State* L)
+luaFunc(entity_getEntityType)
 {
 	Entity *e = entity(L);
 	if (e)
-		lua_pushinteger(L, int(e->getEntityType()));
+		luaReturnInt(int(e->getEntityType()));
 	else
-		lua_pushinteger(L, 0);
-	return 1;
+		luaReturnInt(0);
 }
 
-int l_cam_snap(lua_State *L)
+luaFunc(cam_snap)
 {
 	dsq->game->snapCam();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_cam_toNode(lua_State *L)
+luaFunc(cam_toNode)
 {
 	Path *p = path(L);
 	if (p)
@@ -2673,11 +2221,10 @@ int l_cam_toNode(lua_State *L)
 		//dsq->game->cameraPanToNode(p, 500);
 		dsq->game->setCameraFollow(&p->nodes[0].position);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_cam_toEntity(lua_State *L)
+luaFunc(cam_toEntity)
 {
 	if (lua_touserdata(L, 1) == NULL)
 	{
@@ -2694,11 +2241,10 @@ int l_cam_toEntity(lua_State *L)
 			//dsq->game->setCameraFollow(&p->nodes[0].position);
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_cam_setPosition(lua_State *L)
+luaFunc(cam_setPosition)
 {
 	float x = lua_tonumber(L, 1);
 	float y = lua_tonumber(L, 2);
@@ -2722,21 +2268,11 @@ int l_cam_setPosition(lua_State *L)
 	}
 
 	dsq->cameraPos = p;
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-/*
-int l_cam_restore(lua_State *L)
-{
-	dsq->game->setCameraFollow(dsq->game->avatar);
-	lua_pushnumber(L, 0);
-	return 1;
-}
-*/
 
-
-int l_entity_spawnParticlesFromCollisionMask(lua_State *L)
+luaFunc(entity_spawnParticlesFromCollisionMask)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -2747,11 +2283,10 @@ int l_entity_spawnParticlesFromCollisionMask(lua_State *L)
 		e->spawnParticlesFromCollisionMask(getString(L, 2), intv);
 	}
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_initEmitter(lua_State *L)
+luaFunc(entity_initEmitter)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	int e = lua_tointeger(L, 2);
@@ -2760,48 +2295,42 @@ int l_entity_initEmitter(lua_State *L)
 	{
 		se->initEmitter(e, pfile);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_startEmitter(lua_State *L)
+luaFunc(entity_startEmitter)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	int e = lua_tointeger(L, 2);
-	std::string pfile = getString(L, 3);
 	if (se)
 	{
 		se->startEmitter(e);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_stopEmitter(lua_State *L)
+luaFunc(entity_stopEmitter)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	int e = lua_tointeger(L, 2);
-	std::string pfile = getString(L, 3);
 	if (se)
 	{
 		se->stopEmitter(e);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_initStrands(lua_State *L)
+luaFunc(entity_initStrands)
 {
 	ScriptedEntity *e = scriptedEntity(L);
 	if (e)
 	{
 		e->initStrands(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), Vector(lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8)));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_initSkeletal(lua_State* L)
+luaFunc(entity_initSkeletal)
 {
 	//ScriptedEntity *e = (ScriptedEntity*)(si->getCurrentEntity());
 	ScriptedEntity *e = scriptedEntity(L);
@@ -2816,49 +2345,29 @@ int l_entity_initSkeletal(lua_State* L)
 			e->skeletalSprite.loadSkin(s);
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 
-SkeletalSprite *getSkeletalSprite(Entity *e)
-{
-	Avatar *a;
-	ScriptedEntity *se;
-	SkeletalSprite *skel = 0;
-	if ((a = dynamic_cast<Avatar*>(e)) != 0)
-	{
-		//a->skeletalSprite.transitionAnimate(lua_tostring(L, 2), 0.15, lua_tointeger(L, 3));
-		skel = &a->skeletalSprite;
-	}
-	else if ((se = dynamic_cast<ScriptedEntity*>(e)) != 0)
-	{
-		skel = &se->skeletalSprite;
-	}
-	return skel;
-}
-
-int l_entity_idle(lua_State *L)
+luaFunc(entity_idle)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->idle();
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_stopAllAnimations(lua_State *L)
+luaFunc(entity_stopAllAnimations)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->skeletalSprite.stopAllAnimations();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setAnimLayerTimeMult(lua_State *L)
+luaFunc(entity_setAnimLayerTimeMult)
 {
 	Entity *e = entity(L);
 	int layer = 0;
@@ -2873,11 +2382,10 @@ int l_entity_setAnimLayerTimeMult(lua_State *L)
 			l->timeMultiplier.interpolateTo(t, lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
 		}
 	}
-	lua_pushnumber(L, t);
-	return 1;
+	luaReturnNum(t);
 }
 
-int l_entity_animate(lua_State *L)
+luaFunc(entity_animate)
 {
 	SkeletalSprite *skel = getSkeletalSprite(entity(L));
 
@@ -2890,29 +2398,26 @@ int l_entity_animate(lua_State *L)
 		transition = 0.2;
 	float ret = skel->transitionAnimate(lua_tostring(L, 2), transition, lua_tointeger(L, 3), lua_tointeger(L, 4));
 
-	lua_pushnumber(L, ret);
-	return 1;
+	luaReturnNum(ret);
 }
 
-int l_entity_moveToFront(lua_State *L)
+luaFunc(entity_moveToFront)
 {
 	Entity *e = entity(L);
 	e->moveToFront();
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_moveToBack(lua_State *L)
+luaFunc(entity_moveToBack)
 {
 	Entity *e = entity(L);
 	e->moveToBack();
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_move(lua_State *L)
+luaFunc(entity_move)
 {
 	//Entity *e = si->getCurrentEntity();
 	Entity *e = entity(L);
@@ -2930,22 +2435,20 @@ int l_entity_move(lua_State *L)
 	{
 		e->position.interpolateTo(p, lua_tonumber(L, 4), 0, 0, 1);
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_spawnManaBall(lua_State *L)
+luaFunc(spawnManaBall)
 {
 	Vector p;
 	p.x = lua_tonumber(L, 1);
 	p.y = lua_tonumber(L, 2);
 	int amount = lua_tonumber(L, 3);
 	dsq->game->spawnManaBall(p, amount);
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_spawnAroundEntity(lua_State *L)
+luaFunc(spawnAroundEntity)
 {
 	Entity *e = entity(L);
 	int num = lua_tonumber(L, 2);
@@ -2963,11 +2466,10 @@ int l_spawnAroundEntity(lua_State *L)
 			e = dsq->game->createEntity(idx, 0, pos + Vector(sin(angle)*radius, cos(angle)*radius), 0, false, name);
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_createBeam(lua_State *L)
+luaFunc(createBeam)
 {
 	int x = lua_tointeger(L, 1);
 	int y = lua_tointeger(L, 2);
@@ -2978,11 +2480,10 @@ int l_createBeam(lua_State *L)
 		dsq->game->addRenderObject(b, LR_PARTICLES);
 	else
 		dsq->game->addRenderObject(b, LR_ENTITIES_MINUS2);
-	luaPushPointer(L, b);
-	return 1;
+	luaReturnPtr(b);
 }
 
-int l_beam_setPosition(lua_State *L)
+luaFunc(beam_setPosition)
 {
 	Beam *b = beam(L);
 	if (b)
@@ -2990,44 +2491,40 @@ int l_beam_setPosition(lua_State *L)
 		b->position = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
 		b->trace();
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_beam_setDamage(lua_State *L)
+luaFunc(beam_setDamage)
 {
 	Beam *b = beam(L);
 	if (b)
 	{
 		b->setDamage(lua_tonumber(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_beam_setBeamWidth(lua_State *L)
+luaFunc(beam_setBeamWidth)
 {
 	Beam *b = beam(L);
 	if (b)
 	{
 		b->setBeamWidth(lua_tonumber(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_beam_setTexture(lua_State *L)
+luaFunc(beam_setTexture)
 {
 	Beam *b = beam(L);
 	if (b)
 	{
 		b->setTexture(getString(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_beam_setAngle(lua_State *L)
+luaFunc(beam_setAngle)
 {
 	Beam *b = beam(L);
 	if (b)
@@ -3035,28 +2532,25 @@ int l_beam_setAngle(lua_State *L)
 		b->angle = lua_tonumber(L, 2);
 		b->trace();
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_beam_delete(lua_State *L)
+luaFunc(beam_delete)
 {
 	Beam *b = beam(L);
 	if (b)
 	{
 		b->safeKill();
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_getStringBank(lua_State *L)
+luaFunc(getStringBank)
 {
-	lua_pushstring(L, dsq->continuity.stringBank.get(lua_tointeger(L, 1)).c_str());
-	return 1;
+	luaReturnStr(dsq->continuity.stringBank.get(lua_tointeger(L, 1)).c_str());
 }
 
-int l_isPlat(lua_State *L)
+luaFunc(isPlat)
 {
 	int plat = lua_tointeger(L, 1);
 	bool v = false;
@@ -3067,11 +2561,10 @@ int l_isPlat(lua_State *L)
 #elif BBGE_BUILD_UNIX
 	v = (plat == 2);
 #endif
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_getAngleBetweenEntities(lua_State *L)
+luaFunc(getAngleBetweenEntities)
 {
 	Entity *e1 = entity(L, 1);
 	Entity *e2 = entity(L, 2);
@@ -3080,12 +2573,11 @@ int l_getAngleBetweenEntities(lua_State *L)
 	{
 		MathFunctions::calculateAngleBetweenVectorsInRadians(e1->position, e2->position, angle);
 	}
-	lua_pushnumber(L, angle);
-	return 1;
+	luaReturnNum(angle);
 }
 
 // in radians
-int l_getAngleBetween(lua_State *L)
+luaFunc(getAngleBetween)
 {
 	Vector p1(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	Vector p2(lua_tonumber(L, 3), lua_tonumber(L, 4));
@@ -3103,11 +2595,10 @@ int l_getAngleBetween(lua_State *L)
 	angle += PI/2;
 	angle = PI-(2*PI-angle);
 	*/
-	lua_pushnumber(L, angle);
-	return 1;
+	luaReturnNum(angle);
 }
 
-int l_createEntity(lua_State *L)
+luaFunc(createEntity)
 {
 	std::string type = lua_tostring(L, 1);
 	std::string name;
@@ -3131,35 +2622,10 @@ int l_createEntity(lua_State *L)
 		e = dsq->game->createEntity(idx, 0, Vector(x,y), 0, false, name, ET_ENEMY, BT_NORMAL, 0, 0, true);
 	}
 	*/
-	luaPushPointer(L, e);
-	return 1;
-}
-// moveEntity(name, x, y, time, ease)
-int l_moveEntity(lua_State* L)
-{
-	errorLog ("moveEntity is deprecated");
-	/*
-	Entity *e = dsq->getEntityByName(lua_tostring(L, 1));
-	bool ease = lua_tointeger(L, 5);
-	Vector p(lua_tointeger(L, 2), lua_tointeger(L, 3));
-	if (lua_tonumber(L, 5))
-	{
-		p = e->position + p;
-	}
-	if (ease)
-	{
-		e->position.interpolateTo(p, lua_tonumber(L, 4));
-	}
-	else
-	{
-		e->position.interpolateTo(p, lua_tonumber(L, 4), 0, 0, 1);
-	}
-	*/
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnPtr(e);
 }
 
-int l_savePoint(lua_State* L)
+luaFunc(savePoint)
 {
 	Path *p = path(L);
 	Vector position;
@@ -3177,46 +2643,40 @@ int l_savePoint(lua_State* L)
 		dsq->doSavePoint(e);
 	}
 	*/
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_pause(lua_State *L)
+luaFunc(pause)
 {
 	dsq->game->togglePause(1);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_unpause(lua_State *L)
+luaFunc(unpause)
 {
 	dsq->game->togglePause(0);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_clearControlHint(lua_State *L)
+luaFunc(clearControlHint)
 {
 	dsq->game->clearControlHint();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setSceneColor(lua_State *L)
+luaFunc(setSceneColor)
 {
 	dsq->game->sceneColor3.interpolateTo(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setCameraLerpDelay(lua_State *L)
+luaFunc(setCameraLerpDelay)
 {
 	dsq->game->cameraLerpDelay = lua_tonumber(L, 1);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setControlHint(lua_State *L)
+luaFunc(setControlHint)
 {
 	std::string str = lua_tostring(L, 1);
 	bool left = getBool(L, 2);
@@ -3232,32 +2692,28 @@ int l_setControlHint(lua_State *L)
 		scale = 1;
 
 	dsq->game->setControlHint(str, left, right, middle, t, s, false, songType, scale);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setCanChangeForm(lua_State *L)
+luaFunc(setCanChangeForm)
 {
 	dsq->game->avatar->canChangeForm = getBool(L);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setInvincibleOnNested(lua_State *L)
+luaFunc(setInvincibleOnNested)
 {
 	dsq->game->invincibleOnNested = getBool(L);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setCanWarp(lua_State* L)
+luaFunc(setCanWarp)
 {
 	dsq->game->avatar->canWarp = getBool(L);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_generateCollisionMask(lua_State *L)
+luaFunc(entity_generateCollisionMask)
 {
 	Entity *e = entity(L);
 	float num = lua_tonumber(L, 2);
@@ -3265,11 +2721,10 @@ int l_entity_generateCollisionMask(lua_State *L)
 	{
 		e->generateCollisionMask(num);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_damage(lua_State *L)
+luaFunc(entity_damage)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -3282,12 +2737,11 @@ int l_entity_damage(lua_State *L)
 
 		e->damage(d);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 // must be called in init
-int l_entity_setEntityLayer(lua_State *L)
+luaFunc(entity_setEntityLayer)
 {
 	ScriptedEntity *e = scriptedEntity(L);
 	int l = lua_tonumber(L, 2);
@@ -3295,22 +2749,20 @@ int l_entity_setEntityLayer(lua_State *L)
 	{
 		e->setEntityLayer(l);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setRenderPass(lua_State *L)
+luaFunc(entity_setRenderPass)
 {
 	Entity *e = entity(L);
 	int pass = lua_tonumber(L, 2);
 	if (e)
 		e->setOverrideRenderPass(pass);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 // intended to be used for setting max health and refilling it all
-int l_entity_setHealth(lua_State *L)
+luaFunc(entity_setHealth)
 {
 	Entity *e = entity(L, 1);
 	int h = lua_tonumber(L, 2);
@@ -3318,12 +2770,11 @@ int l_entity_setHealth(lua_State *L)
 	{
 		e->health = e->maxHealth = h;
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 // intended to be used for setting max health and refilling it all
-int l_entity_changeHealth(lua_State *L)
+luaFunc(entity_changeHealth)
 {
 	Entity *e = entity(L, 1);
 	int h = lua_tonumber(L, 2);
@@ -3331,86 +2782,75 @@ int l_entity_changeHealth(lua_State *L)
 	{
 		e->health += h;
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_heal(lua_State *L)
+luaFunc(entity_heal)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->heal(lua_tonumber(L, 2));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_revive(lua_State *L)
+luaFunc(entity_revive)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->revive(lua_tonumber(L, 2));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_screenFadeCapture(lua_State *L)
+luaFunc(screenFadeCapture)
 {
 	dsq->screenTransition->capture();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 
-int l_screenFadeTransition(lua_State *L)
+luaFunc(screenFadeTransition)
 {
 	dsq->screenTransition->transition(lua_tonumber(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_screenFadeGo(lua_State *L)
+luaFunc(screenFadeGo)
 {
 	dsq->screenTransition->go(lua_tonumber(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_isEscapeKey(lua_State *L)
+luaFunc(isEscapeKey)
 {
 	bool isDown = dsq->game->isActing(ACTION_ESC);
-	lua_pushboolean(L, isDown);
-	return 1;
+	luaReturnBool(isDown);
 }
 
-int l_isLeftMouse(lua_State *L)
+luaFunc(isLeftMouse)
 {
 	bool isDown = core->mouse.buttons.left || (dsq->game->avatar && dsq->game->avatar->pollAction(ACTION_PRIMARY));
-	lua_pushboolean(L, isDown);
-	return 1;
+	luaReturnBool(isDown);
 }
 
-int l_isRightMouse(lua_State *L)
+luaFunc(isRightMouse)
 {
 	bool isDown = core->mouse.buttons.right || (dsq->game->avatar && dsq->game->avatar->pollAction(ACTION_SECONDARY));
-	lua_pushboolean(L, isDown);
-	return 1;
+	luaReturnBool(isDown);
 }
 
-int l_setTimerTextAlpha(lua_State *L)
+luaFunc(setTimerTextAlpha)
 {
 	dsq->game->setTimerTextAlpha(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setTimerText(lua_State *L)
+luaFunc(setTimerText)
 {
 	dsq->game->setTimerText(lua_tonumber(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_getWallNormal(lua_State *L)
+luaFunc(getWallNormal)
 {
 	float x,y;
 	x = lua_tonumber(L, 1);
@@ -3423,34 +2863,30 @@ int l_getWallNormal(lua_State *L)
 
 	Vector n = dsq->game->getWallNormal(Vector(x, y), range);
 
-	lua_pushnumber(L, n.x);
-	lua_pushnumber(L, n.y);
-	return 2;
+	luaReturnVec2(n.x, n.y);
 }
 
-int l_incrFlag(lua_State* L)
+luaFunc(incrFlag)
 {
 	std::string f = lua_tostring(L, 1);
 	int v = 1;
 	if (lua_isnumber(L, 2))
 		v = lua_tointeger(L, 2);
 	dsq->continuity.setFlag(f, dsq->continuity.getFlag(f)+v);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_decrFlag(lua_State* L)
+luaFunc(decrFlag)
 {
 	std::string f = lua_tostring(L, 1);
 	int v = 1;
 	if (lua_isnumber(L, 2))
 		v = lua_tointeger(L, 2);
 	dsq->continuity.setFlag(f, dsq->continuity.getFlag(f)-v);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setFlag(lua_State* L)
+luaFunc(setFlag)
 {
 	/*
 	if (lua_isstring(L, 1))
@@ -3458,11 +2894,10 @@ int l_setFlag(lua_State* L)
 	else
 	*/
 	dsq->continuity.setFlag(lua_tointeger(L, 1), lua_tointeger(L, 2));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_getFlag(lua_State* L)
+luaFunc(getFlag)
 {
 	int v = 0;
 	/*
@@ -3472,17 +2907,15 @@ int l_getFlag(lua_State* L)
 	*/
 	v = dsq->continuity.getFlag(lua_tointeger(L, 1));
 
-	lua_pushnumber(L, v);
-	return 1;
+	luaReturnNum(v);
 }
 
-int l_getStringFlag(lua_State *L)
+luaFunc(getStringFlag)
 {
-	lua_pushstring(L, dsq->continuity.getStringFlag(getString(L, 1)).c_str());
-	return 1;
+	luaReturnStr(dsq->continuity.getStringFlag(getString(L, 1)).c_str());
 }
 
-int l_entity_x(lua_State *L)
+luaFunc(entity_x)
 {
 	Entity *e = entity(L);
 	float v = 0;
@@ -3490,11 +2923,10 @@ int l_entity_x(lua_State *L)
 	{
 		v = e->position.x;
 	}
-	lua_pushnumber(L, v);
-	return 1;
+	luaReturnNum(v);
 }
 
-int l_entity_y(lua_State *L)
+luaFunc(entity_y)
 {
 	Entity *e = entity(L);
 	float v = 0;
@@ -3502,11 +2934,10 @@ int l_entity_y(lua_State *L)
 	{
 		v = e->position.y;
 	}
-	lua_pushnumber(L, v);
-	return 1;
+	luaReturnNum(v);
 }
 
-int l_node_setActive(lua_State *L)
+luaFunc(node_setActive)
 {
 	Path *p = path(L);
 	bool v = getBool(L, 2);
@@ -3514,11 +2945,10 @@ int l_node_setActive(lua_State *L)
 	{
 		p->active = v;
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_node_setCursorActivation(lua_State *L)
+luaFunc(node_setCursorActivation)
 {
 	Path *p = path(L);
 	bool v = getBool(L, 2);
@@ -3526,11 +2956,10 @@ int l_node_setCursorActivation(lua_State *L)
 	{
 		p->cursorActivation = v;
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_node_setCatchActions(lua_State *L)
+luaFunc(node_setCatchActions)
 {
 	Path *p = path(L);
 	bool v = getBool(L, 2);
@@ -3538,11 +2967,10 @@ int l_node_setCatchActions(lua_State *L)
 	{
 		p->catchActions = v;
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_node_isEntityInRange(lua_State *L)
+luaFunc(node_isEntityInRange)
 {
 	Path *p = path(L);
 	Entity *e = entity(L,2);
@@ -3555,11 +2983,10 @@ int l_node_isEntityInRange(lua_State *L)
 			v = true;
 		}
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_node_isEntityPast(lua_State *L)
+luaFunc(node_isEntityPast)
 {
 	Path *p = path(L);
 	bool past = false;
@@ -3606,11 +3033,10 @@ int l_node_isEntityPast(lua_State *L)
 			}
 		}
 	}
-	lua_pushboolean(L, past);
-	return 1;
+	luaReturnBool(past);
 }
 
-int l_node_x(lua_State *L)
+luaFunc(node_x)
 {
 	Path *p = path(L);
 	float v = 0;
@@ -3618,11 +3044,10 @@ int l_node_x(lua_State *L)
 	{
 		v = p->nodes[0].position.x;
 	}
-	lua_pushnumber(L, v);
-	return 1;
+	luaReturnNum(v);
 }
 
-int l_node_y(lua_State *L)
+luaFunc(node_y)
 {
 	Path *p = path(L);
 	float v = 0;
@@ -3630,11 +3055,10 @@ int l_node_y(lua_State *L)
 	{
 		v = p->nodes[0].position.y;
 	}
-	lua_pushnumber(L, v);
-	return 1;
+	luaReturnNum(v);
 }
 
-int l_entity_isName(lua_State *L)
+luaFunc(entity_isName)
 {
 	Entity *e = entity(L);
 	std::string s = getString(L, 2);
@@ -3643,36 +3067,33 @@ int l_entity_isName(lua_State *L)
 	{
 		ret = (nocasecmp(s,e->name)==0);
 	}
-	lua_pushboolean(L, ret);
-	return 1;
+	luaReturnBool(ret);
 }
 
 
-int l_entity_getName(lua_State *L)
+luaFunc(entity_getName)
 {
 	Entity *e = entity(L);
-	std::string s;
+	const char *s = "";
 	if (e)
 	{
-		s = e->name;
+		s = e->name.c_str();
 	}
-	lua_pushstring(L, s.c_str());
-	return 1;
+	luaReturnStr(s);
 }
 
-int l_node_getContent(lua_State *L)
+luaFunc(node_getContent)
 {
 	Path *p = path(L);
-	std::string s;
+	const char *s = "";
 	if (p)
 	{
-		s = p->content;
+		s = p->content.c_str();
 	}
-	lua_pushstring(L, s.c_str());
-	return 1;
+	luaReturnStr(s);
 }
 
-int l_node_getAmount(lua_State *L)
+luaFunc(node_getAmount)
 {
 	Path *p = path(L);
 	float a = 0;
@@ -3680,11 +3101,10 @@ int l_node_getAmount(lua_State *L)
 	{
 		a = p->amount;
 	}
-	lua_pushnumber(L, a);
-	return 1;
+	luaReturnNum(a);
 }
 
-int l_node_getSize(lua_State *L)
+luaFunc(node_getSize)
 {
 	Path *p = path(L);
 	int w=0,h=0;
@@ -3693,24 +3113,21 @@ int l_node_getSize(lua_State *L)
 		w = p->rect.getWidth();
 		h = p->rect.getHeight();
 	}
-	lua_pushnumber(L, w);
-	lua_pushnumber(L, h);
-	return 2;
+	luaReturnVec2(w, h);
 }
 
-int l_node_getName(lua_State *L)
+luaFunc(node_getName)
 {
 	Path *p = path(L);
-	std::string s;
+	const char *s = "";
 	if (p)
 	{
-		s = p->name;
+		s = p->name.c_str();
 	}
-	lua_pushstring(L, s.c_str());
-	return 1;
+	luaReturnStr(s);
 }
 
-int l_node_getPathPosition(lua_State *L)
+luaFunc(node_getPathPosition)
 {
 	Path *p = path(L);
 	int idx = lua_tonumber(L, 2);
@@ -3724,12 +3141,10 @@ int l_node_getPathPosition(lua_State *L)
 			y = node->position.y;
 		}
 	}
-	lua_pushnumber(L, x);
-	lua_pushnumber(L, y);
-	return 2;
+	luaReturnVec2(x, y);
 }
 
-int l_node_getPosition(lua_State *L)
+luaFunc(node_getPosition)
 {
 	Path *p = path(L);
 	float x=0,y=0;
@@ -3739,12 +3154,10 @@ int l_node_getPosition(lua_State *L)
 		x = node->position.x;
 		y = node->position.y;
 	}
-	lua_pushnumber(L, x);
-	lua_pushnumber(L, y);
-	return 2;
+	luaReturnVec2(x, y);
 }
 
-int l_node_setPosition(lua_State *L)
+luaFunc(node_setPosition)
 {
 	Path *p = path(L);
 	float x=0,y=0;
@@ -3755,12 +3168,11 @@ int l_node_setPosition(lua_State *L)
 		PathNode *node = &p->nodes[0];
 		node->position = Vector(x, y);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 
-int l_registerSporeDrop(lua_State *L)
+luaFunc(registerSporeDrop)
 {
 	float x, y;
 	int t=0;
@@ -3770,84 +3182,76 @@ int l_registerSporeDrop(lua_State *L)
 
 	dsq->game->registerSporeDrop(Vector(x,y), t);
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setStringFlag(lua_State *L)
+luaFunc(setStringFlag)
 {
 	std::string n = getString(L, 1);
 	std::string v = getString(L, 2);
 	dsq->continuity.setStringFlag(n, v);
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_centerText(lua_State *L)
+luaFunc(centerText)
 {
 	dsq->centerText(getString(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_msg(lua_State* L)
+luaFunc(msg)
 {
 	std::string s(lua_tostring(L, 1));
 	dsq->screenMessage(s);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_chance(lua_State *L)
+luaFunc(chance)
 {
 	int r = rand()%100;
 	int c = lua_tointeger(L, 1);
 	if (c == 0)
-		lua_pushboolean(L, false);
+		luaReturnBool(false);
 	else
 	{
 		if (r <= c || c==100)
-			lua_pushboolean(L, true);
+			luaReturnBool(true);
 		else
-			lua_pushboolean(L, false);
+			luaReturnBool(false);
 	}
-	return 1;
 }
 
-int l_entity_handleShotCollisions(lua_State *L)
+luaFunc(entity_handleShotCollisions)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		dsq->game->handleShotCollisions(e);
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_handleShotCollisionsSkeletal(lua_State *L)
+luaFunc(entity_handleShotCollisionsSkeletal)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		dsq->game->handleShotCollisionsSkeletal(e);
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_handleShotCollisionsHair(lua_State *L)
+luaFunc(entity_handleShotCollisionsHair)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		dsq->game->handleShotCollisionsHair(e, lua_tonumber(L, 2));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_collideSkeletalVsCircle(lua_State *L)
+luaFunc(entity_collideSkeletalVsCircle)
 {
 	Entity *e = entity(L);
 	Entity *e2 = entity(L,2);
@@ -3856,11 +3260,10 @@ int l_entity_collideSkeletalVsCircle(lua_State *L)
 	{
 		b = dsq->game->collideSkeletalVsCircle(e,e2);
 	}
-	luaPushPointer(L, b);
-	return 1;
+	luaReturnPtr(b);
 }
 
-int l_entity_collideSkeletalVsLine(lua_State *L)
+luaFunc(entity_collideSkeletalVsLine)
 {
 	Entity *e = entity(L);
 	int x1, y1, x2, y2, sz;
@@ -3874,11 +3277,10 @@ int l_entity_collideSkeletalVsLine(lua_State *L)
 	{
 		b = dsq->game->collideSkeletalVsLine(e, Vector(x1, y1), Vector(x2, y2), sz);
 	}
-	luaPushPointer(L, b);
-	return 1;
+	luaReturnPtr(b);
 }
 
-int l_entity_collideCircleVsLine(lua_State *L)
+luaFunc(entity_collideCircleVsLine)
 {
 	Entity *e = entity(L);
 	int x1, y1, x2, y2, sz;
@@ -3890,12 +3292,11 @@ int l_entity_collideCircleVsLine(lua_State *L)
 	bool v = false;
 	if (e)
 		v = dsq->game->collideCircleVsLine(e, Vector(x1, y1), Vector(x2, y2), sz);
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
 
-int l_entity_collideCircleVsLineAngle(lua_State *L)
+luaFunc(entity_collideCircleVsLineAngle)
 {
 	Entity *e = entity(L);
 	float angle = lua_tonumber(L, 2);
@@ -3905,12 +3306,11 @@ int l_entity_collideCircleVsLineAngle(lua_State *L)
 	bool v = false;
 	if (e)
 		v = dsq->game->collideCircleVsLineAngle(e, angle, start, end, radius, Vector(x,y));
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
 
-int l_entity_collideHairVsCircle(lua_State *L)
+luaFunc(entity_collideHairVsCircle)
 {
 	Entity *e = entity(L);
 	Entity *e2 = entity(L, 2);
@@ -3922,11 +3322,10 @@ int l_entity_collideHairVsCircle(lua_State *L)
 		float perc = lua_tonumber(L, 4);
 		col = dsq->game->collideHairVsCircle(e, num, e2->position, e2->collideRadius, perc);
 	}
-	lua_pushboolean(L, col);
-	return 1;
+	luaReturnBool(col);
 }
 
-int l_entity_collideSkeletalVsCircleForListByName(lua_State *L)
+luaFunc(entity_collideSkeletalVsCircleForListByName)
 {
 	Entity *e = entity(L);
 	std::string name;
@@ -3950,11 +3349,10 @@ int l_entity_collideSkeletalVsCircleForListByName(lua_State *L)
 			}
 		}
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_debugText(lua_State *L)
+luaFunc(entity_debugText)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -3967,60 +3365,54 @@ int l_entity_debugText(lua_State *L)
 		f->setDecayRate(1);
 		f->fadeAlphaWithLife=1;
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_getHealth(lua_State* L)
+luaFunc(entity_getHealth)
 {
 	Entity *e = entity(L);
 	if (e)
-		lua_pushnumber(L, e->health);
+		luaReturnNum(e->health);
 	else
-		lua_pushnumber(L, 0);
-	return 1;
+		luaReturnNum(0);
 }
 
-int l_entity_initSegments(lua_State* L)
+luaFunc(entity_initSegments)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	if (se)
 		se->initSegments(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tostring(L, 5), lua_tostring(L, 6), lua_tointeger(L, 7), lua_tointeger(L, 8), lua_tonumber(L, 9), lua_tointeger(L, 10));
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_warpSegments(lua_State* L)
+luaFunc(entity_warpSegments)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	if (se)
 		se->warpSegments();
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 //entity_incrTargetLeaches
-int l_entity_incrTargetLeaches(lua_State* L)
+luaFunc(entity_incrTargetLeaches)
 {
 	Entity *e = entity(L);
 	if (e && e->getTargetEntity())
 		e->getTargetEntity()->leaches++;
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_decrTargetLeaches(lua_State* L)
+luaFunc(entity_decrTargetLeaches)
 {
 	Entity *e = entity(L);
 	if (e && e->getTargetEntity())
 		e->getTargetEntity()->leaches--;
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_rotateToVel(lua_State* L)
+luaFunc(entity_rotateToVel)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -4030,11 +3422,10 @@ int l_entity_rotateToVel(lua_State* L)
 			e->rotateToVec(e->vel, lua_tonumber(L, 2), lua_tointeger(L, 3));
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_rotateToEntity(lua_State* L)
+luaFunc(entity_rotateToEntity)
 {
 	Entity *e = entity(L);
 	Entity *e2 = entity(L, 2);
@@ -4047,11 +3438,10 @@ int l_entity_rotateToEntity(lua_State* L)
 			e->rotateToVec(vec, lua_tonumber(L, 3), lua_tointeger(L, 4));
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_rotateToVec(lua_State* L)
+luaFunc(entity_rotateToVec)
 {
 	Entity *e = entity(L);
 	Vector vec(lua_tonumber(L, 2), lua_tonumber(L, 3));
@@ -4062,53 +3452,46 @@ int l_entity_rotateToVec(lua_State* L)
 			e->rotateToVec(vec, lua_tonumber(L, 4), lua_tointeger(L, 5));
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_update(lua_State *L)
+luaFunc(entity_update)
 {
 	entity(L)->update(lua_tonumber(L, 2));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_updateSkeletal(lua_State *L)
+luaFunc(entity_updateSkeletal)
 {
 	entity(L)->skeletalSprite.update(lua_tonumber(L, 2));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_msg(lua_State *L)
+luaFunc(entity_msg)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->message(getString(L, 2), lua_tonumber(L, 3));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_updateCurrents(lua_State *L)
+luaFunc(entity_updateCurrents)
 {
-	lua_pushboolean(L, entity(L)->updateCurrents(lua_tonumber(L, 2)));
-	return 1;
+	luaReturnBool(entity(L)->updateCurrents(lua_tonumber(L, 2)));
 }
 
-int l_entity_updateLocalWarpAreas(lua_State *L)
+luaFunc(entity_updateLocalWarpAreas)
 {
-	lua_pushboolean(L, entity(L)->updateLocalWarpAreas(getBool(L, 2)));
-	return 1;
+	luaReturnBool(entity(L)->updateLocalWarpAreas(getBool(L, 2)));
 }
 
-int l_entity_updateMovement(lua_State* L)
+luaFunc(entity_updateMovement)
 {
 	scriptedEntity(L)->updateMovement(lua_tonumber(L, 2));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_applySurfaceNormalForce(lua_State *L)
+luaFunc(entity_applySurfaceNormalForce)
 {
 	//Entity *e = si->getCurrentEntity();
 	Entity *e = entity(L);
@@ -4127,11 +3510,10 @@ int l_entity_applySurfaceNormalForce(lua_State *L)
 		v.setLength2D(lua_tointeger(L, 2));
 		e->vel += v;
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_applyRandomForce(lua_State* L)
+luaFunc(entity_applyRandomForce)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -4142,11 +3524,10 @@ int l_entity_applyRandomForce(lua_State* L)
 		f.setLength2D(lua_tonumber(L, 1));
 		e->vel += f;
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_getRotation(lua_State *L)
+luaFunc(entity_getRotation)
 {
 	Entity *e = entity(L);
 	float v = 0;
@@ -4154,21 +3535,19 @@ int l_entity_getRotation(lua_State *L)
 	{
 		v = e->rotation.z;
 	}
-	lua_pushnumber(L, v);
-	return 1;
+	luaReturnNum(v);
 }
 
-int l_flingMonkey(lua_State *L)
+luaFunc(flingMonkey)
 {
 	Entity *e = entity(L);
 
 	dsq->continuity.flingMonkey(e);
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_getDistanceToTarget(lua_State *L)
+luaFunc(entity_getDistanceToTarget)
 {
 	Entity *e = entity(L);
 	float dist = 0;
@@ -4180,11 +3559,10 @@ int l_entity_getDistanceToTarget(lua_State *L)
 			dist = (t->position - e->position).getLength2D();
 		}
 	}
-	lua_pushnumber(L, dist);
-	return 1;
+	luaReturnNum(dist);
 }
 
-int l_entity_watchEntity(lua_State *L)
+luaFunc(entity_watchEntity)
 {
 	Entity *e = entity(L);
 	Entity *e2 = 0;
@@ -4195,22 +3573,20 @@ int l_entity_watchEntity(lua_State *L)
 	{
 		e->watchEntity(e2);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setNaijaHeadTexture(lua_State *L)
+luaFunc(setNaijaHeadTexture)
 {
 	Avatar *a = dsq->game->avatar;
 	if (a)
 	{
 		a->setHeadTexture(lua_tostring(L, 1));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_flipToSame(lua_State *L)
+luaFunc(entity_flipToSame)
 {
 	Entity *e = entity(L);
 	Entity *e2 = entity(L, 2);
@@ -4222,11 +3598,10 @@ int l_entity_flipToSame(lua_State *L)
 			e->flipHorizontal();
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_flipToEntity(lua_State *L)
+luaFunc(entity_flipToEntity)
 {
 	Entity *e = entity(L);
 	Entity *e2 = entity(L, 2);
@@ -4234,11 +3609,10 @@ int l_entity_flipToEntity(lua_State *L)
 	{
 		e->flipToTarget(e2->position);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_flipToNode(lua_State *L)
+luaFunc(entity_flipToNode)
 {
 	Entity *e = entity(L);
 	Path *p = path(L, 2);
@@ -4247,22 +3621,20 @@ int l_entity_flipToNode(lua_State *L)
 	{
 		e->flipToTarget(n->position);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_flipToVel(lua_State *L)
+luaFunc(entity_flipToVel)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->flipToVel();
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_node_isEntityIn(lua_State *L)
+luaFunc(node_isEntityIn)
 {
 	Path *p = path(L,1);
 	Entity *e = entity(L,2);
@@ -4276,11 +3648,10 @@ int l_node_isEntityIn(lua_State *L)
 			//(e->position - p->nodes[0].position);
 		}
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_node_isPositionIn(lua_State *L)
+luaFunc(node_isPositionIn)
 {
 	Path *p = path(L,1);
 	float x = lua_tonumber(L, 2);
@@ -4294,11 +3665,10 @@ int l_node_isPositionIn(lua_State *L)
 			v = p->rect.isCoordinateInside(Vector(x,y) - p->nodes[0].position);
 		}
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_isInDarkness(lua_State *L)
+luaFunc(entity_isInDarkness)
 {
 	Entity *e = entity(L);
 	bool d = false;
@@ -4306,11 +3676,10 @@ int l_entity_isInDarkness(lua_State *L)
 	{
 		d = e->isInDarkness();
 	}
-	lua_pushboolean(L, d);
-	return 1;
+	luaReturnBool(d);
 }
 
-int l_entity_isInRect(lua_State *L)
+luaFunc(entity_isInRect)
 {
 	Entity *e = entity(L);
 	bool v= false;
@@ -4329,11 +3698,10 @@ int l_entity_isInRect(lua_State *L)
 			}
 		}
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_isFlippedHorizontal(lua_State *L)
+luaFunc(entity_isFlippedHorizontal)
 {
 	Entity *e = entity(L);
 	bool v=false;
@@ -4341,11 +3709,10 @@ int l_entity_isFlippedHorizontal(lua_State *L)
 	{
 		v = e->isfh();
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_isFlippedVertical(lua_State *L)
+luaFunc(entity_isFlippedVertical)
 {
 	Entity *e = entity(L);
 	bool v=false;
@@ -4353,49 +3720,35 @@ int l_entity_isFlippedVertical(lua_State *L)
 	{
 		v = e->isfv();
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_flipHorizontal(lua_State* L)
+luaFunc(entity_flipHorizontal)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->flipHorizontal();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_fhTo(lua_State* L)
+luaFunc(entity_fhTo)
 {
 	Entity *e = entity(L);
 	bool b = getBool(L);
 	if (e)
 		e->fhTo(b);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_flipVertical(lua_State* L)
+luaFunc(entity_flipVertical)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->flipVertical();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-PauseQuad *getPauseQuad(lua_State *L, int n=1)
-{
-	PauseQuad *q = (PauseQuad*)lua_touserdata(L, n);
-	if (q)
-		return q;
-	else
-		errorLog("Invalid PauseQuad/Particle");
-	return 0;
-}
-
-int l_createQuad(lua_State *L)
+luaFunc(createQuad)
 {
 	PauseQuad *q = new PauseQuad();
 	q->setTexture(getString(L, 1));
@@ -4406,29 +3759,26 @@ int l_createQuad(lua_State *L)
 		layer = (LR_PARTICLES+1) - LR_ELEMENTS1;
 	dsq->game->addRenderObject(q, LR_ELEMENTS1+(layer-1));
 
-	luaPushPointer(L, q);
-	return 1;
+	luaReturnPtr(q);
 }
 
-int l_quad_scale(lua_State *L)
+luaFunc(quad_scale)
 {
 	PauseQuad *q = getPauseQuad(L);
 	if (q)
 		q->scale.interpolateTo(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_quad_rotate(lua_State *L)
+luaFunc(quad_rotate)
 {
 	PauseQuad *q = getPauseQuad(L);
 	if (q)
 		q->rotation.interpolateTo(Vector(0,0,lua_tonumber(L, 2)), lua_tonumber(L, 3), lua_tointeger(L, 4));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_quad_color(lua_State *L)
+luaFunc(quad_color)
 {
 	PauseQuad *q = getPauseQuad(L);
 	if (q)
@@ -4436,40 +3786,36 @@ int l_quad_color(lua_State *L)
 		//e->color = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
 		q->color.interpolateTo(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4)), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_quad_alpha(lua_State *L)
+luaFunc(quad_alpha)
 {
 	PauseQuad *q = getPauseQuad(L);
 	if (q)
 		q->alpha.interpolateTo(Vector(lua_tonumber(L, 2),0,0), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_quad_alphaMod(lua_State *L)
+luaFunc(quad_alphaMod)
 {
 	PauseQuad *q = getPauseQuad(L);
 	if (q)
 		q->alphaMod = lua_tonumber(L, 2);
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_quad_getAlpha(lua_State *L)
+luaFunc(quad_getAlpha)
 {
 	PauseQuad *q = getPauseQuad(L);
 	float v = 0;
 	if (q)
 		v = q->alpha.x;
-	lua_pushnumber(L, v);
-	return 1;
+	luaReturnNum(v);
 }
 
 
-int l_quad_delete(lua_State *L)
+luaFunc(quad_delete)
 {
 	PauseQuad *q = getPauseQuad(L);
 	float t = lua_tonumber(L, 2);
@@ -4484,34 +3830,31 @@ int l_quad_delete(lua_State *L)
 			q->fadeAlphaWithLife = 1;
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 
-int l_quad_setBlendType(lua_State *L)
+luaFunc(quad_setBlendType)
 {
 	PauseQuad *q = getPauseQuad(L);
 	if (q)
 	{
 		q->setBlendType(lua_tonumber(L, 2));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_quad_setPosition(lua_State *L)
+luaFunc(quad_setPosition)
 {
 	PauseQuad *q = getPauseQuad(L);
 	float x = lua_tonumber(L, 2);
 	float y = lua_tonumber(L, 3);
 	if (q)
 		q->position.interpolateTo(Vector(x,y), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setupConversationEntity(lua_State* L)
+luaFunc(setupConversationEntity)
 {
 	std::string name, gfx;
 	if (lua_isstring(L, 2))
@@ -4519,11 +3862,10 @@ int l_setupConversationEntity(lua_State* L)
 	if (lua_isstring(L, 3))
 		gfx = lua_tostring(L, 3);
 	scriptedEntity(L)->setupConversationEntity(name, gfx);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setupEntity(lua_State *L)
+luaFunc(setupEntity)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	if (se)
@@ -4535,11 +3877,10 @@ int l_setupEntity(lua_State *L)
 		}
 		se->setupEntity(tex, lua_tonumber(L, 3));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setupBasicEntity(lua_State* L)
+luaFunc(setupBasicEntity)
 {
 	//ScriptedEntity *se = dynamic_cast<ScriptedEntity*>(si->getCurrentEntity());
 	ScriptedEntity *se = scriptedEntity(L);
@@ -4547,30 +3888,27 @@ int l_setupBasicEntity(lua_State* L)
 	if (se)
 		se->setupBasicEntity(lua_tostring(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5), lua_tointeger(L, 6), lua_tointeger(L, 7), lua_tointeger(L, 8), lua_tointeger(L, 9), lua_tointeger(L, 10), lua_tointeger(L, 11), lua_tointeger(L, 12), lua_tointeger(L, 13), lua_tointeger(L, 14));
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setBeautyFlip(lua_State *L)
+luaFunc(entity_setBeautyFlip)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->beautyFlip = getBool(L, 2);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setInvincible(lua_State *L)
+luaFunc(setInvincible)
 {
 	dsq->game->invinciblity = getBool(L, 1);
 
-	lua_pushboolean(L, dsq->game->invinciblity);
-	return 1;
+	luaReturnBool(dsq->game->invinciblity);
 }
 
-int l_entity_setInvincible(lua_State *L)
+luaFunc(entity_setInvincible)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -4578,46 +3916,30 @@ int l_entity_setInvincible(lua_State *L)
 		e->setInvincible(getBool(L, 2));
 
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setDeathSound(lua_State *L)
+luaFunc(entity_setDeathSound)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->deathSound = lua_tostring(L, 2);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setDeathParticleEffect(lua_State *L)
+luaFunc(entity_setDeathParticleEffect)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	if (se)
 	{
 		se->deathParticleEffect = getString(L, 2);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-/*
-int l_entity(lua_State *L)
-{
-	ScriptedEntity *se = scriptedEntity(L);
-	if (se)
-	{
-		se->deathParticleEffect = lua_tostring(L, 2);
-	}
-	lua_pushnumber(L, 0);
-	return 1;
-}
-*/
-
-int l_entity_setNaijaReaction(lua_State *L)
+luaFunc(entity_setNaijaReaction)
 {
 	Entity *e = entity(L);
 	std::string s;
@@ -4627,11 +3949,10 @@ int l_entity_setNaijaReaction(lua_State *L)
 	{
 		e->naijaReaction = s;
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setName(lua_State *L)
+luaFunc(entity_setName)
 {
 	Entity *e = entity(L);
 	std::string s;
@@ -4642,87 +3963,79 @@ int l_entity_setName(lua_State *L)
 		debugLog("setting entity name to: " + s);
 		e->setName(s);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_pathBurst(lua_State *L)
+luaFunc(entity_pathBurst)
 {
 	Entity *e = entity(L);
 	bool v = false;
 	if (e)
 		v = e->pathBurst(lua_tointeger(L, 2));
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_moveTowardsAngle(lua_State *L)
+luaFunc(entity_moveTowardsAngle)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->moveTowardsAngle(lua_tointeger(L, 2), lua_tonumber(L, 3), lua_tointeger(L, 4));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_moveAroundAngle(lua_State *L)
+luaFunc(entity_moveAroundAngle)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->moveTowardsAngle(lua_tointeger(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_moveTowards(lua_State *L)
+luaFunc(entity_moveTowards)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->moveTowards(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_moveAround(lua_State *L)
+luaFunc(entity_moveAround)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->moveAround(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_addVel(lua_State *L)
+luaFunc(entity_addVel)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->vel += Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_addVel2(lua_State *L)
+luaFunc(entity_addVel2)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->vel2 += Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_addRandomVel(lua_State *L)
+luaFunc(entity_addRandomVel)
 {
 	Entity *e = entity(L);
 	int len = lua_tonumber(L, 2);
@@ -4735,11 +4048,10 @@ int l_entity_addRandomVel(lua_State *L)
 		e->vel += add;
 		//e->vel += Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_addGroupVel(lua_State *L)
+luaFunc(entity_addGroupVel)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -4751,11 +4063,10 @@ int l_entity_addGroupVel(lua_State *L)
 				e2->vel += Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
 		}
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_isValidTarget(lua_State *L)
+luaFunc(entity_isValidTarget)
 {
 	Entity *e = entity(L);
 	Entity *e2 = 0;
@@ -4764,11 +4075,10 @@ int l_entity_isValidTarget(lua_State *L)
 	bool b = false;
 	if (e)
 		b = dsq->game->isValidTarget(e, e2);
-	lua_pushboolean(L, b);
-	return 1;
+	luaReturnBool(b);
 }
 
-int l_entity_isVelIn(lua_State *L)
+luaFunc(entity_isVelIn)
 {
 	Entity *e = entity(L);
 	bool b = false;
@@ -4776,21 +4086,19 @@ int l_entity_isVelIn(lua_State *L)
 	{
 		b = e->vel.isLength2DIn(lua_tonumber(L, 2));
 	}
-	lua_pushboolean(L, b);
-	return 1;
+	luaReturnBool(b);
 }
 
-int l_entity_getVelLen(lua_State *L)
+luaFunc(entity_getVelLen)
 {
 	Entity *e = entity(L);
 	int l = 0;
 	if (e)
 		l = e->vel.getLength2D();
-	lua_pushnumber(L, l);
-	return 1;
+	luaReturnNum(l);
 }
 
-int l_entity_velx(lua_State *L)
+luaFunc(entity_velx)
 {
 	Entity *e = entity(L);
 	float velx = 0;
@@ -4798,11 +4106,10 @@ int l_entity_velx(lua_State *L)
 	{
 		velx = e->vel.x;
 	}
-	lua_pushnumber(L, velx);
-	return 1;
+	luaReturnNum(velx);
 }
 
-int l_entity_vely(lua_State *L)
+luaFunc(entity_vely)
 {
 	Entity *e = entity(L);
 	float vely = 0;
@@ -4810,36 +4117,31 @@ int l_entity_vely(lua_State *L)
 	{
 		vely = e->vel.y;
 	}
-	lua_pushnumber(L, vely);
-	return 1;
+	luaReturnNum(vely);
 }
 
-int l_entity_clearVel(lua_State *L)
+luaFunc(entity_clearVel)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->vel = Vector(0,0,0);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_clearVel2(lua_State *L)
+luaFunc(entity_clearVel2)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->vel2 = Vector(0,0,0);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_getScreenCenter(lua_State *L)
+luaFunc(getScreenCenter)
 {
-	lua_pushnumber(L, core->screenCenter.x);
-	lua_pushnumber(L, core->screenCenter.y);
-	return 2;
+	luaReturnVec2(core->screenCenter.x, core->screenCenter.y);
 }
 
-int l_getNodeFromEntity(lua_State *L)
+luaFunc(getNodeFromEntity)
 {
 	Path *nodePtr = 0;
 	Entity *e = entity(L);
@@ -4847,29 +4149,26 @@ int l_getNodeFromEntity(lua_State *L)
 	{
 		nodePtr = e->getNode();
 	}
-	luaPushPointer(L, nodePtr);
-	return 1;
+	luaReturnPtr(nodePtr);
 }
 
-int l_entity_rotate(lua_State *L)
+luaFunc(entity_rotate)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->rotation.interpolateTo(Vector(0,0,lua_tonumber(L, 2)), lua_tonumber(L, 3), lua_tointeger(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_rotateOffset(lua_State *L)
+luaFunc(entity_rotateOffset)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->rotationOffset.interpolateTo(Vector(0,0,lua_tonumber(L, 2)), lua_tonumber(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5), lua_tointeger(L, 6));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_isState(lua_State *L)
+luaFunc(entity_isState)
 {
 	Entity *e = entity(L);
 	bool v=false;
@@ -4877,41 +4176,37 @@ int l_entity_isState(lua_State *L)
 	{
 		v = (e->getState() == lua_tointeger(L, 2));
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_getState(lua_State *L)
+luaFunc(entity_getState)
 {
 	Entity *e = entity(L);
 	int state = 0;
 	if (e)
 		state = e->getState();
-	lua_pushnumber(L, state);
-	return 1;
+	luaReturnNum(state);
 }
 
-int l_entity_getEnqueuedState(lua_State *L)
+luaFunc(entity_getEnqueuedState)
 {
 	Entity *e = entity(L);
 	int state = 0;
 	if (e)
 		state = e->getEnqueuedState();
-	lua_pushnumber(L, state);
-	return 1;
+	luaReturnNum(state);
 }
 
-int l_entity_getPrevState(lua_State *L)
+luaFunc(entity_getPrevState)
 {
 	Entity *e = entity(L);
 	int state = 0;
 	if (e)
 		state = e->getPrevState();
-	lua_pushnumber(L, state);
-	return 1;
+	luaReturnNum(state);
 }
 
-int l_entity_setTarget(lua_State *L)
+luaFunc(entity_setTarget)
 {
 	Entity *e = entity(L);
 	Entity *t = 0;
@@ -4923,42 +4218,37 @@ int l_entity_setTarget(lua_State *L)
 	{
 		e->setTargetEntity(t);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setBounce(lua_State* L)
+luaFunc(entity_setBounce)
 {
 	CollideEntity *e = collideEntity(L);
 	if (e)
 		e->bounceAmount = e->bounceEntityAmount = lua_tonumber(L, 2);
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_avatar_isSinging(lua_State *L)
+luaFunc(avatar_isSinging)
 {
 	bool b = dsq->game->avatar->isSinging();
-	lua_pushboolean(L, b);
-	return 1;
+	luaReturnBool(b);
 }
 
-int l_avatar_isTouchHit(lua_State *L)
+luaFunc(avatar_isTouchHit)
 {
 	//avatar_canBeTouchHit
 	bool b = !(dsq->game->avatar->bursting && dsq->continuity.form == FORM_BEAST);
-	lua_pushboolean(L, b);
-	return 1;
+	luaReturnBool(b);
 }
 
-int l_avatar_clampPosition(lua_State *L)
+luaFunc(avatar_clampPosition)
 {
 	dsq->game->avatar->clampPosition();
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_setPosition(lua_State* L)
+luaFunc(entity_setPosition)
 {
 	Entity *e = entity(L);
 	float t = 0;
@@ -4966,11 +4256,10 @@ int l_entity_setPosition(lua_State* L)
 	{
 		t = e->position.interpolateTo(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
 	}
-	lua_pushnumber(L, t);
-	return 1;
+	luaReturnNum(t);
 }
 
-int l_entity_setInternalOffset(lua_State* L)
+luaFunc(entity_setInternalOffset)
 {
 	Entity *e = entity(L);
 	float t = 0;
@@ -4978,11 +4267,10 @@ int l_entity_setInternalOffset(lua_State* L)
 	{
 		t = e->internalOffset.interpolateTo(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
 	}
-	lua_pushnumber(L, t);
-	return 1;
+	luaReturnNum(t);
 }
 
-int l_entity_setTexture(lua_State *L)
+luaFunc(entity_setTexture)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -4990,45 +4278,41 @@ int l_entity_setTexture(lua_State *L)
 		std::string s = lua_tostring(L, 2);
 		e->setTexture(s);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setMaxSpeed(lua_State* L)
+luaFunc(entity_setMaxSpeed)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->setMaxSpeed(lua_tointeger(L, 2));
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_getMaxSpeed(lua_State* L)
+luaFunc(entity_getMaxSpeed)
 {
 	Entity *e = entity(L);
 	int v = 0;
 	if (e)
 		v = e->getMaxSpeed();
 
-	lua_pushnumber(L, v);
-	return 1;
+	luaReturnNum(v);
 }
 
-int l_entity_setMaxSpeedLerp(lua_State* L)
+luaFunc(entity_setMaxSpeedLerp)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->maxSpeedLerp.interpolateTo(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 // note: this is a weaker setState than perform
 // this is so that things can override it
 // for example getting PUSH-ed (Force) or FROZEN (bubbled)
-int l_entity_setState(lua_State *L)
+luaFunc(entity_setState)
 {
 	Entity *me = entity(L);
 	if (me)
@@ -5046,11 +4330,10 @@ int l_entity_setState(lua_State *L)
 		me->setState(state, time, force);
 		//}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_fireAtTarget(lua_State* L)
+luaFunc(entity_fireAtTarget)
 {
 	/*
 	Entity *e = entity(L);
@@ -5059,8 +4342,7 @@ int l_entity_fireAtTarget(lua_State* L)
 	{
 		if (!e->getTargetEntity())
 		{
-			lua_pushnumber(L, 0);
-			return 1;
+			luaReturnPtr(NULL);
 		}
 		std::string pe = lua_tostring(L, 2);
 		float damage = lua_tonumber(L, 3);
@@ -5119,21 +4401,16 @@ int l_entity_fireAtTarget(lua_State* L)
 			shot->position += mov;
 		}
 		dsq->game->addRenderObject(shot, LR_PROJECTILES);
-	}
 		//addRenderObject(shot);
-		luaPushPointer(L, shot);
+	}
+	luaReturnPtr(shot);
 	*/
 
-	{
-		debugLog("entire_fireAtTarget is deprecated");
-		lua_pushnumber(L, 0);
-	}
-
-
-	return 1;
+	debugLog("entity_fireAtTarget is deprecated");
+	luaReturnNum(0);
 }
 
-int l_entity_getBoneByIdx(lua_State *L)
+luaFunc(entity_getBoneByIdx)
 {
 	Entity *e = entity(L);
 	Bone *b = 0;
@@ -5146,11 +4423,10 @@ int l_entity_getBoneByIdx(lua_State *L)
 			b = e->skeletalSprite.getBoneByIdx(n);
 		}
 	}
-	luaPushPointer(L, b);
-	return 1;
+	luaReturnPtr(b);
 }
 
-int l_entity_getBoneByName(lua_State *L)
+luaFunc(entity_getBoneByName)
 {
 	Entity *e = entity(L);
 	Bone *b = 0;
@@ -5169,14 +4445,13 @@ int l_entity_getBoneByName(lua_State *L)
 		}
 	}
 	*/
-	luaPushPointer(L, b);
-	return 1;
+	luaReturnPtr(b);
 }
 
 // ditch entity::sound and use this code instead...
 // replace entity sound with this code
 
-int l_entity_playSfx(lua_State *L)
+luaFunc(entity_playSfx)
 {
 	Entity *e= entity(L);
 	if (e)
@@ -5212,11 +4487,10 @@ int l_entity_playSfx(lua_State *L)
 
 		//sound->playSfx(sfx);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_getPosition(lua_State *L)
+luaFunc(bone_getPosition)
 {
 	Bone *b = bone(L);
 	int x=0,y=0;
@@ -5226,12 +4500,10 @@ int l_bone_getPosition(lua_State *L)
 		x = pos.x;
 		y = pos.y;
 	}
-	lua_pushnumber(L, x);
-	lua_pushnumber(L, y);
-	return 2;
+	luaReturnVec2(x, y);
 }
 
-int l_bone_getScale(lua_State *L)
+luaFunc(bone_getScale)
 {
 	Bone *b = bone(L);
 	float x=0,y=0;
@@ -5241,30 +4513,25 @@ int l_bone_getScale(lua_State *L)
 		x = sc.x;
 		y = sc.y;
 	}
-	lua_pushnumber(L, x);
-	lua_pushnumber(L, y);
-	return 2;
+	luaReturnVec2(x, y);
 }
 
 
-int l_bone_getNormal(lua_State *L)
+luaFunc(bone_getNormal)
 {
 	Bone *b = bone(L);
 	if (b)
 	{
 		Vector n = b->getForward();
-		lua_pushnumber(L, n.x);
-		lua_pushnumber(L, n.y);
+		luaReturnVec2(n.x, n.y);
 	}
 	else
 	{
-		lua_pushnumber(L, 0);
-		lua_pushnumber(L, 0);
+		luaReturnVec2(0, 0);
 	}
-	return 2;
 }
 
-int l_bone_damageFlash(lua_State *L)
+luaFunc(bone_damageFlash)
 {
 	Bone *b = bone(L);
 	int type = lua_tonumber(L, 2);
@@ -5278,74 +4545,67 @@ int l_bone_damageFlash(lua_State *L)
 		b->color = Vector(1,1,1);
 		b->color.interpolateTo(toColor, 0.1, 5, 1);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_isVisible(lua_State *L)
+luaFunc(bone_isVisible)
 {
 	bool ret = false;
 	Bone *b = bone(L);
 	if (b)
 		ret = b->renderQuad;
-	lua_pushboolean(L, ret);
-	return 1;
+	luaReturnBool(ret);
 }
 
-int l_bone_setVisible(lua_State *L)
+luaFunc(bone_setVisible)
 {
 	Bone *b = bone(L);
 	if (b)
 		b->renderQuad = getBool(L, 2);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_setTexture(lua_State *L)
+luaFunc(bone_setTexture)
 {
 	Bone *b = bone(L);
 	if (b)
 	{
 		b->setTexture(lua_tostring(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_setTouchDamage(lua_State *L)
+luaFunc(bone_setTouchDamage)
 {
 	Bone *b = bone(L);
 	if (b)
 	{
 		b->touchDamage = lua_tonumber(L, 2);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_getidx(lua_State *L)
+luaFunc(bone_getIndex)
 {
 	Bone *b = bone(L);
 	int idx = -1;
 	if (b)
 		idx = b->boneIdx;
-	lua_pushnumber(L, idx);
-	return 1;
+	luaReturnNum(idx);
 }
 
-int l_bone_getName(lua_State *L)
+luaFunc(bone_getName)
 {
-	std::string n;
+	const char *n = "";
 	Bone *b = bone(L);
 	if (b)
 	{
-		n = b->name;
+		n = b->name.c_str();
 	}
-	lua_pushstring(L, n.c_str());
-	return 1;
+	luaReturnStr(n);
 }
 
-int l_bone_isName(lua_State *L)
+luaFunc(bone_isName)
 {
 	Bone *b = bone(L);
 	bool v = false;
@@ -5353,47 +4613,42 @@ int l_bone_isName(lua_State *L)
 	{
 		v = b->name == lua_tostring(L, 2);
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_overrideZoom(lua_State *L)
+luaFunc(overrideZoom)
 {
 	dsq->game->overrideZoom(lua_tonumber(L, 1), lua_tonumber(L, 2));
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_disableOverrideZoom(lua_State *L)
+luaFunc(disableOverrideZoom)
 {
 	dsq->game->toggleOverrideZoom(false);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 // dt, range, mod
-int l_entity_doSpellAvoidance(lua_State* L)
+luaFunc(entity_doSpellAvoidance)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->doSpellAvoidance(lua_tonumber(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 // dt, range, mod, ignore
-int l_entity_doEntityAvoidance(lua_State* L)
+luaFunc(entity_doEntityAvoidance)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->doEntityAvoidance(lua_tonumber(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), e->getTargetEntity());
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 // doCollisionAvoidance(me, dt, search, mod)
-int l_entity_doCollisionAvoidance(lua_State* L)
+luaFunc(entity_doCollisionAvoidance)
 {
 	Entity *e = entity(L);
 	bool ret = false;
@@ -5408,44 +4663,39 @@ int l_entity_doCollisionAvoidance(lua_State* L)
 		else
 			ret = e->doCollisionAvoidance(lua_tonumber(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), 0, lua_tonumber(L, 5));
 	}
-	lua_pushboolean(L, ret);
-	return 1;
+	luaReturnBool(ret);
 }
 
-int l_setOverrideMusic(lua_State *L)
+luaFunc(setOverrideMusic)
 {
 	dsq->game->overrideMusic = getString(L, 1);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setOverrideVoiceFader(lua_State *L)
+luaFunc(setOverrideVoiceFader)
 {
 	dsq->sound->setOverrideVoiceFader(lua_tonumber(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setGameSpeed(lua_State *L)
+luaFunc(setGameSpeed)
 {
 	dsq->gameSpeed.stop();
 	dsq->gameSpeed.stopPath();
 	dsq->gameSpeed.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_sendEntityMessage(lua_State* L)
+luaFunc(sendEntityMessage)
 {
 	Entity *e = dsq->getEntityByName(lua_tostring(L, 1));
 	if (e)
 		e->onMessage(lua_tostring(L, 2));
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bedEffects(lua_State* L)
+luaFunc(bedEffects)
 {
 	dsq->overlay->alpha.interpolateTo(1, 2);
 	dsq->sound->fadeMusic(SFT_OUT, 1);
@@ -5462,63 +4712,57 @@ int l_bedEffects(lua_State* L)
 	dsq->game->positionToAvatar = bedPosition;
 	dsq->game->transitionToScene(dsq->game->sceneName);
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setDeathScene(lua_State *L)
+luaFunc(entity_setDeathScene)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->setDeathScene(getBool(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setPauseInConversation(lua_State *L)
+luaFunc(entity_setPauseInConversation)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->setPauseInConversation(lua_toboolean(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setCollideWithAvatar(lua_State *L)
+luaFunc(entity_setCollideWithAvatar)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->collideWithAvatar = getBool(L, 2);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setCurrentTarget(lua_State *L)
+luaFunc(entity_setCurrentTarget)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->currentEntityTarget = lua_tointeger(L, 2);
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_setMiniMapHint(lua_State *L)
+luaFunc(setMiniMapHint)
 {
 	std::istringstream is(lua_tostring(L, 1));
 	is >> dsq->game->miniMapHint.scene >> dsq->game->miniMapHint.warpAreaType;
 	dsq->game->updateMiniMapHintPosition();
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entityFollowEntity(lua_State* L)
+luaFunc(entityFollowEntity)
 {
 	Entity *e = dsq->getEntityByName(lua_tostring(L, 1));
 	if (e)
@@ -5526,21 +4770,19 @@ int l_entityFollowEntity(lua_State* L)
 		e->followEntity = dsq->getEntityByName(lua_tostring(L, 2));
 	}
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_isFollowingEntity(lua_State *L)
+luaFunc(entity_isFollowingEntity)
 {
 	Entity *e = entity(L);
 	bool v = false;
 	if (e)
 		v = e->followEntity != 0;
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_followEntity(lua_State* L)
+luaFunc(entity_followEntity)
 {
 	Entity *e1 = entity(L);
 	Entity *e2 = 0;
@@ -5553,40 +4795,20 @@ int l_entity_followEntity(lua_State* L)
 		e1->followEntity = e2;
 		e1->followPos = lua_tointeger(L, 3);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setEntityScript(lua_State* L)
-{
-	errorLog ("setentityScript is deprecated");
-	if (false)
-	{
-		/*
-		Entity *e = dsq->getEntityByName(lua_tostring(L, 1));
-		if (e)
-		{
-			e->convo = lua_tostring(L, 2);
-		}
-		*/
-	}
-
-	lua_pushnumber(L, 0);
-	return 1;
-}
-
-int l_toggleInput(lua_State *L)
+luaFunc(toggleInput)
 {
 	int v = lua_tointeger(L, 1);
 	if (v)
 		dsq->game->avatar->enableInput();
 	else
 		dsq->game->avatar->disableInput();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_toggleTransitFishRide(lua_State* L)
+luaFunc(toggleTransitFishRide)
 {
 	Entity *t = entity(L);
 	if (t)
@@ -5601,38 +4823,34 @@ int l_toggleTransitFishRide(lua_State* L)
 				t->detachEntity(dsq->game->avatar);
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_offset(lua_State *L)
+luaFunc(bone_offset)
 {
 	Bone *b = bone(L);
 	if (b)
 		b->offset.interpolateTo(Vector(lua_tointeger(L, 2), lua_tointeger(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_offset(lua_State *L)
+luaFunc(entity_offset)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->offset.interpolateTo(Vector(lua_tointeger(L, 2), lua_tointeger(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_warpAvatar(lua_State* L)
+luaFunc(warpAvatar)
 {
 	dsq->game->positionToAvatar = Vector(lua_tointeger(L, 2),lua_tointeger(L, 3));
 	dsq->game->transitionToScene(lua_tostring(L, 1));
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_warpNaijaToSceneNode(lua_State* L)
+luaFunc(warpNaijaToSceneNode)
 {
 	std::string scene = getString(L, 1);
 	std::string node = getString(L, 2);
@@ -5648,51 +4866,40 @@ int l_warpNaijaToSceneNode(lua_State* L)
 		dsq->game->transitionToScene(scene);
 	}
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_registerSporeChildData(lua_State *L)
+luaFunc(registerSporeChildData)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		dsq->continuity.registerSporeChildData(e);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
- }
-
-int l_streamSfx(lua_State *L)
-{
-	//core->sound->streamSfx(lua_tostring(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setDamageTarget(lua_State *L)
+luaFunc(entity_setDamageTarget)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->setDamageTarget((DamageType)lua_tointeger(L, 2), getBool(L, 3));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setAllDamageTargets(lua_State *L)
+luaFunc(entity_setAllDamageTargets)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->setAllDamageTargets(getBool(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_isDamageTarget(lua_State *L)
+luaFunc(entity_isDamageTarget)
 {
 	Entity *e = entity(L);
 	bool v=false;
@@ -5700,54 +4907,36 @@ int l_entity_isDamageTarget(lua_State *L)
 	{
 		v = e->isDamageTarget((DamageType)lua_tointeger(L, 2));
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_setEnergyShotTarget(lua_State *L)
-{
-	/*
-	Entity *e = entity(L);
-	if (e)
-	{
-		e->energyShotTarget = lua_toboolean(L, 2);
-	}
-	*/
-	debugLog("setEnergyShotTarget antiquated");
-	lua_pushnumber(L, 0);
-	return 1;
-}
-
-int l_entity_setTargetRange(lua_State *L)
+luaFunc(entity_setTargetRange)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->targetRange = lua_tonumber(L, 2);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_clearTargetPoints(lua_State *L)
+luaFunc(entity_clearTargetPoints)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->clearTargetPoints();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_addTargetPoint(lua_State *L)
+luaFunc(entity_addTargetPoint)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->addTargetPoint(Vector(lua_tonumber(L,2), lua_tonumber(L, 3)));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_getTargetPoint(lua_State *L)
+luaFunc(entity_getTargetPoint)
 {
 	Entity *e = entity(L);
 	int idx = lua_tointeger(L, 2);
@@ -5756,12 +4945,10 @@ int l_entity_getTargetPoint(lua_State *L)
 	{
 		v = e->getTargetPoint(idx);
 	}
-	lua_pushnumber(L, v.x);
-	lua_pushnumber(L, v.y);
-	return 2;
+	luaReturnVec2(v.x, v.y);
 }
 
-int l_entity_getRandomTargetPoint(lua_State *L)
+luaFunc(entity_getRandomTargetPoint)
 {
 	Entity *e = entity(L);
 	Vector v;
@@ -5770,61 +4957,29 @@ int l_entity_getRandomTargetPoint(lua_State *L)
 	{
 		idx = e->getRandomTargetPoint();
 	}
-	lua_pushnumber(L, idx);
-	return 2;
+	luaReturnNum(idx);
 }
 
-int l_entity_setEnergyShotTargetPosition(lua_State *L)
-{
-	/*
-	Entity *e = entity(L);
-	if (e)
-	{
-		e->energyShotTargetPosition = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
-	}
-	*/
-	errorLog("entity_setEnergyShotTargetPosition is obsolete!");
-	lua_pushnumber(L, 0);
-	return 1;
-}
-
-int l_entity_setEnergyChargeTarget(lua_State *L)
-{
-	/*
-	Entity *e = entity(L);
-	if (e)
-	{
-		e->energyChargeTarget = lua_toboolean(L, 2);
-	}
-	*/
-	debugLog("setEnergyChargeTarget antiquated");
-	lua_pushnumber(L, 0);
-	return 1;
-}
-
-int l_playVisualEffect(lua_State *L)
+luaFunc(playVisualEffect)
 {
 	dsq->playVisualEffect(lua_tonumber(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_playNoEffect(lua_State *L)
+luaFunc(playNoEffect)
 {
 	dsq->playNoEffect();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_emote(lua_State *L)
+luaFunc(emote)
 {
 	int emote = lua_tonumber(L, 1);
 	dsq->emote.playSfx(emote);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_playSfx(lua_State *L)
+luaFunc(playSfx)
 {
 	int freq = lua_tonumber(L, 2);
 	float vol = lua_tonumber(L, 3);
@@ -5843,60 +4998,53 @@ int l_playSfx(lua_State *L)
 	if (!dsq->isSkippingCutscene())
 		handle = core->sound->playSfx(sfx);
 	
-	luaPushPointer(L, handle);
-	return 1;
+	luaReturnPtr(handle);
 }
 
-int l_fadeSfx(lua_State *L)
+luaFunc(fadeSfx)
 {
 	void *header = lua_touserdata(L, 1);
 	float ft = lua_tonumber(L, 2);
 
 	core->sound->fadeSfx(header, SFT_OUT, ft);
 
-	luaPushPointer(L, header);
-	return 1;
+	luaReturnPtr(header);
 }
 
-int l_resetTimer(lua_State *L)
+luaFunc(resetTimer)
 {
 	dsq->resetTimer();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_stopMusic(lua_State *L)
+luaFunc(stopMusic)
 {
 	dsq->sound->stopMusic();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_playMusic(lua_State* L)
+luaFunc(playMusic)
 {
 	float crossfadeTime = 0.8;
 	dsq->sound->playMusic(std::string(lua_tostring(L, 1)), SLT_LOOP, SFT_CROSS, crossfadeTime);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_playMusicStraight(lua_State *L)
+luaFunc(playMusicStraight)
 {
 	dsq->sound->setMusicFader(1,0);
 	dsq->sound->playMusic(getString(L, 1), SLT_LOOP, SFT_IN, 0.5); //SFT_IN, 0.1);//, SFT_IN, 0.2);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_playMusicOnce(lua_State* L)
+luaFunc(playMusicOnce)
 {
 	float crossfadeTime = 0.8;
 	dsq->sound->playMusic(std::string(lua_tostring(L, 1)), SLT_NONE, SFT_CROSS, crossfadeTime);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_addInfluence(lua_State *L)
+luaFunc(addInfluence)
 {
 	ParticleInfluence pinf;
 	pinf.pos.x = lua_tonumber(L, 1);
@@ -5904,44 +5052,39 @@ int l_addInfluence(lua_State *L)
 	pinf.size = lua_tonumber(L, 3);
 	pinf.spd = lua_tonumber(L, 4);
 	dsq->particleManager->addInfluence(pinf);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_updateMusic(lua_State *L)
+luaFunc(updateMusic)
 {
 	dsq->game->updateMusic();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_grabTarget(lua_State* L)
+luaFunc(entity_grabTarget)
 {
 	Entity *e = entity(L);
 	e->attachEntity(e->getTargetEntity(), Vector(lua_tointeger(L, 2), lua_tointeger(L, 3)));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_clampToHit(lua_State *L)
+luaFunc(entity_clampToHit)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->clampToHit();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_clampToSurface(lua_State* L)
+luaFunc(entity_clampToSurface)
 {
 	Entity *e = entity(L);
 	bool ret = e->clampToSurface(lua_tonumber(L, 2));
 
-	lua_pushboolean(L, ret);
-	return 1;
+	luaReturnBool(ret);
 }
 
-int l_entity_checkSurface(lua_State *L)
+luaFunc(entity_checkSurface)
 {
 	Entity *e = entity(L);
 	bool c = false;
@@ -5951,11 +5094,10 @@ int l_entity_checkSurface(lua_State *L)
 		c = e->checkSurface(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
 	}
 
-	lua_pushboolean(L, c);
-	return 1;
+	luaReturnBool(c);
 }
 
-int l_entity_switchSurfaceDirection(lua_State* L)
+luaFunc(entity_switchSurfaceDirection)
 {
 	//ScriptedEntity *e = (ScriptedEntity*)si->getCurrentEntity();
 	ScriptedEntity *e = scriptedEntity(L);
@@ -5997,11 +5139,10 @@ int l_entity_switchSurfaceDirection(lua_State* L)
 		e->surfaceMoveDir = n;
 	}
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_adjustPositionBySurfaceNormal(lua_State* L)
+luaFunc(entity_adjustPositionBySurfaceNormal)
 {
 	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
 	if (!e->ridingOnEntity)
@@ -6015,12 +5156,11 @@ int l_entity_adjustPositionBySurfaceNormal(lua_State* L)
 		e->setv(EV_CRAWLING, 0);
 		//e->setCrawling(false);
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
 // HACK: move functionality inside entity class
-int l_entity_moveAlongSurface(lua_State* L)
+luaFunc(entity_moveAlongSurface)
 {
 	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
 
@@ -6157,21 +5297,19 @@ int l_entity_moveAlongSurface(lua_State* L)
 		}
 	}
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_flipHToAvatar(lua_State *L)
+luaFunc(entity_flipHToAvatar)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->flipToTarget(dsq->game->avatar->position);
 
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_rotateToSurfaceNormal(lua_State* L)
+luaFunc(entity_rotateToSurfaceNormal)
 {
 	//ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
 	Entity *e = entity(L);
@@ -6184,57 +5322,51 @@ int l_entity_rotateToSurfaceNormal(lua_State* L)
 	}
 	//Entity *e = entity(L);
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_releaseTarget(lua_State* L)
+luaFunc(entity_releaseTarget)
 {
 	Entity *e = entity(L);//si->getCurrentEntity();
 	e->detachEntity(e->getTargetEntity());
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_e_setv(lua_State *L)
+luaFunc(esetv)
 {
 	Entity *e = entity(L);
 	EV ev = (EV)lua_tointeger(L, 2);
 	int n = lua_tointeger(L, 3);
 	if (e)
 		e->setv(ev, n);
-	lua_pushnumber(L, n);
-	return 1;
+	luaReturnNum(n);
 }
 
-int l_e_getv(lua_State *L)
+luaFunc(egetv)
 {
 	Entity *e = entity(L);
 	EV ev = (EV)lua_tointeger(L, 2);
-	lua_pushnumber(L, e->getv(ev));
-	return 1;
+	luaReturnNum(e->getv(ev));
 }
 
-int l_e_setvf(lua_State *L)
+luaFunc(esetvf)
 {
 	Entity *e = entity(L);
 	EV ev = (EV)lua_tointeger(L, 2);
 	float n = lua_tonumber(L, 3);
 	if (e)
 		e->setvf(ev, n);
-	lua_pushnumber(L, n);
-	return 1;
+	luaReturnNum(n);
 }
 
-int l_e_getvf(lua_State *L)
+luaFunc(egetvf)
 {
 	Entity *e = entity(L);
 	EV ev = (EV)lua_tointeger(L, 2);
-	lua_pushnumber(L, e->getvf(ev));
-	return 1;
+	luaReturnNum(e->getvf(ev));
 }
 
-int l_e_isv(lua_State *L)
+luaFunc(eisv)
 {
 	Entity *e = entity(L);
 	EV ev = (EV)lua_tointeger(L, 2);
@@ -6242,70 +5374,61 @@ int l_e_isv(lua_State *L)
 	bool b = 0;
 	if (e)
 		b = e->isv(ev, n);
-	lua_pushboolean(L, b);
-	return 1;
+	luaReturnBool(b);
 }
 
-int l_entity_setClampOnSwitchDir(lua_State *L)
+luaFunc(entity_setClampOnSwitchDir)
 {
 	debugLog("_setClampOnSwitchDir is old");
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setWidth(lua_State *L)
+luaFunc(entity_setWidth)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->setWidth(lua_tonumber(L, 2));
 		//e->width.interpolateTo(Vector(lua_tonumber(L, 2)), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setHeight(lua_State *L)
+luaFunc(entity_setHeight)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->setHeight(lua_tonumber(L, 2));
 		//e->height.interpolateTo(Vector(lua_tonumber(L, 2)), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_vector_normalize(lua_State *L)
+luaFunc(vector_normalize)
 {
 	float x = lua_tonumber(L, 1);
 	float y = lua_tonumber(L, 2);
 	Vector v(x,y);
 	v.normalize2D();
-	lua_pushnumber(L, v.x);
-	lua_pushnumber(L, v.y);
-	return 2;
+	luaReturnVec2(v.x, v.y);
 }
 
-int l_vector_getLength(lua_State *L)
+luaFunc(vector_getLength)
 {
 	float x = lua_tonumber(L, 1);
 	float y = lua_tonumber(L, 2);
 	Vector v(x,y);
 	float len = v.getLength2D();
-	lua_pushnumber(L, len);
-	return 1;
+	luaReturnNum(len);
 }
 
-int l_vector_setLength(lua_State *L)
+luaFunc(vector_setLength)
 {
 	float x = lua_tonumber(L, 1);
 	float y = lua_tonumber(L, 2);
 	Vector v(x,y);
 	v.setLength2D(lua_tonumber(L, 3));
-	lua_pushnumber(L, v.x);
-	lua_pushnumber(L, v.y);
-	return 2;
+	luaReturnVec2(v.x, v.y);
 }
 
-int l_vector_dot(lua_State *L)
+luaFunc(vector_dot)
 {
 	float x = lua_tonumber(L, 1);
 	float y = lua_tonumber(L, 2);
@@ -6313,43 +5436,38 @@ int l_vector_dot(lua_State *L)
 	float y2 = lua_tonumber(L, 4);
 	Vector v(x,y);
 	Vector v2(x2,y2);
-	lua_pushnumber(L, v.dot2D(v2));
-	return 1;
+	luaReturnNum(v.dot2D(v2));
 }
 
-int l_vector_cap(lua_State *L)
+luaFunc(vector_cap)
 {
 	float x = lua_tonumber(L, 1);
 	float y = lua_tonumber(L, 2);
 	Vector v(x,y);
 	v.capLength2D(lua_tonumber(L, 3));
-	lua_pushnumber(L, v.x);
-	lua_pushnumber(L, v.y);
-	return 2;
+	luaReturnVec2(v.x, v.y);
 }
 
-int l_vector_isLength2DIn(lua_State *L)
+luaFunc(vector_isLength2DIn)
 {
 	float x = lua_tonumber(L, 1);
 	float y = lua_tonumber(L, 2);
 	Vector v(x,y);
 	bool ret = v.isLength2DIn(lua_tonumber(L, 3));
-	lua_pushboolean(L, ret);
-	return 1;
+	luaReturnBool(ret);
 }
 
-int l_entity_push(lua_State *L)
+luaFunc(entity_push)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->push(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_pushTarget(lua_State* L)
+luaFunc(entity_pushTarget)
 {
 	//Entity *e = si->getCurrentEntity();
 	Entity *e = entity(L);
@@ -6364,47 +5482,42 @@ int l_entity_pushTarget(lua_State* L)
 		}
 	}
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_watch(lua_State* luaVM)
+luaFunc(watch)
 {
-	float t = lua_tonumber(luaVM, 1);
-	int quit = lua_tointeger(luaVM, 2);
+	float t = lua_tonumber(L, 1);
+	int quit = lua_tointeger(L, 2);
 	dsq->watch(t, quit);
-	lua_pushnumber( luaVM, 0 );
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_wait(lua_State* luaVM)
+luaFunc(wait)
 {
-	core->main(lua_tonumber(luaVM, 1));
-	lua_pushnumber( luaVM, 0 );
-	return 1;
+	core->main(lua_tonumber(L, 1));
+	luaReturnNum(0);
 }
 
-int l_healEntity(lua_State* L)
+luaFunc(healEntity)
 {
 	Entity *e = dsq->getEntityByName(lua_tostring(L, 1));
 	if (e)
 	{
 		e->heal(lua_tonumber(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_killEntity(lua_State* L)
+luaFunc(killEntity)
 {
 	Entity *e = dsq->getEntityByName(lua_tostring(L, 1));
 	if (e)
 		e->safeKill();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_warpNaijaToEntity(lua_State *L)
+luaFunc(warpNaijaToEntity)
 {
 	Entity *e = dsq->getEntityByName(lua_tostring(L, 1));
 	if (e)
@@ -6419,43 +5532,38 @@ int l_warpNaijaToEntity(lua_State *L)
 		core->main(1);
 
 	}
-	lua_pushnumber(L,0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_getTimer(lua_State *L)
+luaFunc(getTimer)
 {
 	float n = lua_tonumber(L, 1);
 	if (n == 0)
 		n = 1;
-	lua_pushnumber(L, dsq->game->getTimer(n));
-	return 1;
+	luaReturnNum(dsq->game->getTimer(n));
 }
 
-int l_getHalfTimer(lua_State *L)
+luaFunc(getHalfTimer)
 {
 	float n = lua_tonumber(L, 1);
 	if (n == 0)
 		n = 1;
-	lua_pushnumber(L, dsq->game->getHalfTimer(n));
-	return 1;
+	luaReturnNum(dsq->game->getHalfTimer(n));
 }
 
-int l_isNested(lua_State *L)
+luaFunc(isNested)
 {
-	lua_pushboolean(L, core->isNested());
-	return 1;
+	luaReturnBool(core->isNested());
 }
 
-int l_getNumberOfEntitiesNamed(lua_State *L)
+luaFunc(getNumberOfEntitiesNamed)
 {
 	std::string s = getString(L);
 	int c = dsq->game->getNumberOfEntitiesNamed(s);
-	lua_pushnumber(L, c);
-	return 1;
+	luaReturnNum(c);
 }
 
-int l_entity_pullEntities(lua_State *L)
+luaFunc(entity_pullEntities)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -6484,11 +5592,10 @@ int l_entity_pullEntities(lua_State *L)
 			}
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_delete(lua_State *L)
+luaFunc(entity_delete)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -6507,12 +5614,11 @@ int l_entity_delete(lua_State *L)
 			e->setDecayRate(1.0/time);
 		}
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
 
-int l_entity_setCull(lua_State *L)
+luaFunc(entity_setCull)
 {
 	Entity *e = entity(L);
 	bool v = getBool(L, 2);
@@ -6520,21 +5626,20 @@ int l_entity_setCull(lua_State *L)
 	{
 		e->cull = v;
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_isRidingOnEntity(lua_State *L)
+luaFunc(entity_isRidingOnEntity)
 {
 	Entity *e = entity(L);
 	if (e)
-		luaPushPointer(L, e->ridingOnEntity);
+		luaReturnPtr(e->ridingOnEntity);
 	else
-		luaPushPointer(L, NULL);
-	return 1;
+		luaReturnPtr(NULL);
 }
+
 //entity_setProperty(me, EP_SOLID, true)
-int l_entity_isProperty(lua_State *L)
+luaFunc(entity_isProperty)
 {
 	Entity *e = entity(L);
 	bool v = false;
@@ -6543,23 +5648,21 @@ int l_entity_isProperty(lua_State *L)
 		v = e->isEntityProperty((EntityProperty)int(lua_tonumber(L, 2)));
 		//e->setEntityProperty((EntityProperty)lua_tointeger(L, 2), getBool(L, 3));
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
 //entity_setProperty(me, EP_SOLID, true)
-int l_entity_setProperty(lua_State *L)
+luaFunc(entity_setProperty)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->setEntityProperty((EntityProperty)lua_tointeger(L, 2), getBool(L, 3));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setActivation(lua_State* L)
+luaFunc(entity_setActivation)
 {
 	ScriptedEntity *e = scriptedEntity(L);
 	//if (!e) return;
@@ -6571,11 +5674,10 @@ int l_entity_setActivation(lua_State* L)
 	e->activationRange = range;
 	e->convoRadius = convoRadius;
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_say(lua_State *L)
+luaFunc(entity_say)
 {
 	Entity *e = entity(L);
 	int n = lua_tonumber(L, 3);
@@ -6583,11 +5685,10 @@ int l_entity_say(lua_State *L)
 	{
 		e->say(getString(L, 2), (SayType)n);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_isSaying(lua_State *L)
+luaFunc(entity_isSaying)
 {
 	Entity *e = entity(L);
 	bool b=false;
@@ -6595,51 +5696,46 @@ int l_entity_isSaying(lua_State *L)
 	{
 		b = e->isSaying();
 	}
-	lua_pushboolean(L, b);
-	return 1;
+	luaReturnBool(b);
 }
 
-int l_entity_setSayPosition(lua_State *L)
+luaFunc(entity_setSayPosition)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->sayPosition = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setOverrideCullRadius(lua_State *L)
+luaFunc(entity_setCullRadius)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->setOverrideCullRadius(lua_tonumber(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setActivationType(lua_State* L)
+luaFunc(entity_setActivationType)
 {
 	Entity *e = entity(L);//si->getCurrentEntity();
 	int type = lua_tonumber(L, 2);
 	e->activationType = (Entity::ActivationType)type;
 
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_hasTarget(lua_State* L)
+luaFunc(entity_hasTarget)
 {
 	Entity *e = entity(L);
 	if (e)
-		lua_pushboolean(L, e->hasTarget(e->currentEntityTarget));
+		luaReturnBool(e->hasTarget(e->currentEntityTarget));
 	else
-		lua_pushboolean(L, false);
-	return 1;
+		luaReturnBool(false);
 }
 
-int l_entity_hurtTarget(lua_State* L)
+luaFunc(entity_hurtTarget)
 {
 	Entity *e = entity(L);
 	if (e && e->getTargetEntity())
@@ -6653,12 +5749,11 @@ int l_entity_hurtTarget(lua_State* L)
 	if (e && e->getTargetEntity())
 		e->getTargetEntity(e->currentEntityTarget)->damage(lua_tointeger(L, 2), 0, e);
 	*/
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
 // radius dmg speed pushtime
-int l_entity_touchAvatarDamage(lua_State *L)
+luaFunc(entity_touchAvatarDamage)
 {
 	Entity *e = entity(L);
 	bool v = false;
@@ -6666,25 +5761,10 @@ int l_entity_touchAvatarDamage(lua_State *L)
 	{
 		v = e->touchAvatarDamage(lua_tonumber(L, 2), lua_tonumber(L, 3), Vector(-1,-1,-1), lua_tonumber(L, 4), lua_tonumber(L, 5), Vector(lua_tonumber(L, 6), lua_tonumber(L, 7)));
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-/*
-int l_entity_touchAvatarDamageRect(lua_State *L)
-{
-	Entity *e = entity(L);
-	bool v = false;
-	if (e)
-	{
-		v = e->touchAvatarDamageRect(lua_tonumber(L, 2), 
-	}
-	lua_pushboolean(L, v);
-	return 1;
-}
-*/
-
-int l_entity_getDistanceToEntity(lua_State *L)
+luaFunc(entity_getDistanceToEntity)
 {
 	Entity *e = entity(L);
 	Entity *e2 = entity(L, 2);
@@ -6694,59 +5774,51 @@ int l_entity_getDistanceToEntity(lua_State *L)
 		Vector diff = e->position - e2->position;
 		d = diff.getLength2D();
 	}
-	lua_pushnumber(L, d);
-	return 1;
+	luaReturnNum(d);
 }
 
 // entity_istargetInRange
-int l_entity_isTargetInRange(lua_State* L)
+luaFunc(entity_isTargetInRange)
 {
 	Entity *e = entity(L);
 	if (e)
-		lua_pushboolean(L, e->isTargetInRange(lua_tointeger(L, 2), e->currentEntityTarget));
+		luaReturnBool(e->isTargetInRange(lua_tointeger(L, 2), e->currentEntityTarget));
 	else
-		lua_pushboolean(L, false);
-	return 1;
+		luaReturnBool(false);
 }
 
-int l_randAngle360(lua_State *L)
+luaFunc(randAngle360)
 {
-	lua_pushnumber(L, randAngle360());
-	return 1;
+	luaReturnNum(randAngle360());
 }
 
-int l_randVector(lua_State *L)
+luaFunc(randVector)
 {
 	float num = lua_tonumber(L, 1);
 	if (num == 0)
 		num = 1;
 	Vector v = randVector(num);
-	lua_pushnumber(L, v.x);
-	lua_pushnumber(L, v.y);
-	return 2;
+	luaReturnVec2(v.x, v.y);
 }
 
-int l_getNaija(lua_State *L)
+luaFunc(getNaija)
 {
-	luaPushPointer(L, dsq->game->avatar);
-	return 1;
+	luaReturnPtr(dsq->game->avatar);
 }
 
-int l_getLi(lua_State *L)
+luaFunc(getLi)
 {
-	luaPushPointer(L, dsq->game->li);
-	return 1;
+	luaReturnPtr(dsq->game->li);
 }
 
-int l_setLi(lua_State *L)
+luaFunc(setLi)
 {
 	dsq->game->li = entity(L);
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_isPositionInRange(lua_State *L)
+luaFunc(entity_isPositionInRange)
 {
 	Entity *e = entity(L);
 	bool v = false;
@@ -6760,11 +5832,10 @@ int l_entity_isPositionInRange(lua_State *L)
 			v = true;
 		}
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_isEntityInRange(lua_State* L)
+luaFunc(entity_isEntityInRange)
 {
 	Entity *e1 = entity(L);
 	Entity *e2 = entity(L, 2);
@@ -6774,12 +5845,11 @@ int l_entity_isEntityInRange(lua_State* L)
 		//v = ((e2->position - e1->position).getSquaredLength2D() < sqr(lua_tonumber(L, 3)));
 		v = (e2->position - e1->position).isLength2DIn(lua_tonumber(L, 3));
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
 //entity_moveTowardsTarget(spd, dt)
-int l_entity_moveTowardsTarget(lua_State* L)
+luaFunc(entity_moveTowardsTarget)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -6787,22 +5857,20 @@ int l_entity_moveTowardsTarget(lua_State* L)
 		e->moveTowardsTarget(lua_tonumber(L, 2), lua_tonumber(L, 3), e->currentEntityTarget);
 	}
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_moveTowardsGroupCenter(lua_State *L)
+luaFunc(entity_moveTowardsGroupCenter)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->moveTowardsGroupCenter(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_avgVel(lua_State *L)
+luaFunc(entity_avgVel)
 {
 	Entity *e = entity(L);
 	float div = lua_tonumber(L, 2);
@@ -6810,11 +5878,10 @@ int l_entity_avgVel(lua_State *L)
 	{
 		e->vel /= div;
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setVelLen(lua_State *L)
+luaFunc(entity_setVelLen)
 {
 	Entity *e = entity(L);
 	int len = lua_tonumber(L, 2);
@@ -6822,33 +5889,30 @@ int l_entity_setVelLen(lua_State *L)
 	{
 		e->vel.setLength2D(len);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_moveTowardsGroupHeading(lua_State *L)
+luaFunc(entity_moveTowardsGroupHeading)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->moveTowardsGroupHeading(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 // entity dt speed dir
-int l_entity_moveAroundTarget(lua_State* L)
+luaFunc(entity_moveAroundTarget)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->moveAroundTarget(lua_tonumber(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4), e->currentEntityTarget);
 	// do stuff
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_rotateToTarget(lua_State* L)
+luaFunc(entity_rotateToTarget)
 {
 	Entity *e = entity(L);
 	if (e)
@@ -6860,8 +5924,7 @@ int l_entity_rotateToTarget(lua_State* L)
 			e->rotateToVec(v, lua_tonumber(L, 2), lua_tointeger(L, 3));
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 /*
@@ -6870,7 +5933,7 @@ partOffsetInterpolateTo, partOffsetInterpolateTime
 
 */
 
-int l_entity_partWidthHeight(lua_State* L)
+luaFunc(entity_partWidthHeight)
 {
 	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
 	Quad *r = (Quad*)e->partMap[lua_tostring(L, 2)];
@@ -6880,11 +5943,10 @@ int l_entity_partWidthHeight(lua_State* L)
 		int h = lua_tointeger(L, 4);
 		r->setWidthHeight(w, h);
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_partSetSegs(lua_State *L)
+luaFunc(entity_partSetSegs)
 {
 	ScriptedEntity *e = scriptedEntity(L);
 	Quad *r = (Quad*)e->partMap[lua_tostring(L, 2)];
@@ -6892,19 +5954,17 @@ int l_entity_partSetSegs(lua_State *L)
 	{
 		r->setSegs(lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), lua_tonumber(L, 9), lua_tointeger(L, 10));
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_getEntityInGroup(lua_State *L)
+luaFunc(getEntityInGroup)
 {
 	int gid = lua_tonumber(L, 1);
 	int iter = lua_tonumber(L, 2);
-	luaPushPointer(L, dsq->game->getEntityInGroup(gid, iter));
-	return 1;
+	luaReturnPtr(dsq->game->getEntityInGroup(gid, iter));
 }
 
-int l_entity_getGroupID(lua_State *L)
+luaFunc(entity_getGroupID)
 {
 	Entity *e = entity(L);
 	int id = 0;
@@ -6912,11 +5972,10 @@ int l_entity_getGroupID(lua_State *L)
 	{
 		id = e->getGroupID();
 	}
-	lua_pushnumber(L, id);
-	return 1;
+	luaReturnNum(id);
 }
 
-int l_entity_getID(lua_State *L)
+luaFunc(entity_getID)
 {
 	Entity *e = entity(L);
 	int id = 0;
@@ -6927,11 +5986,10 @@ int l_entity_getID(lua_State *L)
 		os << "id: " << id;
 		debugLog(os.str());
 	}
-	lua_pushnumber(L, id);
-	return 1;
+	luaReturnNum(id);
 }
 
-int l_getEntityByID(lua_State *L)
+luaFunc(getEntityByID)
 {
 	debugLog("Calling getEntityByID");
 	int v = lua_tointeger(L, 1);
@@ -6967,29 +6025,17 @@ int l_getEntityByID(lua_State *L)
 	{
 		debugLog("entity ID was 0");
 	}
-	luaPushPointer(L, found);
-	return 1;
+	luaReturnPtr(found);
 }
 
-/*
-int l_node_toggleElements(lua_State *L)
-{
-	// disable the elements found within
-	errorLog("node_disableElements not yet written");
-	lua_pushnumber(L, 0);
-	return 1;
-}
-*/
-
-int l_node_setEffectOn(lua_State *L)
+luaFunc(node_setEffectOn)
 {
 	Path *p = path(L, 1);
 	p->setEffectOn(getBool(L, 2));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_node_activate(lua_State *L)
+luaFunc(node_activate)
 {
 	Path *p = path(L);
 	Entity *e = 0;
@@ -6999,11 +6045,10 @@ int l_node_activate(lua_State *L)
 	{
 		p->activate(e);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_node_setElementsInLayerActive(lua_State *L)
+luaFunc(node_setElementsInLayerActive)
 {
 	Path *p = path(L);
 	int l = lua_tonumber(L, 2);
@@ -7017,11 +6062,10 @@ int l_node_setElementsInLayerActive(lua_State *L)
 			e->setElementActive(v);
 		}
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_node_getNumEntitiesIn(lua_State *L)
+luaFunc(node_getNumEntitiesIn)
 {
 	Path *p = path(L);
 	std::string name;
@@ -7053,11 +6097,10 @@ int l_node_getNumEntitiesIn(lua_State *L)
 	debugLog(os.str());
 	*/
 
-	lua_pushnumber(L, c);
-	return 1;
+	luaReturnNum(c);
 }
 
-int l_node_getNearestEntity(lua_State *L)
+luaFunc(node_getNearestEntity)
 {
 	//Entity *me = entity(L);
 	Path *p = path(L);
@@ -7089,11 +6132,10 @@ int l_node_getNearestEntity(lua_State *L)
 			}
 		}
 	}
-	luaPushPointer(L, closest);
-	return 1;
+	luaReturnPtr(closest);
 }
 
-int l_node_getNearestNode(lua_State *L)
+luaFunc(node_getNearestNode)
 {
 	//Entity *me = entity(L);
 	Path *p = path(L);
@@ -7120,11 +6162,10 @@ int l_node_getNearestNode(lua_State *L)
 			}
 		}
 	}
-	luaPushPointer(L, closest);
-	return 1;
+	luaReturnPtr(closest);
 }
 
-int l_entity_getNearestBoneToPosition(lua_State *L)
+luaFunc(entity_getNearestBoneToPosition)
 {
 	Entity *me = entity(L);
 	Vector p(lua_tonumber(L, 2), lua_tonumber(L, 3));
@@ -7143,11 +6184,10 @@ int l_entity_getNearestBoneToPosition(lua_State *L)
 			}
 		}
 	}
-	luaPushPointer(L, closest);
-	return 1;
+	luaReturnPtr(closest);
 }
 
-int l_entity_getNearestNode(lua_State *L)
+luaFunc(entity_getNearestNode)
 {
 	Entity *me = entity(L);
 	std::string name;
@@ -7176,19 +6216,17 @@ int l_entity_getNearestNode(lua_State *L)
 			}
 		}
 	}
-	luaPushPointer(L, closest);
-	return 1;
+	luaReturnPtr(closest);
 }
 
-int l_ing_hasIET(lua_State *L)
+luaFunc(ing_hasIET)
 {
 	Ingredient *i = getIng(L, 1);
 	bool has = i->hasIET((IngredientEffectType)lua_tointeger(L, 2));
-	lua_pushboolean(L, has);
-	return 1;
+	luaReturnBool(has);
 }
 
-int l_entity_getNearestEntity(lua_State *L)
+luaFunc(entity_getNearestEntity)
 {
 	Entity *me = entity(L);
 	std::string name;
@@ -7236,17 +6274,16 @@ int l_entity_getNearestEntity(lua_State *L)
 			}
 		}
 	}
-	luaPushPointer(L, closest);
-	return 1;
+	luaReturnPtr(closest);
 }
 
-int l_findWall(lua_State *L)
+luaFunc(findWall)
 {
 	int x = lua_tonumber(L, 1);
 	int y = lua_tonumber(L, 2);
 	int dirx = lua_tonumber(L, 3);
 	int diry = lua_tonumber(L, 4);
-	if (dirx == 0 && diry == 0){ debugLog("dirx && diry are zero!"); lua_pushnumber(L, 0); return 1; }
+	if (dirx == 0 && diry == 0){ debugLog("dirx && diry are zero!"); luaReturnNum(0); }
 
 	TileVector t(Vector(x, y));
 	while (!dsq->game->isObstructed(t))
@@ -7258,32 +6295,37 @@ int l_findWall(lua_State *L)
 	int wall = 0;
 	if (diry != 0)		wall = v.y;
 	if (dirx != 0)		wall = v.x;
-	lua_pushnumber(L, wall);
-	return 1;
+	luaReturnNum(wall);
 }
 
-int l_toggleVersionLabel(lua_State *L)
+luaFunc(toggleVersionLabel)
 {
 	bool on = getBool(L, 1);
 
 	dsq->toggleVersionLabel(on);
 
-	lua_pushboolean(L, on);
-	return 1;
+	luaReturnBool(on);
 }
 
-luaf(setVersionLabelText)
+luaFunc(setVersionLabelText)
+{
 	dsq->setVersionLabelText();
-luap(NULL)
+	luaReturnPtr(NULL);
+}
 
-luaf(setCutscene)
+luaFunc(setCutscene)
+{
 	dsq->setCutscene(getBool(L, 1), getBool(L, 2));
-luap(NULL)
+	luaReturnPtr(NULL);
+}
 
-luaf(isInCutscene)
-luab(dsq->isInCutscene())
+luaFunc(isInCutscene)
+{
+	luaReturnBool(dsq->isInCutscene());
+}
 
-luaf(toggleSteam)
+luaFunc(toggleSteam)
+{
 	bool on = getBool(L, 1);
 	for (int i = 0; i < dsq->game->paths.size(); i++)
 	{
@@ -7293,16 +6335,22 @@ luaf(toggleSteam)
 			p->setEffectOn(on);
 		}
 	}
-luab(on)
+	luaReturnBool(on);
+}
 
-luaf(getFirstEntity)
-luap(dsq->getFirstEntity())
+luaFunc(getFirstEntity)
+{
+	luaReturnPtr(dsq->getFirstEntity());
+}
 
-luaf(getNextEntity)
-luap(dsq->getNextEntity())
+luaFunc(getNextEntity)
+{
+	luaReturnPtr(dsq->getNextEntity());
+}
 
-luaf(getEntity)
-	Entity *ent =0;
+luaFunc(getEntity)
+{
+	Entity *ent = 0;
 	// THIS WAS IMPORTANT: this was for getting entity by NUMBER IN LIST used for looping through all entities in script
 	if (lua_isnumber(L, 1))
 	{
@@ -7314,7 +6362,8 @@ luaf(getEntity)
 		std::string s = lua_tostring(L, 1);
 		ent = dsq->getEntityByName(s);
 	}
-luap(ent)
+	luaReturnPtr(ent);
+}
 
 int _alpha(lua_State *L, RenderObject *r)
 {
@@ -7323,21 +6372,20 @@ int _alpha(lua_State *L, RenderObject *r)
 		r->alpha.stop();
 		r->alpha.interpolateTo(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_bone_alpha(lua_State *L)
+luaFunc(bone_alpha)
 {
 	return _alpha(L, boneToRenderObject(L));
 }
 
-int l_entity_alpha(lua_State *L)
+luaFunc(entity_alpha)
 {
 	return _alpha(L, entityToRenderObject(L));
 }
 
-int l_entity_partAlpha(lua_State* L)
+luaFunc(entity_partAlpha)
 {
 	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
 	RenderObject *r = e->partMap[lua_tostring(L, 2)];
@@ -7350,19 +6398,17 @@ int l_entity_partAlpha(lua_State* L)
 		r->alpha.interpolateTo(lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tointeger(L, 6), lua_tointeger(L, 7), lua_tointeger(L, 8));
 	}
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_partBlendType(lua_State *L)
+luaFunc(entity_partBlendType)
 {
 	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
 	e->partMap[lua_tostring(L, 2)]->setBlendType(lua_tointeger(L, 3));
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_partRotate(lua_State* L)
+luaFunc(entity_partRotate)
 {
 	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
 	RenderObject *r = e->partMap[lua_tostring(L, 2)];
@@ -7371,31 +6417,28 @@ int l_entity_partRotate(lua_State* L)
 		r->rotation.interpolateTo(Vector(0,0,lua_tointeger(L, 3)), lua_tonumber(L, 4), lua_tointeger(L, 5), lua_tointeger(L, 6), lua_tointeger(L, 7));
 	}
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_getStateTime(lua_State* L)
+luaFunc(entity_getStateTime)
 {
 	Entity *e = entity(L);//si->getCurrentEntity();
 	float t = 0;
 	if (e)
 		t = e->getStateTime();
-	lua_pushnumber(L, t);
-	return 1;
+	luaReturnNum(t);
 }
 
-int l_entity_setStateTime(lua_State* L)
+luaFunc(entity_setStateTime)
 {
 	Entity *e = entity(L);//si->getCurrentEntity();
 	float t = lua_tonumber(L, 2);
 	if (e)
 		e->setStateTime(t);
-	lua_pushnumber(L, e->getStateTime());
-	return 1;
+	luaReturnNum(e->getStateTime());
 }
 
-int l_entity_offsetUpdate(lua_State* L)
+luaFunc(entity_offsetUpdate)
 {
 	Entity *e = entity(L);//si->getCurrentEntity();
 	if (e)
@@ -7406,21 +6449,19 @@ int l_entity_offsetUpdate(lua_State* L)
 		e->update(t);
 		e->updateCull = uc;
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_scale(lua_State* L)
+luaFunc(entity_scale)
 {
 	Entity *e = entity(L);
 	float time = lua_tonumber(L, 4);
 	//e->scale = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	e->scale.interpolateTo(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3), 0), time, lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_switchLayer(lua_State *L)
+luaFunc(entity_switchLayer)
 {
 	Entity *e = entity(L);
 	int lcode = lua_tonumber(L, 2);
@@ -7432,10 +6473,10 @@ int l_entity_switchLayer(lua_State *L)
 		toLayer = LR_ENTITIES;
 
 	core->switchRenderObjectLayer(e, toLayer);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_isScaling(lua_State *L)
+luaFunc(entity_isScaling)
 {
 	Entity *e = entity(L);
 	bool v = false;
@@ -7443,39 +6484,30 @@ int l_entity_isScaling(lua_State *L)
 	{
 		v = e->scale.isInterpolating();
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_getScale(lua_State *L)
+luaFunc(entity_getScale)
 {
 	Entity *e = entity(L);
 	if (e)
-	{
-		lua_pushnumber(L, e->scale.x);
-		lua_pushnumber(L, e->scale.y);
-	}
+		luaReturnVec2(e->scale.x, e->scale.y);
 	else
-	{
-		lua_pushnumber(L, 0);
-		lua_pushnumber(L, 0);
-	}
-	return 2;
+		luaReturnVec2(0, 0);
 }
 
 // entity numSegments segmentLength width texture
-int l_entity_initHair(lua_State *L)
+luaFunc(entity_initHair)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	if (se)
 	{
 		se->initHair(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tostring(L, 5));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_getHairPosition(lua_State *L)
+luaFunc(entity_getHairPosition)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	float x=0;
@@ -7490,47 +6522,42 @@ int l_entity_getHairPosition(lua_State *L)
 			y = h->position.y;
 		}
 	}
-	lua_pushnumber(L, x);
-	lua_pushnumber(L, y);
-	return 2;
+	luaReturnVec2(x, y);
 }
 
-int l_entity_setUpdateCull(lua_State *L)
+luaFunc(entity_setUpdateCull)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->updateCull = lua_tonumber(L, 2);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 // entity x y z
-int l_entity_setHairHeadPosition(lua_State *L)
+luaFunc(entity_setHairHeadPosition)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	if (se)
 	{
 		se->setHairHeadPosition(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_updateHair(lua_State *L)
+luaFunc(entity_updateHair)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	if (se)
 	{
 		se->updateHair(lua_tonumber(L, 2));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
 // entity x y dt
-int l_entity_exertHairForce(lua_State *L)
+luaFunc(entity_exertHairForce)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	if (se)
@@ -7538,11 +6565,10 @@ int l_entity_exertHairForce(lua_State *L)
 		if (se->hair)
 			se->hair->exertForce(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_initPart(lua_State* L)
+luaFunc(entity_initPart)
 {
 	std::string partName(lua_tostring(L, 2));
 	std::string partTex(lua_tostring(L, 3));
@@ -7572,41 +6598,37 @@ int l_entity_initPart(lua_State* L)
 	e->addChild(q, PM_POINTER);
 	e->registerNewPart(q, partName);
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_findTarget(lua_State* L)
+luaFunc(entity_findTarget)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->findTarget(lua_tointeger(L, 2), lua_tointeger(L, 3), e->currentEntityTarget);
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_doFriction(lua_State* L)
+luaFunc(entity_doFriction)
 {
 	Entity *e = entity(L);
 	if (e)
 	{
 		e->doFriction(lua_tonumber(L, 2), lua_tointeger(L, 3));
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_doGlint(lua_State* L)
+luaFunc(entity_doGlint)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->doGlint(e->position, Vector(2,2), getString(L,2), (RenderObject::BlendTypes)lua_tointeger(L, 3));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_getPosition(lua_State* L)
+luaFunc(entity_getPosition)
 {
 	Entity *e = entity(L);
 	float x=0,y=0;
@@ -7615,12 +6637,10 @@ int l_entity_getPosition(lua_State* L)
 		x = e->position.x;
 		y = e->position.y;
 	}
-	lua_pushnumber(L, x);
-	lua_pushnumber(L, y);
-	return 2;
+	luaReturnVec2(x, y);
 }
 
-int l_entity_getOffset(lua_State* L)
+luaFunc(entity_getOffset)
 {
 	Entity *e = entity(L);
 	float x=0,y=0;
@@ -7629,34 +6649,30 @@ int l_entity_getOffset(lua_State* L)
 		x = e->offset.x;
 		y = e->offset.y;
 	}
-	lua_pushnumber(L, x);
-	lua_pushnumber(L, y);
-	return 2;
+	luaReturnVec2(x, y);
 }
 
 
 
-int l_entity_getPositionX(lua_State* L)
+luaFunc(entity_getPositionX)
 {
 	Entity *e = entity(L);
 	int x = 0;
 	if (e)
 		x = int(e->position.x);
-	lua_pushinteger(L, x);
-	return 1;
+	luaReturnInt(x);
 }
 
-int l_entity_getPositionY(lua_State* L)
+luaFunc(entity_getPositionY)
 {
 	Entity *e = entity(L);
 	int y = 0;
 	if (e)
 		y = int(e->position.y);
-	lua_pushinteger(L, y);
-	return 1;
+	luaReturnInt(y);
 }
 
-int l_entity_getTarget(lua_State *L)
+luaFunc(entity_getTarget)
 {
 	Entity *e = entity(L);
 	Entity *retEnt = NULL;
@@ -7665,23 +6681,20 @@ int l_entity_getTarget(lua_State *L)
 		retEnt = e->getTargetEntity(lua_tonumber(L, 2));
 		//e->activate();
 	}
-	luaPushPointer(L, retEnt);
-	return 1;
+	luaReturnPtr(retEnt);
 }
 
-int l_entity_getTargetPositionX(lua_State* L)
+luaFunc(entity_getTargetPositionX)
 {
-	lua_pushinteger(L, int(entity(L)->getTargetEntity()->position.x));
-	return 1;
+	luaReturnInt(int(entity(L)->getTargetEntity()->position.x));
 }
 
-int l_entity_getTargetPositionY(lua_State* L)
+luaFunc(entity_getTargetPositionY)
 {
-	lua_pushinteger(L, int(entity(L)->getTargetEntity()->position.y));
-	return 1;
+	luaReturnInt(int(entity(L)->getTargetEntity()->position.y));
 }
 
-int l_entity_isNearObstruction(lua_State *L)
+luaFunc(entity_isNearObstruction)
 {
 	Entity *e = entity(L);
 	int sz = lua_tonumber(L, 2);
@@ -7691,11 +6704,10 @@ int l_entity_isNearObstruction(lua_State *L)
 	{
 		v = e->isNearObstruction(sz, type);
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_isInvincible(lua_State *L)
+luaFunc(entity_isInvincible)
 {
 	Entity *e = entity(L);
 	bool v = false;
@@ -7703,11 +6715,10 @@ int l_entity_isInvincible(lua_State *L)
 	{
 		v = e->isInvincible();
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_isInterpolating(lua_State *L)
+luaFunc(entity_isInterpolating)
 {
 	Entity *e = entity(L);
 	bool v = false;
@@ -7715,11 +6726,10 @@ int l_entity_isInterpolating(lua_State *L)
 	{
 		v = e->position.isInterpolating();
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_isRotating(lua_State *L)
+luaFunc(entity_isRotating)
 {
 	Entity *e = entity(L);
 	bool v = false;
@@ -7727,12 +6737,11 @@ int l_entity_isRotating(lua_State *L)
 	{
 		v = e->rotation.isInterpolating();
 	}
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
 
-int l_entity_interpolateTo(lua_State *L)
+luaFunc(entity_interpolateTo)
 {
 	Entity *e = entity(L);
 	int x = lua_tonumber(L, 2);
@@ -7742,54 +6751,48 @@ int l_entity_interpolateTo(lua_State *L)
 	{
 		e->position.interpolateTo(Vector(x, y), t);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_entity_setEatType(lua_State* L)
+luaFunc(entity_setEatType)
 {
 	Entity *e = entity(L);
 	int et = lua_tointeger(L, 2);
 	if (e)
 		e->setEatType((EatType)et, getString(L, 3));
-	lua_pushinteger(L, et);
-	return 1;
+	luaReturnInt(et);
 }
 
-int l_entity_setPositionX(lua_State* L)
+luaFunc(entity_setPositionX)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->position.x = lua_tointeger(L, 2);
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_setPositionY(lua_State* L)
+luaFunc(entity_setPositionY)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->position.y = lua_tointeger(L, 2);
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_rotateTo(lua_State* L)
+luaFunc(entity_rotateTo)
 {
 	Entity *e = entity(L);
 	if (e)
 		e->rotation.interpolateTo(Vector(0,0,lua_tointeger(L, 2)), lua_tonumber(L, 3));
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_getMapName(lua_State *L)
+luaFunc(getMapName)
 {
-	lua_pushstring(L, dsq->game->sceneName.c_str());
-	return 1;
+	luaReturnStr(dsq->game->sceneName.c_str());
 }
 
-int l_isMapName(lua_State *L)
+luaFunc(isMapName)
 {
 	std::string s1 = dsq->game->sceneName;
 	std::string s2 = getString(L, 1);
@@ -7797,20 +6800,18 @@ int l_isMapName(lua_State *L)
 	stringToUpper(s2);
 	bool ret = (s1 == s2);
 
-	lua_pushboolean(L, ret);
-	return 1;
+	luaReturnBool(ret);
 }
 
-int l_mapNameContains(lua_State *L)
+luaFunc(mapNameContains)
 {
 	std::string s = dsq->game->sceneName;
 	stringToLower(s);
 	bool b = (s.find(getString(L, 1)) != std::string::npos);
-	lua_pushboolean(L, b);
-	return 1;
+	luaReturnBool(b);
 }
 
-int l_entity_fireGas(lua_State* L)
+luaFunc(entity_fireGas)
 {
 	Entity *e = entity(L);//si->getCurrentEntity();
 	if (e)
@@ -7829,31 +6830,27 @@ int l_entity_fireGas(lua_State* L)
 		GasCloud *c = new GasCloud(e, e->position + Vector(offx, offy), gfx, Vector(colorx, colory, colorz), radius, life, damage, false, poisonTime);
 		core->getTopStateData()->addRenderObject(c, LR_PARTICLES);
 	}
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_isInputEnabled(lua_State *L)
+luaFunc(isInputEnabled)
 {
-	lua_pushboolean(L, dsq->game->avatar->isInputEnabled());
-	return 1;
+	luaReturnBool(dsq->game->avatar->isInputEnabled());
 }
 
-int l_enableInput(lua_State* L)
+luaFunc(enableInput)
 {
 	dsq->game->avatar->enableInput();
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_disableInput(lua_State* L)
+luaFunc(disableInput)
 {
 	dsq->game->avatar->disableInput();
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_quit(lua_State *L)
+luaFunc(quit)
 {
 #ifdef AQUARIA_DEMO
 	dsq->nag(NAG_QUIT);
@@ -7861,32 +6858,28 @@ int l_quit(lua_State *L)
 	dsq->quit();
 #endif
 
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_doModSelect(lua_State *L)
+luaFunc(doModSelect)
 {
 	dsq->doModSelect();
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_doLoadMenu(lua_State *L)
+luaFunc(doLoadMenu)
 {
 	dsq->doLoadMenu();
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_resetContinuity(lua_State *L)
+luaFunc(resetContinuity)
 {
 	dsq->continuity.reset();
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_toWindowFromWorld(lua_State *L)
+luaFunc(toWindowFromWorld)
 {
 	float x = lua_tonumber(L, 1);
 	float y = lua_tonumber(L, 2);
@@ -7896,72 +6889,60 @@ int l_toWindowFromWorld(lua_State *L)
 	y *= core->globalScale.x;
 	x = 400+x;
 	y = 300+y;
-	lua_pushnumber(L, x);
-	lua_pushnumber(L, y);
-	return 2;
+	luaReturnVec2(x, y);
 }
 
-int l_setMousePos(lua_State *L)
+luaFunc(setMousePos)
 {
 	core->setMousePosition(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_getMousePos(lua_State *L)
+luaFunc(getMousePos)
 {
-	lua_pushnumber(L, core->mouse.position.x);
-	lua_pushnumber(L, core->mouse.position.y);
-	return 2;
+	luaReturnVec2(core->mouse.position.x, core->mouse.position.y);
 }
 
-int l_getMouseWorldPos(lua_State *L)
+luaFunc(getMouseWorldPos)
 {
 	Vector v = dsq->getGameCursorPosition();
-	lua_pushnumber(L, v.x);
-	lua_pushnumber(L, v.y);
-	return 2;
+	luaReturnVec2(v.x, v.y);
 }
 
-int l_fade(lua_State* L)
+luaFunc(fade)
 {
 	dsq->overlay->color = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
 	dsq->overlay->alpha.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_fade2(lua_State* L)
+luaFunc(fade2)
 {
 	dsq->overlay2->color = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
 	dsq->overlay2->alpha.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_fade3(lua_State* L)
+luaFunc(fade3)
 {
 	dsq->overlay3->color = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
 	dsq->overlay3->alpha.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_vision(lua_State *L)
+luaFunc(vision)
 {
 	dsq->vision(lua_tostring(L, 1), lua_tonumber(L, 2), getBool(L, 3));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_musicVolume(lua_State *L)
+luaFunc(musicVolume)
 {
 	dsq->sound->setMusicFader(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_voice(lua_State *L)
+luaFunc(voice)
 {
 	float vmod = lua_tonumber(L, 2);
 	if (vmod == 0)
@@ -7969,77 +6950,67 @@ int l_voice(lua_State *L)
 	else if (vmod == -1)
 		vmod = 0;
 	dsq->voice(lua_tostring(L, 1), vmod);
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_voiceOnce(lua_State *L)
+luaFunc(voiceOnce)
 {
 	dsq->voiceOnce(lua_tostring(L, 1));
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_voiceInterupt(lua_State *L)
+luaFunc(voiceInterupt)
 {
 	dsq->voiceInterupt(lua_tostring(L, 1));
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_stopVoice(lua_State *L)
+luaFunc(stopVoice)
 {
 	dsq->stopVoice();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_stopAllSfx(lua_State *L)
+luaFunc(stopAllSfx)
 {
 	dsq->sound->stopAllSfx();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_stopAllVoice(lua_State *L)
+luaFunc(stopAllVoice)
 {
 	dsq->sound->stopAllVoice();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_fadeIn(lua_State *L)
+luaFunc(fadeIn)
 {
 	dsq->overlay->alpha.interpolateTo(0, lua_tonumber(L, 1));
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_fadeOut(lua_State *L)
+luaFunc(fadeOut)
 {
 	dsq->overlay->color = 0;
 	dsq->overlay->alpha.interpolateTo(1, lua_tonumber(L, 1));
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_entity_setWeight(lua_State *L)
+luaFunc(entity_setWeight)
 {
 	CollideEntity *e = collideEntity(L);
 	if (e)
 		e->weight = lua_tointeger(L, 2);
-	lua_pushinteger(L, 0);
-	return 1;
+	luaReturnInt(0);
 }
 
-int l_pickupGem(lua_State *L)
+luaFunc(pickupGem)
 {
 	dsq->continuity.pickupGem(getString(L), !getBool(L, 2));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_beaconEffect(lua_State *L)
+luaFunc(beaconEffect)
 {
 	int index = lua_tointeger(L, 1);
 
@@ -8053,11 +7024,10 @@ int l_beaconEffect(lua_State *L)
 
 	dsq->sound->playSfx("ping");
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setBeacon(lua_State *L)
+luaFunc(setBeacon)
 {
 	int index = lua_tointeger(L, 1);
 
@@ -8074,11 +7044,10 @@ int l_setBeacon(lua_State *L)
 
 	dsq->continuity.setBeacon(index, v, pos, color);
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_getBeacon(lua_State *L)
+luaFunc(getBeacon)
 {
 	int index = lua_tointeger(L, 1);
 	bool v = false;
@@ -8088,48 +7057,42 @@ int l_getBeacon(lua_State *L)
 		v = true;
 	}
 
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
 // particle effect
 
-int l_getCostume(lua_State *L)
+luaFunc(getCostume)
 {
-	lua_pushstring(L, dsq->continuity.costume.c_str());
-	return 1;
+	luaReturnStr(dsq->continuity.costume.c_str());
 }
 
-int l_setCostume(lua_State *L)
+luaFunc(setCostume)
 {
 	dsq->continuity.setCostume(getString(L));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setElementLayerVisible(lua_State *L)
+luaFunc(setElementLayerVisible)
 {
 	int l = lua_tonumber(L, 1);
 	bool v = getBool(L, 2);
 	dsq->game->setElementLayerVisible(l, v);
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_isElementLayerVisible(lua_State *L)
+luaFunc(isElementLayerVisible)
 {
-	lua_pushboolean(L, dsq->game->isElementLayerVisible(lua_tonumber(L, 1)));
-	return 1;
+	luaReturnBool(dsq->game->isElementLayerVisible(lua_tonumber(L, 1)));
 }
 
-int l_isStreamingVoice(lua_State *L)
+luaFunc(isStreamingVoice)
 {
 	bool v = dsq->sound->isPlayingVoice();
-	lua_pushboolean(L, v);
-	return 1;
+	luaReturnBool(v);
 }
 
-int l_entity_getAlpha(lua_State *L)
+luaFunc(entity_getAlpha)
 {
 	Entity *e = entity(L);
 	float a = 0;
@@ -8137,19 +7100,17 @@ int l_entity_getAlpha(lua_State *L)
 	{
 		a = e->alpha.x;
 	}
-	lua_pushnumber(L, a);
-	return 1;
+	luaReturnNum(a);
 }
 
-int l_isObstructed(lua_State *L)
+luaFunc(isObstructed)
 {
 	int x = lua_tonumber(L, 1);
 	int y = lua_tonumber(L, 2);
-	lua_pushboolean(L, dsq->game->isObstructed(TileVector(Vector(x,y))));
-	return 1;
+	luaReturnBool(dsq->game->isObstructed(TileVector(Vector(x,y))));
 }
 
-int l_isObstructedBlock(lua_State *L)
+luaFunc(isObstructedBlock)
 {
 	int x = lua_tonumber(L, 1);
 	int y = lua_tonumber(L, 2);
@@ -8168,11 +7129,10 @@ int l_isObstructedBlock(lua_State *L)
 			}
 		}
 	}
-	lua_pushboolean(L, obs);
-	return 1;
+	luaReturnBool(obs);
 }
 
-int l_node_getFlag(lua_State *L)
+luaFunc(node_getFlag)
 {
 	Path *p = path(L);
 	int v = 0;
@@ -8180,11 +7140,10 @@ int l_node_getFlag(lua_State *L)
 	{
 		v = dsq->continuity.getPathFlag(p);
 	}
-	lua_pushnumber(L, v);
-	return 1;
+	luaReturnNum(v);
 }
 
-int l_node_isFlag(lua_State *L)
+luaFunc(node_isFlag)
 {
 	Path *p = path(L);
 	int c = lua_tonumber(L, 2);
@@ -8193,11 +7152,10 @@ int l_node_isFlag(lua_State *L)
 	{
 		ret = (c == dsq->continuity.getPathFlag(p));
 	}
-	lua_pushboolean(L, ret);
-	return 1;
+	luaReturnBool(ret);
 }
 
-int l_node_setFlag(lua_State *L)
+luaFunc(node_setFlag)
 {
 	Path *p = path(L);
 	int v = lua_tonumber(L, 2);
@@ -8205,11 +7163,10 @@ int l_node_setFlag(lua_State *L)
 	{
 		dsq->continuity.setPathFlag(p, v);
 	}
-	lua_pushnumber(L, v);
-	return 1;
+	luaReturnNum(v);
 }
 
-int l_entity_isFlag(lua_State *L)
+luaFunc(entity_isFlag)
 {
 	Entity *e = entity(L);
 	int v = lua_tonumber(L, 2);
@@ -8218,11 +7175,10 @@ int l_entity_isFlag(lua_State *L)
 	{
 		b = (dsq->continuity.getEntityFlag(dsq->game->sceneName, e->getID())==v);
 	}
-	lua_pushboolean(L, b);
-	return 1;
+	luaReturnBool(b);
 }
 
-int l_entity_setFlag(lua_State *L)
+luaFunc(entity_setFlag)
 {
 	Entity *e = entity(L);
 	int v = lua_tonumber(L, 2);
@@ -8230,11 +7186,10 @@ int l_entity_setFlag(lua_State *L)
 	{
 		dsq->continuity.setEntityFlag(dsq->game->sceneName, e->getID(), v);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_isFlag(lua_State *L)
+luaFunc(isFlag)
 {
 	int v = 0;
 	/*
@@ -8258,32 +7213,28 @@ int l_isFlag(lua_State *L)
 	dsq->continuity.getFlag(lua_tostring(L, 1));
 
 	*/
-	lua_pushboolean(L, f);
-	return 1;
+	luaReturnBool(f);
 }
 
-int l_avatar_updatePosition(lua_State *L)
+luaFunc(avatar_updatePosition)
 {
 	dsq->game->avatar->updatePosition();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_avatar_toggleMovement(lua_State *L)
+luaFunc(avatar_toggleMovement)
 {
 	dsq->game->avatar->toggleMovement((bool)lua_tointeger(L, 1));
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_clearShots(lua_State *L)
+luaFunc(clearShots)
 {
 	Shot::killAllShots();
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_clearHelp(lua_State *L)
+luaFunc(clearHelp)
 {
 	float t = 0.4;
 
@@ -8308,42 +7259,28 @@ int l_clearHelp(lua_State *L)
 		ro = rl->getNext();
 	}
 
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_setLiPower(lua_State *L)
+luaFunc(setLiPower)
 {
 	float m = lua_tonumber(L, 1);
 	float t = lua_tonumber(L, 2);
 	dsq->continuity.setLiPower(m, t); 
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_getLiPower(lua_State *L)
+luaFunc(getLiPower)
 {
-	lua_pushnumber(L, dsq->continuity.liPower);
-	return 1;
+	luaReturnNum(dsq->continuity.liPower);
 }
 
-int l_getPetPower(lua_State *L)
+luaFunc(getPetPower)
 {
-	lua_pushnumber(L, dsq->continuity.petPower);
-	return 1;
+	luaReturnNum(dsq->continuity.petPower);
 }
 
-int l_getPlantGrabNode(lua_State *L)
-{
-	ScriptedEntity *se = scriptedEntity(L);
-	if (se)
-	{
-		//se->springPlant.
-	}
-	lua_pushnumber(L, 0);
-	return 1;
-}
-
-int l_showControls(lua_State *L)
+luaFunc(showControls)
 {
 	std::string keygfx = lua_tostring(L, 1);
 	std::string mousegfx = lua_tostring(L, 2);
@@ -8377,19 +7314,17 @@ int l_showControls(lua_State *L)
 		keyboard->position = Vector(600, 400);
 		core->getTopStateData()->addRenderObject(keyboard, LR_HELP);
 	}
-	lua_pushnumber(L, 0);
-	return 1;
+	luaReturnNum(0);
 }
 
-int l_appendUserDataPath(lua_State *L)
+luaFunc(appendUserDataPath)
 {
 	std::string path = getString(L, 1);
 	
 	if (!dsq->getUserDataFolder().empty())
 		path = dsq->getUserDataFolder() + "/" + path;
 	
-	lua_pushstring(L, path.c_str());
-	return 1;
+	luaReturnStr(path.c_str());
 }
 
 
@@ -8473,7 +7408,7 @@ void ScriptInterface::createBaseLuaVM()
 	//luaopen_os(baseState);				/* opens the os lib */
 
 	// override Lua's standard dofile(), so we can handle filename case issues.
-	lua_register( baseState, "dofile", l_dofile_caseinsensitive);
+	lua_register(baseState, "dofile", l_dofile_caseinsensitive);
 
 	//luaopen_io(baseState);				/* opens the I/O library */
 
@@ -8481,1057 +7416,1004 @@ void ScriptInterface::createBaseLuaVM()
 	lua_newtable(baseState);
 	lua_setglobal(baseState, "_threadtable");
 
-	lua_register( baseState, "shakeCamera",									l_shakeCamera);
-	lua_register( baseState, "upgradeHealth",									l_upgradeHealth);
-	
-	lua_register( baseState, "cureAllStatus",									l_cureAllStatus);
-	lua_register( baseState, "setPoison",										l_setPoison);
-	lua_register( baseState, "setMusicToPlay",									l_setMusicToPlay);
-	lua_register( baseState, "confirm",										l_confirm);
-	
-	lua_register( baseState, "randRange",										l_randRange);
+	// Register all custom functions.
 
-	lua_register( baseState, "flingMonkey",									l_flingMonkey);
-	
+	luaRegister(shakeCamera);
+	luaRegister(upgradeHealth);
 
-	lua_register( baseState, "setLiPower",										l_setLiPower);
-	lua_register( baseState, "getLiPower",										l_getLiPower);
-	lua_register( baseState, "getPetPower",									l_getPetPower);
-	lua_register( baseState, "getTimer",										l_getTimer);
-	lua_register( baseState, "getHalfTimer",									l_getHalfTimer);
-	lua_register( baseState, "setCostume",										l_setCostume);
-	lua_register( baseState, "getCostume",										l_getCostume);
-	lua_register( baseState, "getNoteName",									l_getNoteName);
+	luaRegister(cureAllStatus);
+	luaRegister(setPoison);
+	luaRegister(setMusicToPlay);
+	luaRegister(confirm);
 
+	luaRegister(randRange);
 
-	lua_register( baseState, "getWorldType",									l_getWorldType);
+	luaRegister(flingMonkey);
 
 
-	lua_register( baseState, "getWaterLevel",									l_getWaterLevel);
-	lua_register( baseState, "setWaterLevel",									l_setWaterLevel);
+	luaRegister(setLiPower);
+	luaRegister(getLiPower);
+	luaRegister(getPetPower);
+	luaRegister(getTimer);
+	luaRegister(getHalfTimer);
+	luaRegister(setCostume);
+	luaRegister(getCostume);
+	luaRegister(getNoteName);
 
 
-	lua_register( baseState, "getEntityInGroup",								l_getEntityInGroup);
+	luaRegister(getWorldType);
 
-	lua_register( baseState, "createQuad",										l_createQuad);
-	lua_register( baseState, "quad_delete",									l_quad_delete);
-	lua_register( baseState, "quad_scale",										l_quad_scale);
-	lua_register( baseState, "quad_rotate",									l_quad_rotate);
 
-	lua_register( baseState, "quad_color",										l_quad_color);
-	lua_register( baseState, "quad_alpha",										l_quad_alpha);
-	lua_register( baseState, "quad_alphaMod",									l_quad_alphaMod);
-	lua_register( baseState, "quad_getAlpha",									l_quad_getAlpha);
+	luaRegister(getWaterLevel);
+	luaRegister(setWaterLevel);
 
-	lua_register( baseState, "quad_setPosition",								l_quad_setPosition);
-	lua_register( baseState, "quad_setBlendType",								l_quad_setBlendType);
 
+	luaRegister(getEntityInGroup);
 
-	lua_register( baseState, "setupEntity",									l_setupEntity);
-	lua_register( baseState, "setActivePet",									l_setActivePet);
+	luaRegister(createQuad);
+	luaRegister(quad_delete);
+	luaRegister(quad_scale);
+	luaRegister(quad_rotate);
 
+	luaRegister(quad_color);
+	luaRegister(quad_alpha);
+	luaRegister(quad_alphaMod);
+	luaRegister(quad_getAlpha);
 
-	lua_register( baseState, "reconstructGrid",								l_reconstructGrid);
-	lua_register( baseState, "reconstructEntityGrid",							l_reconstructEntityGrid);
+	luaRegister(quad_setPosition);
+	luaRegister(quad_setBlendType);
 
 
+	luaRegister(setupEntity);
+	luaRegister(setActivePet);
 
-	
 
-	lua_register( baseState, "ing_hasIET",										l_ing_hasIET);
+	luaRegister(reconstructGrid);
+	luaRegister(reconstructEntityGrid);
 
 
-	lua_register( baseState, "esetv",											l_e_setv);
-	lua_register( baseState, "esetvf",											l_e_setvf);
-	lua_register( baseState, "egetv",											l_e_getv);
-	lua_register( baseState, "egetvf",											l_e_getvf);
-	lua_register( baseState, "eisv",											l_e_isv);
 
-	lua_register( baseState, "entity_addIgnoreShotDamageType",					l_entity_addIgnoreShotDamageType);
-	lua_register( baseState, "entity_ensureLimit",								l_entity_ensureLimit);
-	lua_register( baseState, "entity_getBoneLockEntity",						l_entity_getBoneLockEntity);
 
 
-	lua_register( baseState, "entity_setRidingPosition",						l_entity_setRidingPosition);
-	lua_register( baseState, "entity_setRidingData",							l_entity_setRidingData);
-	lua_register( baseState, "entity_setBoneLock",								l_entity_setBoneLock);
-	lua_register( baseState, "entity_setIngredient",							l_entity_setIngredient);
-	lua_register( baseState, "entity_setDeathScene",							l_entity_setDeathScene);
-	lua_register( baseState, "entity_say",										l_entity_say);
-	lua_register( baseState, "entity_isSaying",								l_entity_isSaying);
-	lua_register( baseState, "entity_setSayPosition",							l_entity_setSayPosition);
+	luaRegister(ing_hasIET);
 
 
-	lua_register( baseState, "entity_setClampOnSwitchDir",						l_entity_setClampOnSwitchDir);
+	luaRegister(esetv);
+	luaRegister(esetvf);
+	luaRegister(egetv);
+	luaRegister(egetvf);
+	luaRegister(eisv);
 
-	lua_register( baseState, "entity_setRegisterEntityDied",					l_entity_setRegisterEntityDied);
+	luaRegister(entity_addIgnoreShotDamageType);
+	luaRegister(entity_ensureLimit);
+	luaRegister(entity_getBoneLockEntity);
 
-	lua_register( baseState, "entity_setBeautyFlip",							l_entity_setBeautyFlip);
-	lua_register( baseState, "entity_setInvincible",							l_entity_setInvincible);
 
-	lua_register( baseState, "setInvincible",									l_setInvincible);
+	luaRegister(entity_setRidingPosition);
+	luaRegister(entity_setRidingData);
+	luaRegister(entity_setBoneLock);
+	luaRegister(entity_setIngredient);
+	luaRegister(entity_setDeathScene);
+	luaRegister(entity_say);
+	luaRegister(entity_isSaying);
+	luaRegister(entity_setSayPosition);
 
-	
 
+	luaRegister(entity_setClampOnSwitchDir);
 
+	luaRegister(entity_setBeautyFlip);
+	luaRegister(entity_setInvincible);
 
-	lua_register( baseState, "entity_setLife",									l_entity_setLife);
-	lua_register( baseState, "entity_setLookAtPoint",							l_entity_setLookAtPoint);
-	lua_register( baseState, "entity_getLookAtPoint",							l_entity_getLookAtPoint);
+	luaRegister(setInvincible);
 
 
-	lua_register( baseState, "entity_setDieTimer",								l_entity_setDieTimer);
-	lua_register( baseState, "entity_setAutoSkeletalUpdate",					l_entity_setAutoSkeletalUpdate);
-	lua_register( baseState, "entity_updateSkeletal",							l_entity_updateSkeletal);
-	lua_register( baseState, "entity_setBounceType",							l_entity_setBounceType);
 
-	lua_register( baseState, "entity_getHealthPerc",							l_entity_getHealthPerc);
-	lua_register( baseState, "entity_getBounceType",							l_entity_getBounceType);
-	lua_register( baseState, "entity_setRiding",								l_entity_setRiding);
-	lua_register( baseState, "entity_getRiding",								l_entity_getRiding);
 
-	lua_register( baseState, "entity_setNodeGroupActive",						l_entity_setNodeGroupActive);
 
-	lua_register( baseState, "entity_setNaijaReaction",						l_entity_setNaijaReaction);
+	luaRegister(entity_setLife);
+	luaRegister(entity_setLookAtPoint);
+	luaRegister(entity_getLookAtPoint);
 
-	lua_register( baseState, "entity_setEatType",								l_entity_setEatType);
 
-	lua_register( baseState, "entity_setSpiritFreeze",							l_entity_setSpiritFreeze);
+	luaRegister(entity_setDieTimer);
+	luaRegister(entity_setAutoSkeletalUpdate);
+	luaRegister(entity_updateSkeletal);
+	luaRegister(entity_setBounceType);
 
-	lua_register( baseState, "entity_setCanLeaveWater",						l_entity_setCanLeaveWater);
+	luaRegister(entity_getHealthPerc);
+	luaRegister(entity_getBounceType);
+	luaRegister(entity_setRiding);
+	luaRegister(entity_getRiding);
 
-	lua_register( baseState, "entity_pullEntities",							l_entity_pullEntities);
+	luaRegister(entity_setNodeGroupActive);
 
-	lua_register( baseState, "entity_setEntityLayer",							l_entity_setEntityLayer);
-	lua_register( baseState, "entity_setRenderPass",							l_entity_setRenderPass);
+	luaRegister(entity_setNaijaReaction);
 
-	lua_register( baseState, "entity_clearTargetPoints",						l_entity_clearTargetPoints);
-	lua_register( baseState, "entity_addTargetPoint",							l_entity_addTargetPoint);
+	luaRegister(entity_setEatType);
 
+	luaRegister(entity_setSpiritFreeze);
 
-	lua_register( baseState, "entity_setOverrideCullRadius",					l_entity_setOverrideCullRadius);
-	lua_register( baseState, "entity_setCullRadius",							l_entity_setOverrideCullRadius);
+	luaRegister(entity_setCanLeaveWater);
 
-	lua_register( baseState, "entity_setUpdateCull",							l_entity_setUpdateCull);
-	lua_register( baseState, "entity_flipHToAvatar",							l_entity_flipHToAvatar);
-	//lua_register( baseState, "entity_fhTo",									l_entity_fhTo);
+	luaRegister(entity_pullEntities);
 
-	lua_register( baseState, "entity_switchLayer",								l_entity_switchLayer);
+	luaRegister(entity_setEntityLayer);
+	luaRegister(entity_setRenderPass);
 
-	lua_register( baseState, "entity_debugText",								l_entity_debugText);
+	luaRegister(entity_clearTargetPoints);
+	luaRegister(entity_addTargetPoint);
 
-	
-	lua_register( baseState, "avatar_setCanDie",								l_avatar_setCanDie);
-	lua_register( baseState, "avatar_toggleCape",								l_avatar_toggleCape);
-	lua_register( baseState, "avatar_setPullTarget",							l_avatar_setPullTarget);
 
+	luaRegister(entity_setCullRadius);
+	luaRegister(entity_setUpdateCull);
 
-	lua_register( baseState, "setGLNearest",									l_setGLNearest);
-	
+	luaRegister(entity_flipHToAvatar);
 
-	lua_register( baseState, "avatar_clampPosition",							l_avatar_clampPosition);
-	lua_register( baseState, "avatar_updatePosition",							l_avatar_updatePosition);
+	luaRegister(entity_switchLayer);
 
-	lua_register( baseState, "pause",											l_pause);
-	lua_register( baseState, "unpause",										l_unpause);
+	luaRegister(entity_debugText);
 
 
-	lua_register( baseState, "vector_normalize",								l_vector_normalize);
-	lua_register( baseState, "vector_setLength",								l_vector_setLength);
-	lua_register( baseState, "vector_getLength",								l_vector_getLength);
+	luaRegister(avatar_setCanDie);
+	luaRegister(avatar_toggleCape);
+	luaRegister(avatar_setPullTarget);
 
-	lua_register( baseState, "vector_dot",										l_vector_dot);
 
-	lua_register( baseState, "vector_isLength2DIn",							l_vector_isLength2DIn);
-	lua_register( baseState, "vector_cap",										l_vector_cap);
+	luaRegister(setGLNearest);
 
 
-	lua_register( baseState, "entity_setDeathParticleEffect",					l_entity_setDeathParticleEffect);
-	lua_register( baseState, "entity_setDeathSound",							l_entity_setDeathSound);
+	luaRegister(avatar_clampPosition);
+	luaRegister(avatar_updatePosition);
 
-	lua_register( baseState, "entity_setDamageTarget",							l_entity_setDamageTarget);
-	lua_register( baseState, "entity_setAllDamageTargets",						l_entity_setAllDamageTargets);
+	luaRegister(pause);
+	luaRegister(unpause);
 
-	lua_register( baseState, "entity_isDamageTarget",							l_entity_isDamageTarget);
-	lua_register( baseState, "entity_isVelIn",									l_entity_isVelIn);
-	lua_register( baseState, "entity_isValidTarget",							l_entity_isValidTarget);
 
+	luaRegister(vector_normalize);
+	luaRegister(vector_setLength);
+	luaRegister(vector_getLength);
 
-	lua_register( baseState, "entity_isUnderWater",							l_entity_isUnderWater);
-	lua_register( baseState, "entity_checkSplash",								l_entity_checkSplash);
+	luaRegister(vector_dot);
 
+	luaRegister(vector_isLength2DIn);
+	luaRegister(vector_cap);
 
 
+	luaRegister(entity_setDeathParticleEffect);
+	luaRegister(entity_setDeathSound);
 
-	lua_register( baseState, "entity_setEnergyShotTarget",						l_entity_setEnergyShotTarget);
-	lua_register( baseState, "entity_setEnergyShotTargetPosition",				l_entity_setEnergyShotTargetPosition);
-	//lua_register( baseState, "entity_getEnergyShotTargetPosition",				l_entity_getEnergyShotTargetPosition);
-	lua_register( baseState, "entity_getRandomTargetPoint",					l_entity_getRandomTargetPoint);
-	lua_register( baseState, "entity_getTargetPoint",							l_entity_getTargetPoint);
+	luaRegister(entity_setDamageTarget);
+	luaRegister(entity_setAllDamageTargets);
 
+	luaRegister(entity_isDamageTarget);
+	luaRegister(entity_isVelIn);
+	luaRegister(entity_isValidTarget);
 
-	lua_register( baseState, "entity_setTargetRange",							l_entity_setTargetRange);
 
+	luaRegister(entity_isUnderWater);
+	luaRegister(entity_checkSplash);
 
-	lua_register( baseState, "entity_setEnergyChargeTarget",					l_entity_setEnergyChargeTarget);
 
-	lua_register( baseState, "entity_setCollideWithAvatar",					l_entity_setCollideWithAvatar);
-	lua_register( baseState, "entity_setPauseInConversation",					l_entity_setPauseInConversation);
 
 
-	lua_register( baseState, "bone_setRenderPass",								l_bone_setRenderPass);
-	lua_register( baseState, "bone_setVisible",								l_bone_setVisible);
-	lua_register( baseState, "bone_isVisible",									l_bone_isVisible);
+	luaRegister(entity_getRandomTargetPoint);
+	luaRegister(entity_getTargetPoint);
 
-	lua_register( baseState, "bone_addSegment",								l_bone_addSegment);
-	lua_register( baseState, "entity_setSegs",									l_entity_setSegs);
-	lua_register( baseState, "bone_setSegs",									l_bone_setSegs);
-	lua_register( baseState, "bone_update",									l_bone_update);
 
+	luaRegister(entity_setTargetRange);
 
-	lua_register( baseState, "bone_setSegmentOffset",							l_bone_setSegmentOffset);
-	lua_register( baseState, "bone_setSegmentProps",							l_bone_setSegmentProps);
-	lua_register( baseState, "bone_setSegmentChainHead",						l_bone_setSegmentChainHead);
-	lua_register( baseState, "bone_setAnimated",								l_bone_setAnimated);
-	lua_register( baseState, "bone_showFrame",									l_bone_showFrame);
 
-	lua_register( baseState, "bone_lookAtEntity",								l_bone_lookAtEntity);
+	luaRegister(entity_setCollideWithAvatar);
+	luaRegister(entity_setPauseInConversation);
 
-	lua_register( baseState, "bone_setTexture",								l_bone_setTexture);
 
-	lua_register( baseState, "bone_scale",										l_bone_scale);
-	lua_register( baseState, "bone_setBlendType",								l_bone_setBlendType);
+	luaRegister(bone_setRenderPass);
+	luaRegister(bone_setVisible);
+	luaRegister(bone_isVisible);
 
-	//lua_register( baseState, "bone_setRotation",								l_bone_setRotation);
+	luaRegister(bone_addSegment);
+	luaRegister(entity_setSegs);
+	luaRegister(bone_setSegs);
+	luaRegister(bone_update);
 
 
-	lua_register( baseState, "entity_partSetSegs",								l_entity_partSetSegs);
+	luaRegister(bone_setSegmentOffset);
+	luaRegister(bone_setSegmentProps);
+	luaRegister(bone_setSegmentChainHead);
+	luaRegister(bone_setAnimated);
+	luaRegister(bone_showFrame);
 
+	luaRegister(bone_lookAtEntity);
 
-	lua_register( baseState, "entity_adjustPositionBySurfaceNormal",			l_entity_adjustPositionBySurfaceNormal);
-	lua_register( baseState, "entity_applySurfaceNormalForce",					l_entity_applySurfaceNormalForce);
-	lua_register( baseState, "entity_applyRandomForce",						l_entity_applyRandomForce);
+	luaRegister(bone_setTexture);
 
-	lua_register( baseState, "createBeam",										l_createBeam);
-	lua_register( baseState, "beam_setAngle",									l_beam_setAngle);
-	lua_register( baseState, "beam_setPosition",								l_beam_setPosition);
-	lua_register( baseState, "beam_setTexture",								l_beam_setTexture);
-	lua_register( baseState, "beam_setDamage",									l_beam_setDamage);
-	lua_register( baseState, "beam_setBeamWidth",								l_beam_setBeamWidth);
+	luaRegister(bone_scale);
+	luaRegister(bone_setBlendType);
 
 
-	lua_register( baseState, "beam_delete",									l_beam_delete);
+	luaRegister(entity_partSetSegs);
 
-	lua_register( baseState, "getStringBank",									l_getStringBank);
 
-	lua_register( baseState, "isPlat",											l_isPlat);
+	luaRegister(entity_adjustPositionBySurfaceNormal);
+	luaRegister(entity_applySurfaceNormalForce);
+	luaRegister(entity_applyRandomForce);
 
-	lua_register( baseState, "getAngleBetweenEntities",						l_getAngleBetweenEntities);
-	lua_register( baseState, "getAngleBetween",								l_getAngleBetween);
+	luaRegister(createBeam);
+	luaRegister(beam_setAngle);
+	luaRegister(beam_setPosition);
+	luaRegister(beam_setTexture);
+	luaRegister(beam_setDamage);
+	luaRegister(beam_setBeamWidth);
 
 
-	lua_register( baseState, "createEntity",									l_createEntity);
-	lua_register( baseState, "entity_setWeight",								l_entity_setWeight);
-	lua_register( baseState, "entity_setBlendType",							l_entity_setBlendType);
+	luaRegister(beam_delete);
 
-	lua_register( baseState, "entity_setActivationType",						l_entity_setActivationType);
-	lua_register( baseState, "entity_setColor",								l_entity_setColor);
-	lua_register( baseState, "entity_color",									l_entity_setColor);
-	lua_register( baseState, "entity_playSfx",									l_entity_playSfx);
-	
-	lua_register( baseState, "isQuitFlag",										l_isQuitFlag);
-	lua_register( baseState, "isDeveloperKeys",								l_isDeveloperKeys);
-	lua_register( baseState, "isDemo",											l_isDemo);
+	luaRegister(getStringBank);
 
-	lua_register( baseState, "isInputEnabled",									l_isInputEnabled);
-	lua_register( baseState, "disableInput",									l_disableInput);
+	luaRegister(isPlat);
 
-	lua_register( baseState, "setMousePos",									l_setMousePos);
-	lua_register( baseState, "getMousePos",									l_getMousePos);
-	lua_register( baseState, "getMouseWorldPos",								l_getMouseWorldPos);
+	luaRegister(getAngleBetweenEntities);
+	luaRegister(getAngleBetween);
 
-	lua_register( baseState, "resetContinuity",								l_resetContinuity);
 
-	lua_register( baseState, "quit",											l_quit);
-	lua_register( baseState, "doModSelect",									l_doModSelect);
-	lua_register( baseState, "doLoadMenu",										l_doLoadMenu);
+	luaRegister(createEntity);
+	luaRegister(entity_setWeight);
+	luaRegister(entity_setBlendType);
 
+	luaRegister(entity_setActivationType);
+	luaRegister(entity_setColor);
+	lua_register(baseState, "entity_color", l_entity_setColor);
+	luaRegister(entity_playSfx);
 
-	lua_register( baseState, "enableInput",									l_enableInput);
-	lua_register( baseState, "fade",											l_fade);
-	lua_register( baseState, "fade2",											l_fade2);
-	lua_register( baseState, "fade3",											l_fade3);
+	luaRegister(isQuitFlag);
+	luaRegister(isDeveloperKeys);
+	luaRegister(isDemo);
 
-	lua_register( baseState, "setupConversationEntity",						l_setupConversationEntity);
+	luaRegister(isInputEnabled);
+	luaRegister(disableInput);
 
-	lua_register( baseState, "getMapName",										l_getMapName);
-	lua_register( baseState, "isMapName",										l_isMapName);
-	lua_register( baseState, "mapNameContains",								l_mapNameContains);
-	
-	lua_register( baseState, "entity_getNormal",								l_entity_getNormal);
+	luaRegister(setMousePos);
+	luaRegister(getMousePos);
+	luaRegister(getMouseWorldPos);
 
-	lua_register( baseState, "entity_getAlpha",								l_entity_getAlpha);
-	lua_register( baseState, "entity_getAimVector",							l_entity_getAimVector);
+	luaRegister(resetContinuity);
 
-	lua_register( baseState, "entity_getVectorToEntity",						l_entity_getVectorToEntity);
+	luaRegister(quit);
+	luaRegister(doModSelect);
+	luaRegister(doLoadMenu);
 
-	lua_register( baseState, "entity_getVelLen",								l_entity_getVelLen);
 
-	lua_register( baseState, "entity_getDistanceToTarget",						l_entity_getDistanceToTarget);
-	lua_register( baseState, "entity_delete",									l_entity_delete);
-	lua_register( baseState, "entity_move",									l_entity_move);
+	luaRegister(enableInput);
+	luaRegister(fade);
+	luaRegister(fade2);
+	luaRegister(fade3);
 
+	luaRegister(setupConversationEntity);
 
-	lua_register( baseState, "entity_moveToFront",								l_entity_moveToFront);
-	lua_register( baseState, "entity_moveToBack",								l_entity_moveToBack);
+	luaRegister(getMapName);
+	luaRegister(isMapName);
+	luaRegister(mapNameContains);
 
+	luaRegister(entity_getNormal);
 
-	
+	luaRegister(entity_getAlpha);
+	luaRegister(entity_getAimVector);
 
-	lua_register( baseState, "entity_getID",									l_entity_getID);
-	lua_register( baseState, "entity_getGroupID",								l_entity_getGroupID);
+	luaRegister(entity_getVectorToEntity);
 
-	lua_register( baseState, "getEntityByID",									l_getEntityByID);
+	luaRegister(entity_getVelLen);
 
-	lua_register( baseState, "entity_setBounce",								l_entity_setBounce);
-	lua_register( baseState, "entity_setPosition",								l_entity_setPosition);
-	lua_register( baseState, "entity_setInternalOffset",						l_entity_setInternalOffset);
-	lua_register( baseState, "entity_setActivation",							l_entity_setActivation);
-	lua_register( baseState, "entity_rotateToEntity",							l_entity_rotateToEntity);
-	lua_register( baseState, "entity_rotateTo",								l_entity_rotateTo);
-	lua_register( baseState, "entity_rotateOffset",							l_entity_rotateOffset);
+	luaRegister(entity_getDistanceToTarget);
+	luaRegister(entity_delete);
+	luaRegister(entity_move);
 
-	lua_register( baseState, "entity_fireGas",									l_entity_fireGas);
-	lua_register( baseState, "entity_rotateToTarget",							l_entity_rotateToTarget);
 
-	lua_register( baseState, "entity_switchSurfaceDirection",					l_entity_switchSurfaceDirection);
+	luaRegister(entity_moveToFront);
+	luaRegister(entity_moveToBack);
 
-	lua_register( baseState, "entity_offset",									l_entity_offset);
-	lua_register( baseState, "entity_moveAlongSurface",						l_entity_moveAlongSurface);
-	lua_register( baseState, "entity_rotateToSurfaceNormal",					l_entity_rotateToSurfaceNormal);
-	lua_register( baseState, "entity_clampToSurface",							l_entity_clampToSurface);
-	lua_register( baseState, "entity_checkSurface",							l_entity_checkSurface);
-	lua_register( baseState, "entity_clampToHit",								l_entity_clampToHit);
 
 
-	lua_register( baseState, "entity_grabTarget",								l_entity_grabTarget);
-	lua_register( baseState, "entity_releaseTarget",							l_entity_releaseTarget);
 
-	lua_register( baseState, "entity_getStateTime",							l_entity_getStateTime);
-	lua_register( baseState, "entity_setStateTime",							l_entity_setStateTime);
+	luaRegister(entity_getID);
+	luaRegister(entity_getGroupID);
 
-	lua_register( baseState, "entity_scale",									l_entity_scale);
-	lua_register( baseState, "entity_getScale",								l_entity_getScale);
+	luaRegister(getEntityByID);
 
-	lua_register( baseState, "entity_doFriction",								l_entity_doFriction);
+	luaRegister(entity_setBounce);
+	luaRegister(entity_setPosition);
+	luaRegister(entity_setInternalOffset);
+	luaRegister(entity_setActivation);
+	luaRegister(entity_rotateToEntity);
+	luaRegister(entity_rotateTo);
+	luaRegister(entity_rotateOffset);
 
-	lua_register( baseState, "entity_partWidthHeight",							l_entity_partWidthHeight);
-	lua_register( baseState, "entity_partBlendType",							l_entity_partBlendType);
-	lua_register( baseState, "entity_partRotate",								l_entity_partRotate);
-	lua_register( baseState, "entity_partAlpha",								l_entity_partAlpha);
+	luaRegister(entity_fireGas);
+	luaRegister(entity_rotateToTarget);
 
-	lua_register( baseState, "entity_fireAtTarget",							l_entity_fireAtTarget);
+	luaRegister(entity_switchSurfaceDirection);
 
-	lua_register( baseState, "entity_getHealth",								l_entity_getHealth);
-	lua_register( baseState, "entity_pushTarget",								l_entity_pushTarget);
-	lua_register( baseState, "entity_flipHorizontal",							l_entity_flipHorizontal);
-	lua_register( baseState, "entity_flipVertical",							l_entity_flipVertical);
-	lua_register( baseState, "entity_fh",										l_entity_flipHorizontal);
-	lua_register( baseState, "entity_fhTo",									l_entity_fhTo);
-	lua_register( baseState, "entity_fv",										l_entity_flipVertical);
-	lua_register( baseState, "entity_update",									l_entity_update);
-	lua_register( baseState, "entity_msg",										l_entity_msg);
-	lua_register( baseState, "entity_updateMovement",							l_entity_updateMovement);
-	lua_register( baseState, "entity_updateCurrents",							l_entity_updateCurrents);
-	lua_register( baseState, "entity_updateLocalWarpAreas",					l_entity_updateLocalWarpAreas);
+	luaRegister(entity_offset);
+	luaRegister(entity_moveAlongSurface);
+	luaRegister(entity_rotateToSurfaceNormal);
+	luaRegister(entity_clampToSurface);
+	luaRegister(entity_checkSurface);
+	luaRegister(entity_clampToHit);
 
-	lua_register( baseState, "entity_setPositionX",							l_entity_setPositionX);
-	lua_register( baseState, "entity_setPositionY",							l_entity_setPositionY);
-	lua_register( baseState, "entity_getPosition",								l_entity_getPosition);
-	lua_register( baseState, "entity_getOffset",								l_entity_getOffset);
-	lua_register( baseState, "entity_getPositionX",							l_entity_getPositionX);
-	lua_register( baseState, "entity_getPositionY",							l_entity_getPositionY);
 
-	lua_register( baseState, "entity_getTargetPositionX",						l_entity_getTargetPositionX);
-	lua_register( baseState, "entity_getTargetPositionY",						l_entity_getTargetPositionY);
+	luaRegister(entity_grabTarget);
+	luaRegister(entity_releaseTarget);
 
-	lua_register( baseState, "entity_incrTargetLeaches",						l_entity_incrTargetLeaches);
-	lua_register( baseState, "entity_decrTargetLeaches",						l_entity_decrTargetLeaches);
-	lua_register( baseState, "entity_rotateToVel",								l_entity_rotateToVel);
-	lua_register( baseState, "entity_rotateToVec",								l_entity_rotateToVec);
+	luaRegister(entity_getStateTime);
+	luaRegister(entity_setStateTime);
 
-	lua_register( baseState, "entity_setSegsMaxDist",							l_entity_setSegsMaxDist);
+	luaRegister(entity_scale);
+	luaRegister(entity_getScale);
 
+	luaRegister(entity_doFriction);
 
+	luaRegister(entity_partWidthHeight);
+	luaRegister(entity_partBlendType);
+	luaRegister(entity_partRotate);
+	luaRegister(entity_partAlpha);
 
-	lua_register( baseState, "entity_offsetUpdate",							l_entity_offsetUpdate);
+	luaRegister(entity_getHealth);
+	luaRegister(entity_pushTarget);
+	luaRegister(entity_flipHorizontal);
+	luaRegister(entity_flipVertical);
+	lua_register(baseState, "entity_fh", l_entity_flipHorizontal);
+	luaRegister(entity_fhTo);
+	luaRegister(entity_update);
+	luaRegister(entity_msg);
+	luaRegister(entity_updateMovement);
+	luaRegister(entity_updateCurrents);
+	luaRegister(entity_updateLocalWarpAreas);
 
-	lua_register( baseState, "entity_createEntity",							l_entity_createEntity);
-	lua_register( baseState, "entity_resetTimer",								l_entity_resetTimer);
-	lua_register( baseState, "entity_stopTimer",								l_entity_stopTimer);
-	lua_register( baseState, "entity_stopPull",								l_entity_stopPull);
-	lua_register( baseState, "entity_setTargetPriority",						l_entity_setTargetPriority);
+	luaRegister(entity_setPositionX);
+	luaRegister(entity_setPositionY);
+	luaRegister(entity_getPosition);
+	luaRegister(entity_getOffset);
+	luaRegister(entity_getPositionX);
+	luaRegister(entity_getPositionY);
 
+	luaRegister(entity_getTargetPositionX);
+	luaRegister(entity_getTargetPositionY);
 
-	lua_register( baseState, "entity_setBehaviorType",							l_entity_setBehaviorType);
-	lua_register( baseState, "entity_getBehaviorType",							l_entity_getBehaviorType);
-	lua_register( baseState, "entity_setEntityType",							l_entity_setEntityType);
-	lua_register( baseState, "entity_getEntityType",							l_entity_getEntityType);
+	luaRegister(entity_incrTargetLeaches);
+	luaRegister(entity_decrTargetLeaches);
+	luaRegister(entity_rotateToVel);
+	luaRegister(entity_rotateToVec);
 
-	lua_register( baseState, "entity_setSegmentTexture",						l_entity_setSegmentTexture);
+	luaRegister(entity_setSegsMaxDist);
 
 
-	lua_register( baseState, "entity_spawnParticlesFromCollisionMask",			l_entity_spawnParticlesFromCollisionMask);
-	lua_register( baseState, "entity_initEmitter",								l_entity_initEmitter);
-	lua_register( baseState, "entity_startEmitter",							l_entity_startEmitter);
-	lua_register( baseState, "entity_stopEmitter",								l_entity_stopEmitter);
 
-	lua_register( baseState, "entity_initPart",								l_entity_initPart);
-	lua_register( baseState, "entity_initSegments",							l_entity_initSegments);
-	lua_register( baseState, "entity_warpSegments",							l_entity_warpSegments);
-	lua_register( baseState, "entity_initSkeletal",							l_entity_initSkeletal);
-	lua_register( baseState, "entity_initStrands",								l_entity_initStrands);
+	luaRegister(entity_offsetUpdate);
 
-	lua_register( baseState, "entity_hurtTarget",								l_entity_hurtTarget);
-	lua_register( baseState, "entity_doSpellAvoidance",						l_entity_doSpellAvoidance);
-	lua_register( baseState, "entity_doEntityAvoidance",						l_entity_doEntityAvoidance);
-	lua_register( baseState, "entity_rotate",									l_entity_rotate);
-	lua_register( baseState, "entity_doGlint",									l_entity_doGlint);
-	lua_register( baseState, "entity_findTarget",								l_entity_findTarget);
-	lua_register( baseState, "entity_hasTarget",								l_entity_hasTarget);
-	lua_register( baseState, "entity_isInRect",								l_entity_isInRect);
-	lua_register( baseState, "entity_isInDarkness",							l_entity_isInDarkness);
-	lua_register( baseState, "entity_isScaling",								l_entity_isScaling);
+	luaRegister(entity_createEntity);
+	luaRegister(entity_resetTimer);
+	luaRegister(entity_stopTimer);
+	luaRegister(entity_stopPull);
+	luaRegister(entity_setTargetPriority);
 
-	lua_register( baseState, "entity_isRidingOnEntity",						l_entity_isRidingOnEntity);
 
-	lua_register( baseState, "entity_isBeingPulled",							l_entity_isBeingPulled);
+	luaRegister(entity_setBehaviorType);
+	luaRegister(entity_getBehaviorType);
+	luaRegister(entity_setEntityType);
+	luaRegister(entity_getEntityType);
 
-	lua_register( baseState, "entity_isNearObstruction",						l_entity_isNearObstruction);
-	lua_register( baseState, "entity_isDead",									l_entity_isDead);
+	luaRegister(entity_setSegmentTexture);
 
 
+	luaRegister(entity_spawnParticlesFromCollisionMask);
+	luaRegister(entity_initEmitter);
+	luaRegister(entity_startEmitter);
+	luaRegister(entity_stopEmitter);
 
-	lua_register( baseState, "entity_isTargetInRange",							l_entity_isTargetInRange);
-	lua_register( baseState, "entity_getDistanceToEntity",						l_entity_getDistanceToEntity);
+	luaRegister(entity_initPart);
+	luaRegister(entity_initSegments);
+	luaRegister(entity_warpSegments);
+	luaRegister(entity_initSkeletal);
+	luaRegister(entity_initStrands);
 
-	lua_register( baseState, "entity_isInvincible",							l_entity_isInvincible);
+	luaRegister(entity_hurtTarget);
+	luaRegister(entity_doSpellAvoidance);
+	luaRegister(entity_doEntityAvoidance);
+	luaRegister(entity_rotate);
+	luaRegister(entity_doGlint);
+	luaRegister(entity_findTarget);
+	luaRegister(entity_hasTarget);
+	luaRegister(entity_isInRect);
+	luaRegister(entity_isInDarkness);
+	luaRegister(entity_isScaling);
 
-	lua_register( baseState, "entity_isNearGround",							l_entity_isNearGround);
+	luaRegister(entity_isRidingOnEntity);
 
-	lua_register( baseState, "entity_moveTowardsTarget",						l_entity_moveTowardsTarget);
-	lua_register( baseState, "entity_moveAroundTarget",						l_entity_moveAroundTarget);
+	luaRegister(entity_isBeingPulled);
 
-	lua_register( baseState, "entity_moveTowardsAngle",						l_entity_moveTowardsAngle);
-	lua_register( baseState, "entity_moveAroundAngle",							l_entity_moveAroundAngle);
-	lua_register( baseState, "entity_moveTowards",								l_entity_moveTowards);
-	lua_register( baseState, "entity_moveAround",								l_entity_moveAround);
+	luaRegister(entity_isNearObstruction);
+	luaRegister(entity_isDead);
 
-	lua_register( baseState, "entity_moveTowardsGroupCenter",					l_entity_moveTowardsGroupCenter);
-	lua_register( baseState, "entity_moveTowardsGroupHeading",					l_entity_moveTowardsGroupHeading);
-	lua_register( baseState, "entity_avgVel",									l_entity_avgVel);
-	lua_register( baseState, "entity_setVelLen",								l_entity_setVelLen);
 
-	lua_register( baseState, "entity_setMaxSpeed",								l_entity_setMaxSpeed);
-	lua_register( baseState, "entity_getMaxSpeed",								l_entity_getMaxSpeed);
-	lua_register( baseState, "entity_setMaxSpeedLerp",							l_entity_setMaxSpeedLerp);
-	lua_register( baseState, "entity_setState",								l_entity_setState);
-	lua_register( baseState, "entity_getState",								l_entity_getState);
-	lua_register( baseState, "entity_getEnqueuedState",						l_entity_getEnqueuedState);
 
-	lua_register( baseState, "entity_getPrevState",							l_entity_getPrevState);
-	lua_register( baseState, "entity_doCollisionAvoidance",					l_entity_doCollisionAvoidance);
-	lua_register( baseState, "entity_animate",									l_entity_animate);
-	lua_register( baseState, "entity_setAnimLayerTimeMult",					l_entity_setAnimLayerTimeMult);
+	luaRegister(entity_isTargetInRange);
+	luaRegister(entity_getDistanceToEntity);
 
-	lua_register( baseState, "entity_setCurrentTarget",						l_entity_setCurrentTarget);
-	//lua_register( baseState, "entity_spawnParticleEffect",					l_entity_spawnParticleEffect);
-	lua_register( baseState, "entity_warpToPathStart",							l_entity_warpToPathStart);
-	lua_register( baseState, "entity_stopInterpolating",						l_entity_stopInterpolating);
+	luaRegister(entity_isInvincible);
 
-	lua_register( baseState, "entity_followPath",								l_entity_followPath);
-	lua_register( baseState, "entity_isFollowingPath",							l_entity_isFollowingPath);
-	lua_register( baseState, "entity_followEntity",							l_entity_followEntity);
-	lua_register( baseState, "entity_sound",									l_entity_sound);
-	lua_register( baseState, "entity_soundFreq",								l_entity_soundFreq);
+	luaRegister(entity_isNearGround);
 
+	luaRegister(entity_moveTowardsTarget);
+	luaRegister(entity_moveAroundTarget);
 
-	lua_register( baseState, "entity_enableMotionBlur",						l_entity_enableMotionBlur);
-	lua_register( baseState, "entity_disableMotionBlur",						l_entity_disableMotionBlur);
+	luaRegister(entity_moveTowardsAngle);
+	luaRegister(entity_moveAroundAngle);
+	luaRegister(entity_moveTowards);
+	luaRegister(entity_moveAround);
 
+	luaRegister(entity_moveTowardsGroupCenter);
+	luaRegister(entity_moveTowardsGroupHeading);
+	luaRegister(entity_avgVel);
+	luaRegister(entity_setVelLen);
 
-	lua_register( baseState, "registerSporeChildData",							l_registerSporeChildData);
-	lua_register( baseState, "registerSporeDrop",								l_registerSporeDrop);
+	luaRegister(entity_setMaxSpeed);
+	luaRegister(entity_getMaxSpeed);
+	luaRegister(entity_setMaxSpeedLerp);
+	luaRegister(entity_setState);
+	luaRegister(entity_getState);
+	luaRegister(entity_getEnqueuedState);
 
-	
-	lua_register( baseState, "getIngredientGfx",								l_getIngredientGfx);
+	luaRegister(entity_getPrevState);
+	luaRegister(entity_doCollisionAvoidance);
+	luaRegister(entity_animate);
+	luaRegister(entity_setAnimLayerTimeMult);
 
-	lua_register( baseState, "spawnIngredient",								l_spawnIngredient);
-	lua_register( baseState, "spawnAllIngredients",							l_spawnAllIngredients);
-	lua_register( baseState, "spawnParticleEffect",							l_spawnParticleEffect);
-	lua_register( baseState, "spawnManaBall",									l_spawnManaBall);
+	luaRegister(entity_setCurrentTarget);
+	luaRegister(entity_warpToPathStart);
+	luaRegister(entity_stopInterpolating);
 
+	luaRegister(entity_followPath);
+	luaRegister(entity_isFollowingPath);
+	luaRegister(entity_followEntity);
+	luaRegister(entity_sound);
+	luaRegister(entity_soundFreq);
 
-	lua_register( baseState, "isEscapeKey",									l_isEscapeKey);
-	
 
-	lua_register( baseState, "resetTimer",										l_resetTimer);
+	luaRegister(entity_enableMotionBlur);
+	luaRegister(entity_disableMotionBlur);
 
-	lua_register( baseState, "addInfluence",									l_addInfluence);
-	lua_register( baseState, "setupBasicEntity",								l_setupBasicEntity);
-	lua_register( baseState, "playMusic",										l_playMusic);
-	lua_register( baseState, "playMusicStraight",								l_playMusicStraight);
-	lua_register( baseState, "stopMusic",										l_stopMusic);
 
-	lua_register( baseState, "user_set_demo_intro",							l_user_set_demo_intro);
-	lua_register( baseState, "user_save",										l_user_save);
+	luaRegister(registerSporeChildData);
+	luaRegister(registerSporeDrop);
 
-	lua_register( baseState, "playMusicOnce",									l_playMusicOnce);
-	
-	lua_register( baseState, "playSfx",										l_playSfx);
-	lua_register( baseState, "fadeSfx",										l_fadeSfx);
-	
-	lua_register( baseState, "emote",											l_emote);
 
-	lua_register( baseState, "playVfx",										l_playVisualEffect);
-	lua_register( baseState, "playVisualEffect",								l_playVisualEffect);
-	lua_register( baseState, "playNoEffect",									l_playNoEffect);
+	luaRegister(getIngredientGfx);
 
-	
-	lua_register( baseState, "setOverrideMusic",								l_setOverrideMusic);
+	luaRegister(spawnIngredient);
+	luaRegister(spawnAllIngredients);
+	luaRegister(spawnParticleEffect);
+	luaRegister(spawnManaBall);
 
-	lua_register( baseState, "setOverrideVoiceFader",							l_setOverrideVoiceFader);
-	lua_register( baseState, "setGameSpeed",									l_setGameSpeed);
-	lua_register( baseState, "sendEntityMessage",								l_sendEntityMessage);
-	lua_register( baseState, "healEntity",										l_healEntity);
-	lua_register( baseState, "warpAvatar",										l_warpAvatar);
-	lua_register( baseState, "warpNaijaToSceneNode",							l_warpNaijaToSceneNode);
 
+	luaRegister(isEscapeKey);
 
 
-	lua_register( baseState, "toWindowFromWorld",								l_toWindowFromWorld);
+	luaRegister(resetTimer);
 
-	lua_register( baseState, "toggleTransitFishRide",							l_toggleTransitFishRide);
+	luaRegister(addInfluence);
+	luaRegister(setupBasicEntity);
+	luaRegister(playMusic);
+	luaRegister(playMusicStraight);
+	luaRegister(stopMusic);
 
-	lua_register( baseState, "toggleDamageSprite",								l_toggleDamageSprite);
+	luaRegister(user_set_demo_intro);
+	luaRegister(user_save);
 
-	lua_register( baseState, "toggleLiCombat",									l_toggleLiCombat);
+	luaRegister(playMusicOnce);
 
-	lua_register( baseState, "toggleCursor",									l_toggleCursor);
-	lua_register( baseState, "toggleBlackBars",								l_toggleBlackBars);
-	lua_register( baseState, "setBlackBarsColor",								l_setBlackBarsColor);
+	luaRegister(playSfx);
+	luaRegister(fadeSfx);
 
-	
-	lua_register( baseState, "stopCursorGlow",									l_stopCursorGlow);
+	luaRegister(emote);
 
-	lua_register( baseState, "entityFollowEntity",								l_entityFollowEntity);
-	lua_register( baseState, "setEntityScript",								l_setEntityScript);
+	luaRegister(playVisualEffect);
+	luaRegister(playNoEffect);
 
-	lua_register( baseState, "setMiniMapHint",									l_setMiniMapHint);
-	lua_register( baseState, "bedEffects",										l_bedEffects);
 
-	lua_register( baseState, "killEntity",										l_killEntity);
-	lua_register( baseState, "warpNaijaToEntity",								l_warpNaijaToEntity);
+	luaRegister(setOverrideMusic);
 
-	lua_register( baseState, "setNaijaHeadTexture",							l_setNaijaHeadTexture);
-	lua_register( baseState, "avatar_setHeadTexture",							l_setNaijaHeadTexture);
+	luaRegister(setOverrideVoiceFader);
+	luaRegister(setGameSpeed);
+	luaRegister(sendEntityMessage);
+	luaRegister(healEntity);
+	luaRegister(warpAvatar);
+	luaRegister(warpNaijaToSceneNode);
 
-	//lua_register( baseState, "hurtEntity",									l_hurtEntity);
 
-	lua_register( baseState, "incrFlag",										l_incrFlag );
-	lua_register( baseState, "decrFlag",										l_decrFlag );
-	lua_register( baseState, "setFlag",										l_setFlag );
-	lua_register( baseState, "getFlag",										l_getFlag );
-	lua_register( baseState, "setStringFlag",									l_setStringFlag );
-	lua_register( baseState, "getStringFlag",									l_getStringFlag );
-	lua_register( baseState, "learnSpell",										l_learnSpell );
-	lua_register( baseState, "learnSong",										l_learnSong );
-	lua_register( baseState, "unlearnSong",									l_unlearnSong );
-	lua_register( baseState, "hasSong",										l_hasSong );
-	lua_register( baseState, "hasLi",											l_hasLi );
 
-	lua_register( baseState, "setCanWarp",										l_setCanWarp );
-	lua_register( baseState, "setCanChangeForm",								l_setCanChangeForm );
-	lua_register( baseState, "setInvincibleOnNested",							l_setInvincibleOnNested );
-	
-	lua_register( baseState, "setControlHint",									l_setControlHint );
-	lua_register( baseState, "setCameraLerpDelay",								l_setCameraLerpDelay );
-	lua_register( baseState, "screenFadeGo",									l_screenFadeGo );
-	lua_register( baseState, "screenFadeTransition",							l_screenFadeTransition );
-	lua_register( baseState, "screenFadeCapture",								l_screenFadeCapture );
+	luaRegister(toWindowFromWorld);
 
-	lua_register( baseState, "clearControlHint",								l_clearControlHint );
+	luaRegister(toggleTransitFishRide);
 
+	luaRegister(toggleDamageSprite);
 
-	lua_register( baseState, "savePoint",										l_savePoint );
-	lua_register( baseState, "moveEntity",										l_moveEntity );
-	lua_register( baseState, "wait",											l_wait );
-	lua_register( baseState, "watch",											l_watch );
+	luaRegister(toggleLiCombat);
 
-	lua_register( baseState, "quitNestedMain",									l_quitNestedMain );
-	lua_register( baseState, "isNestedMain",									l_isNestedMain );
+	luaRegister(toggleCursor);
+	luaRegister(toggleBlackBars);
+	luaRegister(setBlackBarsColor);
 
 
-	lua_register( baseState, "msg",											l_msg );
-	lua_register( baseState, "centerText",										l_centerText );
-	lua_register( baseState, "watchForVoice",									l_watchForVoice );
+	luaRegister(stopCursorGlow);
 
-	lua_register( baseState, "setElementLayerVisible",							l_setElementLayerVisible);
-	lua_register( baseState, "isElementLayerVisible",							l_isElementLayerVisible);
+	luaRegister(entityFollowEntity);
 
-	lua_register( baseState, "isWithin",										l_isWithin );
+	luaRegister(setMiniMapHint);
+	luaRegister(bedEffects);
 
+	luaRegister(killEntity);
+	luaRegister(warpNaijaToEntity);
 
+	luaRegister(setNaijaHeadTexture);
 
-	lua_register( baseState, "pickupGem",										l_pickupGem );
-	lua_register( baseState, "setBeacon",										l_setBeacon );
-	lua_register( baseState, "getBeacon",										l_getBeacon );
-	lua_register( baseState, "beaconEffect",									l_beaconEffect );
-	
-	lua_register( baseState, "chance",											l_chance);
+	luaRegister(incrFlag);
+	luaRegister(decrFlag);
+	luaRegister(setFlag);
+	luaRegister(getFlag);
+	luaRegister(setStringFlag);
+	luaRegister(getStringFlag);
+	luaRegister(learnSpell);
+	luaRegister(learnSong);
+	luaRegister(unlearnSong);
+	luaRegister(hasSong);
+	luaRegister(hasLi);
 
-	lua_register( baseState, "goToTitle",										l_goToTitle);
-	lua_register( baseState, "jumpState",										l_jumpState);
-	lua_register( baseState, "getEnqueuedState",								l_getEnqueuedState);
+	luaRegister(setCanWarp);
+	luaRegister(setCanChangeForm);
+	luaRegister(setInvincibleOnNested);
 
+	luaRegister(setControlHint);
+	luaRegister(setCameraLerpDelay);
+	luaRegister(screenFadeGo);
+	luaRegister(screenFadeTransition);
+	luaRegister(screenFadeCapture);
 
-	lua_register( baseState, "fadeIn",											l_fadeIn);
-	lua_register( baseState, "fadeOut",										l_fadeOut);
+	luaRegister(clearControlHint);
 
-	lua_register( baseState, "vision",											l_vision);
 
-	lua_register( baseState, "musicVolume",									l_musicVolume);
+	luaRegister(savePoint);
+	luaRegister(wait);
+	luaRegister(watch);
 
-	lua_register( baseState, "voice",											l_voice);
-	lua_register( baseState, "playVoice",										l_voice);
-	lua_register( baseState, "voiceOnce",										l_voiceOnce);
-	lua_register( baseState, "voiceInterupt",									l_voiceInterupt);
+	luaRegister(quitNestedMain);
+	luaRegister(isNestedMain);
 
 
-	lua_register( baseState, "stopVoice",										l_stopVoice);
-	lua_register( baseState, "stopAllVoice",									l_stopAllVoice);
-	lua_register( baseState, "stopAllSfx",										l_stopAllSfx);
+	luaRegister(msg);
+	luaRegister(centerText);
+	luaRegister(watchForVoice);
 
+	luaRegister(setElementLayerVisible);
+	luaRegister(isElementLayerVisible);
 
+	luaRegister(isWithin);
 
-	lua_register( baseState, "fadeOutMusic",									l_fadeOutMusic);
 
 
-	/*
-	lua_register( baseState, "options",										l_options);
-	lua_register( baseState, "opt",											l_options);
-	*/
-	lua_register( baseState, "isStreamingVoice",								l_isStreamingVoice);
-	lua_register( baseState, "isPlayingVoice",									l_isStreamingVoice);
+	luaRegister(pickupGem);
+	luaRegister(setBeacon);
+	luaRegister(getBeacon);
+	luaRegister(beaconEffect);
 
-	lua_register( baseState, "changeForm",										l_changeForm);
-	lua_register( baseState, "getForm",										l_getForm);
-	lua_register( baseState, "isForm",											l_isForm);
-	lua_register( baseState, "learnFormUpgrade",								l_learnFormUpgrade);
-	lua_register( baseState, "hasFormUpgrade",									l_hasFormUpgrade);
+	luaRegister(chance);
 
+	luaRegister(goToTitle);
+	luaRegister(jumpState);
+	luaRegister(getEnqueuedState);
 
-	lua_register( baseState, "castSong",										l_castSong);
-	lua_register( baseState, "isObstructed",									l_isObstructed);
-	lua_register( baseState, "isObstructedBlock",								l_isObstructedBlock);
 
-	lua_register( baseState, "isFlag",											l_isFlag);
+	luaRegister(fadeIn);
+	luaRegister(fadeOut);
 
-	lua_register( baseState, "entity_isFlag",				 					l_entity_isFlag);
-	lua_register( baseState, "entity_setFlag",									l_entity_setFlag);
+	luaRegister(vision);
 
-	lua_register( baseState, "node_isFlag",				 					l_node_isFlag);
-	lua_register( baseState, "node_setFlag",									l_node_setFlag);
-	lua_register( baseState, "node_getFlag",									l_node_getFlag);
+	luaRegister(musicVolume);
 
-	lua_register( baseState, "avatar_getStillTimer",							l_avatar_getStillTimer);
-	lua_register( baseState, "avatar_getSpellCharge",							l_avatar_getSpellCharge);
+	luaRegister(voice);
+	luaRegister(voiceOnce);
+	luaRegister(voiceInterupt);
 
-	lua_register( baseState, "avatar_isSinging",								l_avatar_isSinging);
-	lua_register( baseState, "avatar_isTouchHit",								l_avatar_isTouchHit);
-	lua_register( baseState, "avatar_isBursting",								l_avatar_isBursting);
-	lua_register( baseState, "avatar_isLockable",								l_avatar_isLockable);
-	lua_register( baseState, "avatar_isRolling",								l_avatar_isRolling);
-	lua_register( baseState, "avatar_isOnWall",								l_avatar_isOnWall);
-	lua_register( baseState, "avatar_isShieldActive",							l_avatar_isShieldActive);
-	lua_register( baseState, "avatar_getRollDirection",						l_avatar_getRollDirection);
 
-	lua_register( baseState, "avatar_fallOffWall",								l_avatar_fallOffWall);
-	lua_register( baseState, "avatar_setBlockSinging",							l_avatar_setBlockSinging);
+	luaRegister(stopVoice);
+	luaRegister(stopAllVoice);
+	luaRegister(stopAllSfx);
 
 
-	lua_register( baseState, "avatar_toggleMovement",							l_avatar_toggleMovement);
 
-	lua_register( baseState, "toggleConversationWindow",						l_toggleConversationWindow);
-	lua_register( baseState, "toggleDialogWindow",								l_toggleConversationWindow);
+	luaRegister(fadeOutMusic);
 
 
-	lua_register( baseState, "showInGameMenu",									l_showInGameMenu);
-	lua_register( baseState, "hideInGameMenu",									l_hideInGameMenu);
-	
+	luaRegister(isStreamingVoice);
 
-	lua_register( baseState, "showImage",										l_showImage);
-	lua_register( baseState, "hideImage",										l_hideImage);
-	lua_register( baseState, "showControls",									l_showControls);
-	lua_register( baseState, "clearHelp",										l_clearHelp);
-	lua_register( baseState, "clearShots",										l_clearShots);
+	luaRegister(changeForm);
+	luaRegister(getForm);
+	luaRegister(isForm);
+	luaRegister(learnFormUpgrade);
+	luaRegister(hasFormUpgrade);
 
 
+	luaRegister(castSong);
+	luaRegister(isObstructed);
+	luaRegister(isObstructedBlock);
 
-	lua_register( baseState, "getEntity",										l_getEntity);
-	lua_register( baseState, "getEntityByName",								l_getEntity);
+	luaRegister(isFlag);
 
-	lua_register( baseState, "getFirstEntity",									l_getFirstEntity);
-	lua_register( baseState, "getNextEntity",									l_getNextEntity);
+	luaRegister(entity_isFlag);
+	luaRegister(entity_setFlag);
 
-	lua_register( baseState, "setStory",										l_setStory);
-	lua_register( baseState, "getStory",										l_getStory);
-	lua_register( baseState, "getNoteColor",									l_getNoteColor);
-	lua_register( baseState, "getNoteVector",									l_getNoteVector);
-	lua_register( baseState, "getRandNote",									l_getRandNote);
+	luaRegister(node_isFlag);
+	luaRegister(node_setFlag);
+	luaRegister(node_getFlag);
 
-	lua_register( baseState, "foundLostMemory",								l_foundLostMemory);
+	luaRegister(avatar_getStillTimer);
+	luaRegister(avatar_getSpellCharge);
 
-	
+	luaRegister(avatar_isSinging);
+	luaRegister(avatar_isTouchHit);
+	luaRegister(avatar_isBursting);
+	luaRegister(avatar_isLockable);
+	luaRegister(avatar_isRolling);
+	luaRegister(avatar_isOnWall);
+	luaRegister(avatar_isShieldActive);
+	luaRegister(avatar_getRollDirection);
 
-	lua_register( baseState, "isStory",										l_isStory);
+	luaRegister(avatar_fallOffWall);
+	luaRegister(avatar_setBlockSinging);
 
-	lua_register( baseState, "isInDialog",										l_isInConversation);
-	lua_register( baseState, "entity_damage",									l_entity_damage);
-	lua_register( baseState, "entity_heal",									l_entity_heal);
 
-	lua_register( baseState, "getNearestIngredient",							l_getNearestIngredient);
+	luaRegister(avatar_toggleMovement);
 
-	lua_register( baseState, "getNearestNode",									l_getNearestNode);
-	lua_register( baseState, "getNearestNodeByType",							l_getNearestNodeByType);
 
-	lua_register( baseState, "getNode",										l_getNode);
-	lua_register( baseState, "getNodeByName",									l_getNode);
-	lua_register( baseState, "getNodeToActivate",								l_getNodeToActivate);
-	lua_register( baseState, "setNodeToActivate",								l_setNodeToActivate);
-	lua_register( baseState, "setActivation",									l_setActivation);
-	
-	lua_register( baseState, "entity_warpToNode",								l_entity_warpToNode);
-	lua_register( baseState, "entity_moveToNode",								l_entity_moveToNode);
+	luaRegister(showInGameMenu);
+	luaRegister(hideInGameMenu);
 
-	lua_register( baseState, "setNaijaModel",									l_setNaijaModel);
 
-	lua_register( baseState, "cam_toNode",										l_cam_toNode);
-	lua_register( baseState, "cam_snap",										l_cam_snap);
-	lua_register( baseState, "cam_toEntity",									l_cam_toEntity);
-	lua_register( baseState, "cam_setPosition",								l_cam_setPosition);
+	luaRegister(showImage);
+	luaRegister(hideImage);
+	luaRegister(showControls);
+	luaRegister(clearHelp);
+	luaRegister(clearShots);
 
 
-	lua_register( baseState, "entity_flipTo",									l_entity_flipToEntity);
-	lua_register( baseState, "entity_flipToEntity",							l_entity_flipToEntity);
-	lua_register( baseState, "entity_flipToSame",								l_entity_flipToSame);
 
-	lua_register( baseState, "entity_flipToNode",								l_entity_flipToNode);
-	lua_register( baseState, "entity_flipToVel",								l_entity_flipToVel);
+	luaRegister(getEntity);
+	luaRegister(getFirstEntity);
+	luaRegister(getNextEntity);
 
-	lua_register( baseState, "entity_swimToNode",								l_entity_swimToNode);
-	lua_register( baseState, "entity_swimToPosition",							l_entity_swimToPosition);
+	luaRegister(setStory);
+	luaRegister(getStory);
+	luaRegister(getNoteColor);
+	luaRegister(getNoteVector);
+	luaRegister(getRandNote);
 
+	luaRegister(foundLostMemory);
 
-	lua_register( baseState, "createShot",										l_createShot);
-	lua_register( baseState, "entity_fireShot",								l_entity_fireShot);
 
-	lua_register( baseState, "entity_setAffectedBySpells",						l_entity_setAffectedBySpells);
-	lua_register( baseState, "entity_isHit",									l_entity_isHit);
 
+	luaRegister(isStory);
 
+	luaRegister(entity_damage);
+	luaRegister(entity_heal);
 
-	lua_register( baseState, "createWeb",										l_createWeb);
-	lua_register( baseState, "web_addPoint",									l_web_addPoint);
-	lua_register( baseState, "web_setPoint",									l_web_setPoint);
-	lua_register( baseState, "web_getNumPoints",								l_web_getNumPoints);
-	lua_register( baseState, "web_delete",										l_web_delete);
+	luaRegister(getNearestIngredient);
 
-	lua_register( baseState, "createSpore",									l_createSpore);
+	luaRegister(getNearestNode);
+	luaRegister(getNearestNodeByType);
 
+	luaRegister(getNode);
+	luaRegister(getNodeToActivate);
+	luaRegister(setNodeToActivate);
+	luaRegister(setActivation);
 
+	luaRegister(entity_warpToNode);
+	luaRegister(entity_moveToNode);
 
-	lua_register( baseState, "shot_getPosition",								l_shot_getPosition);
-	lua_register( baseState, "shot_setAimVector",								l_shot_setAimVector);
-	lua_register( baseState, "shot_setOut",									l_shot_setOut);
-	lua_register( baseState, "shot_setLifeTime",								l_shot_setLifeTime);
-	lua_register( baseState, "shot_setNice",									l_shot_setNice);
-	lua_register( baseState, "shot_setVel",									l_shot_setVel);
-	lua_register( baseState, "shot_setBounceType",								l_shot_setBounceType);
-	lua_register( baseState, "entity_pathBurst",								l_entity_pathBurst);
-	lua_register( baseState, "entity_handleShotCollisions",					l_entity_handleShotCollisions);
-	lua_register( baseState, "entity_handleShotCollisionsSkeletal",			l_entity_handleShotCollisionsSkeletal);
-	lua_register( baseState, "entity_handleShotCollisionsHair",				l_entity_handleShotCollisionsHair);
-	lua_register( baseState, "entity_collideSkeletalVsCircle",					l_entity_collideSkeletalVsCircle);
-	lua_register( baseState, "entity_collideSkeletalVsLine",					l_entity_collideSkeletalVsLine);
-	lua_register( baseState, "entity_collideSkeletalVsCircleForListByName",	l_entity_collideSkeletalVsCircleForListByName);
-	lua_register( baseState, "entity_collideCircleVsLine",						l_entity_collideCircleVsLine);
-	lua_register( baseState, "entity_collideCircleVsLineAngle",				l_entity_collideCircleVsLineAngle);
+	luaRegister(setNaijaModel);
 
+	luaRegister(cam_toNode);
+	luaRegister(cam_snap);
+	luaRegister(cam_toEntity);
+	luaRegister(cam_setPosition);
 
-	lua_register( baseState, "entity_collideHairVsCircle",						l_entity_collideHairVsCircle);
 
-	lua_register( baseState, "entity_setDropChance",							l_entity_setDropChance);
+	luaRegister(entity_flipToEntity);
+	luaRegister(entity_flipToSame);
 
-	lua_register( baseState, "entity_waitForPath",								l_entity_waitForPath);
-	lua_register( baseState, "entity_watchForPath",							l_entity_watchForPath);
+	luaRegister(entity_flipToNode);
+	luaRegister(entity_flipToVel);
 
-	lua_register( baseState, "entity_addVel",									l_entity_addVel);
-	lua_register( baseState, "entity_addVel2",									l_entity_addVel2);
-	lua_register( baseState, "entity_addRandomVel",							l_entity_addRandomVel);
+	luaRegister(entity_swimToNode);
+	luaRegister(entity_swimToPosition);
 
-	lua_register( baseState, "entity_addGroupVel",								l_entity_addGroupVel);
-	lua_register( baseState, "entity_clearVel",								l_entity_clearVel);
-	lua_register( baseState, "entity_clearVel2",								l_entity_clearVel2);
 
+	luaRegister(createShot);
+	luaRegister(entity_fireShot);
 
-	lua_register( baseState, "entity_revive",									l_entity_revive);
+	luaRegister(entity_isHit);
 
-	lua_register( baseState, "entity_getTarget",								l_entity_getTarget);
-	lua_register( baseState, "entity_isState",									l_entity_isState);
 
-	lua_register( baseState, "entity_setProperty",								l_entity_setProperty);
-	lua_register( baseState, "entity_isProperty",								l_entity_isProperty);
 
+	luaRegister(createWeb);
+	luaRegister(web_addPoint);
+	luaRegister(web_setPoint);
+	luaRegister(web_getNumPoints);
+	luaRegister(web_delete);
 
-	lua_register( baseState, "entity_initHair",								l_entity_initHair);
-	lua_register( baseState, "entity_getHairPosition",							l_entity_getHairPosition);
+	luaRegister(createSpore);
 
-	lua_register( baseState, "entity_setHairHeadPosition",						l_entity_setHairHeadPosition);
-	lua_register( baseState, "entity_updateHair",								l_entity_updateHair);
-	lua_register( baseState, "entity_exertHairForce",							l_entity_exertHairForce);
 
-	lua_register( baseState, "entity_setName",									l_entity_setName);
 
-	lua_register( baseState, "getNumberOfEntitiesNamed",						l_getNumberOfEntitiesNamed);
+	luaRegister(shot_getPosition);
+	luaRegister(shot_setAimVector);
+	luaRegister(shot_setOut);
+	luaRegister(shot_setLifeTime);
+	luaRegister(shot_setVel);
+	luaRegister(shot_setBounceType);
+	luaRegister(entity_pathBurst);
+	luaRegister(entity_handleShotCollisions);
+	luaRegister(entity_handleShotCollisionsSkeletal);
+	luaRegister(entity_handleShotCollisionsHair);
+	luaRegister(entity_collideSkeletalVsCircle);
+	luaRegister(entity_collideSkeletalVsLine);
+	luaRegister(entity_collideSkeletalVsCircleForListByName);
+	luaRegister(entity_collideCircleVsLine);
+	luaRegister(entity_collideCircleVsLineAngle);
 
-	lua_register( baseState, "isNested",										l_isNested);
 
-	lua_register( baseState, "wnd",											l_toggleConversationWindow);
-	lua_register( baseState, "wnds",											l_toggleConversationWindowSoft);
+	luaRegister(entity_collideHairVsCircle);
 
-	lua_register( baseState, "entity_idle",									l_entity_idle);
-	lua_register( baseState, "entity_stopAllAnimations",						l_entity_stopAllAnimations);
+	luaRegister(entity_setDropChance);
 
-	lua_register(baseState, "entity_getBoneByIdx",								l_entity_getBoneByIdx);
-	lua_register(baseState, "entity_getBoneByName",							l_entity_getBoneByName);
-	//lua_register(baseState, "bone_getWorldPosition",							l_bone_getWorldPosition);
+	luaRegister(entity_waitForPath);
+	luaRegister(entity_watchForPath);
 
+	luaRegister(entity_addVel);
+	luaRegister(entity_addVel2);
+	luaRegister(entity_addRandomVel);
 
+	luaRegister(entity_addGroupVel);
+	luaRegister(entity_clearVel);
+	luaRegister(entity_clearVel2);
 
-	lua_register( baseState, "inp",											l_toggleInput);
 
-	//lua_register( baseState, "CM",											l_CM);
-	//lua_register( baseState, "isIDHighest",									l_isIDHighest);
-	//lua_register( baseState, "isEGOHighest",									l_isEGOHighest);
-	//lua_register( baseState, "isSUPHighest",									l_isSUPHighest);
+	luaRegister(entity_revive);
 
-	lua_register( baseState, "entity_setTarget",								l_entity_setTarget);
-	lua_register( baseState, "getNodeFromEntity",								l_getNodeFromEntity);
+	luaRegister(entity_getTarget);
+	luaRegister(entity_isState);
 
-	lua_register( baseState, "getScreenCenter",								l_getScreenCenter);
+	luaRegister(entity_setProperty);
+	luaRegister(entity_isProperty);
 
 
+	luaRegister(entity_initHair);
+	luaRegister(entity_getHairPosition);
 
-	lua_register( baseState, "debugLog",										l_debugLog);
-	lua_register( baseState, "loadMap",										l_loadMap);
+	luaRegister(entity_setHairHeadPosition);
+	luaRegister(entity_updateHair);
+	luaRegister(entity_exertHairForce);
 
-	lua_register( baseState, "reloadTextures",									l_reloadTextures);
+	luaRegister(entity_setName);
 
-	lua_register( baseState, "loadSound",										l_loadSound);
+	luaRegister(getNumberOfEntitiesNamed);
 
-	lua_register( baseState, "node_activate",									l_node_activate);
-	lua_register( baseState, "node_getName",									l_node_getName);
-	lua_register( baseState, "node_getPathPosition",							l_node_getPathPosition);
-	lua_register( baseState, "node_getPosition",								l_node_getPosition);
-	lua_register( baseState, "node_setPosition",								l_node_setPosition);
-	lua_register( baseState, "node_getContent",								l_node_getContent);
-	lua_register( baseState, "node_getAmount",									l_node_getAmount);
-	lua_register( baseState, "node_getSize",									l_node_getSize);
-	lua_register( baseState, "node_setEffectOn",								l_node_setEffectOn);
+	luaRegister(isNested);
 
-	//luar(	node_setEffectOn				);
-	luar(	toggleSteam						);
-	luar(	toggleVersionLabel				);
-	luar(	setVersionLabelText				);
-	
-	luar(	appendUserDataPath				);
+	luaRegister(entity_idle);
+	luaRegister(entity_stopAllAnimations);
 
-	luar(	setCutscene						);
-	luar(	isInCutscene					);
+	luaRegister(entity_getBoneByIdx);
+	luaRegister(entity_getBoneByName);
 
-		
 
-	lua_register( baseState, "node_getNumEntitiesIn",							l_node_getNumEntitiesIn);
 
+	luaRegister(toggleInput);
 
-	lua_register( baseState, "entity_getName",									l_entity_getName);
-	lua_register( baseState, "entity_isName",									l_entity_isName);
-	
+	luaRegister(entity_setTarget);
+	luaRegister(getNodeFromEntity);
 
-	lua_register( baseState, "node_setCursorActivation",						l_node_setCursorActivation);
-	lua_register( baseState, "node_setCatchActions",							l_node_setCatchActions);
+	luaRegister(getScreenCenter);
 
-	lua_register( baseState, "node_setElementsInLayerActive",					l_node_setElementsInLayerActive);
 
 
-	lua_register( baseState, "entity_setHealth",								l_entity_setHealth);
-	lua_register( baseState, "entity_changeHealth",							l_entity_changeHealth);
+	luaRegister(debugLog);
+	luaRegister(loadMap);
 
-	lua_register( baseState, "node_setActive",									l_node_setActive);
+	luaRegister(reloadTextures);
 
+	luaRegister(loadSound);
 
-	lua_register( baseState, "setGameOver",									l_setGameOver);
-	lua_register( baseState, "setSceneColor",									l_setSceneColor);
+	luaRegister(node_activate);
+	luaRegister(node_getName);
+	luaRegister(node_getPathPosition);
+	luaRegister(node_getPosition);
+	luaRegister(node_setPosition);
+	luaRegister(node_getContent);
+	luaRegister(node_getAmount);
+	luaRegister(node_getSize);
+	luaRegister(node_setEffectOn);
 
+	luaRegister(toggleSteam);
+	luaRegister(toggleVersionLabel);
+	luaRegister(setVersionLabelText);
 
-	lua_register( baseState, "entity_watchEntity",								l_entity_watchEntity);
+	luaRegister(appendUserDataPath);
 
-	lua_register( baseState, "entity_setCollideRadius",						l_entity_setCollideRadius);
-	lua_register( baseState, "entity_getCollideRadius",						l_entity_getCollideRadius);
-	lua_register( baseState, "entity_setTouchPush",							l_entity_setTouchPush);
-	lua_register( baseState, "entity_setTouchDamage",							l_entity_setTouchDamage);
+	luaRegister(setCutscene);
+	luaRegister(isInCutscene);
 
-	lua_register( baseState, "entity_isEntityInRange",							l_entity_isEntityInRange);
-	lua_register( baseState, "entity_isPositionInRange",						l_entity_isPositionInRange);
 
-	lua_register( baseState, "entity_stopFollowingPath",						l_entity_stopFollowingPath);
-	lua_register( baseState, "entity_slowToStopPath",							l_entity_slowToStopPath);
-	lua_register( baseState, "entity_isSlowingToStopPath",						l_entity_isSlowingToStopPath);
 
-	lua_register( baseState, "entity_findNearestEntityOfType",					l_entity_findNearestEntityOfType);
-	lua_register( baseState, "entity_isFollowingEntity",						l_entity_isFollowingEntity);
-	lua_register( baseState, "entity_resumePath",								l_entity_resumePath);
+	luaRegister(node_getNumEntitiesIn);
 
-	lua_register( baseState, "entity_generateCollisionMask",					l_entity_generateCollisionMask);
 
-	lua_register( baseState, "entity_isAnimating",								l_entity_isAnimating);
-	lua_register( baseState, "entity_getAnimationName",						l_entity_getAnimationName);
-	lua_register( baseState, "entity_getAnimName",								l_entity_getAnimationName);
-	lua_register( baseState, "entity_getAnimationLength",						l_entity_getAnimationLength);
-	lua_register( baseState, "entity_getAnimLen",								l_entity_getAnimationLength);
+	luaRegister(entity_getName);
+	luaRegister(entity_isName);
 
-	lua_register( baseState, "entity_setCull",									l_entity_setCull);
 
-	lua_register( baseState, "entity_setTexture",								l_entity_setTexture);
-	lua_register( baseState, "entity_setFillGrid",								l_entity_setFillGrid);
+	luaRegister(node_setCursorActivation);
+	luaRegister(node_setCatchActions);
 
-	lua_register( baseState, "entity_interpolateTo",							l_entity_interpolateTo);
-	lua_register( baseState, "entity_isInterpolating",							l_entity_isInterpolating);
-	lua_register( baseState, "entity_isRotating",								l_entity_isRotating);
+	luaRegister(node_setElementsInLayerActive);
 
 
-	lua_register( baseState, "entity_isFlippedHorizontal",						l_entity_isFlippedHorizontal);
-	lua_register( baseState, "entity_isfh",									l_entity_isFlippedHorizontal);
-	lua_register( baseState, "entity_isfv",									l_entity_isFlippedVertical);
+	luaRegister(entity_setHealth);
+	luaRegister(entity_changeHealth);
 
-	lua_register( baseState, "entity_setWidth",								l_entity_setWidth);
-	lua_register( baseState, "entity_setHeight",								l_entity_setHeight);
-	lua_register( baseState, "entity_push",									l_entity_push);
+	luaRegister(node_setActive);
 
-	lua_register( baseState, "entity_alpha",									l_entity_alpha);
 
-	lua_register( baseState, "findWall",										l_findWall);
+	luaRegister(setGameOver);
+	luaRegister(setSceneColor);
 
 
-	lua_register( baseState, "overrideZoom",									l_overrideZoom);
-	lua_register( baseState, "disableOverrideZoom",							l_disableOverrideZoom);
+	luaRegister(entity_watchEntity);
 
+	luaRegister(entity_setCollideRadius);
+	luaRegister(entity_getCollideRadius);
+	luaRegister(entity_setTouchPush);
+	luaRegister(entity_setTouchDamage);
 
+	luaRegister(entity_isEntityInRange);
+	luaRegister(entity_isPositionInRange);
 
-	lua_register( baseState, "spawnAroundEntity",								l_spawnAroundEntity);
+	luaRegister(entity_stopFollowingPath);
+	luaRegister(entity_slowToStopPath);
+	luaRegister(entity_isSlowingToStopPath);
 
-	lua_register( baseState, "entity_setAffectedBySpell",						l_entity_setAffectedBySpell);
+	luaRegister(entity_findNearestEntityOfType);
+	luaRegister(entity_isFollowingEntity);
+	luaRegister(entity_resumePath);
 
-	lua_register( baseState, "entity_toggleBone",								l_entity_toggleBone);
+	luaRegister(entity_generateCollisionMask);
 
-	lua_register( baseState, "bone_damageFlash",								l_bone_damageFlash);
-	lua_register( baseState, "bone_setColor", 									l_bone_setColor);
-	lua_register( baseState, "bone_color", 									l_bone_setColor);
-	lua_register( baseState, "bone_setPosition",								l_bone_setPosition);
-	lua_register( baseState, "bone_rotate",									l_bone_rotate);
-	lua_register( baseState, "bone_rotateOffset",								l_bone_rotateOffset);
-	lua_register( baseState, "bone_getRotation",								l_bone_getRotation);
-	lua_register( baseState, "bone_offset",									l_bone_offset);
+	luaRegister(entity_isAnimating);
+	luaRegister(entity_getAnimationName);
+	luaRegister(entity_getAnimationLength);
 
-	lua_register( baseState, "bone_alpha",										l_bone_alpha);
+	luaRegister(entity_setCull);
 
-	lua_register( baseState, "bone_setTouchDamage",							l_bone_setTouchDamage);
-	lua_register( baseState, "bone_getNormal",									l_bone_getNormal);
-	lua_register( baseState, "bone_getPosition",								l_bone_getPosition);
-	lua_register( baseState, "bone_getScale",									l_bone_getScale);
-	lua_register( baseState, "bone_getWorldPosition",							l_bone_getWorldPosition);
-	lua_register( baseState, "bone_getWorldRotation",							l_bone_getWorldRotation);
+	luaRegister(entity_setTexture);
+	luaRegister(entity_setFillGrid);
 
+	luaRegister(entity_interpolateTo);
+	luaRegister(entity_isInterpolating);
+	luaRegister(entity_isRotating);
 
 
-	lua_register( baseState, "bone_getName",									l_bone_getName);
-	lua_register( baseState, "bone_isName",									l_bone_isName);
-	lua_register( baseState, "bone_getidx",									l_bone_getidx);
-	lua_register( baseState, "bone_getIndex",									l_bone_getidx);
-	lua_register( baseState, "node_x",											l_node_x);
-	lua_register( baseState, "node_y",											l_node_y);
-	lua_register( baseState, "node_isEntityPast",								l_node_isEntityPast);
-	lua_register( baseState, "node_isEntityInRange",							l_node_isEntityInRange);
-	lua_register( baseState, "node_isPositionIn",								l_node_isPositionIn);
+	luaRegister(entity_isFlippedHorizontal);
+	lua_register(baseState, "entity_isfh", l_entity_isFlippedHorizontal);
+	luaRegister(entity_isFlippedVertical);
 
+	luaRegister(entity_setWidth);
+	luaRegister(entity_setHeight);
+	luaRegister(entity_push);
 
+	luaRegister(entity_alpha);
 
-	lua_register( baseState, "entity_warpLastPosition",						l_entity_warpLastPosition);
-	lua_register( baseState, "entity_x",										l_entity_x);
-	lua_register( baseState, "entity_y",										l_entity_y);
-	lua_register( baseState, "entity_velx",									l_entity_velx);
-	lua_register( baseState, "entity_vely",									l_entity_vely);
-	lua_register( baseState, "entity_velTowards",								l_entity_velTowards);
+	luaRegister(findWall);
 
 
+	luaRegister(overrideZoom);
+	luaRegister(disableOverrideZoom);
 
-	lua_register( baseState, "updateMusic",									l_updateMusic);
 
-	lua_register( baseState, "entity_touchAvatarDamage",						l_entity_touchAvatarDamage);
-	lua_register( baseState, "getNaija",										l_getNaija);
-	lua_register( baseState, "getLi",											l_getLi);
-	lua_register( baseState, "setLi",											l_setLi);
 
-	lua_register( baseState, "randAngle360",									l_randAngle360);
-	lua_register( baseState, "randVector",										l_randVector);
-	lua_register( baseState, "getRandVector",									l_randVector);
+	luaRegister(spawnAroundEntity);
 
+	luaRegister(entity_toggleBone);
 
-	lua_register( baseState, "getAvatar",										l_getNaija);
+	luaRegister(bone_damageFlash);
+	luaRegister(bone_setColor);
+	luaRegister(bone_setPosition);
+	luaRegister(bone_rotate);
+	luaRegister(bone_rotateOffset);
+	luaRegister(bone_getRotation);
+	luaRegister(bone_offset);
 
-	lua_register( baseState, "entity_getNearestEntity",						l_entity_getNearestEntity);
-	lua_register( baseState, "entity_getNearestBoneToPosition",				l_entity_getNearestBoneToPosition);
+	luaRegister(bone_alpha);
 
-	lua_register( baseState, "entity_getNearestNode",							l_entity_getNearestNode);
+	luaRegister(bone_setTouchDamage);
+	luaRegister(bone_getNormal);
+	luaRegister(bone_getPosition);
+	luaRegister(bone_getScale);
+	luaRegister(bone_getWorldPosition);
+	luaRegister(bone_getWorldRotation);
 
-	lua_register( baseState, "node_getNearestEntity",							l_node_getNearestEntity);
-	lua_register( baseState, "node_getNearestNode",							l_node_getNearestNode);
 
 
-	lua_register( baseState, "entity_getRotation",								l_entity_getRotation);
+	luaRegister(bone_getName);
+	luaRegister(bone_isName);
+	luaRegister(bone_getIndex);
+	luaRegister(node_x);
+	luaRegister(node_y);
+	luaRegister(node_isEntityPast);
+	luaRegister(node_isEntityInRange);
+	luaRegister(node_isPositionIn);
 
-	lua_register( baseState, "streamSfx",										l_streamSfx);
 
-	lua_register( baseState, "node_isEntityIn",								l_node_isEntityIn);
 
+	luaRegister(entity_warpLastPosition);
+	luaRegister(entity_x);
+	luaRegister(entity_y);
+	luaRegister(entity_velx);
+	luaRegister(entity_vely);
+	luaRegister(entity_velTowards);
 
 
-	lua_register( baseState, "isLeftMouse",									l_isLeftMouse);
-	lua_register( baseState, "isRightMouse",									l_isRightMouse);
 
+	luaRegister(updateMusic);
 
-	lua_register( baseState, "setTimerTextAlpha",								l_setTimerTextAlpha);
-	lua_register( baseState, "setTimerText",									l_setTimerText);
+	luaRegister(entity_touchAvatarDamage);
+	luaRegister(getNaija);
+	luaRegister(getLi);
+	luaRegister(setLi);
 
+	luaRegister(randAngle360);
+	luaRegister(randVector);
 
-	lua_register( baseState, "getWallNormal",									l_getWallNormal);
-	lua_register( baseState, "getLastCollidePosition",							l_getLastCollidePosition);
+	luaRegister(entity_getNearestEntity);
+	luaRegister(entity_getNearestBoneToPosition);
+
+	luaRegister(entity_getNearestNode);
+
+	luaRegister(node_getNearestEntity);
+	luaRegister(node_getNearestNode);
+
+
+	luaRegister(entity_getRotation);
+
+	luaRegister(node_isEntityIn);
+
+
+
+	luaRegister(isLeftMouse);
+	luaRegister(isRightMouse);
+
+
+	luaRegister(setTimerTextAlpha);
+	luaRegister(setTimerText);
+
+
+	luaRegister(getWallNormal);
+	luaRegister(getLastCollidePosition);
 
 
 
 
 	// ============== deprecated
+
+	luaRegister(entity_fireAtTarget);  // FIXME: still used by several scripts
+	luaRegister(entity_setAffectedBySpells);  // FIXME: still used by several scripts
+	luaRegister(shot_setNice);  // FIXME: still used by loper.lua, toad.lua
 }
 
 void ScriptInterface::destroyBaseLuaVM()

@@ -102,7 +102,7 @@ function update(me, dt)
 			while entity_isAnimating(me) do
 				watch(FRAME_TIME)
 			end
-			avatar_setHeadTexture("Blink")
+			setNaijaHeadTexture("Blink")
 			watch(1)
 			
 			vision("EnergyTemple", 4)
@@ -184,7 +184,7 @@ function update(me, dt)
 			entity_rotate(me, -90, 2, 0, 0, 1)
 			playSfx("mia-sillygirl")
 			watch(1)
-			avatar_setHeadTexture("")
+			setNaijaHeadTexture("")
 			
 			
 			entity_animate(me, "trail")

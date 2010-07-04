@@ -150,12 +150,12 @@ function postInit(me)
 	n = getNaija()
 	entity_setTarget(me, n)
 	
-	node = getNodeByName("MAXLEFT")
+	node = getNode("MAXLEFT")
 	maxLeft = node_x(node)
-	node = getNodeByName("MAXRIGHT")
+	node = getNode("MAXRIGHT")
 	maxRight = node_x(node)
 	
-	camNode = getNodeByName("CAM")
+	camNode = getNode("CAM")
 	
 	
 	

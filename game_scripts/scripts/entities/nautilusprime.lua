@@ -95,7 +95,7 @@ function init(me)
 	bone_setSegs(tentacles, 32, 32, 0.1, 0.1, 0.01, 0.1, 6, 1)
 	
 	lungeDelay = 1.0				-- prevent the nautilus from attacking right away
-	leaveArea = getNodeByName("NAUTILUSPRIME_LEAVEAREA")
+	leaveArea = getNode("NAUTILUSPRIME_LEAVEAREA")
 	
 	bone_alpha(eye, 0)
 	entity_setTargetPriority(me, 1)

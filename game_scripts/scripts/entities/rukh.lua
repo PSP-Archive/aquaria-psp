@@ -76,8 +76,8 @@ function init(me)
 	bone_neck = entity_getBoneByName(me, "Neck")
 	
 	cl = 0.56
-	bone_color(backLeg, cl, cl, cl)
-	bone_color(backWing, cl, cl, cl)
+	bone_setColor(backLeg, cl, cl, cl)
+	bone_setColor(backWing, cl, cl, cl)
 	
 	entity_setCullRadius(me, 456)
 	

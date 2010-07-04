@@ -52,7 +52,7 @@ function init()
 	fade2(0, 1, 1, 1, 1)
 	watch(1)
 	
-	playVoice("eric")
+	voice("eric")
 	
 	watch(12) -- 12
 	

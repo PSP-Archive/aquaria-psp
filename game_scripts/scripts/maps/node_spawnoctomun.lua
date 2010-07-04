@@ -23,7 +23,7 @@ boss = 0
 
 function spawnItem(me)
 	debugLog("Spawning collectible dumbo egg")
-	node = getNodeByName("DUMBOEGGLOC")
+	node = getNode("DUMBOEGGLOC")
 	if node == 0 then
 		debugLog("COULD NOT FIND NODE!")
 	end

@@ -147,7 +147,7 @@ function update(me, dt)
 			else
 				entity_moveTowardsTarget(me, dt, 1000)
 			end
-			entity_flipTo(me, entity_getTarget(me))
+			entity_flipToEntity(me, entity_getTarget(me))
 			entity_doCollisionAvoidance(me, dt, 5, 0.5)
 		end
 		entity_updateMovement(me, dt)
