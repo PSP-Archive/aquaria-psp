@@ -17,16 +17,18 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
-pullTimer		= 1.5
-dieTimer		= 0
+v.pullTimer		= 1.5
+v.dieTimer		= 0
 
-glow = 0
+v.glow = 0
 
-hits = 16
+v.hits = 16
 
 STATE_BLIND		= 1000
 STATE_PULLABLE	= 1001
@@ -38,26 +40,26 @@ function init(me)
 	
 	entity_setState(me, STATE_IDLE)
 	
-	glow = entity_getBoneByName(me, "glow")
+	v.glow = entity_getBoneByName(me, "glow")
 	
-	bone_scale(glow, 4, 4, 1)
-	bone_scale(glow, 8, 8, 1, -1, 1)
-	bone_alpha(glow, 0)
+	bone_scale(v.glow, 4, 4, 1)
+	bone_scale(v.glow, 8, 8, 1, -1, 1)
+	bone_alpha(v.glow, 0)
 	
-	bone_rotate(glow, 360, 1, -1)
+	bone_rotate(v.glow, 360, 1, -1)
 	
 	entity_setCollideRadius(me, 90)
 	
 	entity_scale(me, 1.5, 1.5)
 	
-	bone_setBlendType(glow, BLEND_ADD)
+	bone_setBlendType(v.glow, BLEND_ADD)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
-	creatorform6 = entity_getNearestEntity(me, "creatorform6")
+	v.creatorform6 = entity_getNearestEntity(me, "creatorform6")
 end
 
 function update(me, dt)
@@ -66,12 +68,12 @@ function update(me, dt)
 	
 	
 	
-	if dieTimer > 0 then
+	if v.dieTimer > 0 then
 		entity_addVel(me, -1000*dt, 0)
-		dieTimer = dieTimer - dt
-		if dieTimer <= 0 then
-			dieTimer = 0
-			entity_msg(creatorform6, "eyedied")
+		v.dieTimer = v.dieTimer - dt
+		if v.dieTimer <= 0 then
+			v.dieTimer = 0
+			entity_msg(v.creatorform6, "eyedied")
 			entity_delete(me)
 			return
 		end
@@ -79,18 +81,18 @@ function update(me, dt)
 	
 	if entity_isState(me, STATE_PULLABLE) then
 		if entity_isBeingPulled(me) then
-			pullTimer = pullTimer - dt
-			if pullTimer <= 0 then
-				entity_msg(creatorform6, "eyepopped")
+			v.pullTimer = v.pullTimer - dt
+			if v.pullTimer <= 0 then
+				entity_msg(v.creatorform6, "eyepopped")
 				entity_setProperty(me, EP_MOVABLE, false)
 				
 				entity_addVel(me, -1000, 0)
 				
 				entity_alpha(me, 0, 2)
 				
-				dieTimer = 2
+				v.dieTimer = 2
 				
-				pullTimer = 0
+				v.pullTimer = 0
 			end
 		end
 	end
@@ -103,7 +105,7 @@ end
 
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
-		bone_alpha(glow, 0, 1)
+		bone_alpha(v.glow, 0, 1)
 		entity_setColor(me, 1, 1, 1, 0.5)
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_BLIND) then
@@ -111,7 +113,7 @@ function enterState(me)
 		entity_setColor(me, 1, 1, 1)
 		entity_setColor(me, 1, 0.5, 0.5, 0.2, -1, 1)
 		]]--
-		bone_alpha(glow, 0.5, 1)
+		bone_alpha(v.glow, 0.5, 1)
 		
 	elseif entity_isState(me, STATE_PULLABLE) then
 		entity_color(me, 0.2, 0.2, 0.2, 3)
@@ -123,7 +125,7 @@ end
 
 function exitState(me)
 	if entity_isState(me, STATE_BLIND) then
-		bone_alpha(glow, 0, 1)
+		bone_alpha(v.glow, 0, 1)
 		entity_setState(me, STATE_IDLE)
 	end
 end
@@ -132,8 +134,8 @@ function damage(me, attacker, bone, damageType, dmg)
 	debugLog("hit eyespiral")
 	if entity_isState(me, STATE_BLIND) then
 		bone_damageFlash(entity_getBoneByIdx(me, 0))
-		hits = hits - dmg
-		if hits <= 0 then
+		v.hits = v.hits - dmg
+		if v.hits <= 0 then
 			entity_setState(me, STATE_PULLABLE)
 		end
 		return false

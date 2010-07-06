@@ -17,29 +17,31 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-altar = 0
+v.altar = 0
 function init(me)
 	node_setCursorActivation(me, true)
 end
 
 function update(me, dt)
-	if altar == 0 then
-		altar = node_getNearestEntity(me, "Altar")
+	if v.altar == 0 then
+		v.altar = node_getNearestEntity(me, "Altar")
 	end
-	if altar ~=0 then
-		node_setCursorActivation(me, entity_isState(altar, STATE_OPENED))
+	if v.altar ~= 0 then
+		node_setCursorActivation(me, entity_isState(v.altar, STATE_OPENED))
 	end
 end
 
 function activate(me)
-	if altar ~= 0 then
+	if v.altar ~= 0 then
 		debugLog("found altar")
-		if entity_isState(altar, STATE_OPENED) then
-			entity_setState(altar, STATE_CLOSE)
-		elseif entity_isState(altar, STATE_CLOSED) then
-			entity_setState(altar, STATE_OPEN)
+		if entity_isState(v.altar, STATE_OPENED) then
+			entity_setState(v.altar, STATE_CLOSE)
+		elseif entity_isState(v.altar, STATE_CLOSED) then
+			entity_setState(v.altar, STATE_OPEN)
 		end
 	end
 end

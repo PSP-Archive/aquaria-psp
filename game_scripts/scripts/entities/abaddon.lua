@@ -17,11 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-bone_tentacles = 0
-fireDelay = 0
+v.n = 0
+v.bone_tentacles = 0
+v.fireDelay = 0
 
 function init(me)
 	setupEntity(me)
@@ -31,7 +33,7 @@ function init(me)
 	
 	entity_generateCollisionMask(me)	
 		
-	bone_tentacles = entity_getBoneByName(me, "Tentacles")	
+	v.bone_tentacles = entity_getBoneByName(me, "Tentacles")	
 	
 	entity_setDeathParticleEffect(me, "BigRedExplode")
 	entity_setDeathScene(me, true)
@@ -50,26 +52,26 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 	entity_handleShotCollisionsSkeletal(me)
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if bone ~= 0 then
 		entity_touchAvatarDamage(me, 0, 1, 400)
 	end
 	
-	fireDelay = fireDelay + dt
-	if fireDelay > 4 then
-		fireDelay = 0
-		radius = 64
-		maxa = 3.14 * 2
-		off = bone_getRotation(bone_tentacles)
-		a = off
+	v.fireDelay = v.fireDelay + dt
+	if v.fireDelay > 4 then
+		v.fireDelay = 0
+		local radius = 64
+		local maxa = 3.14 * 2
+		local off = bone_getRotation(v.bone_tentacles)
+		local a = off
 		while a < maxa+off do
-			s= createShot("Abaddon", me)
+			local s = createShot("Abaddon", me)
 			shot_setAimVector(s, math.sin(a), math.cos(a))		
 			shot_setOut(s, radius)
 			a = a + (3.14*2)/8.0
@@ -80,9 +82,9 @@ end
 
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
-		bone_rotate(bone_tentacles, 360, 10, -1)
+		bone_rotate(v.bone_tentacles, 360, 10, -1)
 	elseif entity_isState(me, STATE_DEATHSCENE) then
-		t = 2
+		local t = 2
 		entity_offset(me, 10, 0, 0.05, -1, 1)
 		entity_setStateTime(me, t)
 		entity_scale(me, 0.2, 0.2, t, 0, 1)
@@ -93,7 +95,7 @@ function exitState(me)
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if bone == bone_tentacles then
+	if bone == v.bone_tentacles then
 		return false
 	end
 	return true

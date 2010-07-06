@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- H U G G Y
 -- ================================================================================================
@@ -30,19 +32,19 @@ STATE_FLYOFF			= 1001
 -- L O C A L   V A R I A B L E S 
 -- ================================================================================================
 
-eyes = 0
-color = math.random(8)-1
-noteDown = -1
-angle = randAngle360()
+v.eyes = 0
+v.color = math.random(8)-1
+v.noteDown = -1
+v.angle = randAngle360()
 
-swimTime = 0.60 + math.random(40)/100
-swimTimer = swimTime * 0.76
+v.swimTime = 0.60 + math.random(40)/100
+v.swimTimer = v.swimTime * 0.76
 
-attachBone = 0
-rollTime = 0
-maxRollTime = math.random(12)/30.0 + 0.45
+v.attachBone = 0
+v.rollTime = 0
+v.maxRollTime = math.random(12)/30.0 + 0.45
 
-healDelay = 0
+v.healDelay = 0
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -72,16 +74,16 @@ function init(me)
 	entity_setDamageTarget(me, DT_AVATAR_LIZAP, false)	-- Stop Li from shooting at huggys!
 	
 	entity_initSkeletal(me, "Huggy")
-	eyes = entity_getBoneByName(me, "Eyes")
+	v.eyes = entity_getBoneByName(me, "Eyes")
 	
-	size = 0.77 + (math.random(15)*0.01)
+	local size = 0.77 + (math.random(15)*0.01)
 	entity_scale(me, size, size)
 	
 	entity_initHair(me, 32*size, 2, 40*size, "Huggy/Tail2")
 	entity_exertHairForce(me, 0, 400, 1)
 	
-	r,g,b = getNoteColor(color)
-	bone_setColor(eyes, r, g, b)
+	local r,g,b = getNoteColor(v.color)
+	bone_setColor(v.eyes, r, g, b)
 	
 	entity_setState(me, STATE_IDLE)
 	
@@ -89,43 +91,40 @@ function init(me)
 end
 
 function update(me, dt)
-	boost = 315
+	local boost = 315
 
 	if entity_getState(me)==STATE_IDLE then
 		if not entity_hasTarget(me) then
 		
-			if noteDown == color then 
+			if v.noteDown == v.color then 
 				entity_findTarget(me, 550)
 			end
 			
-			swimTimer = swimTimer + dt
+			v.swimTimer = v.swimTimer + dt
 			
-			if swimTimer > swimTime then
-				swimTimer = swimTimer - swimTime
+			if v.swimTimer > v.swimTime then
+				v.swimTimer = v.swimTimer - v.swimTime
 				
-				angle = angle + math.random(180) - 90
-				if angle > 355 then
-					angle = angle - 355
-				elseif angle < 0 then
-					angle = angle + 355
+				v.angle = v.angle + math.random(180) - 90
+				if v.angle > 355 then
+					v.angle = v.angle - 355
+				elseif v.angle < 0 then
+					v.angle = v.angle + 355
 				end
 				
-				entity_moveTowardsAngle(me, angle, 1, boost)
+				entity_moveTowardsAngle(me, v.angle, 1, boost)
 				
 				entity_doEntityAvoidance(me, dt, 64, 0.2)
 				entity_rotateToVel(me, 0.4)
-				
-				lastBoostX = boostX
-				lastBoostY = boostY
 			end
 			entity_doCollisionAvoidance(me, dt, 6, 0.5)
 		else
-			swimTimer = swimTimer + dt
-			if swimTimer > swimTime then			
+			v.swimTimer = v.swimTimer + dt
+			if v.swimTimer > v.swimTime then
 				entity_moveTowardsTarget(me, 1, boost*4)
 					
 				entity_doEntityAvoidance(me, 1, 64, 0.1)
-				swimTimer = swimTimer - swimTime
+				v.swimTimer = v.swimTimer - v.swimTime
 			else
 				entity_moveTowardsTarget(me, dt, boost/3)
 				entity_doEntityAvoidance(me, dt, 64, 0.1)
@@ -147,22 +146,21 @@ function update(me, dt)
 		
 	elseif entity_getState(me)==STATE_ATTACHED then
 	
-		healDelay = healDelay - dt
-		if healDelay < 0 then
-			healDelay = 0.5
+		v.healDelay = v.healDelay - dt
+		if v.healDelay < 0 then
+			v.healDelay = 0.5
 			spawnParticleEffect("HuggyHeal", entity_x(me), entity_y(me))
 			entity_heal(getNaija(), 1*dt)
 		end
 		
 		entity_exertHairForce(me, 0, 4, 1)				--tail gravity
 	
-		t = entity_getTarget(me)
-		entity_rotate(me, bone_getWorldRotation(attachBone))
-		entity_setPosition(me, bone_getWorldPosition(attachBone))
+		entity_rotate(me, bone_getWorldRotation(v.attachBone))
+		entity_setPosition(me, bone_getWorldPosition(v.attachBone))
 		
 		if avatar_isRolling() then
-			rollTime = rollTime + dt
-			if rollTime > maxRollTime then			
+			v.rollTime = v.rollTime + dt
+			if v.rollTime > v.maxRollTime then			
 				entity_setState(me, STATE_FLYOFF, 0.5)
 			end
 		end
@@ -177,7 +175,7 @@ function update(me, dt)
 		entity_updateCurrents(me, dt)
 		entity_updateMovement(me, dt)
 		entity_rotateToVel(me, 0.2)
-		angle = entity_getRotation(me)
+		v.angle = entity_getRotation(me)
 	end
 	
 	entity_setHairHeadPosition(me, entity_x(me), entity_y(me))
@@ -189,11 +187,11 @@ function songNote(me, note)
 		return
 	end
 	
-	noteDown = note
+	v.noteDown = note
 end
 
 function songNoteDone(me, note)
-	noteDown = -1
+	v.noteDown = -1
 end
 
 function enterState(me)
@@ -209,12 +207,12 @@ function enterState(me)
 		entity_setMaxSpeed(me, 0)
 		entity_animate(me, "attached", LOOP_INF)
 		entity_sound(me, "Leach")
-		attachBone = entity_getNearestBoneToPosition(entity_getTarget(me), entity_getPosition(me))
+		v.attachBone = entity_getNearestBoneToPosition(entity_getTarget(me), entity_getPosition(me))
 		
 	elseif entity_isState(me, STATE_FLYOFF) then
 		entity_setEntityType(me, ET_ENEMY)
 		esetv(me, EV_LOOKAT,1)
-		rollTime = 0
+		v.rollTime = 0
 		entity_setMaxSpeed(me, 840)
 		entity_addRandomVel(me, 1200)
 		entity_setTarget(me, 0)

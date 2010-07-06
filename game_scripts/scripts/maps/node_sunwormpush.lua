@@ -17,26 +17,28 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-s = 0
+v.n = 0
+v.s = 0
 
 function init(me)
-	n = getNaija()
-	s = getEntity("sunworm")
+	v.n = getNaija()
+	v.s = getEntity("sunworm")
 end
 
 function update(me, dt)
 	if getFlag(FLAG_BOSS_SUNWORM) <= 0 then
-		if s == 0 then
-			s = getEntity("sunworm")
+		if v.s == 0 then
+			v.s = getEntity("sunworm")
 		else
-			if node_isEntityIn(me, s) and entity_isUnderWater(s) then
-				dx = entity_x(s) - node_x(me)
-				dy = entity_y(s) - node_y(me)
+			if node_isEntityIn(me, v.s) and entity_isUnderWater(v.s) then
+				local dx = entity_x(v.s) - node_x(me)
+				local dy = entity_y(v.s) - node_y(me)
 				dx, dy = vector_setLength(dx, dy, 3000*dt)
-				entity_addVel(s, dx, dy)
+				entity_addVel(v.s, dx, dy)
 			end
 		end
 	end

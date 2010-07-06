@@ -17,59 +17,61 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-done = false
+v.done = false
 
-bone_body = 0
-match = false
-mia = 0
-n = 0
+v.bone_body = 0
+v.match = false
+v.mia = 0
+v.n = 0
 
 function init(me)
 end
 
 function update(me, dt)
-	if match then
+	if v.match then
 		-- float with
-		if bone_body == 0 then
-			bone_body = entity_getBoneByName(mia, "Body")
+		if v.bone_body == 0 then
+			v.bone_body = entity_getBoneByName(v.mia, "Body")
 		end
 		
-		bx, by = bone_getWorldPosition(bone_body)
-		entity_setPosition(n, entity_x(n), by)
+		local bx, by = bone_getWorldPosition(v.bone_body)
+		entity_setPosition(v.n, entity_x(v.n), by)
 	end
-	if not done and node_isEntityIn(me, getNaija()) then
-		done = true
+	if not v.done and node_isEntityIn(me, getNaija()) then
+		v.done = true
 		
-		n = getNaija()
+		local n = getNaija()
 		
-		cam = getNode("cam")
-		cam2 = getNode("cam2")
-		naija2 = getNode("naija2")
+		local cam = getNode("cam")
+		local cam2 = getNode("cam2")
+		local naija2 = getNode("naija2")
 		
-		entity_idle(n)
+		entity_idle(v.n)
 		
 		changeForm(FORM_NORMAL)
 		watch(0.5)
 		
-		entity_idle(n)
+		entity_idle(v.n)
 		
 		fade2(1, 0.5)
 		watch(0.5)
 		
 		overrideZoom(0.9)
 		-- do the secret ending!
-		thir = createEntity("13_progression")
-		mia = createEntity("mia")
+		local thir = createEntity("13_progression")
+		v.mia = createEntity("mia")
 		entity_offset(thir, 0, 40)
-		entity_warpToNode(n, getNode("naija"))
+		entity_warpToNode(v.n, getNode("naija"))
 		entity_warpToNode(thir, getNode("mia"))
-		entity_warpToNode(mia, getNode("mia"))
-		entity_flipToEntity(mia, n)
-		entity_flipToEntity(thir, n)
-		entity_flipToEntity(n, mia)
-		entity_alpha(mia, 0)
+		entity_warpToNode(v.mia, getNode("mia"))
+		entity_flipToEntity(v.mia, v.n)
+		entity_flipToEntity(thir, v.n)
+		entity_flipToEntity(v.n, v.mia)
+		entity_alpha(v.mia, 0)
 		fadeIn(1)
 		fade2(0, 1, 0, 0, 0)
 		watch(1)
@@ -78,21 +80,21 @@ function update(me, dt)
 		
 		watch(0.5)
 		
-		--cam_toEntity(mia)
+		--cam_toEntity(v.mia)
 		cam_toNode(cam)
 		
 		watch(0.5)
 		
 		playSfx("spirit-beacon")
 		
-		spawnParticleEffect("SpiritBeacon", entity_x(mia), entity_y(mia))
+		spawnParticleEffect("SpiritBeacon", entity_x(v.mia), entity_y(v.mia))
 		fade2(1,0.2,1,1,1) watch(0.2)
 		fade2(0,0.2,1,1,1) watch(0.2)
 		
 		playSfx("mia-appear")
 		
 		entity_alpha(thir, 0.1, 3)
-		entity_alpha(mia, 1, 3)
+		entity_alpha(v.mia, 1, 3)
 		watch(2.8)
 		fade2(1,0.2,1,1,1) watch(0.2)
 		fade2(0,0.8,1,1,1)
@@ -110,13 +112,13 @@ function update(me, dt)
 		
 		watch(0.5)
 		
-		entity_setPosition(n, node_x(naija2), node_y(naija2))
+		entity_setPosition(v.n, node_x(naija2), node_y(naija2))
 		
 		overrideZoom(1.2)
 		
-		entity_animate(mia, "hug", -1, 1)
-		entity_animate(n, "hugLi", -1, 3)
-		match = true
+		entity_animate(v.mia, "hug", -1, 1)
+		entity_animate(v.n, "hugLi", -1, 3)
+		v.match = true
 		
 		cam_toNode(cam2)
 		watch(0.5)

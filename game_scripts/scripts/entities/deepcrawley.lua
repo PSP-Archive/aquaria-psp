@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- D E E P   C R A W L E Y
 -- ================================================================================================
@@ -27,21 +29,20 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-size = 0
-t = 0.5
-size0 = 1.5
+v.size = 0
+v.t = 0.5
+v.size0 = 1.5
 
-n = 0
-mld = 0.2
-ld = mld
-note = -1
-excited = 0
-excited = 0
-glow = 0
+v.n = 0
+v.mld = 0.2
+v.ld = v.mld
+v.note = -1
+v.excited = 0
+v.glow = 0
 
-maxSpeed = 321 + math.random(32)
-width = 128
-dir = -1
+v.maxSpeed = 321 + math.random(32)
+v.width = 128
+v.dir = -1
 
 STATE_ROTATE = 1000
 STATE_WALK = 1001
@@ -72,39 +73,39 @@ function init(me)
 	entity_setUpdateCull(me, 4000)
 
 	-- SLIGHT SCALE AND COLOUR VARIATION
-	sz = 0.8 + (math.random(400) * 0.001)
+	local sz = 0.8 + (math.random(400) * 0.001)
 	entity_scale(me, sz, sz)
-	cl = 1.0 - (math.random(2345) * 0.0001)
+	local cl = 1.0 - (math.random(2345) * 0.0001)
 	entity_color(me, cl, cl, cl)
-	width = width * sz
-	entity_setCollideRadius(me, width)
+	v.width = v.width * sz
+	entity_setCollideRadius(me, v.width)
 
-	entity_scale(me, size0, size0)
+	entity_scale(me, v.size0, v.size0)
 
-	glow = createQuad("Naija/LightFormGlow", 13)
-	quad_scale(glow, 4, 4)
+	v.glow = createQuad("Naija/LightFormGlow", 13)
+	quad_scale(v.glow, 4, 4)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 
-	entity_setMaxSpeed(me, maxSpeed)
+	entity_setMaxSpeed(me, v.maxSpeed)
 	entity_rotate(me, randAngle360())
 	entity_addRandomVel(me, 123)
 	
-	if chance(50) then dir = 1 end
+	if chance(50) then v.dir = 1 end
 end
 
 function update(me, dt)
-	ld = ld - dt
-	if ld < 0 then
-		ld = mld
-		l = createQuad("Naija/LightFormGlow", 13)
-		r = 1
-		g = 1
-		b = 1
-		if note ~= -1 then
-			r, g, b = getNoteColor(note)
+	v.ld = v.ld - dt
+	if v.ld < 0 then
+		v.ld = v.mld
+		local l = createQuad("Naija/LightFormGlow", 13)
+		local r = 1
+		local g = 1
+		local b = 1
+		if v.note ~= -1 then
+			r, g, b = getNoteColor(v.note)
 			r = r*0.5 + 0.5
 			g = g*0.5 + 0.5
 			b = b*0.5 + 0.5
@@ -115,19 +116,19 @@ function update(me, dt)
 		quad_alpha(l, 0.7, 0.5)
 		quad_color(l, r, g, b)		
 		quad_delete(l, 2)
-		quad_color(glow, r, g, b, 0.5)
+		quad_color(v.glow, r, g, b, 0.5)
 	end
 
 	entity_clearTargetPoints(me)
 	
 	-- ROTATE GENTLY
-	rotSpeed = (entity_getVelLen(me)/300) + 1
-	if entity_velx(me) < 0 then dir = -1
-	else dir = 1 end
-	entity_rotateTo(me, entity_getRotation(me) + (rotSpeed * dir))
+	local rotSpeed = (entity_getVelLen(me)/300) + 1
+	if entity_velx(me) < 0 then v.dir = -1
+	else v.dir = 1 end
+	entity_rotateTo(me, entity_getRotation(me) + (rotSpeed * v.dir))
 	
 	-- AVOIDANCE
-	if entity_getBoneLockEntity(n) ~= me then entity_doEntityAvoidance(me, dt, entity_getCollideRadius(me)*2.1, 1.23) end
+	if entity_getBoneLockEntity(v.n) ~= me then entity_doEntityAvoidance(me, dt, entity_getCollideRadius(me)*2.1, 1.23) end
 	entity_doCollisionAvoidance(me, dt, ((entity_getCollideRadius(me)*0.01)*7)+1, 0.421)
 	-- MOVEMENT
 	if entity_getVelLen(me) > 64 then entity_doFriction(me, dt, 42) end
@@ -138,7 +139,7 @@ function update(me, dt)
 		entity_moveTowardsTarget(me, 1, -500)
 	end
 
-	quad_setPosition(glow, entity_getPosition(me))
+	quad_setPosition(v.glow, entity_getPosition(me))
 end
 
 function enterState(me)
@@ -159,15 +160,15 @@ function damage(me, attacker, bone, damageType, dmg)
 	if not entity_isInvincible(me) and (damageType == DT_AVATAR_ENERGYBLAST or damageType == DT_AVATAR_SHOCK or damageType == DT_AVATAR_LIZAP) then
 		entity_heal(me, 999)
 		
-		size = size + dmg
-		maxSpeed = maxSpeed + dmg * 10
-		if size >= 16 then
+		v.size = v.size + dmg
+		v.maxSpeed = v.maxSpeed + dmg * 10
+		if v.size >= 16 then
 			entity_setState(me, STATE_EXPLODE)
 		end	
 		--entity_setCollideRadius(me, getRadius(me))
-		entity_setCollideRadius(me, entity_getCollideRadius(me)-(size*0.5))
+		entity_setCollideRadius(me, entity_getCollideRadius(me)-(v.size*0.5))
 		
-		sz = size0 - (size * 0.1)
+		local sz = v.size0 - (v.size * 0.1)
 		entity_scale(me, sz, sz, 0.5)
 	end
 	return true

@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- W A L K E R   (alpha)
 -- ================================================================================================
@@ -27,11 +29,11 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L   V A R I A B L E S 
 -- ================================================================================================
 
-moveTimer = 0
-n = 0
+v.moveTimer = 0
+v.n = 0
 
-seen = false
-sighTimer = 5
+v.seen = false
+v.sighTimer = 5
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -59,15 +61,15 @@ function init(me)
 	entity_setDeathParticleEffect(me, "Explode")
 	
 	entity_initSkeletal(me, "Walker")
-	bone_body = entity_getBoneByName(me, "Body")
+	v.bone_body = entity_getBoneByName(me, "Body")
 	entity_generateCollisionMask(me)
 	
 	-- DARKEN BACK LEGS
-	backLeg1Bottom = entity_getBoneByName(me, "BackLeg1Bottom")
-	backLeg1Top = entity_getBoneByName(me, "BackLeg1Top")
-	BackLeg2Bottom = entity_getBoneByName(me, "BackLeg2Bottom")
-	backLeg2Top = entity_getBoneByName(me, "BackLeg2Top")
-	cl = 0.64
+	local backLeg1Bottom = entity_getBoneByName(me, "BackLeg1Bottom")
+	local backLeg1Top = entity_getBoneByName(me, "BackLeg1Top")
+	local BackLeg2Bottom = entity_getBoneByName(me, "BackLeg2Bottom")
+	local backLeg2Top = entity_getBoneByName(me, "BackLeg2Top")
+	local cl = 0.64
 	bone_setColor(backLeg1Bottom, cl, cl, cl)
 	bone_setColor(backLeg1Top, cl, cl, cl)
 	bone_setColor(BackLeg2Bottom, cl, cl, cl)
@@ -86,10 +88,10 @@ end
 function postInit(me)
 	entity_setState(me, STATE_IDLE)
 	
-	n = getNaija()
+	v.n = getNaija()
 	
 	-- FLIP WITH A FLIP NODE
-	node = entity_getNearestNode(me, "FLIP")
+	local node = entity_getNearestNode(me, "FLIP")
 	if node ~=0 then
 		if node_isEntityIn(node, me) then 
 			entity_fh(me)
@@ -100,27 +102,27 @@ end
 
 function update(me, dt)
 	-- NAIJA ATTACHING TO BODY
-	rideBone = entity_collideSkeletalVsCircle(me, n)
-	if rideBone == bone_body and avatar_isBursting() and entity_setBoneLock(n, me, rideBone) then
+	local rideBone = entity_collideSkeletalVsCircle(me, v.n)
+	if rideBone == v.bone_body and avatar_isBursting() and entity_setBoneLock(v.n, me, rideBone) then
 	elseif rideBone ~=0 then
-		vecX, vecY = entity_getVectorToEntity(me, n, 1000)
-		entity_addVel(n, vecX, vecY)
+		local vecX, vecY = entity_getVectorToEntity(me, v.n, 1000)
+		entity_addVel(v.n, vecX, vecY)
 	end
 	
 	-- emote
-	if entity_isEntityInRange(me, n, 512) then
-		if not seen then
+	if entity_isEntityInRange(me, v.n, 512) then
+		if not v.seen then
 			if chance(50) then
 				emote(EMOTE_NAIJAWOW)
 			else
 				emote(EMOTE_NAIJALAUGH)
 			end
 		end
-		seen = true
-		sighTimer = sighTimer - dt
-		if sighTimer < 0 then
+		v.seen = true
+		v.sighTimer = v.sighTimer - dt
+		if v.sighTimer < 0 then
 			emote(EMOTE_NAIJAGIGGLE)
-			sighTimer = 8 + math.random(4)
+			v.sighTimer = 8 + math.random(4)
 		end
 	end
 		

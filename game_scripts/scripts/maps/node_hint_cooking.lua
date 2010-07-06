@@ -17,21 +17,23 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
 function init(me)
 end
 
 function update(me, dt)
-	n = getNaija()
+	v.n = getNaija()
 	if isFlag(FLAG_HINT_COOKING, 0) then
 		if node_isEntityIn(me, getNaija()) then
 			--setControlHint(getStringBank(11), 0, 0, 0, 8)
-			entity_idle(n)
-			if entity_isfh(n) then
-				entity_fh(n)
+			entity_idle(v.n)
+			if entity_isfh(v.n) then
+				entity_fh(v.n)
 			end
 			watch(3.5)
 			showInGameMenu(0,0,MENUPAGE_FOOD)

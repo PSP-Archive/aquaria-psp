@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- Krill
 -- ================================================================================================
@@ -35,13 +37,13 @@ STATE_PASSON			= 1006
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-moveTimer = 0
-moveDir = 0
-avoidCollisionsTimer = 0
-eggTimer = 0
-lifeSpan = 0
+v.moveTimer = 0
+v.moveDir = 0
+v.avoidCollisionsTimer = 0
+v.eggTimer = 0
+v.lifeSpan = 0
 
-eggTime = 2
+v.eggTime = 2
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -75,8 +77,8 @@ function init(me)
 	
 	esetv(me, EV_WALLOUT, 8)
 	
-	lifeSpan = 18 + math.random(8)
-	--lifeSpan = 8
+	v.lifeSpan = 18 + math.random(8)
+	--v.lifeSpan = 8
 	
 	entity_setState(me, STATE_IDLE)
 	
@@ -91,53 +93,53 @@ end
 function update(me, dt)	
 	
 	if entity_isState(me, STATE_IDLE) then
-		lifeSpan = lifeSpan - dt
-		if lifeSpan < 2 then
+		v.lifeSpan = v.lifeSpan - dt
+		if v.lifeSpan < 2 then
 			entity_setMaxSpeedLerp(me, 0.1, 0.1)	
 			entity_color(me, 0.2,0.4,0.4,100*dt)
-		elseif lifeSpan < 4 then
+		elseif v.lifeSpan < 4 then
 			entity_setMaxSpeedLerp(me, 0.4, 0.1)
 			entity_setColor(me, 0.6, 0.9, 0.9, 100*dt)
 		end
-		if lifeSpan < 0 then
+		if v.lifeSpan < 0 then
 			entity_setState(me, STATE_PASSON)
 		end
-		avoidCollisionsTimer = avoidCollisionsTimer + dt
-		if avoidCollisionsTimer > 5 then
-			avoidCollisionsTimer = 0
+		v.avoidCollisionsTimer = v.avoidCollisionsTimer + dt
+		if v.avoidCollisionsTimer > 5 then
+			v.avoidCollisionsTimer = 0
 		end
-		moveTimer = moveTimer + dt
-		if moveTimer < 1.5 then
+		v.moveTimer = v.moveTimer + dt
+		if v.moveTimer < 1.5 then
 			-- move
-			amount = 2000*dt
-			if moveDir == 0 then
+			local amount = 2000*dt
+			if v.moveDir == 0 then
 				entity_addVel(me, -amount, 0)
 				if entity_isFlippedHorizontal(me) then
 					entity_flipHorizontal(me)
 				end
-			elseif moveDir == 1 then
+			elseif v.moveDir == 1 then
 				entity_addVel(me, 0, amount)
-			elseif moveDir == 2 then
+			elseif v.moveDir == 2 then
 				entity_addVel(me, amount, 0)
 				if not entity_isFlippedHorizontal(me) then
 					entity_flipHorizontal(me)
 				end			
-			elseif moveDir == 3 then
+			elseif v.moveDir == 3 then
 				entity_addVel(me, 0, amount)
 			end		
-		elseif moveTimer > 3 then
+		elseif v.moveTimer > 3 then
 			-- stop 
 			--entity_clearVel(me)
-			moveTimer = 0
-			moveDir = moveDir +1 
-			if moveDir >= 4 then
-				moveDir = 0
+			v.moveTimer = 0
+			v.moveDir = v.moveDir +1 
+			if v.moveDir >= 4 then
+				v.moveDir = 0
 			end
-		elseif moveTimer > 2.5 then
-			factor = 5*dt
+		elseif v.moveTimer > 2.5 then
+			local factor = 5*dt
 			entity_addVel(me, -entity_velx(me)*factor, -entity_vely(me)*factor)
 		end
-		if avoidCollisionsTimer < 3 then
+		if v.avoidCollisionsTimer < 3 then
 			entity_doCollisionAvoidance(me, dt, 4, 1.0)
 		end
 		entity_updateMovement(me, dt)		
@@ -148,9 +150,9 @@ function update(me, dt)
 		if not entity_isFlippedHorizontal(me) then
 			entity_flipHorizontal(me)
 		end				
-		eggTimer = eggTimer + dt
-		if eggTimer > eggTime then
-			eggTimer = 0
+		v.eggTimer = v.eggTimer + dt
+		if v.eggTimer > v.eggTime then
+			v.eggTimer = 0
 			entity_setState(me, STATE_LAYEGGS)
 		end
 	elseif entity_isState(me, STATE_LAYEGGS) or entity_isState(me, STATE_RECOVER) then
@@ -171,7 +173,7 @@ end
 
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
-		avoidCollisionsTimer = 0
+		v.avoidCollisionsTimer = 0
 	elseif entity_isState(me, STATE_SURFACE) then
 		entity_clearVel(me)
 		if chance(50) then
@@ -189,14 +191,14 @@ function enterState(me)
 		entity_scale(me)
 		entity_scale(me, 1, 1, 1)
 		entity_setStateTime(me, 1)
-		eggTimer = -7
+		v.eggTimer = -7
 	elseif entity_isState(me, STATE_LAYEGGS) then
 		entity_setInternalOffset(me, 0, 0)
 		entity_setInternalOffset(me, 10, 0, 0.1, -1, 1)
 		entity_setStateTime(me, 2)
-		lifeSpan = lifeSpan - 2
+		v.lifeSpan = v.lifeSpan - 2
 	elseif entity_isState(me, STATE_RECOVER) then
-		eggs = createEntity("KrillEggs", "", entity_getPosition(me))
+		local eggs = createEntity("KrillEggs", "", entity_getPosition(me))
 		entity_alpha(eggs, 0)
 		entity_alpha(eggs, 1, 0.5)
 		entity_scale(eggs, 1)
@@ -207,7 +209,7 @@ function enterState(me)
 		entity_setInternalOffset(me, 0, 0, 0.5)
 		entity_setStateTime(me, 2)
 	elseif entity_isState(me, STATE_PASSON) then
-		t = 2
+		local t = 2
 		entity_setStateTime(me, t)
 		entity_alpha(me, 1)
 		entity_alpha(me, 0, t)

@@ -17,25 +17,27 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ===============================================================================================
 -- SPORE CHILD
 -- ================================================================================================
 
 dofile("scripts/entities/entityinclude.lua")
 
-growth = 0
-growTime = 5
-growEmitter = 0
-seekEnemy = 0
-seekEnemyDelay = 1.5
+v.growth = 0
+v.growTime = 5
+v.growEmitter = 0
+v.seekEnemy = 0
+v.seekEnemyDelay = 1.5
 
-minSpeed = 450
-maxSpeed = 700
+v.minSpeed = 450
+v.maxSpeed = 700
 
-backAway = 0
-backAwayTime = 0.75
+v.backAway = 0
+v.backAwayTime = 0.75
 
-myType = 1
+v.myType = 1
 
 function init(me)
 	setupBasicEntity(
@@ -55,7 +57,7 @@ function init(me)
 	1
 	)
 	
-	entity_initEmitter(me, growEmitter, "SporeSeedGrow")
+	entity_initEmitter(me, v.growEmitter, "SporeSeedGrow")
 	
 	entity_setCollideRadius(me, 64)
 	entity_setEntityType(me, ET_ENEMY)
@@ -70,7 +72,7 @@ function init(me)
 	
 	entity_setWeight(me, 100)
 	
-	seekEnemy = seekEnemyDelay
+	v.seekEnemy = v.seekEnemyDelay
 end
 
 function update(me, dt)

@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- SHOCKER
 -- ================================================================================================
@@ -31,10 +33,10 @@ dofile("scripts/entities/entityinclude.lua")
 STATE_SHOCKPREP 	= 1000
 STATE_SHOCK			= 1001
 
-moveStateTimer = 0
-moveState = 0
-shockDelay = 0
-shockDelayTime = 5
+v.moveStateTimer = 0
+v.moveState = 0
+v.shockDelay = 0
+v.shockDelayTime = 5
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -79,9 +81,9 @@ function update(me, dt)
 	end
 	
 	if entity_hasTarget(me) and entity_isTargetInRange(me, 512) then
-		shockDelay = shockDelay - dt
-		if shockDelay < 0 then
-			shockDelay = shockDelayTime
+		v.shockDelay = v.shockDelay - dt
+		if v.shockDelay < 0 then
+			v.shockDelay = v.shockDelayTime
 			entity_setState(me, STATE_SHOCKPREP, 2)
 		end
 	end
@@ -100,23 +102,23 @@ function update(me, dt)
 		end
 		entity_doCollisionAvoidance(me, dt, 8, 1.0)
 		--[[
-		if moveState == 0 then
+		if v.moveState == 0 then
 			entity_addVel(me, 0*dt, -500*dt)
-		elseif moveState == 1 then			
+		elseif v.moveState == 1 then			
 			entity_moveTowardsTarget(me, dt, 500)
-		elseif moveState == 2 then
+		elseif v.moveState == 2 then
 			entity_addVel(me, 0*dt, 500*dt)
-		elseif moveState == 3 then
+		elseif v.moveState == 3 then
 			entity_moveTowardsTarget(me, dt, -500)
 		end
 		]]--
 		
-		moveStateTimer = moveStateTimer + dt
-		if moveStateTimer > 3 then
-			moveStateTimer = 0
-			moveState = moveState + 1
-			if moveState > 3 then
-				moveState = 0
+		v.moveStateTimer = v.moveStateTimer + dt
+		if v.moveStateTimer > 3 then
+			v.moveStateTimer = 0
+			v.moveState = v.moveState + 1
+			if v.moveState > 3 then
+				v.moveState = 0
 			end
 		end
 	end

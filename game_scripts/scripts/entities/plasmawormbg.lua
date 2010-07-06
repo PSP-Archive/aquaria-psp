@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- P L A S M A W O R M  B G
 -- ================================================================================================
@@ -27,22 +29,22 @@ dofile("scripts/entities/entityinclude.lua")
 -- FUNCTIONS
 -- ================================================================================================
 
-dir = 0
-switchDirDelay = 0
-wiggleTime = 0
-wiggleDir = 1
-interestTimer = 0
-colorRevertTimer = 0
+v.dir = 0
+v.switchDirDelay = 0
+v.wiggleTime = 0
+v.wiggleDir = 1
+v.interestTimer = 0
+v.colorRevertTimer = 0
 
-collisionSegs = 64
-avoidLerp = 0
-avoidDir = 1
-interest = false
-glow = {}
+v.collisionSegs = 64
+v.avoidLerp = 0
+v.avoidDir = 1
+v.interest = false
+v.glow = {}
 
-segs = 64
-glowSegInt = 4
-glowSegs = segs/glowSegInt
+v.segs = 64
+v.glowSegInt = 4
+v.glowSegs = v.segs/v.glowSegInt
 
 -- initializes the entity
 function init(me)
@@ -67,9 +69,9 @@ function init(me)
 	
 	entity_setDropChance(me, 50)
 	
-	lungeDelay = 1.0				-- prevent the nautilus from attacking right away
+	v.lungeDelay = 1.0				-- prevent the nautilus from attacking right away
 
-	entity_initHair(me, segs, 16, 64, "plasmaworm/body-bg")
+	entity_initHair(me, v.segs, 16, 64, "plasmaworm/body-bg")
 	--[[
 	entity_initSegments(
 	25,								-- num segments
@@ -85,16 +87,16 @@ function init(me)
 	]]--
 	
 	if chance(50) then
-		dir = 0
+		v.dir = 0
 	else
-		dir = 1
+		v.dir = 1
 	end
 	
 	if chance(50) then
-		interest = true
+		v.interest = true
 	end
-	switchDirDelay = math.random(800)/100.0
-	naija = getNaija()
+	v.switchDirDelay = math.random(800)/100.0
+	v.naija = getNaija()
 	
 	entity_addVel(me, math.random(1000)-500, math.random(1000)-500)
 	entity_setDeathParticleEffect(me, "Explode")
@@ -105,11 +107,11 @@ function init(me)
 	
 	entity_setSegs(me, 8, 2, 0.1, 0.9, 0, -0.03, 8, 0)
 	
-	for i=1,glowSegs do
-		glow[i] = createQuad("Naija/LightFormGlow", 13)
-		quad_scale(glow[i], 3, 3)
-		quad_scale(glow[i], 4, 4, 0.5, -1, 1, 1)
-		quad_alpha(glow[i], 0.4)
+	for i=1,v.glowSegs do
+		v.glow[i] = createQuad("Naija/LightFormGlow", 13)
+		quad_scale(v.glow[i], 3, 3)
+		quad_scale(v.glow[i], 4, 4, 0.5, -1, 1, 1)
+		quad_alpha(v.glow[i], 0.4)
 	end	
 	setNormalGlow()
 
@@ -121,60 +123,60 @@ function init(me)
 end
 
 function setNormalGlow()
-	for i=1,glowSegs do
-		quad_color(glow[i], 0.6, 0.6, 0.9)
-		quad_color(glow[i], 1, 1, 1, 2, -1, 1, 1)
+	for i=1,v.glowSegs do
+		quad_color(v.glow[i], 0.6, 0.6, 0.9)
+		quad_color(v.glow[i], 1, 1, 1, 2, -1, 1, 1)
 	end
 end
 
-spin = 0
+v.spin = 0
 -- the entity's main update function
 function update(me, dt)
 	entity_rotateToVel(me)
-	if colorRevertTimer > 0 then
-		colorRevertTimer = colorRevertTimer - dt
-		if colorRevertTimer < 0 then
+	if v.colorRevertTimer > 0 then
+		v.colorRevertTimer = v.colorRevertTimer - dt
+		if v.colorRevertTimer < 0 then
 			entity_setColor(me, 1, 1, 1, 3)
 			setNormalGlow()
 		end
 	end
 	
-	spin = spin - dt
-	if spin > 5 then
+	v.spin = v.spin - dt
+	if v.spin > 5 then
 		-- do something cool!
 		msg("SPUN!")
-		spin = 0
+		v.spin = 0
 	end
 
 	-- in idle state only
 	if entity_getState(me)==STATE_IDLE then
-		-- count down the lungeDelay timer to 0
-		if lungeDelay > 0 then lungeDelay = lungeDelay - dt if lungeDelay < 0 then lungeDelay = 0 end end
+		-- count down the v.lungeDelay timer to 0
+		if v.lungeDelay > 0 then v.lungeDelay = v.lungeDelay - dt if v.lungeDelay < 0 then v.lungeDelay = 0 end end
 		
 		-- if we don't have a target, find one
 		if not entity_hasTarget(me) then
 			entity_findTarget(me, 1000)
 		else
-			wiggleTime = wiggleTime + (dt*200)*wiggleDir
-			if wiggleTime > 1000 then
-				wiggleDir = -1	
-			elseif wiggleTime < 0 then
-				wiggleDir = 1
+			v.wiggleTime = v.wiggleTime + (dt*200)*v.wiggleDir
+			if v.wiggleTime > 1000 then
+				v.wiggleDir = -1	
+			elseif v.wiggleTime < 0 then
+				v.wiggleDir = 1
 			end
 			
-			interestTimer = interestTimer - dt
-			if interestTimer < 0 then
-				if interest then
-					interest = false
+			v.interestTimer = v.interestTimer - dt
+			if v.interestTimer < 0 then
+				if v.interest then
+					v.interest = false
 				else
-					interest = true
+					v.interest = true
 					entity_addVel(me, math.random(1000)-500, math.random(1000)-500)
 				end
-				interestTimer = math.random(400.0)/100.0 + 2.0
+				v.interestTimer = math.random(400.0)/100.0 + 2.0
 			end
-			if interest then
+			if v.interest then
 				if entity_isNearObstruction(getNaija(), 8) then
-					interest = false
+					v.interest = false
 				else
 					if entity_isTargetInRange(me, 1600) then
 						if entity_isTargetInRange(me, 100) then
@@ -182,7 +184,7 @@ function update(me, dt)
 						elseif not entity_isTargetInRange(me, 300) then
 							entity_moveTowardsTarget(me, dt, 1000)		-- move in if we're too far away
 						end
-						entity_moveAroundTarget(me, dt, 1000+wiggleTime, dir)
+						entity_moveAroundTarget(me, dt, 1000+v.wiggleTime, v.dir)
 					end
 				end
 			else
@@ -192,13 +194,13 @@ function update(me, dt)
 			end
 			
 			--[[
-			switchDirDelay = switchDirDelay - dt
-			if switchDirDelay < 0 then
-				switchDirDelay = math.random(800)/100.0
-				if dir == 0 then
-					dir = 1
+			v.switchDirDelay = v.switchDirDelay - dt
+			if v.switchDirDelay < 0 then
+				v.switchDirDelay = math.random(800)/100.0
+				if v.dir == 0 then
+					v.dir = 1
 				else
-					dir = 0
+					v.dir = 0
 				end
 			end
 			]]--
@@ -206,19 +208,19 @@ function update(me, dt)
 			--[[
 			-- 40% of the time when we're in range and not delaying, launch an attack
 			if entity_isTargetInRange(me, 300) then
-				if math.random(100) < 40 and lungeDelay == 0 then
+				if math.random(100) < 40 and v.lungeDelay == 0 then
 					entity_setState(me, STATE_ATTACKPREP, 0.5)
 				end
 			end
 			]]--
 			
-			avoidLerp = avoidLerp + dt*avoidDir
-			if avoidLerp >= 1 or avoidLerp <= 0 then
-				avoidLerp = 0
-				if avoidDir == -1 then
-					avoidDir = 1
+			v.avoidLerp = v.avoidLerp + dt*v.avoidDir
+			if v.avoidLerp >= 1 or v.avoidLerp <= 0 then
+				v.avoidLerp = 0
+				if v.avoidDir == -1 then
+					v.avoidDir = 1
 				else
-					avoidDir = -1
+					v.avoidDir = -1
 				end
 			end
 			-- avoid other things nearby
@@ -232,14 +234,14 @@ function update(me, dt)
 	entity_setHairHeadPosition(me, entity_x(me), entity_y(me))
 	entity_updateHair(me, dt)
 	
-	for i=0,glowSegs-1 do		
-		x, y = entity_getHairPosition(me, i*glowSegInt)
+	for i=0,v.glowSegs-1 do		
+		local x, y = entity_getHairPosition(me, i*v.glowSegInt)
 		--debugLog(string.format("hair(%d, %d)", x, y))
-		quad_setPosition(glow[i+1], x, y)
+		quad_setPosition(v.glow[i+1], x, y)
 	end	
-	--entity_handleShotCollisionsHair(me, collisionSegs)
+	--entity_handleShotCollisionsHair(me, v.collisionSegs)
 	--entity_handleShotCollisions(me)
-	--if entity_collideHairVsCircle(me, naija, collisionSegs, 0.5) then
+	--if entity_collideHairVsCircle(me, v.naija, v.collisionSegs, 0.5) then
 		--entity_touchAvatarDamage(me, 0, 0, 500)
 	--end
 end
@@ -248,8 +250,8 @@ function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_setMaxSpeed(me, 400)
 	elseif entity_isState(me, STATE_DEAD) then
-		for i=1,glowSegs do
-			quad_delete(glow[i], 0.5)
+		for i=1,v.glowSegs do
+			quad_delete(v.glow[i], 0.5)
 		end
 	end
 end
@@ -265,27 +267,27 @@ function damage(me, attacker, bone, damageType, dmg)
 	return true
 end
 
-lastNote = 0
+v.lastNote = 0
 function songNote(me, note)
 	if getForm()~=FORM_NORMAL then
 		return
 	end
 	
-	if note ~= lastNote then
-		spin = spin + 0.1
+	if note ~= v.lastNote then
+		v.spin = v.spin + 0.1
 	end
-	lastNote = note
-	interest = true
-	r,g,b = getNoteColor(note)
+	v.lastNote = note
+	v.interest = true
+	local r,g,b = getNoteColor(note)
 	entity_setColor(me, r,g,b,1)
-	colorRevertTimer = 10
+	v.colorRevertTimer = 10
 	
 	r = r * 0.5 + 0.5
 	g = g * 0.5 + 0.5
 	b = b * 0.5 + 0.5
-	for i=1,glowSegs do
-		quad_color(glow[i], r, g, b)
-		quad_color(glow[i], 1, 1, 1, 2, -1, 1, 1)
+	for i=1,v.glowSegs do
+		quad_color(v.glow[i], r, g, b)
+		quad_color(v.glow[i], 1, 1, 1, 2, -1, 1, 1)
 	end
 	--entity_setColor(me, 1,1,1,10)
 end

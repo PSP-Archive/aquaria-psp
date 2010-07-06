@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- C H O M P E R
 -- ================================================================================================
@@ -27,18 +29,18 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L   V A R I A B L E S 
 -- ================================================================================================
 
-startX = 0
-startY = 0
-startRot = 0
+v.startX = 0
+v.startY = 0
+v.startRot = 0
 
-dir = 0
+v.dir = 0
 
-biteDelay = 0
-bD = 1.67	-- Time before bite
-doneDelay = 0		
-dD = 1.32	-- Time after bite
+v.biteDelay = 0
+v.bD = 1.67	-- Time before bite
+v.doneDelay = 0		
+v.dD = 1.32	-- Time after bite
 
-maxSpeed = 890
+v.maxSpeed = 890
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -65,33 +67,33 @@ function init(me)
 	entity_setDropChance(me, 11)
 	
 	entity_initSkeletal(me, "Chomper")
-	glow = entity_getBoneByName(me, "EyeGlow")
-	body = entity_getBoneByName(me, "Body")
+	v.glow = entity_getBoneByName(me, "EyeGlow")
+	v.body = entity_getBoneByName(me, "Body")
 	
 	entity_setEntityType(me, ET_ENEMY)
 	entity_generateCollisionMask(me)
 	
 	entity_setCullRadius(me, 420) -- Skeletal sprites ain't got auto cull yet (says Alec)
 	
-	bone_alpha(glow, 0.21)
-	bone_scale(glow, 0.12, 0.12)
+	bone_alpha(v.glow, 0.21)
+	bone_scale(v.glow, 0.12, 0.12)
 	
-	entity_setMaxSpeed(me, maxSpeed)
+	entity_setMaxSpeed(me, v.maxSpeed)
 	
 	entity_initEmitter(me, 0, "ChomperLunge")
 end
 
 function postInit(me)
 	entity_setState(me, STATE_IDLE)
-	startX, startY = entity_getPosition(me)
-	startRot = entity_getRotation(me)
+	v.startX, v.startY = entity_getPosition(me)
+	v.startRot = entity_getRotation(me)
 	
 	-- FLIP HORIZONTALLY IF THERE'S A FLIP NODE
-	node = entity_getNearestNode(me, "FLIP")
+	local node = entity_getNearestNode(me, "FLIP")
 	if node ~=0 then
 		if node_isEntityIn(node, me) then 
 			entity_fh(me)
-			dir = 1
+			v.dir = 1
 		end
 	end
 end
@@ -99,50 +101,50 @@ end
 function update(me, dt)
 	-- SET TARGET TO BODY
 	entity_clearTargetPoints(me)
-	x,y = bone_getWorldPosition(body)
+	local x,y = bone_getWorldPosition(v.body)
 	entity_addTargetPoint(me, x, y)
 	
 	entity_findTarget(me, 808)
 	
 	if not entity_hasTarget(me) then
-		bone_alpha(glow, 0.21, 0.89)
-		bone_scale(glow, 0.12, 0.12, 0.89)
+		bone_alpha(v.glow, 0.21, 0.89)
+		bone_scale(v.glow, 0.12, 0.12, 0.89)
 		
-		biteDelay = bD
+		v.biteDelay = v.bD
 	else
-		bone_alpha(glow, 0.89, 0.26)
-		bone_scale(glow, 1, 1, 0.26)
+		bone_alpha(v.glow, 0.89, 0.26)
+		bone_scale(v.glow, 1, 1, 0.26)
 		
 		if entity_getState(me) == STATE_OPEN then
-			bone_alpha(glow, 0.93, 0.64)
-			bone_scale(glow, 1.8, 1.8, 0.56)
+			bone_alpha(v.glow, 0.93, 0.64)
+			bone_scale(v.glow, 1.8, 1.8, 0.56)
 			-- Aim a bit before bite
-			entity_rotateToEntity(me, getNaija(), 2.8, 90 +(dir*-180))
+			entity_rotateToEntity(me, getNaija(), 2.8, 90 +(v.dir*-180))
 		end
 		
 		-- TIME BETWEEN BITES
-		if biteDelay > 0 then biteDelay = biteDelay - dt
-		else biteDelay = 0 end
+		if v.biteDelay > 0 then v.biteDelay = v.biteDelay - dt
+		else v.biteDelay = 0 end
 		
-		if biteDelay == 0 then
+		if v.biteDelay == 0 then
 			if entity_isState(me, STATE_IDLE) then entity_setState(me, STATE_OPEN) end
-			biteDelay = bD
+			v.biteDelay = v.bD
 		end
 	end
 	
 	-- WAIT A MOMENT BEFORE RETURNING TO START POSITION
 	if entity_getState(me) == STATE_DONE then
-		if doneDelay > 0 then doneDelay = doneDelay - dt
-		else doneDelay = 0 end
+		if v.doneDelay > 0 then v.doneDelay = v.doneDelay - dt
+		else v.doneDelay = 0 end
 		
-		if doneDelay == 0 then entity_setState(me, STATE_CLOSE) end
+		if v.doneDelay == 0 then entity_setState(me, STATE_CLOSE) end
 	end
 
 	-- DON'T UPDATE MOVEMENT IF CHOMPER'S SLIDING BACK TO HOME POSITION
 	if entity_getState(me) == STATE_CLOSE then
-		closeX, closeY = entity_getPosition(me)
+		local closeX, closeY = entity_getPosition(me)
 		
-		if closeX == startX and closeY == startY then
+		if closeX == v.startX and closeY == v.startY then
 			entity_setState(me, STATE_IDLE)
 		end
 	else
@@ -160,7 +162,7 @@ end
 function enterState(me)
 	if entity_getState(me) == STATE_IDLE then
 		entity_animate(me, "idle", LOOP_INF)
-		biteDelay = bD
+		v.biteDelay = v.bD
 		entity_clearVel(me)
 		entity_setMaxSpeed(me, 0)
 		
@@ -170,17 +172,17 @@ function enterState(me)
 		
 	elseif entity_getState(me) == STATE_ATTACK then
 		entity_setStateTime(me, entity_animate(me, "attack"))
-		entity_setMaxSpeed(me, maxSpeed)
+		entity_setMaxSpeed(me, v.maxSpeed)
 		entity_setMaxSpeedLerp(me, 7.9)				-- Increased biteyness
 		entity_setMaxSpeedLerp(me, 0.76, 0.38)
 	
 	elseif entity_getState(me) == STATE_DONE then
 		entity_animate(me, "idle", LOOP_INF)
-		entity_rotateTo(me, startRot, 3.21)
+		entity_rotateTo(me, v.startRot, 3.21)
 		
 	elseif entity_getState(me) == STATE_CLOSE then
 		-- Go back home, Chomper!
-		entity_setPosition(me, startX, startY, 2, 0, 0, 1)
+		entity_setPosition(me, v.startX, v.startY, 2, 0, 0, 1)
 	end
 end
 
@@ -189,11 +191,11 @@ function animationKey(me, key)
 		entity_sound(me, "Bite", 543 + math.random(123))
 		
 		-- THRUST IN PROPER DIRECTION
-		if dir == 0 then
-			thrustX, thrustY = entity_getAimVector(me, 270, (maxSpeed*10), 0)
+		if v.dir == 0 then
+			local thrustX, thrustY = entity_getAimVector(me, 270, (v.maxSpeed*10), 0)
 			entity_addVel(me, thrustX, thrustY)
 		else
-			thrustX, thrustY = entity_getAimVector(me, 270, (maxSpeed*10), 1)
+			local thrustX, thrustY = entity_getAimVector(me, 270, (v.maxSpeed*10), 1)
 			entity_addVel(me, thrustX, thrustY)
 		end
 		
@@ -209,13 +211,13 @@ function exitState(me)
 	
 	elseif entity_getState(me) == STATE_ATTACK then
 		entity_setState(me, STATE_DONE)
-		doneDelay = dD
+		v.doneDelay = v.dD
 		entity_stopEmitter(me, 0)
 	end
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if bone == body then
+	if bone == v.body then
 		return true
 	end
 	

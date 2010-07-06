@@ -17,25 +17,27 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
 function initFinalSpirit(flag, name)
 	if getFlag(flag) > 0 then
-		ent = getEntity(name)
+		local ent = getEntity(name)
 		if ent ~= 0 then
 			entity_delete(ent)
 		end
 	end
 	if isFlag(flag, 1) then
-		ent = createEntity(name, "", entity_x(n), entity_y(n))
+		local ent = createEntity(name, "", entity_x(v.n), entity_y(v.n))
 		entity_setState(ent, STATE_FOLLOW, -1, true)
 	end
 end
 
 function initFinalSpirits()
-	n = getNaija()
+	v.n = getNaija()
 	initFinalSpirit(FLAG_SPIRIT_ERULIAN, "Erulian-Final")
 	initFinalSpirit(FLAG_SPIRIT_KROTITE, "Krotite-Final")
 	initFinalSpirit(FLAG_SPIRIT_DRASK, "Drask-Final")

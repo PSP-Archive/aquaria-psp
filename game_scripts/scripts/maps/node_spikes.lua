@@ -17,26 +17,28 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
 function init(me)
 	
 end
 
 function update(me, dt)
-	if n == 0 then
-		n = getNaija()
+	if v.n == 0 then
+		v.n = getNaija()
 	end
-	if node_isEntityIn(me, n) then
-		entity_damage(n, 0, 0.5)
+	if node_isEntityIn(me, v.n) then
+		entity_damage(v.n, 0, 0.5)
 		
-		nx,ny = getWallNormal(node_x(me), node_y(me))
+		local nx, ny = getWallNormal(node_x(me), node_y(me))
 		if not(nx == 0 and ny == 0) then
-			nx,ny = vector_setLength(nx, ny, 800)
-			--entity_push(n, nx, ny, 0.25)
-			entity_addVel(n, nx, ny)
+			nx, ny = vector_setLength(nx, ny, 800)
+			--entity_push(v.n, nx, ny, 0.25)
+			entity_addVel(v.n, nx, ny)
 		end
 	end
 end

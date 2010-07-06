@@ -17,13 +17,15 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-beam = 0
-delay = 0
-bone_eyes = 0
-cr = 70
+v.n = 0
+v.beam = 0
+v.delay = 0
+v.bone_eyes = 0
+v.cr = 70
 
 function init(me)
 	setupEntity(me)
@@ -31,11 +33,11 @@ function init(me)
 	entity_initSkeletal(me, "AbyssOctopus")	
 	
 	--entity_generateCollisionMask(me)	
-	entity_setCollideRadius(me, cr)
+	entity_setCollideRadius(me, v.cr)
 	
 	entity_setState(me, STATE_IDLE)
 	
-	angle = 360
+	local angle = 360
 	if chance(50) then
 		angle = -angle
 	end
@@ -49,21 +51,21 @@ function init(me)
 	entity_setDeathScene(me, true)
 	--entity_setDeathParticleEffect(me, "BigRedExplode")
 	entity_setDamageTarget(me, DT_ENEMY_BEAM, false)
-	bone_eyes = entity_getBoneByName(me, "Eyes")
+	v.bone_eyes = entity_getBoneByName(me, "Eyes")
 	
-	delay = -math.random(2)
+	v.delay = -math.random(2)
 	
 	entity_setUpdateCull(me, 1024)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 	entity_handleShotCollisions(me)
-	--bone = entity_collideSkeletalVsCircle(me, n)
+	--local bone = entity_collideSkeletalVsCircle(me, v.n)
 	
 	entity_updateMovement(me, dt)
 	entity_moveTowardsTarget(me, dt, 100)
@@ -71,10 +73,10 @@ function update(me, dt)
 	entity_doCollisionAvoidance(me, dt, 8, 0.5)
 	
 	if entity_isState(me, STATE_IDLE) then
-		if beam == 0 then
-			delay = delay + dt
-			if delay > 3 then
-				delay = 0
+		if v.beam == 0 then
+			v.delay = v.delay + dt
+			if v.delay > 3 then
+				v.delay = 0
 
 				entity_setState(me, STATE_CHARGE1)
 				entity_setUpdateCull(me, 3000)
@@ -82,24 +84,24 @@ function update(me, dt)
 			end
 		else		
 			
-			beam_setAngle(beam, entity_getRotation(me)-180)
-			beam_setPosition(beam, entity_getPosition(me))	
-			delay = delay + dt
-			if delay >= 3 then
+			beam_setAngle(v.beam, entity_getRotation(me)-180)
+			beam_setPosition(v.beam, entity_getPosition(me))
+			v.delay = v.delay + dt
+			if v.delay >= 3 then
 				entity_setUpdateCull(me, 1024)
-				delay = 0
-				beam_delete(beam)
-				beam = 0
-				bone_setColor(bone_eyes, 1, 1, 1, 1)
+				v.delay = 0
+				beam_delete(v.beam)
+				v.beam = 0
+				bone_setColor(v.bone_eyes, 1, 1, 1, 1)
 			end
 		end
 	end
 	
 	if entity_touchAvatarDamage(me, entity_getCollideRadius(me), 0) then
-		if avatar_isBursting() and entity_setBoneLock(n, me) then
+		if avatar_isBursting() and entity_setBoneLock(v.n, me) then
 		else
-			x, y = entity_getVectorToEntity(me, n, 800)
-			entity_addVel(n, x, y)
+			local x, y = entity_getVectorToEntity(me, v.n, 800)
+			entity_addVel(v.n, x, y)
 		end
 	end
 end
@@ -110,12 +112,12 @@ function enterState(me)
 	elseif entity_isState(me, STATE_DEATHSCENE) then
 		spawnParticleEffect("BigRedExplode", entity_getPosition(me))
 		entity_animate(me, "die")
-		if beam ~= 0 then
-			beam_delete(beam)
-			beam = 0
+		if v.beam ~= 0 then
+			beam_delete(v.beam)
+			v.beam = 0
 		end	
 		
-		bone_setColor(bone_eyes, 0, 0, 0, 2)
+		bone_setColor(v.bone_eyes, 0, 0, 0, 2)
 	
 		entity_rotate(me, entity_getRotation(me), 1)
 		entity_setPosition(me, entity_x(me), entity_y(me)+1024, 4, 0, 0, 1)
@@ -124,9 +126,9 @@ function enterState(me)
 		entity_scale(me, 0.3, 0.6, 4)
 	elseif entity_isState(me, STATE_DEAD) then
 	elseif entity_isState(me, STATE_CHARGE1) then
-		bone_setColor(bone_eyes, 1, 0, 0, 1)
+		bone_setColor(v.bone_eyes, 1, 0, 0, 1)
 		entity_stopInterpolating(me)
-		--bone_setColor(bone_eyes, 1, 0, 0, 1)
+		--bone_setColor(v.bone_eyes, 1, 0, 0, 1)
 		entity_animate(me, "charge")
 		entity_setStateTime(me, 0.5)
 		entity_sound(me, "EnergyOrbCharge")
@@ -138,8 +140,8 @@ function exitState(me)
 	if entity_isState(me, STATE_CHARGE1) then
 		entity_sound(me, "PowerUp")
 		entity_sound(me, "FizzleBarrier")
-		beam = createBeam(bx, by, entity_getRotation(me)-180)
-		beam_setTexture(beam, "particles/Beam")
+		v.beam = createBeam(bx, by, entity_getRotation(me)-180)
+		beam_setTexture(v.beam, "particles/Beam")
 		entity_setState(me, STATE_IDLE)
 	elseif entity_isState(me, STATE_DEATHSCENE) then
 		entity_scale(me, 0.1, 0.1)

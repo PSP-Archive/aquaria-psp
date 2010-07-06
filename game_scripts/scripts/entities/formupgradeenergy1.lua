@@ -17,9 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
-charge = 0
-delay = 1
+v.charge = 0
+v.delay = 1
 
 -- energy1 is the blast roll??
 function init(me)
@@ -48,12 +50,12 @@ function update(me, dt)
 	entity_updateCurrents(me)
 	
 	if not entity_isState(me, STATE_CHARGED) then
-		delay = delay - dt
-		if delay < 0 then
-			delay = 0.5
-			charge = charge - 1
-			if charge < 0 then
-				charge = 0
+		v.delay = v.delay - dt
+		if v.delay < 0 then
+			v.delay = 0.5
+			v.charge = v.charge - 1
+			if v.charge < 0 then
+				v.charge = 0
 			end
 		end
 	end
@@ -80,14 +82,14 @@ end
 function damage(me, attacker, bone, damageType, dmg)	
 	if not entity_isState(me, STATE_CHARGED) then
 		if damageType == DT_AVATAR_ENERGYBLAST then
-			--charge = charge + dmg
+			--v.charge = v.charge + dmg
 		elseif damageType == DT_AVATAR_SHOCK then
-			charge = charge + 10
+			v.charge = v.charge + 10
 		end
-		if charge >= 10 then
+		if v.charge >= 10 then
 			playSfx("EnergyOrbCharge")
 			spawnParticleEffect("EnergyOrbCharge", entity_x(me), entity_y(me))
-			setControlHint("Naija's Energy Form has been upgraded. Rolllng while in the Energy Form will perform a new attack.", 0, 0, 0, 6)
+			setControlHint("Naija's Energy Form has been upgraded. Rolling while in the Energy Form will perform a new attack.", 0, 0, 0, 6)
 			entity_setState(me, STATE_CHARGED)
 		end
 	end

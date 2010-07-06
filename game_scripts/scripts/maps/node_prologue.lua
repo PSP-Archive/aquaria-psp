@@ -17,38 +17,40 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
-n1 = 0
-n2 = 0
-n3 = 0
+v.n1 = 0
+v.n2 = 0
+v.n3 = 0
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 	
 	node_setCursorActivation(me, true)
 	
-	n1 = getNode("N1")
+	v.n1 = getNode("N1")
 	
 	-- monsters
-	n2 = getNode("N2")
-	n3 = getNode("N3")
+	v.n2 = getNode("N2")
+	v.n3 = getNode("N3")
 end
 
 function update(me, dt)
 end
 
 function activate(me)
-	entity_idle(n)
+	entity_idle(v.n)
 	
 	shakeCamera(0,0.001)
 	
 	fade(1,0)
 	
 	setCameraLerpDelay(0.0001)
-	cam_toNode(n1)
+	cam_toNode(v.n1)
 	
 	overrideZoom(0.7)
 	
@@ -62,7 +64,7 @@ function activate(me)
 	fade(1, 4)
 	watch(4)
 	
-	cam_toNode(n2)
+	cam_toNode(v.n2)
 	
 	watch(2)
 	
@@ -78,7 +80,7 @@ function activate(me)
 	fade(1, 0.2) watch(0.2)
 	
 	
-	cam_toNode(n3)
+	cam_toNode(v.n3)
 	
 	
 	fade(0, 0.1) watch(0.1)
@@ -94,7 +96,7 @@ function activate(me)
 	setCameraLerpDelay(0)
 	
 	fade(0,1)
-	cam_toEntity(n)
+	cam_toEntity(v.n)
 	shakeCamera(0,0.001)
 	overrideZoom(0)
 end

@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- B I O P L A N T
 -- ================================================================================================
@@ -28,7 +30,7 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-glow = 0
+v.glow = 0
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -53,26 +55,26 @@ function init(me)
 	)
 
 	entity_setEntityType(me, ET_NEUTRAL)
-	scale_random = math.random(40) * 0.01
+	local scale_random = math.random(40) * 0.01
 	entity_scale(me, 1.5 + scale_random, 1.5 + scale_random)
 	entity_setEntityLayer(me, -3)
 end
 
 function update(me, dt)
-	glow = createQuad("Naija/LightFormGlow", 13)
-	quad_scale(glow, 10, 10)
+	v.glow = createQuad("Naija/LightFormGlow", 13)
+	quad_scale(v.glow, 10, 10)
 
-	if glow ~= 0 then
+	if v.glow ~= 0 then
 		if entity_isInDarkness(me) then
-			quad_alpha(glow, 1, 0.5)
+			quad_alpha(v.glow, 1, 0.5)
 		else
-			quad_alpha(glow, 0, 0.5)
+			quad_alpha(v.glow, 0, 0.5)
 		end
 	end
 	
-	quad_setPosition(glow, entity_getPosition(me))
-	quad_delete(glow, 0.1)
-	glow = 0
+	quad_setPosition(v.glow, entity_getPosition(me))
+	quad_delete(v.glow, 0.1)
+	v.glow = 0
 end
 
 function enterState(me)

@@ -17,11 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-attackDelay = 0
-dir = 1
-n = getNaija()
+v.attackDelay = 0
+v.dir = 1
+v.n = getNaija()
 
 function init(me)
 	setupBasicEntity(
@@ -52,7 +54,7 @@ function init(me)
 	entity_setState(me, STATE_IDLE)
 	--entity_setCullRadius(me, 1024)
 	
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
@@ -63,7 +65,7 @@ function update(me, dt)
 		if entity_hasTarget(me) then
 			entity_moveTowardsTarget(me, 1, 400)
 		else
-			entity_addVel(me, 500*dir, 0)
+			entity_addVel(me, 500*v.dir, 0)
 			entity_updateMovement(me, dt)
 			entity_flipToVel(me)
 		end
@@ -87,7 +89,7 @@ function update(me, dt)
 end
 
 function hitSurface(me)
-	dir = -dir
+	v.dir = -v.dir
 end
 
 function enterState(me)

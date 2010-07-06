@@ -17,12 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 function init()
-	n = getNaija()
-	li = getLi()
-	node = getNode("LAUNCHFROMSUNTEMPLE")
+	local n = getNaija()
+	local li = getLi()
+	local node = getNode("LAUNCHFROMSUNTEMPLE")
 	if node_isEntityIn(node, n) then
-		lin = getNode("LIFROMSUN")
+		local lin = getNode("LIFROMSUN")
 		entity_setPosition(li, node_x(lin), node_y(lin))
 	end
 end

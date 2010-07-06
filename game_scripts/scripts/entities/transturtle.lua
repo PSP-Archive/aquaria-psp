@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 -- regular areas
@@ -24,25 +26,26 @@ TURTLE_REGULAR		= 0
 -- energy upgrade secret, forest 05, openwater03
 TURTLE_SECRET1		= 1
 
-seat = 0
-seat2 = 0
-tame = 0
-n = 0
-leave = 0
-avatarAttached 	= false
-liAttached		= false
-myFlag = 0
-turtleType = TURTLE_REGULAR
+v.seat = 0
+v.seat2 = 0
+v.tame = 0
+v.n = 0
+v.li = 0
+v.leave = 0
+v.avatarAttached = false
+v.liAttached = false
+v.myFlag = 0
+v.turtleType = TURTLE_REGULAR
 
-light1 = 0
-light2 = 0
+v.light1 = 0
+v.light2 = 0
 
-seen = false
+v.seen = false
 
-sbank = 0
+v.sbank = 0
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 	
 	setupEntity(me, "")
 	
@@ -51,61 +54,61 @@ function init(me)
 	entity_setEntityType(me, ET_NEUTRAL)
 	entity_setActivation(me, AT_CLICK, 128, 512)
 	
-	seat = entity_getBoneByName(me, "Seat")
-	seat2 = entity_getBoneByName(me, "Seat2")
-	tame = entity_getBoneByName(me, "Tame")
+	v.seat = entity_getBoneByName(me, "Seat")
+	v.seat2 = entity_getBoneByName(me, "Seat2")
+	v.tame = entity_getBoneByName(me, "Tame")
 	entity_setCullRadius(me, 1024)
-	bone_alpha(seat, 0)
-	bone_alpha(seat2, 0)
-	bone_alpha(tame, 0)
+	bone_alpha(v.seat, 0)
+	bone_alpha(v.seat2, 0)
+	bone_alpha(v.tame, 0)
 	
 	if isMapName("VEIL01") then
 		debugLog("is veil01")
-		myFlag = FLAG_TRANSTURTLE_VEIL01
-		sbank = 1014
+		v.myFlag = FLAG_TRANSTURTLE_VEIL01
+		v.sbank = 1014
 	elseif isMapName("VEIL02") then
 		debugLog("is veil02")
-		myFlag = FLAG_TRANSTURTLE_VEIL02
-		sbank = 1014
+		v.myFlag = FLAG_TRANSTURTLE_VEIL02
+		v.sbank = 1014
 	elseif isMapName("OPENWATER03") then
-		myFlag = FLAG_TRANSTURTLE_OPENWATER03
-		sbank = 1009
+		v.myFlag = FLAG_TRANSTURTLE_OPENWATER03
+		v.sbank = 1009
 	elseif isMapName("FOREST04") then
-		myFlag = FLAG_TRANSTURTLE_FOREST04
-		sbank = 1010
+		v.myFlag = FLAG_TRANSTURTLE_FOREST04
+		v.sbank = 1010
 -- think openwater06 is unused atm
 	elseif isMapName("OPENWATER06")	then
-		myFlag = FLAG_TRANSTURTLE_OPENWATER06
-		sbank = 1009
+		v.myFlag = FLAG_TRANSTURTLE_OPENWATER06
+		v.sbank = 1009
 -- think openwater06 is unused atm
 	elseif isMapName("MAINAREA") then
-		myFlag = FLAG_TRANSTURTLE_MAINAREA
-		sbank = 1008
+		v.myFlag = FLAG_TRANSTURTLE_MAINAREA
+		v.sbank = 1008
 	elseif isMapName("ABYSS03") then
-		myFlag = FLAG_TRANSTURTLE_ABYSS03
-		turtleType = TURTLE_REGULAR
-		sbank = 1015
+		v.myFlag = FLAG_TRANSTURTLE_ABYSS03
+		v.turtleType = TURTLE_REGULAR
+		v.sbank = 1015
 	elseif isMapName("FINALBOSS") then
-		myFlag = FLAG_TRANSTURTLE_FINALBOSS
-		turtleType = TURTLE_REGULAR
-		sbank = 1021
+		v.myFlag = FLAG_TRANSTURTLE_FINALBOSS
+		v.turtleType = TURTLE_REGULAR
+		v.sbank = 1021
 	elseif isMapName("FOREST05") then
-		myFlag = FLAG_TRANSTURTLE_FOREST05
-		turtleType = TURTLE_SECRET1
+		v.myFlag = FLAG_TRANSTURTLE_FOREST05
+		v.turtleType = TURTLE_SECRET1
 	elseif isMapName("SEAHORSE") then
-		myFlag = FLAG_TRANSTURTLE_SEAHORSE
-		turtleType = TURTLE_SECRET1
+		v.myFlag = FLAG_TRANSTURTLE_SEAHORSE
+		v.turtleType = TURTLE_SECRET1
 	end
 	
-	if myFlag ~= 0 and (not entity_isFlag(me, 0)) then
-		setFlag(myFlag, 1)
+	if v.myFlag ~= 0 and (not entity_isFlag(me, 0)) then
+		setFlag(v.myFlag, 1)
 	end
 	
-	light1 = entity_getBoneByName(me, "Light1")
-	light2 = entity_getBoneByName(me, "Light2")
+	v.light1 = entity_getBoneByName(me, "Light1")
+	v.light2 = entity_getBoneByName(me, "Light2")
 	
-	bone_setBlendType(light1, BLEND_ADD)
-	bone_setBlendType(light2, BLEND_ADD)
+	bone_setBlendType(v.light1, BLEND_ADD)
+	bone_setBlendType(v.light2, BLEND_ADD)
 	
 	loadSound("TransTurtle-Light")
 	loadSound("transturtle-takeoff")
@@ -115,7 +118,7 @@ end
 
 
 function lights(me, on, t)
-	a = 1
+	local a = 1
 	if not on then
 		a = 0
 		debugLog("Lights off!")
@@ -123,25 +126,25 @@ function lights(me, on, t)
 		debugLog("Lights on!")
 	end
 	
-	bone_alpha(light1, a, t)
-	bone_alpha(light2, a, t)
+	bone_alpha(v.light1, a, t)
+	bone_alpha(v.light2, a, t)
 end
 
 function postInit(me)
-	leave = entity_getNearestNode(me, "TRANSTURTLELEAVE")
+	v.leave = entity_getNearestNode(me, "TRANSTURTLELEAVE")
 	
-	if turtleType == TURTLE_REGULAR then
+	if v.turtleType == TURTLE_REGULAR then
 		debugLog("Regular turtle")
-		if isFlag(myFlag, 0) then
+		if isFlag(v.myFlag, 0) then
 			lights(me, false, 0)
 		else
 			-- turn on ze lights
 			lights(me, true, 0)
 		end
 		
-		if sbank ~= 0 then
+		if v.sbank ~= 0 then
 			if entity_isEntityInRange(me, getNaija(), 600) then
-				centerText(getStringBank(sbank))
+				centerText(getStringBank(v.sbank))
 			end
 		end
 	else
@@ -151,8 +154,8 @@ function postInit(me)
 	
 	
 	-- if naija starts on a turtle, ignore the seen/hint
-	if entity_isEntityInRange(me, n, 350) then
-		seen = true
+	if entity_isEntityInRange(me, v.n, 350) then
+		v.seen = true
 	end
 end
 
@@ -166,7 +169,7 @@ function update(me, dt)
 	end
 	
 	if not hasSong(SONG_BEASTFORM) then
-		if entity_isEntityInRange(me, n, 512) then
+		if entity_isEntityInRange(me, v.n, 512) then
 			voiceOnce("Naija_TransportTurtles")
 		end
 	end
@@ -179,69 +182,69 @@ function update(me, dt)
 		entity_setActivationType(me, AT_CLICK)
 	end
 	
-	if avatarAttached then
-		--entity_flipToSame(n, me)
-		x,y = bone_getWorldPosition(seat)
+	if v.avatarAttached then
+		--entity_flipToSame(v.n, me)
+		local x, y = bone_getWorldPosition(v.seat)
 		
 		entity_setRidingData(me, x, y, 0, entity_isfh(me))
 	end
 	
-	if liAttached then
-		x,y = bone_getWorldPosition(seat2)
-		entity_setPosition(li, x, y)
-		entity_rotate(li, entity_getRotation(me))
-		if entity_isfh(me) and not entity_isfh(li) then
-			entity_fh(li)
-		elseif not entity_isfh(me) and entity_isfh(li) then
-			entity_fh(li)
+	if v.liAttached then
+		local x, y = bone_getWorldPosition(v.seat2)
+		entity_setPosition(v.li, x, y)
+		entity_rotate(v.li, entity_getRotation(me))
+		if entity_isfh(me) and not entity_isfh(v.li) then
+			entity_fh(v.li)
+		elseif not entity_isfh(me) and entity_isfh(v.li) then
+			entity_fh(v.li)
 		end
 	end
 	
-	if entity_isEntityInRange(me, n, 300) then
-		if not seen then
+	if entity_isEntityInRange(me, v.n, 300) then
+		if not v.seen then
 			emote(EMOTE_NAIJAWOW)
 			if anyOtherFlag() then
 				setControlHint(getStringBank(226), 0, 0, 0, 5, "transturtle/headicon")
 			else
 				setControlHint(getStringBank(225), 0, 0, 0, 5, "transturtle/headicon")
 			end
-			seen = true
+			v.seen = true
 		end
 	end
 	
-	if turtleType == TURTLE_REGULAR then
+	if v.turtleType == TURTLE_REGULAR then
 		if isNested() then return end
-		if entity_isEntityInRange(me, n, 300) and (not isFlag(myFlag, 1) or entity_isFlag(me, 0)) and entity_isUnderWater(n) then
-			entity_idle(n)
-			entity_setInvincible(n, true)
-			entity_flipToEntity(n, me)
+		if entity_isEntityInRange(me, v.n, 300) and (not isFlag(v.myFlag, 1) or entity_isFlag(me, 0)) and entity_isUnderWater(v.n) then
+			entity_idle(v.n)
+			entity_setInvincible(v.n, true)
+			entity_flipToEntity(v.n, me)
 			cam_toEntity(me)
 			watch(1.5)
 			playSfx("TransTurtle-Light")
 			lights(me, true, 1.5)
 			watch(2)
-			cam_toEntity(n)
+			cam_toEntity(v.n)
 			watch(1)
-			setFlag(myFlag, 1)
+			setFlag(v.myFlag, 1)
 			pickupGem("Turtle")
 			entity_setFlag(me, 1)
 		end
 	else
-		if entity_isEntityInRange(me, n, 256) and entity_isFlag(me,0) then
+		if entity_isEntityInRange(me, v.n, 256) and entity_isFlag(me,0) then
 			entity_setFlag(me, 1)
 			pickupGem("Turtle")
-			--debugLog(string.format("setting %d to 1", myFlag));
-			setFlag(myFlag, 1)
+			--debugLog(string.format("setting %d to 1", v.myFlag));
+			setFlag(v.myFlag, 1)
 		end
 	end
 end
 
 function isOtherFlag(flag)
-	return (myFlag ~= flag and isFlag(flag, 1))
+	return (v.myFlag ~= flag and isFlag(flag, 1))
 end
 
 function anyOtherFlag()
-	if turtleType == TURTLE_REGULAR then
+	if v.turtleType == TURTLE_REGULAR then
 		debugLog("turtle is regular")
 		if isOtherFlag(FLAG_TRANSTURTLE_VEIL01) then
 			return true
@@ -259,7 +262,7 @@ function anyOtherFlag()
 			return true
 		end
 	end
-	if turtleType == TURTLE_SECRET1 then
+	if v.turtleType == TURTLE_SECRET1 then
 		debugLog("turtle is secret")
 		return true
 	end
@@ -270,7 +273,7 @@ end
 function activate(me)
 	--if isForm(FORM_BEAST) then
 	--[[
-	if turtleType == TURTLE_REGULAR then
+	if v.turtleType == TURTLE_REGULAR then
 		voiceOnce("Naija_TransportTurtles2")
 	end
 	]]--
@@ -284,58 +287,58 @@ function activate(me)
 		entity_setActivation(me, AT_NONE)
 		
 		if isFlag(FLAG_FIRSTTRANSTURTLE, 0) then
-			x,y = bone_getWorldPosition(tame)
-			entity_swimToPosition(n, x, y)
-			entity_watchForPath(n)
-			entity_flipToEntity(n, me)
-			entity_animate(n, "tameTurtle", 0, LAYER_UPPERBODY)
+			local x, y = bone_getWorldPosition(v.tame)
+			entity_swimToPosition(v.n, x, y)
+			entity_watchForPath(v.n)
+			entity_flipToEntity(v.n, me)
+			entity_animate(v.n, "tameTurtle", 0, LAYER_UPPERBODY)
 			entity_animate(me, "tame")
 			while entity_isAnimating(me) do
 				watch(FRAME_TIME)
 			end
-			entity_idle(n)
+			entity_idle(v.n)
 			entity_animate(me, "idle")
 			watch(0.5)
 			-- don't forget this later: 
 			setFlag(FLAG_FIRSTTRANSTURTLE, 1)
 		end
-		li = 0
+		v.li = 0
 		if hasLi() then
-			li = getLi()
-			if entity_isEntityInRange(n, li, 512) then
+			v.li = getLi()
+			if entity_isEntityInRange(v.n, v.li, 512) then
 			else
 				fade2(1, 0.2, 1, 1, 1)
 				watch(0.2)
-				entity_setPosition(li, entity_x(n), entity_y(n))
+				entity_setPosition(v.li, entity_x(v.n), entity_y(v.n))
 				fade2(0, 0.5)
 				watch(0.5)
 			end
 		end
-		x,y = bone_getWorldPosition(seat)
+		local x, y = bone_getWorldPosition(v.seat)
 
-		entity_swimToPosition(n, x, y)
-		entity_watchForPath(n)
-		entity_animate(n, "rideTurtle", -1)
-		avatarAttached = true
-		if entity_isfh(me) and not entity_isfh(n) then
-			entity_fh(n)
-		elseif not entity_isfh(me) and entity_isfh(n) then
-			entity_fh(n)
+		entity_swimToPosition(v.n, x, y)
+		entity_watchForPath(v.n)
+		entity_animate(v.n, "rideTurtle", -1)
+		v.avatarAttached = true
+		if entity_isfh(me) and not entity_isfh(v.n) then
+			entity_fh(v.n)
+		elseif not entity_isfh(me) and entity_isfh(v.n) then
+			entity_fh(v.n)
 		end
 		
-		if li ~= 0 then
+		if v.li ~= 0 then
 			debugLog("here!")
-			entity_setState(li, STATE_PUPPET, -1, 1)
-			x2,y2 = bone_getWorldPosition(seat2)
-			entity_swimToPosition(li, x2, y2)
-			entity_watchForPath(li)
-			entity_animate(li, "rideTurtle", -1)
-			liAttached = true
-			entity_setRiding(li, me)
+			entity_setState(v.li, STATE_PUPPET, -1, 1)
+			local x2, y2 = bone_getWorldPosition(v.seat2)
+			entity_swimToPosition(v.li, x2, y2)
+			entity_watchForPath(v.li)
+			entity_animate(v.li, "rideTurtle", -1)
+			v.liAttached = true
+			entity_setRiding(v.li, me)
 		end
 		
 		
-		entity_setRiding(n, me)
+		entity_setRiding(v.n, me)
 		overrideZoom(0.75, 1.5)
 		if isMapName("VEIL01") then
 			entity_rotate(me, -80, 2, 0, 0, 1)
@@ -346,7 +349,7 @@ function activate(me)
 		end
 		
 
-		entity_moveToNode(me, leave, SPEED_FAST)
+		entity_moveToNode(me, v.leave, SPEED_FAST)
 		entity_animate(me, "swim", -1)
 		
 		playSfx("transturtle-takeoff")
@@ -369,7 +372,7 @@ function activate(me)
 		]]--
 				
 		-- regular cycle:
-		if turtleType == TURTLE_REGULAR then
+		if v.turtleType == TURTLE_REGULAR then
 			if isMapName("VEIL01") then
 				if isFlag(FLAG_TRANSTURTLE_ABYSS03, 1) then
 					warpNaijaToSceneNode("ABYSS03", "TRANSTURTLE")
@@ -472,7 +475,7 @@ function activate(me)
 		end
 		
 		-- secret:
-		if turtleType == TURTLE_SECRET1 then
+		if v.turtleType == TURTLE_SECRET1 then
 			if isMapName("SEAHORSE") then
 				warpNaijaToSceneNode("FOREST05", "TRANSTURTLE")
 			elseif isMapName("FOREST05") then

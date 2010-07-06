@@ -17,23 +17,25 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-slow = false
+v.slow = false
 function init(me)
 	--node_setCursorActivation(me, true)
 end
 
 function update(me)
 	if node_isEntityIn(me, getNaija()) then
-		if not slow then
+		if not v.slow then
 			setGameSpeed(0.5, 0.2)
-			slow = true
+			v.slow = true
 		end
 	else
-		if slow then
+		if v.slow then
 			setGameSpeed(1, 0.2)
-			slow = false
+			v.slow = false
 		end
 	end
 end

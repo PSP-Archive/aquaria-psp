@@ -17,15 +17,17 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-attackDelay = 1 + math.random(3)
-soundDelay = 0
-dir = 0
-dirTimer = 0
+v.n = 0
+v.attackDelay = 1 + math.random(3)
+v.soundDelay = 0
+v.dir = 0
+v.dirTimer = 0
 
-bubDelay = 0
+v.bubDelay = 0
 
 function init(me)
 	setupEntity(me)
@@ -52,32 +54,32 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	--entity_setTarget(me, n)
+	v.n = getNaija()
+	--entity_setTarget(me, v.n)
 end
 
 function update(me, dt)	
 	dt = dt * 1.1
 	if entity_isState(me, STATE_IDLE) then
 		if entity_hasTarget(me) then
-			dirTimer = dirTimer + dt
-			if dirTimer > 1 then
-				if dir == 0 then dir = 1 else dir = 0 end
-				dirTimer = 0
+			v.dirTimer = v.dirTimer + dt
+			if v.dirTimer > 1 then
+				if v.dir == 0 then v.dir = 1 else v.dir = 0 end
+				v.dirTimer = 0
 			end
 			entity_doCollisionAvoidance(me, dt, 8, 0.2)
 			entity_addVel(me, 0, -800*dt)
-			if dir == 0 then
+			if v.dir == 0 then
 				entity_addVel(me, -400*dt)
 			else
 				entity_addVel(me, 400*dt)
 			end
-			attackDelay = attackDelay - dt
-			if attackDelay < 0 then
-				attackDelay = 0
-				x, y = entity_getPosition(me)
-				x2 = x
-				y2 = y + 1000
+			v.attackDelay = v.attackDelay - dt
+			if v.attackDelay < 0 then
+				v.attackDelay = 0
+				local x, y = entity_getPosition(me)
+				local x2 = x
+				local y2 = y + 1000
 				if entity_collideCircleVsLine(me, x, y, x2, y2, 64) then
 					entity_setState(me, STATE_CHARGE1)
 				end
@@ -87,17 +89,17 @@ function update(me, dt)
 			entity_findTarget(me, 900)
 		end
 	elseif entity_isState(me, STATE_ATTACK) then
-		bubDelay = bubDelay + dt
-		if bubDelay > 0.1 then
-			bubDelay = 0
+		v.bubDelay = v.bubDelay + dt
+		if v.bubDelay > 0.1 then
+			v.bubDelay = 0
 			spawnParticleEffect("bubble-release-short", entity_x(me), entity_y(me))
 		end
 		
-		soundDelay = soundDelay + dt
-		if soundDelay >= 0.4 then
+		v.soundDelay = v.soundDelay + dt
+		if v.soundDelay >= 0.4 then
 			
 			entity_playSfx(me, "FroogFlap")
-			soundDelay = 0
+			v.soundDelay = 0
 		end
 	
 		entity_moveTowardsTarget(me, dt, 200)
@@ -154,7 +156,7 @@ end
 function hitSurface(me)
 	if entity_isState(me, STATE_ATTACK) then
 		entity_setState(me, STATE_IDLE)
-		attackDelay = 2+math.random(3)
+		v.attackDelay = 2+math.random(3)
 	end
 end
 

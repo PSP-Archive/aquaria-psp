@@ -17,15 +17,17 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 -- sings while animating
 
-n = 0
-singDelay = 60
+v.n = 0
+v.singDelay = 60
 
-singingStarted = false
-head = 0
+v.singingStarted = false
+v.head = 0
 
 function init(me)
 	setupEntity(me)
@@ -39,27 +41,27 @@ function init(me)
 	entity_scale(me, 0.5, 0.5)
 	
 	loadSound("Anima")
-	head = entity_getBoneByName(me, "Head")
+	v.head = entity_getBoneByName(me, "Head")
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 	if entity_getAlpha(me) == 1 then
-		if singingStarted and entity_isState(me, STATE_SING) then
-			if entity_isEntityInRange(me, n, 600) then
-				singDelay = singDelay + dt
-				if singDelay > 10 then
-					singDelay = 0
+		if v.singingStarted and entity_isState(me, STATE_SING) then
+			if entity_isEntityInRange(me, v.n, 600) then
+				v.singDelay = v.singDelay + dt
+				if v.singDelay > 10 then
+					v.singDelay = 0
 					playSfx("Anima")
 					--entity_setState(me, STATE_SING)
 				end
 			end
 		end
-		entity_setLookAtPoint(me, bone_getWorldPosition(head))
+		entity_setLookAtPoint(me, bone_getWorldPosition(v.head))
 	end
 	
 end
@@ -70,14 +72,14 @@ function enterState(me)
 	elseif entity_isState(me, STATE_SING) then
 		entity_animate(me, "sing", -1)
 		
-		singingStarted = true
+		v.singingStarted = true
 	end
 end
 
 function exitState(me)
 	if entity_isState(me, STATE_SING) then
 		--entity_setState(me, STATE_IDLE)
-		singDelay = 0
+		v.singDelay = 0
 	end
 end
 

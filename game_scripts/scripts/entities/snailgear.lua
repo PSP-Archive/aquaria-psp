@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- SNAIL GEAR
 
 dofile("scripts/entities/entityinclude.lua")
@@ -24,9 +26,9 @@ dofile("scripts/entities/entityinclude.lua")
 STATE_JUMP				= 1000
 STATE_TRANSITION		= 1001
 
-jumpDelay = 0
-moveTimer = 0
-rotateOffset = 0
+v.jumpDelay = 0
+v.moveTimer = 0
+v.rotateOffset = 0
 
 function init(me)
 	setupBasicEntity(
@@ -65,31 +67,31 @@ function update(me, dt)
 	if entity_getState(me)==STATE_IDLE then
 		entity_moveAlongSurface(me, dt, 300, 6, 24)
 		entity_rotateToSurfaceNormal(me, 0.1)
-		moveTimer = moveTimer + dt
-		if moveTimer > 8 then
+		v.moveTimer = v.moveTimer + dt
+		if v.moveTimer > 8 then
 			entity_switchSurfaceDirection(me)
-			moveTimer = 0
+			v.moveTimer = 0
 		end
 		if not(entity_hasTarget(me)) then
 			entity_findTarget(me, 1200)
 		else
 			if entity_isTargetInRange(me, 600) then
-				jumpDelay = jumpDelay - dt
-				if jumpDelay < 0 then
-					jumpDelay = 3
+				v.jumpDelay = v.jumpDelay - dt
+				if v.jumpDelay < 0 then
+					v.jumpDelay = 3
 					entity_setState(me, STATE_JUMP)
 				end
 			end
 		end
 	elseif entity_getState(me)==STATE_JUMP then
 	--[[
-		rotateOffset = rotateOffset + dt * 400
-		if rotateOffset > 180 then
-			rotateOffset = 180
+		v.rotateOffset = v.rotateOffset + dt * 400
+		if v.rotateOffset > 180 then
+			v.rotateOffset = 180
 		end
 		]]--
 		
-		entity_rotateToVel(me, 0.1, rotateOffset)
+		entity_rotateToVel(me, 0.1, v.rotateOffset)
 		entity_updateMovement(me, dt)
 		
 		
@@ -121,7 +123,7 @@ function enterState(me)
 		entity_animate(me, "idle", -1)
 	elseif entity_getState(me)==STATE_JUMP then
 		spawnParticleEffect("WallBoost", entity_x(me), entity_y(me), 0, entity_getRotation(me)+90)
-		rotateOffset = 0
+		v.rotateOffset = 0
 		entity_applySurfaceNormalForce(me, 800)
 		entity_adjustPositionBySurfaceNormal(me, 10)
 		entity_animate(me, "jump")

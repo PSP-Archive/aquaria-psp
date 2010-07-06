@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- N A U P L I U S
 -- ================================================================================================
@@ -34,32 +36,32 @@ MOVE_STATE_DOWN = 1
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-blupTimer = 0
-dirTimer = 0
-blupTime = 3.0
+v.blupTimer = 0
+v.dirTimer = 0
+v.blupTime = 3.0
 
-fireDelay = 2
-moveTimer = 0
-maxShots = 3
-lastShot = maxShots
+v.fireDelay = 2
+v.moveTimer = 0
+v.maxShots = 3
+v.lastShot = v.maxShots
 
 -- ================================================================================================
 -- F U N C T I O N S
 -- ================================================================================================
 
-sz = 1.0
-dir = 0
+v.sz = 1.0
+v.dir = 0
 
-moveState = 0
-moveTimer = 0
-velx = 0
+v.moveState = 0
+v.moveTimer = 0
+v.velx = 0
 
-soundDelay = 0
+v.soundDelay = 0
 
-dir = ORIENT_UP
+v.dir = ORIENT_UP
 
 function doIdleScale(me)	
-	entity_scale(me, 1.0*sz, 0.80*sz, blupTime, -1, 1, 1)
+	entity_scale(me, 1.0*v.sz, 0.80*v.sz, v.blupTime, -1, 1, 1)
 end
 
 function init(me)
@@ -88,7 +90,7 @@ function init(me)
 	
 	entity_initHair(me, 40, 5, 30, "nauplius-tentacles")
 	
-	entity_scale(me, 0.75*sz, 1*sz)
+	entity_scale(me, 0.75*v.sz, 1*v.sz)
 	doIdleScale(me)
 	
 	entity_exertHairForce(me, 0, 400, 1)
@@ -99,15 +101,15 @@ end
 function update(me, dt)
 	dt = dt * 1.5
 	if avatar_isBursting() or entity_getRiding(getNaija())~=0 then
-		e = entity_getRiding(getNaija())
+		local e = entity_getRiding(getNaija())
 		if entity_touchAvatarDamage(me, 32, 0, 400) then
 			if e~=0 then
-				x,y = entity_getVectorToEntity(me, e)
+				local x,y = entity_getVectorToEntity(me, e)
 				x,y = vector_setLength(x, y, 500)
 				entity_addVel(e, x, y)
 			end
-			len = 500
-			x,y = entity_getVectorToEntity(getNaija(), me)
+			local len = 500
+			local x,y = entity_getVectorToEntity(getNaija(), me)
 			x,y = vector_setLength(x, y, len)
 			entity_push(me, x, y, 0.2, len, 0)
 			entity_sound(me, "JellyBlup", 800)
@@ -118,38 +120,38 @@ function update(me, dt)
 		end
 	end
 	entity_handleShotCollisions(me)
-	sx,sy = entity_getScale(me)
+	v.sx,v.sy = entity_getScale(me)
 		
 		
-	moveTimer = moveTimer - dt
-	if moveTimer < 0 then
-		if moveState == MOVE_STATE_DOWN then		
-			moveState = MOVE_STATE_UP
-			fireDelay = 0.5
+	v.moveTimer = v.moveTimer - dt
+	if v.moveTimer < 0 then
+		if v.moveState == MOVE_STATE_DOWN then		
+			v.moveState = MOVE_STATE_UP
+			v.fireDelay = 0.5
 			entity_setMaxSpeedLerp(me, 1.5, 0.2)
 			entity_scale(me, 0.80, 1, 1, 1, 1)
-			moveTimer = 3 + math.random(200)/100.0
+			v.moveTimer = 3 + math.random(200)/100.0
 			entity_sound(me, "JellyBlup")
-		elseif moveState == MOVE_STATE_UP then
-			moveState = MOVE_STATE_DOWN
+		elseif v.moveState == MOVE_STATE_UP then
+			v.moveState = MOVE_STATE_DOWN
 			doIdleScale(me)
 			entity_setMaxSpeedLerp(me, 1, 1)
-			moveTimer = math.random(4) + math.random(200)/100.0
+			v.moveTimer = math.random(4) + math.random(200)/100.0
 		end
 	end
 	
 	
-	if moveState == MOVE_STATE_UP then
+	if v.moveState == MOVE_STATE_UP then
 	
-		if dir == ORIENT_UP then
+		if v.dir == ORIENT_UP then
 			entity_addVel(me, 0, -4000*dt)
 			if isObstructed(entity_x(me), entity_y(me)-40) then
-				dir = ORIENT_DOWN
+				v.dir = ORIENT_DOWN
 			end
-		elseif dir == ORIENT_DOWN then
+		elseif v.dir == ORIENT_DOWN then
 			entity_addVel(me, 0, 4000*dt)
 			if isObstructed(entity_x(me), entity_y(me)+40) then
-				dir = ORIENT_UP
+				v.dir = ORIENT_UP
 			end
 		end
 		
@@ -159,26 +161,26 @@ function update(me, dt)
 		if not(entity_hasTarget(me)) then
 			entity_findTarget(me, 1200)
 		else
-			if fireDelay > 0 then
-				fireDelay = fireDelay - dt
-				if fireDelay < 0 then
+			if v.fireDelay > 0 then
+				v.fireDelay = v.fireDelay - dt
+				if v.fireDelay < 0 then
 					spawnParticleEffect("ArmaShot", entity_x(me), entity_y(me) - 80)
-					s = createShot("Raspberry", me, entity_getTarget(me), entity_x(me), entity_y(me) - 20)
+					local s = createShot("Raspberry", me, entity_getTarget(me), entity_x(me), entity_y(me) - 20)
 					shot_setAimVector(s, entity_getNormal(me))
 					shot_setOut(s, 64)
 				
-					if lastShot <= 1 then
-						fireDelay = 4
-						lastShot = maxShots
+					if v.lastShot <= 1 then
+						v.fireDelay = 4
+						v.lastShot = v.maxShots
 					else
-						fireDelay = 0.5
-						lastShot = lastShot - 1
+						v.fireDelay = 0.5
+						v.lastShot = v.lastShot - 1
 					end				
 				end
 			end
 		end
 
-	elseif moveState == MOVE_STATE_DOWN then
+	elseif v.moveState == MOVE_STATE_DOWN then
 		entity_addVel(me, 0, 50*dt)
 		--entity_rotateTo(me, 0, 3)
 

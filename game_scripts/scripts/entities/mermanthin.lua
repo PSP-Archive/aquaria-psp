@@ -17,22 +17,24 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- Merman / Thin
 -- ================================================================================================
 
 dofile("scripts/entities/entityinclude.lua")
 
-swimTime = 0
-swimTimer = swimTime - swimTime/4
-dirTimer = 0
-dir = 0
-soundDelay = math.random(4)
+v.swimTime = 0
+v.swimTimer = v.swimTime - v.swimTime/4
+v.dirTimer = 0
+v.dir = 0
+v.soundDelay = math.random(4)
 
-playedSound = false
+v.playedSound = false
 
-attackDelay = 0
-maxAttackDelay = 1
+v.attackDelay = 0
+v.maxAttackDelay = 1
 
 STATE_HANG 	= 1000
 STATE_SWIM 	= 1001
@@ -40,17 +42,17 @@ STATE_BURST = 1002
 STATE_WALL = 1003
 STATE_WALLBURST = 1004
 
-burstDelay = 0
-checkSurfaceDelay = 0
+v.burstDelay = 0
+v.checkSurfaceDelay = 0
 
-bloatTimer = 0
+v.bloatTimer = 0
 
-lastx = 0
-lasty = 0
+v.lastx = 0
+v.lasty = 0
 
-bloated = false
+v.bloated = false
 
-playSoundDelay = math.random(300)/300.0
+v.playSoundDelay = math.random(300)/300.0
 
 function init(me)
 	setupBasicEntity(me, 
@@ -115,12 +117,12 @@ end
 
 function postInit(me)
 	--checkSurface(me)
-	node = entity_getNearestNode(me, "bloatup")
+	local node = entity_getNearestNode(me, "bloatup")
 	if node ~= 0 and node_isEntityIn(node, me) then
 		entity_setState(me, STATE_BLOATED, -1, 1)
 	end
 	
-	node = entity_getNearestNode(me, "sitstill")
+	local node = entity_getNearestNode(me, "sitstill")
 	if node ~= 0 and node_isEntityIn(node, me) then
 		entity_setMaxSpeed(me, 0.01)
 	end
@@ -129,46 +131,46 @@ end
 --[[
 function checkSurface(me)
 	if entity_isNearObstruction(me, 3, OBSCHECK_4DIR) then
-		checkSurfaceDelay = math.random(3)+1
+		v.checkSurfaceDelay = math.random(3)+1
 		if entity_clampToSurface(me, 0.5, 3) then
 			entity_setState(me, STATE_WALL, 2 + math.random(2))
 		else
-			checkSurfaceDelay = 0.1
+			v.checkSurfaceDelay = 0.1
 		end
 	end
 end
 ]]--
 
 function update(me, dt)
-	amt = 800
+	local amt = 800
 	
 	if entity_isState(me, STATE_IDLE) or entity_isState(me, STATE_WALL) or entity_isState(me, STATE_SWIM) then
-		soundDelay = soundDelay - dt
-		if soundDelay < 0 then
-			soundDelay = math.random(4)+2
+		v.soundDelay = v.soundDelay - dt
+		if v.soundDelay < 0 then
+			v.soundDelay = math.random(4)+2
 			entity_sound(me, "Merman-Idle", 1000+math.random(100))
 		end
 	end
 	
-	if burstDelay > 0 then
-		burstDelay = burstDelay - dt
+	if v.burstDelay > 0 then
+		v.burstDelay = v.burstDelay - dt
 	end
 
 	
 	entity_updateCurrents(me, dt)
 	
 	if entity_isState(me, STATE_BLOATED) then
-		dirTimer = dirTimer + dt
-		if dirTimer > 2 then
-			dirTimer = 0
-			if dir > 0 then
-				dir = 0
+		v.dirTimer = v.dirTimer + dt
+		if v.dirTimer > 2 then
+			v.dirTimer = 0
+			if v.dir > 0 then
+				v.dir = 0
 			else
-				dir = 1
+				v.dir = 1
 			end
 		end
-		spd = 200
-		if dir > 0 then
+		local spd = 200
+		if v.dir > 0 then
 			spd = -spd
 		end
 		entity_addVel(me, spd*dt, 0)
@@ -176,23 +178,23 @@ function update(me, dt)
 		entity_doCollisionAvoidance(me, dt, 6, 0.5)
 		
 		if not entity_isBeingPulled(me) then
-			bloatTimer = bloatTimer + dt
-			if bloatTimer > 0.5 then
+			v.bloatTimer = v.bloatTimer + dt
+			if v.bloatTimer > 0.5 then
 				spawnParticleEffect("gaspoof", entity_x(me), entity_y(me))
 				--createShot( "bloatgasshot", me, getNaija())
-				bloatTimer = 0
+				v.bloatTimer = 0
 			end
 		else
-			bloatTimer = -3
+			v.bloatTimer = -3
 		end
 		
 	end
 	if entity_isState(me, STATE_IDLE) then
 		entity_rotate(me, 0, 0.2)
 		entity_updateCurrents(me)
-		timer = timer + dt
-		if timer > 2 then
-			timer = 0
+		v.timer = v.timer + dt
+		if v.timer > 2 then
+			v.timer = 0
 			if not entity_hasTarget(me) then
 				entity_findTarget(me, 2000)
 			end
@@ -203,19 +205,19 @@ function update(me, dt)
 		end
 	end
 
-	if not playedSound and entity_isEntityInRange(me, getNaija(), 800) then
-		playSoundDelay = playSoundDelay - dt
-		if playSoundDelay < 0 then
-			playedSound = true
+	if not v.playedSound and entity_isEntityInRange(me, getNaija(), 800) then
+		v.playSoundDelay = v.playSoundDelay - dt
+		if v.playSoundDelay < 0 then
+			v.playedSound = true
 			entity_sound(me, "Merman-Cry", 1000 + math.random(100))
-			playSoundDelay = 0
+			v.playSoundDelay = 0
 		end
 	end
 
 	
 	if entity_isState(me, STATE_SWIM) then
-		timer = timer + dt
-		if timer > 5 then
+		v.timer = v.timer + dt
+		if v.timer > 5 then
 			entity_setState(me, STATE_IDLE)
 		end
 		if entity_hasTarget(me) then
@@ -229,18 +231,18 @@ function update(me, dt)
 	end
 	
 	if entity_isState(me, STATE_IDLE) or entity_isState(me, STATE_SWIM) then
-		checkSurfaceDelay = checkSurfaceDelay + dt
+		v.checkSurfaceDelay = v.checkSurfaceDelay + dt
 		
-		if checkSurfaceDelay > 5 then
+		if v.checkSurfaceDelay > 5 then
 			--debugLog("MermanThin: checking surface")
 			if entity_checkSurface(me, 6, STATE_WALL, math.random(2)+2) then
 				--debugLog("MermanThin: successful clamp!")
 			else
 				entity_doCollisionAvoidance(me, dt, 2, 0.5)
-				checkSurfaceDelay = 4.9
+				v.checkSurfaceDelay = 4.9
 			end
 			
-			--checkSurfaceDelay = 0
+			--v.checkSurfaceDelay = 0
 		else
 			entity_doCollisionAvoidance(me, dt, 2, 0.5)
 		end
@@ -261,8 +263,8 @@ function update(me, dt)
 		entity_findTarget(me, 500)
 	else
 		
-		swimTimer = swimTimer + dt
-		if swimTimer > swimTime then			
+		v.swimTimer = v.swimTimer + dt
+		if v.swimTimer > v.swimTime then			
 			entity_moveTowardsTarget(me, 1, amt)
 			if not entity_isNearObstruction(getNaija(), 8) then
 				entity_doCollisionAvoidance(me, 1, 6, 0.5)
@@ -271,7 +273,7 @@ function update(me, dt)
 			entity_doSpellAvoidance(me, 1, 256, 0.2)
 			entity_doEntityAvoidance(me, 1, 256, 0.2)
 			entity_rotateToVel(me, 0.1)
-			swimTimer = swimTimer - swimTime
+			v.swimTimer = v.swimTimer - v.swimTime
 			entity_animate(me, "swim", LOOP_INF)
 		else
 			entity_moveTowardsTarget(me, dt, 400)
@@ -291,7 +293,7 @@ function update(me, dt)
 	if not entity_isState(me, STATE_WALL) then		
 		entity_doFriction(me, dt, 100)
 		if entity_isBeingPulled(me) then
-			--entity_flipToEntity(me, n)
+			--entity_flipToEntity(me, v.n)
 			entity_doCollisionAvoidance(me, dt, 5, 0.5)
 		else
 			entity_flipToVel(me)
@@ -302,28 +304,28 @@ function update(me, dt)
 		entity_moveAlongSurface(me, dt, 350, 6)
 		entity_rotateToSurfaceNormal(me)
 		--[[
-		if entity_x(me) == lastx and entity_y(me) == lasty then
+		if entity_x(me) == v.lastx and entity_y(me) == v.lasty then
 			entity_setState(me, STATE_WALLBURST)
 		end
 		]]--
 	end
 
 	if not entity_isState(me, STATE_WALL) then
-		if attackDelay < maxAttackDelay then
-			attackDelay = attackDelay + dt
+		if v.attackDelay < v.maxAttackDelay then
+			v.attackDelay = v.attackDelay + dt
 		else
 			if entity_isEntityInRange(me, entity_getTarget(me), 128) then
 				entity_animate(me, string.format("attack%d", math.random(3)), 0, LAYER_UPPERBODY)
-				attackDelay = 0
+				v.attackDelay = 0
 			end
 		end
 	end
 	if not entity_isBeingPulled(me) then
-		attacked = false
+		local attacked = false
 		if not entity_isState(me, STATE_BLOATED) then
 			attacked = entity_touchAvatarDamage(me, 32, 1, 1200)
 		else
-			if bloatTimer >= 0 then
+			if v.bloatTimer >= 0 then
 				attacked = entity_touchAvatarDamage(me, 96, 0.5, 1200)
 			end
 		end
@@ -332,8 +334,8 @@ function update(me, dt)
 	
 	entity_handleShotCollisions(me)	
 	
-	lastx = entity_x(me)
-	lasty = entity_y(me)
+	v.lastx = entity_x(me)
+	v.lasty = entity_y(me)
 	
 end
 
@@ -358,7 +360,7 @@ function damage(me, attacker, bone, damageType, dmg)
 		return false
 	end
 	if entity_isState(me, STATE_IDLE) or entity_isState(me, STATE_SWIM) then
-		if (entity_isState(me, STATE_IDLE) or burstDelay <= 0) and damageType == DT_AVATAR_ENERGYBLAST then
+		if (entity_isState(me, STATE_IDLE) or v.burstDelay <= 0) and damageType == DT_AVATAR_ENERGYBLAST then
 			entity_setState(me, STATE_BURST, 0.5)
 		end
 	end
@@ -371,7 +373,7 @@ function damage(me, attacker, bone, damageType, dmg)
 end
 
 function enterState(me)
-	timer = 0
+	v.timer = 0
 	if entity_getState(me)==STATE_IDLE then
 		--debugLog("MermanThin: STATE_IDLE")
 		entity_setProperty(me, EP_MOVABLE, false)
@@ -388,7 +390,7 @@ function enterState(me)
 			entity_setPosition(me, node_x(node), node_y(node), 1, 0, 0, 1)
 		end
 		]]--
-		bloated = true
+		v.bloated = true
 		entity_setProperty(me, EP_MOVABLE, true)
 		--entity_applySurfaceNormalForce(me, 1000)
 		--entity_setWeight(me, 10)	
@@ -441,7 +443,7 @@ function enterState(me)
 		end
 		entity_animate(me, "wall", LOOP_INF)
 	elseif entity_getState(me)==STATE_BURST then
-		burstDelay = 6
+		v.burstDelay = 6
 		entity_animate(me, "burst")
 		--[[
 		entity_doSpellAvoidance(me, 1, 256, 1.0)
@@ -452,13 +454,13 @@ function enterState(me)
 		entity_moveTowardsTarget(me, 1, 1000)
 	elseif entity_getState(me)==STATE_WALLBURST then		
 		--entity_applySurfaceNormalForce(me, 1000)
-		vx, vy = entity_getNormal(me)
+		local vx, vy = entity_getNormal(me)
 		vx = vx * 1000
 		vy = vy * 1000
 		entity_clearVel(me)
 		entity_addVel(me, vx, vy)
 		--debugLog(string.format("v(%f, %f)", vx, vy))
-		burstDelay = 6
+		v.burstDelay = 6
 		entity_animate(me, "burst")
 		entity_setMaxSpeedLerp(me, 2, 0.1)
 		--entity_moveAlongSurface(me, 1, 0, 0, 100)
@@ -480,7 +482,7 @@ function hitSurface(me)
 end
 
 function dieNormal(me)
-	if bloated then
+	if v.bloated then
 		shakeCamera(10, 2)
 	end
 end

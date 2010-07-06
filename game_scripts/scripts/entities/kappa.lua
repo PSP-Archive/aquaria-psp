@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-glow = 0
+v.n = 0
+v.glow = 0
 
 function init(me)
 	setupEntity(me)
@@ -28,17 +30,17 @@ function init(me)
 	entity_initSkeletal(me, "Kappa")	
 	entity_setAllDamageTargets(me, false)
 	
-	glow = entity_getBoneByName(me, "Glow")
-	bone_alpha(glow, 0)
-	bone_scale(glow, 2, 2)
+	v.glow = entity_getBoneByName(me, "Glow")
+	bone_alpha(v.glow, 0)
+	bone_scale(v.glow, 2, 2)
 	entity_setState(me, STATE_IDLE)
 	
 	entity_setEntityLayer(me, -3)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -46,24 +48,24 @@ end
 
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
-		bone_alpha(glow, 0)
+		bone_alpha(v.glow, 0)
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_CHARGE1) then
 		playSfx("MenuNote0")
-		bone_alpha(glow, 1)
-		bone_setColor(glow, 1, 0.5, 0.5)
-		bone_alpha(glow, 0, 1)
+		bone_alpha(v.glow, 1)
+		bone_setColor(v.glow, 1, 0.5, 0.5)
+		bone_alpha(v.glow, 0, 1)
 	elseif entity_isState(me, STATE_CHARGE2) then
 		playSfx("MenuNote0")
-		bone_alpha(glow, 1)
-		bone_setColor(glow, 1, 1, 0.5)
+		bone_alpha(v.glow, 1)
+		bone_setColor(v.glow, 1, 1, 0.5)
 		
-		bone_alpha(glow, 0, 1)
+		bone_alpha(v.glow, 0, 1)
 	elseif entity_isState(me, STATE_CHARGE3) then
 		playSfx("MenuNote7")
-		bone_alpha(glow, 1)
-		bone_setColor(glow, 0.5, 1, 0.5)		
-		bone_alpha(glow, 0, 1)
+		bone_alpha(v.glow, 1)
+		bone_setColor(v.glow, 0.5, 1, 0.5)		
+		bone_alpha(v.glow, 0, 1)
 		entity_setStateTime(me, 1)
 	end
 end

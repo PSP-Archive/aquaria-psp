@@ -17,16 +17,18 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-dir = 0
+v.n = 0
+v.dir = 0
 
 STATE_FLYING = 1000
 STATE_FALLING = 1001
-inity = 0
-drownTimer = 0
-drownTime = 6
+v.inity = 0
+v.drownTimer = 0
+v.drownTime = 6
 
 function init(me)
 	setupEntity(me)
@@ -48,9 +50,9 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
-	inity = entity_y(me)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
+	v.inity = entity_y(me)
 end
 
 function update(me, dt)
@@ -58,7 +60,7 @@ function update(me, dt)
 	entity_touchAvatarDamage(me, entity_getCollideRadius(me), 0.5, 1000, 0)
 	
 	if entity_isState(me, STATE_FLYING) then
-		if dir == 0 then
+		if v.dir == 0 then
 			entity_addVel(me, -800*dt, 0)
 		else
 			entity_addVel(me, 800*dt, 0)
@@ -67,14 +69,14 @@ function update(me, dt)
 	end
 	if not entity_isState(me, STATE_IDLE) then	
 		entity_updateMovement(me, dt)
-		--entity_setPosition(me, entity_x(me), inity, 0)
+		--entity_setPosition(me, entity_x(me), v.inity, 0)
 	end
 	if entity_isUnderWater(me) then
 		if not entity_isState(me, STATE_FALLING) then
 			entity_setState(me, STATE_FALLING)
 		end
-		drownTimer = drownTimer + dt
-		if drownTimer > drownTime then
+		v.drownTimer = v.drownTimer + dt
+		if v.drownTimer > v.drownTime then
 			entity_damage(me, me, 999)
 		end
 	end
@@ -118,10 +120,10 @@ function animationKey(me, key)
 end
 
 function hitSurface(me)
-	if dir == 0 then
-		dir = 1
+	if v.dir == 0 then
+		v.dir = 1
 	else
-		dir = 0
+		v.dir = 0
 	end
 end
 

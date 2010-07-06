@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-bone_head = 0
+v.n = 0
+v.bone_head = 0
 
 normal = 0
 angry = 1
@@ -48,12 +50,12 @@ end
 
 function doSkel(me, skel, skin)
 	entity_initSkeletal(me, skel, skin)	
-	bone_head = entity_getBoneByName(me, "Head")
+	v.bone_head = entity_getBoneByName(me, "Head")
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -92,11 +94,11 @@ end
 
 function msg(me, m)
 	if m == "smile" then
-		bone_showFrame(bone_head, happy)
+		bone_showFrame(v.bone_head, happy)
 	elseif m == "normal" then
-		bone_showFrame(bone_head, 0)
+		bone_showFrame(v.bone_head, 0)
 	elseif m == "surprise" then
-		bone_showFrame(bone_head, surprise)
+		bone_showFrame(v.bone_head, surprise)
 	elseif m == "end" then
 		doSkel(me, "Li", "li-end")
 	end

@@ -17,16 +17,18 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-seen = false
+v.n = 0
+v.seen = false
 
-notes = { 4, 2, 3, 2, 1 }
-numNotes = 5
-curNote = 1
+v.notes = { 4, 2, 3, 2, 1 }
+v.numNotes = 5
+v.curNote = 1
 
-warpLoc = 0
+v.warpLoc = 0
 
 function init(me)
 	setupEntity(me)
@@ -42,7 +44,7 @@ function init(me)
 	else
 		entity_setState(me, STATE_OPENED)
 	end
-	warpLoc = entity_getBoneByName(me, "WarpLoc")
+	v.warpLoc = entity_getBoneByName(me, "WarpLoc")
 	
 	loadSound("DeepWhale-Open")
 	
@@ -51,15 +53,15 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 	if entity_isState(me, STATE_OPENED) then
 		--debugLog("opened")
-		bx, by = bone_getWorldPosition(warpLoc)
-		if entity_isPositionInRange(n, bx, by, 200) then
+		local bx, by = bone_getWorldPosition(v.warpLoc)
+		if entity_isPositionInRange(v.n, bx, by, 200) then
 			loadMap("WHALE", "ENTER")
 		end
 	end
@@ -70,11 +72,11 @@ function enterState(me)
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_OPEN) then
 		playSfx("DeepWhale-Open")
-		seen = true
-		entity_idle(n)
+		v.seen = true
+		entity_idle(v.n)
 		entity_animate(me, "open")
 		shakeCamera(10, 4)
-		entity_flipToEntity(n, me)
+		entity_flipToEntity(v.n, me)
 		watch(1)
 		emote(EMOTE_NAIJAUGH)
 		watch(2)
@@ -107,11 +109,11 @@ function hitSurface(me)
 end
 
 function lightFlare(me)
-	if not seen then
-		if entity_isEntityInRange(me, n, 600) then
-			entity_idle(n)
-			seen = true
-			entity_flipToEntity(n, me)
+	if not v.seen then
+		if entity_isEntityInRange(me, v.n, 600) then
+			entity_idle(v.n)
+			v.seen = true
+			entity_flipToEntity(v.n, me)
 			watch(0.2)
 			emote(EMOTE_NAIJAUGH)
 			watch(1.4)
@@ -126,13 +128,13 @@ end
 
 function songNoteDone(me, note)
 	if entity_isState(me, STATE_IDLE) then
-		debugLog(string.format("curNote: %d", curNote))
-		if notes[curNote] == note then
-			curNote = curNote + 1
+		debugLog(string.format("curNote: %d", v.curNote))
+		if v.notes[v.curNote] == note then
+			v.curNote = v.curNote + 1
 		else
-			curNote = 1
+			v.curNote = 1
 		end
-		if curNote > numNotes then
+		if v.curNote > v.numNotes then
 			entity_setState(me, STATE_OPEN)
 		end
 	end

@@ -17,16 +17,18 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-soundDelay = 0.1
-inCurrent = false
-updateDelay = 0
-updateDelayTime = 0.5
-groupNode = 0
-bounceGroup = {}
-bounceGroupSize = 1
+v.n = 0
+v.soundDelay = 0.1
+v.inCurrent = false
+v.updateDelay = 0
+v.updateDelayTime = 0.5
+v.groupNode = 0
+v.bounceGroup = {}
+v.bounceGroupSize = 1
 
 function init(me)
 	setupEntity(me)
@@ -49,41 +51,40 @@ function init(me)
 end
 
 function grabBounceGroup(me)
-	bounceGroup = {}
-	if groupNode ~= 0 then
+	v.bounceGroup = {}
+	if v.groupNode ~= 0 then
 
-		e = getFirstEntity()
-		c = 1
+		local e = getFirstEntity()
+		local c = 1
 		while e ~= 0 do
-			if e ~= me and not entity_isDead(e) and entity_getEntityType(e) == ET_ENEMY and node_isEntityIn(groupNode, e) then
+			if e ~= me and not entity_isDead(e) and entity_getEntityType(e) == ET_ENEMY and node_isEntityIn(v.groupNode, e) then
 				--debugLog(string.format("c: %d e: %d", c, e))
-				bounceGroup[c] = e
+				v.bounceGroup[c] = e
 				c = c + 1
 			end
 			e = getNextEntity()
 		end
-		bounceGroupSize = c
-		--debugLog(string.format("bounceGroupSize: %d", bounceGroupSize))
+		v.bounceGroupSize = c
+		--debugLog(string.format("bounceGroupSize: %d", v.bounceGroupSize))
 	end
 end
 
 function postInit(me)
-	e = 0
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	entity_update(me, math.random(100)/200.0)
-	inCurrent = entity_updateCurrents(me, dt)
+	v.inCurrent = entity_updateCurrents(me, dt)
 	
-	groupNode = entity_getNearestNode(me, "JELLYBOUNCE")
+	v.groupNode = entity_getNearestNode(me, "JELLYBOUNCE")
 	grabBounceGroup(me)
 end
 
 function bounceReact(me)
 	entity_scale(me, 1, 1)
 	entity_scale(me, 0.8, 1, 0.1, 5, 1)		
-	if soundDelay < 0 then
+	if v.soundDelay < 0 then
 		entity_sound(me, "SpikyBounce", 400+math.random(200))
-		soundDelay = 0.8
+		v.soundDelay = 0.8
 	end
 end
 
@@ -91,11 +92,11 @@ end
 function entityDied(me, died)
 	--debugLog("entityDied!!")
 	--[[
-	if bounceGroupSize ~= 1 then
-		for i=1,bounceGroupSize-1 do
-			if bounceGroup[i] == died then
+	if v.bounceGroupSize ~= 1 then
+		for i=1,v.bounceGroupSize-1 do
+			if v.bounceGroup[i] == died then
 				--debugLog("   erasing ent!")
-				bounceGroups[i] = 0
+				v.bounceGroups[i] = 0
 			end
 		end
 	end
@@ -104,8 +105,8 @@ function entityDied(me, died)
 end
 
 function update(me, dt)
-	if soundDelay > 0 then
-		soundDelay = soundDelay - dt
+	if v.soundDelay > 0 then
+		v.soundDelay = v.soundDelay - dt
 	end
 	--entity_updateCurrents(me, dt)
 	--entity_updateMovement(me, dt)	
@@ -116,51 +117,51 @@ function update(me, dt)
 		if not isForm(FORM_NATURE) then
 			bounceReact(me)
 --[[
-			vx, vy = entity_getVectorToEntity(me, n)
-			dx, dy = vector_setLength(vx, vy, entity_getCollideRadius(me)+entity_getCollideRadius(n)+1)
+			local vx, vy = entity_getVectorToEntity(me, v.n)
+			local dx, dy = vector_setLength(vx, vy, entity_getCollideRadius(me)+entity_getCollideRadius(v.n)+1)
 			vx, vy = vector_setLength(vx, vy, 2000)
-			entity_push(n, vx, vy, 0.5, 2000, 0)
-			entity_addVel(n, vx, vy)
+			entity_push(v.n, vx, vy, 0.5, 2000, 0)
+			entity_addVel(v.n, vx, vy)
 			vx, vy = vector_setLength(vx, vy, 2000)
-			entity_clearVel2(n)			
-			entity_setPosition(n, entity_x(me)+dx, entity_y(me)+dy)	
+			entity_clearVel2(v.n)			
+			entity_setPosition(v.n, entity_x(me)+dx, entity_y(me)+dy)	
 ]]--			
-			if inCurrent then
-				vx, vy = entity_getVectorToEntity(me, n)
-				dx, dy = vector_setLength(vx, vy, entity_getCollideRadius(me)+entity_getCollideRadius(n)+1)
+			if v.inCurrent then
+				local vx, vy = entity_getVectorToEntity(me, v.n)
+				local dx, dy = vector_setLength(vx, vy, entity_getCollideRadius(me)+entity_getCollideRadius(v.n)+1)
 				vx, vy = vector_setLength(vx, vy, 2500)
-				entity_push(n, vx, vy, 0.5, 2500, 0)
-				entity_addVel(n, vx, vy)
+				entity_push(v.n, vx, vy, 0.5, 2500, 0)
+				entity_addVel(v.n, vx, vy)
 				vx, vy = vector_setLength(vx, vy, 2500)
-				entity_clearVel2(n)
-				entity_addVel2(n, vx, vy)
-				entity_setPosition(n, entity_x(me)+dx, entity_y(me)+dy)
+				entity_clearVel2(v.n)
+				entity_addVel2(v.n, vx, vy)
+				entity_setPosition(v.n, entity_x(me)+dx, entity_y(me)+dy)
 			else
-				vx, vy = entity_getVectorToEntity(me, n)
-				dx, dy = vector_setLength(vx, vy, entity_getCollideRadius(me)+entity_getCollideRadius(n)+1)
+				local vx, vy = entity_getVectorToEntity(me, v.n)
+				local dx, dy = vector_setLength(vx, vy, entity_getCollideRadius(me)+entity_getCollideRadius(v.n)+1)
 				vx, vy = vector_setLength(vx, vy, 2000)
-				--entity_push(n, vx, vy, 0.5, 1000, 0)				
-				entity_addVel(n, vx, vy)
-				entity_clearVel2(n)
+				--entity_push(v.n, vx, vy, 0.5, 1000, 0)				
+				entity_addVel(v.n, vx, vy)
+				entity_clearVel2(v.n)
 				vx, vy = vector_setLength(vx, vy, 800)
-				entity_addVel2(n, vx, vy)
-				entity_setPosition(n, entity_x(me)+dx, entity_y(me)+dy)				
+				entity_addVel2(v.n, vx, vy)
+				entity_setPosition(v.n, entity_x(me)+dx, entity_y(me)+dy)				
 			end
 		end
 	end
-	if bounceGroupSize ~= 1 then
-		for i=1,bounceGroupSize-1 do
-			--debugLog(string.format("i: %d, bgrp: %d", i, bounceGroupSize))
-			e = bounceGroup[i]
+	if v.bounceGroupSize ~= 1 then
+		for i=1,v.bounceGroupSize-1 do
+			--debugLog(string.format("i: %d, bgrp: %d", i, v.bounceGroupSize))
+			local e = v.bounceGroup[i]
 			--debugLog(string.format("i: %d e: %d", i, ent))
 			if e ~= 0 then
 				if entity_isEntityInRange(me, e, entity_getCollideRadius(me)+entity_getCollideRadius(e)) then
-					vx, vy = entity_getVectorToEntity(me, e)
+					local vx, vy = entity_getVectorToEntity(me, e)
 					vx, vy = vector_setLength(vx, vy, 1200)
 					entity_addVel(e, vx, vy)
 					vx, vy = vector_setLength(vx, vy, 800)
 					entity_addVel2(e, vx, vy)			
-					dx, dy = vector_setLength(vx, vy, entity_getCollideRadius(me)+entity_getCollideRadius(n)+1)
+					local dx, dy = vector_setLength(vx, vy, entity_getCollideRadius(me)+entity_getCollideRadius(v.n)+1)
 					entity_setPosition(e, entity_x(me)+dx, entity_y(me)+dy)
 					bounceReact(me)
 				end
@@ -168,16 +169,15 @@ function update(me, dt)
 		end
 	end
 	--[[
-	iter = 0
-	e = getFirstEntity()
+	local e = getFirstEntity()
 	while e ~= 0 do
 		if e ~= me and entity_getEntityType(e) == ET_ENEMY and entity_isEntityInRange(me, e, entity_getCollideRadius(me)+entity_getCollideRadius(e)) then
-			vx, vy = entity_getVectorToEntity(me, e)
+			local vx, vy = entity_getVectorToEntity(me, e)
 			vx, vy = vector_setLength(vx, vy, 1200)
 			entity_addVel(e, vx, vy)
 			vx, vy = vector_setLength(vx, vy, 800)
 			entity_addVel2(e, vx, vy)			
-			dx, dy = vector_setLength(vx, vy, entity_getCollideRadius(me)+entity_getCollideRadius(n)+1)
+			local dx, dy = vector_setLength(vx, vy, entity_getCollideRadius(me)+entity_getCollideRadius(v.n)+1)
 			entity_setPosition(e, entity_x(me)+dx, entity_y(me)+dy)
 			bounceReact(me)
 			break

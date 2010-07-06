@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- S E A   T U R T L E   C O M M O N
 -- ================================================================================================
@@ -36,29 +38,30 @@ STATE_TO_GLIDE = 1004
 -- L O C A L   V A R I A B L E S 
 -- ================================================================================================
 
-sz = 1
-maxSpeed = 890
+v.sz = 1
+v.maxSpeed = 890
 
-swimTime = 0.34 + (math.random(42)*0.01)
-angle = 90
+v.swimTime = 0.34 + (math.random(42)*0.01)
+v.angle = 90
 
-turtle_type = 0
+v.turtle_type = 0
 
-song = { 0, 0, 0 }
+v.song = { 0, 0, 0 }
 
-songNoteTimer = 0
-songNoteDelay = 1.2
-songNote = 1
-singDelay = 0
+v.songNoteTimer = 0
+v.songNoteDelay = 1.2
+v.songNote = 1
+v.singDelay = 0
+v.singing = false
 
-curRecNote = 1
-recDelay = 0
+v.curRecNote = 1
+v.recDelay = 0
 
-follower = false
-following = false
+v.follower = false
+v.following = false
 
-saveFlag = 0
-saveNode = 0
+v.saveFlag = 0
+v.saveNode = 0
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -81,50 +84,50 @@ function commonInit(me, turType)
 	1800							-- updateCull -1: disabled, default: 4000
 	)
 	
-	turtle_type = turType
+	v.turtle_type = turType
 	
 	entity_setDeathParticleEffect(me, "Explode")
 	entity_setDropChance(me, 21)
 	
-	if turtle_type == 2 then
+	if v.turtle_type == 2 then
 		entity_initSkeletal(me, "babyturtle")
 		
-	elseif turtle_type == 4 then
+	elseif v.turtle_type == 4 then
 		entity_initSkeletal(me, "babyturtle", "babyturtle-special1")
-		follower = true
-		song[1] = 0
-		song[2] = 3
-		song[3] = 4
+		v.follower = true
+		v.song[1] = 0
+		v.song[2] = 3
+		v.song[3] = 4
 		
-		saveFlag = FLAG_MAMATURTLE_RESCUE1
+		v.saveFlag = FLAG_MAMATURTLE_RESCUE1
 		
-	elseif turtle_type == 5 then
+	elseif v.turtle_type == 5 then
 		entity_initSkeletal(me, "babyturtle", "babyturtle-special2")
-		follower = true
-		song[1] = 2
-		song[2] = 3
-		song[3] = 4
+		v.follower = true
+		v.song[1] = 2
+		v.song[2] = 3
+		v.song[3] = 4
 		
-		saveFlag = FLAG_MAMATURTLE_RESCUE2
+		v.saveFlag = FLAG_MAMATURTLE_RESCUE2
 		
-	elseif turtle_type == 6 then
+	elseif v.turtle_type == 6 then
 		entity_initSkeletal(me, "babyturtle", "babyturtle-special3")
-		follower = true
-		song[1] = 7
-		song[2] = 6
-		song[3] = 2
+		v.follower = true
+		v.song[1] = 7
+		v.song[2] = 6
+		v.song[3] = 2
 		
-		saveFlag = FLAG_MAMATURTLE_RESCUE3
+		v.saveFlag = FLAG_MAMATURTLE_RESCUE3
 		
 	else
 		entity_initSkeletal(me, "SeaTurtle")
 	end
 	
-	if saveFlag ~= 0 then
-		saveNode = getNode("TURTLESAVED")
+	if v.saveFlag ~= 0 then
+		v.saveNode = getNode("TURTLESAVED")
 	end
 	
-	shell = entity_getBoneByName(me, "Shell")
+	v.shell = entity_getBoneByName(me, "Shell")
 	
 	-- MAKE BACK PARTS DARKER
 	--[[backFrontFlipper = entity_getBoneByName(me, "FrontFlipperBack")
@@ -135,40 +138,40 @@ function commonInit(me, turType)
 	entity_setCullRadius(me, 800)
 	
 	-- BIG
-	if turtle_type <= 0 then
-		sz = 1.56 + (math.random(234)*0.001)
-		turtle_type = 0
+	if v.turtle_type <= 0 then
+		v.sz = 1.56 + (math.random(234)*0.001)
+		v.turtle_type = 0
 		entity_generateCollisionMask(me)
 		entity_setCullRadius(me, 1024)
 	
 	-- SMALL
-	elseif turtle_type == 1 then
-		sz = 0.76 + (math.random(234)*0.001)
+	elseif v.turtle_type == 1 then
+		v.sz = 0.76 + (math.random(234)*0.001)
 	
 	-- BABY
-	elseif turtle_type == 2 then
+	elseif v.turtle_type == 2 then
 		
-		sz = 0.43 + (math.random(210)*0.001)
+		v.sz = 0.43 + (math.random(210)*0.001)
 	
 	-- BACKGROUND	(CRAP)
-	elseif turtle_type == 3 then
-		--turtle_type = 3
-		sz = 0.23 + (math.random(210)*0.001)
+	elseif v.turtle_type == 3 then
+		--v.turtle_type = 3
+		v.sz = 0.23 + (math.random(210)*0.001)
 		entity_color(me, 0.1, 0.1, 0.1)
 		entity_alpha(me, 0.98)
 		entity_setEntityLayer(me, -2)
-	elseif turtle_type == 4 or turtle_type == 5 or turtle_type == 6 then
+	elseif v.turtle_type == 4 or v.turtle_type == 5 or v.turtle_type == 6 then
 		-- special baby 1
-		sz = 0.43 + ((math.random(50)+140)*0.001)
+		v.sz = 0.43 + ((math.random(50)+140)*0.001)
 	end
 	
-	entity_scale(me, sz, sz)
+	entity_scale(me, v.sz, v.sz)
 	
 	entity_setEntityType(me, ET_NEUTRAL)
 	
 	entity_setState(me, STATE_GLIDING)
 	entity_rotateTo(me, 360, 0.1)
-	entity_setMaxSpeed(me, maxSpeed)
+	entity_setMaxSpeed(me, v.maxSpeed)
 	
 	entity_setDamageTarget(me, DT_AVATAR_LIZAP, false)
 	entity_setDamageTarget(me, DT_AVATAR_PET, false)
@@ -181,7 +184,7 @@ end
 
 function postInit(me)
 	-- FLIP HORIZONTALLY IF THERE'S A FLIP NODE
-	node = entity_getNearestNode(me, "FLIP")
+	local node = entity_getNearestNode(me, "FLIP")
 	if node ~=0 then
 		if node_isEntityIn(node, me) then 
 			entity_fh(me)
@@ -193,19 +196,19 @@ function update(me, dt)
 		
 	-- SWIM ANGLE
 	
-	if not follower then
+	if not v.follower then
 		if entity_getState(me) == STATE_GLIDING then
-			swimTime = swimTime - dt
-			if swimTime < 0 then
-				swimTime = 1.23 + (math.random(234)*0.01)
+			v.swimTime = v.swimTime - dt
+			if v.swimTime < 0 then
+				v.swimTime = 1.23 + (math.random(234)*0.01)
 				
 				-- Point based on Flip
 				if not entity_isfh(me) then
-					angle = 58 + math.random(64)
-					entity_rotateTo(me, angle + 270, 2)
+					v.angle = 58 + math.random(64)
+					entity_rotateTo(me, v.angle + 270, 2)
 				else
-					angle = 238 + math.random(64)
-					entity_rotateTo(me, angle + 90, 2)
+					v.angle = 238 + math.random(64)
+					entity_rotateTo(me, v.angle + 90, 2)
 				end		
 				
 				entity_setState(me, STATE_TO_THRUST)
@@ -222,8 +225,8 @@ function update(me, dt)
 		end
 	end
 	
-	if following then
-		if isFlag(saveFlag, 0) then
+	if v.following then
+		if isFlag(v.saveFlag, 0) then
 			entity_setTarget(me, getNaija())
 			entity_setMaxSpeed(me, 500)
 			if not entity_isEntityInRange(me, getNaija(), 128) then
@@ -231,26 +234,26 @@ function update(me, dt)
 			end
 			entity_rotateTo(me, 0, 0.1)
 			
-			if node_isEntityIn(saveNode, me) then
-				mamaTurtle = getEntity("mamaturtle")
-				setFlag(saveFlag, 1)
+			if node_isEntityIn(v.saveNode, me) then
+				local mamaTurtle = getEntity("mamaturtle")
+				setFlag(v.saveFlag, 1)
 				entity_setState(mamaTurtle, STATE_OPEN, -1, 1)
 			end
 		end
 	end
 	
 	-- FLIP L/R
-	flipThresh = 50	
+	local flipThresh = 50	
 	if entity_velx(me) < -flipThresh and not entity_isfh(me) then
 		entity_fh(me)
-		angle = angle + 180
+		v.angle = v.angle + 180
 	elseif entity_velx(me) > flipThresh and entity_isfh(me) then
 		entity_fh(me)
-		angle = angle - 180
+		v.angle = v.angle - 180
 	end
 	
 	-- AVOIDANCE
-	if following then
+	if v.following then
 		entity_setCollideRadius(me, 16)
 		entity_doEntityAvoidance(me, dt, 43, 0.12)
 		entity_doCollisionAvoidance(me, dt, 4, 0.5)
@@ -264,16 +267,16 @@ function update(me, dt)
 	entity_updateMovement(me, dt)
 	
 	-- COLLISIONS
-	if turtle_type >= 3 then
-	elseif turtle_type == 0 then
+	if v.turtle_type >= 3 then
+	elseif v.turtle_type == 0 then
 		-- NAIJA ATTACHING TO SHELL
 		
-		rideBone = entity_collideSkeletalVsCircle(me, getNaija())
-		if rideBone == shell and avatar_isBursting() and entity_setBoneLock(getNaija(), me, rideBone) then
+		local rideBone = entity_collideSkeletalVsCircle(me, getNaija())
+		if rideBone == v.shell and avatar_isBursting() and entity_setBoneLock(getNaija(), me, rideBone) then
 		
 		elseif rideBone ~=0 then
-			nX, nY = entity_getPosition(getNaija())
-			bX, bY = bone_getWorldPosition(rideBone)
+			local nX, nY = entity_getPosition(getNaija())
+			local bX, bY = bone_getWorldPosition(rideBone)
 			nX = nX - bX
 			nY = nY - bY
 			nX, nY = vector_setLength(nX, nY, 600)
@@ -282,43 +285,43 @@ function update(me, dt)
 		
 		entity_handleShotCollisionsSkeletal(me)
 		
-	elseif turtle_type == 1 then
-		entity_touchAvatarDamage(me, 67 * sz, 0, 420)
+	elseif v.turtle_type == 1 then
+		entity_touchAvatarDamage(me, 67 * v.sz, 0, 420)
 		entity_handleShotCollisions(me)
 	end
 	
 	
-	if follower then
-		if not following and entity_isEntityInRange(me, getNaija(), 512) then
+	if v.follower then
+		if not v.following and entity_isEntityInRange(me, getNaija(), 512) then
 			musicVolume(0.5, 0.2)
 		else
 			musicVolume(1.0, 0.2)
 		end
-		if recDelay > 0 then
-			recDelay = recDelay - dt
-			if recDelay < 0 then
-				recDelay = 0
-				curRecNote = 1
+		if v.recDelay > 0 then
+			v.recDelay = v.recDelay - dt
+			if v.recDelay < 0 then
+				v.recDelay = 0
+				v.curRecNote = 1
 			end
 		end
-		if not following then
+		if not v.following then
 			if entity_isEntityInRange(me, getNaija(), 800) then
-				if singing then
-					songNoteTimer = songNoteTimer + dt
-					if songNoteTimer > songNoteDelay then
-						--playSfx(getNoteName(song[songNote]), 
-						entity_sound(me, getNoteName(song[songNote], "low-"), 1, 2)
-						songNote = songNote + 1
-						if songNote > 3 then
-							singing = false
+				if v.singing then
+					v.songNoteTimer = v.songNoteTimer + dt
+					if v.songNoteTimer > v.songNoteDelay then
+						--playSfx(getNoteName(v.song[v.songNote]), 
+						entity_sound(me, getNoteName(v.song[v.songNote], "low-"), 1, 2)
+						v.songNote = v.songNote + 1
+						if v.songNote > 3 then
+							v.singing = false
 						end
-						songNoteTimer = 0
-						singDelay = 3
+						v.songNoteTimer = 0
+						v.singDelay = 3
 					end
 				else
-					singDelay = singDelay - dt
-					if singDelay < 0 then
-						singDelay = 0
+					v.singDelay = v.singDelay - dt
+					if v.singDelay < 0 then
+						v.singDelay = 0
 						sing(me)
 					end
 				end
@@ -328,8 +331,8 @@ function update(me, dt)
 end
 
 function sing(me)
-	singing = true
-	songNote = 1
+	v.singing = true
+	v.songNote = 1
 end
 
 function enterState(me)
@@ -356,9 +359,9 @@ function exitState(me)
 		
 	elseif entity_getState(me) == STATE_THRUSTING then
 		-- THRUST
-		entity_moveTowardsAngle(me, angle, 1, 124 + math.random(124))
+		entity_moveTowardsAngle(me, v.angle, 1, 124 + math.random(124))
 		entity_setState(me, STATE_TO_GLIDE)
-		shellX, shellY = bone_getWorldPosition(shell)
+		local shellX, shellY = bone_getWorldPosition(v.shell)
 		spawnParticleEffect("SeaTurtleBubbles", shellX, shellY)
 		
 	elseif entity_getState(me) == STATE_TO_GLIDE then
@@ -376,20 +379,20 @@ function damage(me, attacker, bone, damageType, dmg)
 end
 
 function startFollowing(me)
-	following = true
+	v.following = true
 end
 
 function songNoteDone(me, note, t)
-	if follower and not following then
-		if t >= 0.2 and note == song[curRecNote] then
-			recDelay = 2
-			curRecNote = curRecNote + 1
-			if curRecNote > 3 then
+	if v.follower and not v.following then
+		if t >= 0.2 and note == v.song[v.curRecNote] then
+			v.recDelay = 2
+			v.curRecNote = v.curRecNote + 1
+			if v.curRecNote > 3 then
 				startFollowing(me)
 			end
 		else
-			recDelay = 0.1
-			curRecNote = 1
+			v.recDelay = 0.1
+			v.curRecNote = 1
 		end
 	end
 end

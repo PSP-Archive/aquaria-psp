@@ -17,21 +17,22 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-done = false
+v.n = 0
+v.done = false
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me)
-	if node_isEntityInside(me, n) and not done then
+	if node_isEntityInside(me, v.n) and not v.done then
 		voice("Laugh1")
-		done = true
+		v.done = true
 		--[[
-		v = getFlag(FLAG_CREATORVOICE)
 		if isFlag(FLAG_CREATORVOICE, 0) then
 			voice("Laugh1")
 		elseif isFlag(FLAG_CREATORVOICE, 1) then

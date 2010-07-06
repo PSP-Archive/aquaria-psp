@@ -17,11 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-ix,iy=0,0
-escapeNode=0
+v.n = 0
+v.ix,v.iy = 0,0
+v.escapeNode = 0
 
 function init(me)
 	setupEntity(me)
@@ -36,18 +38,18 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
-	ix,iy = entity_getPosition(me)
-	escapeNode = getNode("CAVEEXIT")
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
+	v.ix,v.iy = entity_getPosition(me)
+	v.escapeNode = getNode("CAVEEXIT")
 
 	if isFlag(FLAG_SUNKENCITY_BOSS, 1) then
 		entity_delete(me)
 	elseif getFlag(FLAG_SUNKENCITY_PUZZLE) > 0 then		
-		node = getNode("MOTHER")
+		local node = getNode("MOTHER")
 		entity_setPosition(me, node_x(node), node_y(node))
-		node2 = getNode("MOTHERSPAWN")
-		mother = createEntity("CC_Mother", "", node_x(node2), node_y(node2))	
+		local node2 = getNode("MOTHERSPAWN")
+		local mother = createEntity("CC_Mother", "", node_x(node2), node_y(node2))
 		entity_setState(me, STATE_DONE)
 		entity_animate(me, "float", -1)
 	else
@@ -56,23 +58,23 @@ function postInit(me)
 	entity_rotate(me, 0)
 end
 
-done = false
-inScene = false
+v.done = false
+v.inScene = false
 function cutScene(me)
-	if inScene then return end
-	done = true
-	inScene = true
+	if v.inScene then return end
+	v.done = true
+	v.inScene = true
 	-- mother arrives, sings song in loop
-	entity_idle(n)
+	entity_idle(v.n)
 	cam_toEntity(me)	
 	--node_getPosition(getNode("MOTHER"))
-	node = getNode("MOTHER")
+	local node = getNode("MOTHER")
 	entity_setPosition(me, node_x(node), node_y(node), 3, 0, 0, 1)
 	watch(3)
 	watch(1)
 	-- mother fades in
-	node2 = getNode("MOTHERSPAWN")
-	mother = createEntity("CC_Mother", "", node_x(node2), node_y(node2))	
+	local node2 = getNode("MOTHERSPAWN")
+	local mother = createEntity("CC_Mother", "", node_x(node2), node_y(node2))
 	entity_alpha(mother, 0)
 	entity_alpha(mother, 1, 2)
 
@@ -81,33 +83,33 @@ function cutScene(me)
 	watch(1)
 	
 	setFlag(FLAG_SUNKENCITY_PUZZLE, 1)
-	cam_toEntity(n)
+	cam_toEntity(v.n)
 	
-	inScene = false
+	v.inScene = false
 end
 
 function update(me, dt)
 	if entity_isState(me, STATE_IDLE) then
-		if entity_isEntityInRange(me, n, 256) and getForm() == FORM_LIGHT then
+		if entity_isEntityInRange(me, v.n, 256) and getForm() == FORM_LIGHT then
 			entity_setState(me, STATE_FOLLOW)
 		end
 	elseif entity_isState(me, STATE_FOLLOW) then
-		if not done then
-			if node_isEntityIn(escapeNode, me) then
+		if not v.done then
+			if node_isEntityIn(v.escapeNode, me) then
 				cutScene(me)
 			else
-				if getForm() ~= FORM_LIGHT or not entity_isEntityInRange(me, n, 512) then
-					entity_setPosition(me, ix, iy, 3, 0, 0, 1)
+				if getForm() ~= FORM_LIGHT or not entity_isEntityInRange(me, v.n, 512) then
+					entity_setPosition(me, v.ix, v.iy, 3, 0, 0, 1)
 					entity_setState(me, STATE_IDLE)
 				else	
-					if entity_isEntityInRange(me, n, 128) then
+					if entity_isEntityInRange(me, v.n, 128) then
 						entity_moveTowardsTarget(me, dt, -500)
 					else
 						entity_moveTowardsTarget(me, dt, 500)
 					end
 					entity_doCollisionAvoidance(me, dt, 2, 1)
 					entity_updateMovement(me, dt)
-					entity_flipToEntity(me, n)
+					entity_flipToEntity(me, v.n)
 				end
 			end
 		end

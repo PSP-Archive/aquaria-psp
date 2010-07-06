@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- SCHOOL FISH 1 - Ze Grande Experimente!
 -- ================================================================================================
@@ -28,7 +30,7 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-lungeDelay = 0					-- prevents the nautilus from lunging over and over
+v.lungeDelay = 0				-- prevents the nautilus from lunging over and over
 
  
 -- ================================================================================================

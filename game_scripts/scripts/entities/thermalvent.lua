@@ -17,11 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-targetBone = 0
-ventBone = 0
+v.n = 0
+v.targetBone = 0
+v.ventBone = 0
 
 
 STATE_OPT		= 1001
@@ -35,29 +37,29 @@ function init(me)
 	
 	entity_generateCollisionMask(me)
 		
-	targetBone = entity_getBoneByName(me, "Target")
-	ventBone = entity_getBoneByName(me, "Vent")
+	v.targetBone = entity_getBoneByName(me, "Target")
+	v.ventBone = entity_getBoneByName(me, "Vent")
 	
-	bone_alpha(targetBone)
-	bone_alpha(ventBone)
+	bone_alpha(v.targetBone)
+	bone_alpha(v.ventBone)
 	entity_setState(me, STATE_IDLE)
 	entity_setUpdateCull(me, 1100)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 	--[[
 	entity_handleShotCollisionsSkeletal(me)	
 	]]--
-	e = getFirstEntity()
+	local e = getFirstEntity()
 	while e ~= 0 do
 		if e ~= me and eisv(e, EV_CRAWLING, 0) and entity_getName(e) ~= "thermalvent" then
-			x, y = bone_getWorldPosition(targetBone)
-			x2, y2 = bone_getWorldPosition(ventBone)
+			local x, y = bone_getWorldPosition(v.targetBone)
+			local x2, y2 = bone_getWorldPosition(v.ventBone)
 			if entity_collideCircleVsLine(e, x, y, x2, y2, 64) then
 				entity_addVel(e, 0, -2000*dt)
 			end
@@ -65,7 +67,7 @@ function update(me, dt)
 			if entity_collideCircleVsLine(e, x, y, x2, y2, 16) then
 				y = entity_vely(e)
 				entity_clearVel(e)
-				if entity_x(n) < entity_x(me) then
+				if entity_x(v.n) < entity_x(me) then
 					entity_addVel(e, -100, y)
 				else
 					entity_addVel(e, 100, y)
@@ -75,12 +77,12 @@ function update(me, dt)
 		e = getNextEntity()
 	end
 
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if bone ~= 0 then
 		entity_touchAvatarDamage(me, 0, 0, 400, 0)
 	end
 	--[[
-	if entity_isEntityInRange(me, n, 1000) then
+	if entity_isEntityInRange(me, v.n, 1000) then
 		entity_setState(me, STATE_IDLE)
 		entity_animate(me, "idle", -1)
 	else

@@ -17,19 +17,21 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
 
-maxHits = 3
-hits = maxHits
+v.maxHits = 3
+v.hits = v.maxHits
 
-head = 0
+v.head = 0
 
-beam = 0
+v.beam = 0
 
-hit = false
+v.hit = false
 
 function init(me)
 	setupEntity(me)
@@ -40,7 +42,7 @@ function init(me)
 	
 	entity_setState(me, STATE_IDLE)
 	
-	head = entity_getBoneByName(me, "head")
+	v.head = entity_getBoneByName(me, "head")
 	
 	entity_setDamageTarget(me, DT_AVATAR_LIZAP, false)
 	entity_setDamageTarget(me, DT_AVATAR_PET, false)
@@ -52,23 +54,23 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 	
 	entity_handleShotCollisionsSkeletal(me)
 	
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if bone ~= 0 then
-		entity_setPosition(n, entity_x(n)-20, entity_y(n))
-		entity_addVel(n, -1000, 0)
-		entity_damage(n, me, 1)
+		entity_setPosition(v.n, entity_x(v.n)-20, entity_y(v.n))
+		entity_addVel(v.n, -1000, 0)
+		entity_damage(v.n, me, 1)
 	end
 	
-	if beam ~= 0 then
-		beam_setPosition(beam, entity_x(me), entity_y(me))
+	if v.beam ~= 0 then
+		beam_setPosition(v.beam, entity_x(me), entity_y(me))
 	end
 end
 
@@ -81,25 +83,25 @@ function enterState(me)
 	elseif entity_isState(me, STATE_OPENED) then
 		playSfx("PowerUp")
 		playSfx("FizzleBarrier")
-		beam = createBeam(0, 0, entity_getRotation(me)-90, 1)
-		beam_setTexture(beam, "creator/form6/beam")
-		beam_setBeamWidth(beam, 256)
-		beam_setDamage(beam, 3)
+		v.beam = createBeam(0, 0, entity_getRotation(me)-90, 1)
+		beam_setTexture(v.beam, "creator/form6/beam")
+		beam_setBeamWidth(v.beam, 256)
+		beam_setDamage(v.beam, 3)
 	elseif entity_isState(me, STATE_CLOSE) then
 		entity_setStateTime(me, entity_animate(me, "close"))
-		beam_delete(beam)
-		beam = 0
+		beam_delete(v.beam)
+		v.beam = 0
 		
 	elseif entity_isState(me, STATE_CLOSED) then
-		if hit then
-			e1 = createEntity("mutilus", "", entity_x(me)-64, entity_y(me)-32)
-			e2 = createEntity("mutilus", "", entity_x(me)-64-10, entity_y(me))
-			e3 = createEntity("mutilus", "", entity_x(me)-64, entity_y(me)+32)
+		if v.hit then
+			local e1 = createEntity("mutilus", "", entity_x(me)-64, entity_y(me)-32)
+			local e2 = createEntity("mutilus", "", entity_x(me)-64-10, entity_y(me))
+			local e3 = createEntity("mutilus", "", entity_x(me)-64, entity_y(me)+32)
 			spawnParticleEffect("tinyredexplode", entity_x(e1), entity_y(e1))
 			spawnParticleEffect("tinyredexplode", entity_x(e2), entity_y(e2))
 			spawnParticleEffect("tinyredexplode", entity_x(e3), entity_y(e3))
 		end
-		hit = false
+		v.hit = false
 		entity_setStateTime(me, 1)
 		setSceneColor(1, 1, 1, 2)
 	end
@@ -116,9 +118,9 @@ function exitState(me)
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if entity_isState(me, STATE_OPEN) and bone == head then
-		if not hit then
-			hit = true
+	if entity_isState(me, STATE_OPEN) and bone == v.head then
+		if not v.hit then
+			v.hit = true
 			playSfx("creatorform6-die3")
 
 			bone_damageFlash(entity_getBoneByIdx(me, 0))

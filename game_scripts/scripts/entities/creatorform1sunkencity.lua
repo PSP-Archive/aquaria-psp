@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-hand = 0
+v.n = 0
+v.hand = 0
 
 function init(me)
 	setupEntity(me)
@@ -30,21 +32,21 @@ function init(me)
 	
 	entity_setState(me, STATE_IDLE)
 	
-	hand = entity_getBoneByName(me, "Hand")
+	v.hand = entity_getBoneByName(me, "Hand")
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 	--entity_updateMovement(me, dt)
 	
 	if entity_isState(me, STATE_GRAB) then
-		li = getLi()
+		local li = getLi()
 		if li ~= 0 then
-			entity_setPosition(li, bone_getWorldPosition(hand))
+			entity_setPosition(li, bone_getWorldPosition(v.hand))
 		end
 	end
 end

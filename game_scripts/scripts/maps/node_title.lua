@@ -17,31 +17,33 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 --SCRIPT_OFF
 
-n = 0
-mbDown = false
-labelTimer = 0
+v.n = 0
+v.mbDown = false
+v.labelTimer = 0
 
 function init(me)
 	--stopAllVoice()
 	resetContinuity()
 	setOverrideMusic("")
 	
-	n = getNaija()
+	v.n = getNaija()
 	
-	entity_alpha(n, 0.2)
+	entity_alpha(v.n, 0.2)
 	
-	entity_heal(n, 999)
+	entity_heal(v.n, 999)
 	cam_toNode(me)
 	cam_setPosition(node_x(me), node_y(me))
-	entity_setInvincible(n, true)
-	entity_setState(n, STATE_TITLE)
+	entity_setInvincible(v.n, true)
+	entity_setState(v.n, STATE_TITLE)
 	
-	--entity_stopAllAnimations(n)
-	entity_animate(n, "frozen", -1, 4)
+	--entity_stopAllAnimations(v.n)
+	entity_animate(v.n, "frozen", -1, 4)
 	--c = createEntity("Crotoid", "", 400, 300)
 
 	setMousePos(400, 550)
@@ -68,12 +70,12 @@ function init(me)
 	setVersionLabelText()
 	toggleVersionLabel(1)
 	
-	labelTimer = 0
+	v.labelTimer = 0
 end
 
 function update(me, dt)
-	labelTimer = labelTimer + dt
-	if labelTimer > 0.5 then
+	v.labelTimer = v.labelTimer + dt
+	if v.labelTimer > 0.5 then
 		setVersionLabelText()
 	end
 	cam_setPosition(node_x(me), node_y(me))
@@ -83,17 +85,17 @@ function update(me, dt)
 		toggleCursor(true, 0.1)
 	end
 
-	scale = 800.0/1024.0 + 0.01
+	local scale = 800.0/1024.0 + 0.01
 	
 	overrideZoom(scale, 2)
 	
-	entity_setPosition(n, node_getPosition(getNode("NAIJA")))
+	entity_setPosition(v.n, node_getPosition(getNode("NAIJA")))
 	
-	if (isLeftMouse() or isRightMouse()) and not mbDown then
-		mbDown = true
-	elseif (not isLeftMouse() and not isRightMouse()) and mbDown then
-		mbDown = false
-		node = getNodeToActivate()
+	if (isLeftMouse() or isRightMouse()) and not v.mbDown then
+		v.mbDown = true
+	elseif (not isLeftMouse() and not isRightMouse()) and v.mbDown then
+		v.mbDown = false
+		local node = getNodeToActivate()
 		setNodeToActivate(0)
 		stopCursorGlow()
 		if node ~= 0 then

@@ -17,26 +17,28 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 function init(me)
 	node_setCursorActivation(me, false)
 
-	door = node_getNearestEntity(me, "EnergyDoor")
+	local door = node_getNearestEntity(me, "EnergyDoor")
 	if door ~= 0 then
 		debugLog("found door")
 		if isFlag(FLAG_ENERGYGODENCOUNTER, 0) then
 			entity_setState(door, STATE_OPENED)
 		else
 			if getFlag(FLAG_ENERGYSLOT_FIRST) > 0 then
-				orbHolder = node_getNearestEntity(me)
-				id = getFlag(FLAG_ENERGYSLOT_FIRST)
-				energyOrb = getEntityByID(id)
+				local orbHolder = node_getNearestEntity(me)
+				local id = getFlag(FLAG_ENERGYSLOT_FIRST)
+				local energyOrb = getEntityByID(id)
 				if energyOrb ~=0 and orbHolder ~=0 then
 					entity_setPosition(energyOrb, entity_x(orbHolder), entity_y(orbHolder))
 					entity_setState(energyOrb, STATE_CHARGED)
 				end
-				door = node_getNearestEntity(me, "EnergyDoor")
+				local door = node_getNearestEntity(me, "EnergyDoor")
 				if door ~= 0 then
 					entity_setState(door, STATE_OPENED)
 				end
@@ -47,14 +49,14 @@ function init(me)
 	end
 	--[[
 	if getFlag(FLAG_ENERGYSLOT_MAINAREA) > 0 then
-		orbHolder = node_getNearestEntity(me)
-		id = getFlag(FLAG_ENERGYSLOT_MAINAREA)
-		energyOrb = getEntityByID(id)
+		local orbHolder = node_getNearestEntity(me)
+		local id = getFlag(FLAG_ENERGYSLOT_MAINAREA)
+		local energyOrb = getEntityByID(id)
 		if energyOrb ~=0 and orbHolder ~=0 then
 			entity_setPosition(energyOrb, entity_x(orbHolder), entity_y(orbHolder))
 			entity_setState(energyOrb, STATE_CHARGED)
 		end
-		door = node_getNearestEntity(me, "EnergyDoor")
+		local door = node_getNearestEntity(me, "EnergyDoor")
 		if door ~= 0 then
 			entity_setState(door, STATE_OPENED)
 		end
@@ -64,10 +66,10 @@ end
 
 function activate(me)
 	if getFlag(FLAG_ENERGYSLOT_FIRST)==0 then
-		energyOrb = node_getNearestEntity(me, "EnergyOrb")
+		local energyOrb = node_getNearestEntity(me, "EnergyOrb")
 		if energyOrb ~= 0 and entity_isState(energyOrb, STATE_CHARGED) then
 			setFlag(FLAG_ENERGYSLOT_FIRST, entity_getID(energyOrb))
-			door = node_getNearestEntity(me, "EnergyDoor")
+			local door = node_getNearestEntity(me, "EnergyDoor")
 			if door ~= 0 then
 				entity_setState(door, STATE_OPEN)
 			end

@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-doorID = 178
-holderID = 179
-flag = FLAG_MAINAREA_ETENTER2
+v.doorID = 178
+v.holderID = 179
+v.flag = FLAG_MAINAREA_ETENTER2
 
 dofile("scripts/include/energyslottemplate.lua")

@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 function init(me)
@@ -24,10 +26,10 @@ function init(me)
 end
 	
 function activate(me)
-	n = getNaija()
-	node_bg = node_getNearestNode(me, "BG")
-	node_bgExit = node_getNearestNode(me, "BGEXIT")
-	sx,sy = entity_getScale(n)
+	local n = getNaija()
+	local node_bg = node_getNearestNode(me, "BG")
+	local node_bgExit = node_getNearestNode(me, "BGEXIT")
+	local sx, sy = entity_getScale(n)
 	entity_switchLayer(n, -3)
 	entity_scale(n, sx*0.5, sy*0.5, 1.5)
 	entity_swimToNode(n, node_bg)

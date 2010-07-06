@@ -17,9 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-giggled = false
+v.giggled = false
 
 function init(me)
 	node_setCursorActivation(me, true)
@@ -32,9 +34,9 @@ function activate(me)
 	cam_toEntity(getEntity("SongDoor1"))
 	screenFadeGo(3)
 	watch(3)
-	if not giggled then
+	if not v.giggled then
 		emote(EMOTE_NAIJAGIGGLE)
-		giggled = true
+		v.giggled = true
 	end
 	watch(2)
 	

@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- N A U T I L U S
 
 dofile("scripts/entities/entityinclude.lua")
@@ -24,7 +26,7 @@ dofile("scripts/entities/entityinclude.lua")
 STATE_ATTACKPREP		= 1000
 STATE_ATTACK			= 1001
 
-lungeDelay = 0					-- prevents the nautilus from lunging over and over
+v.lungeDelay = 0					-- prevents the nautilus from lunging over and over
 -- initializes the entity
 function init(me)
 	setupBasicEntity(
@@ -49,7 +51,7 @@ function init(me)
 	entity_setDropChance(me, 5, 1)
 	
 	entity_rotate(me, 360, 1, LOOP_INF)		-- make the nautilus spin 360 degrees endlessly over 1 second
-	lungeDelay = 1.0						-- prevent the nautilus from attacking right away
+	v.lungeDelay = 1.0						-- prevent the nautilus from attacking right away
 	loadSound("Nautilus")
 end
 
@@ -59,7 +61,7 @@ function update(me, dt)
 	-- in idle state only
 	if entity_getState(me)==STATE_IDLE then
 		-- count down the lungeDelay timer to 0
-		if lungeDelay > 0 then lungeDelay = lungeDelay - dt if lungeDelay < 0 then lungeDelay = 0 end end
+		if v.lungeDelay > 0 then v.lungeDelay = v.lungeDelay - dt if v.lungeDelay < 0 then v.lungeDelay = 0 end end
 		
 		-- if we don't have a target, find one
 		if not entity_hasTarget(me) then
@@ -75,7 +77,7 @@ function update(me, dt)
 			
 			-- 40% of the time when we're in range and not delaying, launch an attack
 			if entity_isTargetInRange(me, 300) then
-				if math.random(100) < 40 and lungeDelay == 0 then
+				if math.random(100) < 40 and v.lungeDelay == 0 then
 					entity_setState(me, STATE_ATTACKPREP, 0.5)
 				end
 			end
@@ -115,7 +117,7 @@ function enterState(me)
 		entity_doGlint(me, "Glint", BLEND_ADD)
 	elseif entity_isState(me, STATE_ATTACK) then
 		entity_enableMotionBlur(me)
-		lungeDelay = 2.0
+		v.lungeDelay = 2.0
 		entity_setMaxSpeed(me, 950)
 		entity_moveTowardsTarget(me, 950, 1)
 	end

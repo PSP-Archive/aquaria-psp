@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- SPIKEBALL
 -- ================================================================================================
@@ -26,9 +28,9 @@ dofile("scripts/entities/entityinclude.lua")
 -- entity specific
 STATE_FIRE				= 1000
 STATE_PULLBACK			= 1001
-fireDelay = 0
+v.fireDelay = 0
 
-dir = 0
+v.dir = 0
  
 -- ================================================================================================
 -- FUNCTIONS
@@ -67,14 +69,14 @@ function update(me, dt)
 	
 	entity_touchAvatarDamage(me, 64, 1, 0.1)
 	
-	amount = 1000
-	if dir==0 then
+	local amount = 1000
+	if v.dir == 0 then
 		entity_addVel(me, -amount, 0)
-	elseif dir ==1 then
+	elseif v.dir == 1 then
 		entity_addVel(me, 0, amount)
-	elseif dir==2 then
+	elseif v.dir == 2 then
 		entity_addVel(me, amount, 0)
-	elseif dir==3 then
+	elseif v.dir == 3 then
 		entity_addVel(me, 0, -amount)
 	end
 	entity_updateMovement(me, dt)
@@ -84,10 +86,10 @@ function update(me, dt)
 	if entity_getTarget(me) ~= 0 then
 		entity_flipToEntity(me, entity_getTarget(me))
 	end
-	if fireDelay > 0 then
-		fireDelay = fireDelay - dt
-		if fireDelay < 0 then
-			fireDelay = 0
+	if v.fireDelay > 0 then
+		v.fireDelay = v.fireDelay - dt
+		if v.fireDelay < 0 then
+			v.fireDelay = 0
 		end
 	end
 	
@@ -98,7 +100,7 @@ function update(me, dt)
 		else
 			if entity_isTargetInRange(me, 4000) then				
 				entity_moveTowardsTarget(me, dt, 500)		-- move in if we're too far away
-				if entity_isTargetInRange(me, 350) and fireDelay==0 then
+				if entity_isTargetInRange(me, 350) and v.fireDelay==0 then
 					entity_setState(me, STATE_FIRE, 0.5)
 				end
 			else
@@ -142,9 +144,9 @@ end
 
 function hitSurface(me)
 	--entity_flipHorizontal(me)
-	dir = dir + 1
-	if dir > 3 then
-		dir = 0
+	v.dir = v.dir + 1
+	if v.dir > 3 then
+		v.dir = 0
 	end
 end
 

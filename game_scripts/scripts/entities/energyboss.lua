@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- Energy Boss
 -- ================================================================================================
@@ -36,42 +38,42 @@ ATTACK_UP					= 1
 ATTACK_DOWN					= 2
 ATTACK_BITE					= 3
 
-attacks = 0
+v.attacks = 0
 
-attack = 0
-awoken = false
-attackDelay = 0
-naija = 0
+v.attack = 0
+v.awoken = false
+v.attackDelay = 0
+v.naija = 0
 
-maxMove = 0
-maxMove2 = 0
-minMove = 0
-pushBackHits = 0
-maxPushBackHits = 6
-moveDelay = 0
-fireDelay = 0
-fireBit = 0
-shotsFired = 0
-barrier = 0
-maxHits = 3
-hits = maxHits
-endTextDelay = 0
-playedMusic = false
-dead = false
+v.maxMove = 0
+v.maxMove2 = 0
+v.minMove = 0
+v.pushBackHits = 0
+v.maxPushBackHits = 6
+v.moveDelay = 0
+v.fireDelay = 0
+v.fireBit = 0
+v.shotsFired = 0
+v.barrier = 0
+v.maxHits = 3
+v.hits = v.maxHits
+v.endTextDelay = 0
+v.playedMusic = false
+v.dead = false
 
-orb = 0
+v.orb = 0
 
-bone_jaw = 0
-bone_claw = 0
-bone_head = 0
-bone_body = 0
+v.bone_jaw = 0
+v.bone_claw = 0
+v.bone_head = 0
+v.bone_body = 0
 
 function damage(me, attacker, bone, damageType, dmg)
 	bone_damageFlash(bone, 1)
-	if entity_x(me) > node_x(minMove)+50 and not entity_isState(me, STATE_MOVEBACK) and not entity_isState(me, STATE_HITBARRIER) and not entity_isState(me, STATE_MOVEBACKFROMBARRIER) and not entity_isState(me, STATE_COLLAPSE) then
-		pushBackHits = pushBackHits + dmg
-		if pushBackHits >= maxPushBackHits then
-			pushBackHits = 0
+	if entity_x(me) > node_x(v.minMove)+50 and not entity_isState(me, STATE_MOVEBACK) and not entity_isState(me, STATE_HITBARRIER) and not entity_isState(me, STATE_MOVEBACKFROMBARRIER) and not entity_isState(me, STATE_COLLAPSE) then
+		v.pushBackHits = v.pushBackHits + dmg
+		if v.pushBackHits >= v.maxPushBackHits then
+			v.pushBackHits = 0
 			entity_setState(me, STATE_MOVEBACK)
 		end
 	end
@@ -114,20 +116,20 @@ function init(me)
 	
 	entity_generateCollisionMask(me)
 	
-	bone_jaw = entity_getBoneByName(me, "Jaw")
-	bone_claw = entity_getBoneByName(me, "Claw")
-	bone_head = entity_getBoneByName(me, "Head")
-	bone_body = entity_getBoneByName(me, "Body")
+	v.bone_jaw = entity_getBoneByName(me, "Jaw")
+	v.bone_claw = entity_getBoneByName(me, "Claw")
+	v.bone_head = entity_getBoneByName(me, "Head")
+	v.bone_body = entity_getBoneByName(me, "Body")
 	
-	maxMove = getNode("ENERGYBOSSMAXMOVE")
-	maxMove2 = getNode("ENERGYBOSSMAXMOVE2")
-	minMove = getNode("ENERGYBOSSMINMOVE")
+	v.maxMove = getNode("ENERGYBOSSMAXMOVE")
+	v.maxMove2 = getNode("ENERGYBOSSMAXMOVE2")
+	v.minMove = getNode("ENERGYBOSSMINMOVE")
 	
 	entity_setDamageTarget(me, DT_AVATAR_LIZAP, false)
 	entity_setDamageTarget(me, DT_AVATAR_PET, false)
 	
 	
-	naija = getNaija()
+	v.naija = getNaija()
 	
 	loadSound("EnergyBoss-Attack")
 	loadSound("EnergyBoss-Die")
@@ -138,17 +140,17 @@ end
 function postInit(me)
 	if not entity_isState(me, STATE_COLLAPSE) then
 		if getFlag(FLAG_ENERGYBOSSDEAD)>0 and not entity_isState(me, STATE_COLLAPSED) then
-			entity_setPosition(me, node_x(maxMove2), entity_y(me))
+			entity_setPosition(me, node_x(v.maxMove2), entity_y(me))
 			entity_setState(me, STATE_COLLAPSED)
-			dead = true
+			v.dead = true
 			return
 		end
 	end
 
 	
-	orb = getEntityByID(4)
-	holder = getEntityByID(3)
-	barrier = getEntityByID(5)
+	v.orb = getEntityByID(4)
+	v.holder = getEntityByID(3)
+	v.barrier = getEntityByID(5)
 end
 
 function update(me, dt)
@@ -160,50 +162,50 @@ function update(me, dt)
 	end
 	]]--
 	if entity_isState(me, STATE_COLLAPSE) then
-		if endTextDelay > 0 then
-			endTextDelay = endTextDelay - dt
-			if endTextDelay < 0 then
-				endTextDelay = 0
+		if v.endTextDelay > 0 then
+			v.endTextDelay = v.endTextDelay - dt
+			if v.endTextDelay < 0 then
+				v.endTextDelay = 0
 				
-				cam_toEntity(naija)
+				cam_toEntity(v.naija)
 				changeForm(FORM_NORMAL)
 				
 				setInvincible(true)
 				
-				entity_idle(naija)
-				entity_animate(naija, "agony", -1)
-				entity_flipToEntity(naija, me)
+				entity_idle(v.naija)
+				entity_animate(v.naija, "agony", -1)
+				entity_flipToEntity(v.naija, me)
 				--voiceOnce("Naija_EnergyBossOver")
 				voice("Naija_Vision_EnergyBoss1")
-				--entity_idle(naija)
-				entity_idle(naija)
-				entity_animate(naija, "agony", -1)
+				--entity_idle(v.naija)
+				entity_idle(v.naija)
+				entity_animate(v.naija, "agony", -1)
 				fade2(0.5, 8, 1, 1, 1)
 				watchForVoice()
 				fade2(1, 1, 1, 1, 1)
 				watch(1)
 				
-				collectibleNode = getNode("COLLECTIBLE")
-				ent = createEntity("CollectibleEnergyBoss", "", node_x(collectibleNode), node_y(collectibleNode))
+				local collectibleNode = getNode("COLLECTIBLE")
+				local ent = createEntity("CollectibleEnergyBoss", "", node_x(collectibleNode), node_y(collectibleNode))
 				entity_alpha(ent, 0)
 				entity_alpha(ent, 1, 2)
 				watch(0.5)
 				
 				setInvincible(false)
 				
-				if entity_getHealth(naija) < 1 then
-					entity_heal(naija, 1)
+				if entity_getHealth(v.naija) < 1 then
+					entity_heal(v.naija, 1)
 				end
 				
 				loadMap("EnergyTempleVision")
 				
-				--entity_idle(naija)
+				--entity_idle(v.naija)
 				--watch(6.5)
 				--[[
 				showImage("Visions/EnergyBoss/00")
 				voice("Naija_Vision_EnergyBoss2")
 				watchForVoice()
-				entity_idle(naija)
+				entity_idle(v.naija)
 				hideImage()
 				watch(1)
 				voice("Naija_Vision_EnergyBoss3")
@@ -216,11 +218,11 @@ function update(me, dt)
 	if entity_isState(me, STATE_COLLAPSED) then
 		return
 	end
-	if not awoken and not playedMusic and getFlag(FLAG_ENERGYBOSSDEAD)==0 then
+	if not v.awoken and not v.playedMusic and getFlag(FLAG_ENERGYBOSSDEAD)==0 then
 		if not isFlag(FLAG_OMPO, 4) then 
-			if entity_isEntityInRange(me, naija, 1220) then
+			if entity_isEntityInRange(me, v.naija, 1220) then
 				emote(EMOTE_NAIJAUGH)
-				playedMusic = true
+				v.playedMusic = true
 				playMusic("BigBoss")
 				--setNaijaHeadTexture("shock", 4)
 				entity_setState(me, STATE_INTRO)
@@ -228,7 +230,7 @@ function update(me, dt)
 		end
 	end
 	
-	if not awoken then return end
+	if not v.awoken then return end
 	
 
 	if entity_isState(me, STATE_COLLAPSED) then
@@ -237,17 +239,17 @@ function update(me, dt)
 
 	
 	--[[
-	if barrier == 0 then
-		barrier = getEntityByID(5)
+	if v.barrier == 0 then
+		v.barrier = getEntityByID(5)
 	end
 	]]--
 	
-	bone = entity_collideSkeletalVsCircle(me, getNaija())
-	if bone ~= 0 or entity_x(naija) < entity_x(me) then
+	local bone = entity_collideSkeletalVsCircle(me, getNaija())
+	if bone ~= 0 or entity_x(v.naija) < entity_x(me) then
 		entity_damage(getNaija(), me, 1)
-		if entity_y(naija) > entity_y(me)+50 then
+		if entity_y(v.naija) > entity_y(me)+50 then
 			entity_push(getNaija(), 1200, -600, 0.5)
-		elseif entity_y(naija) < entity_y(me) then
+		elseif entity_y(v.naija) < entity_y(me) then
 			entity_push(getNaija(), 1200, 600, 0.5)
 		else
 			entity_push(getNaija(), 1200, 0, 0.5)
@@ -257,9 +259,9 @@ function update(me, dt)
 	if entity_isState(me, STATE_ATTACK) or entity_isState(me, STATE_INTRO) then
 		if not entity_isAnimating(me) then
 			if entity_isState(me, STATE_ATTACK) then
-				attacks = attacks + 1 
-				if attacks >= 1 then
-					attacks = 0
+				v.attacks = v.attacks + 1 
+				if v.attacks >= 1 then
+					v.attacks = 0
 					entity_setState(me, STATE_MOVING)
 				else
 					entity_setState(me, STATE_IDLE)
@@ -279,30 +281,30 @@ function update(me, dt)
 
 	
 	if not entity_isState(me, STATE_MOVEBACK) and not entity_isState(me, STATE_MOVEBACKFROMBARRIER) then
-		if entity_x(orb) < entity_x(barrier) then
-			if moveDelay > 0 then
-				moveDelay = moveDelay - dt
-				if moveDelay < 0 then
-					moveDelay = 0
+		if entity_x(v.orb) < entity_x(v.barrier) then
+			if v.moveDelay > 0 then
+				v.moveDelay = v.moveDelay - dt
+				if v.moveDelay < 0 then
+					v.moveDelay = 0
 				end
 			end
 		end
 	end
 
-	if barrier ~= 0 then
+	if v.barrier ~= 0 then
 		--debugLog("ENERGYBOSS: has Barrier")
-		if entity_isState(barrier, STATE_PULSE) then
+		if entity_isState(v.barrier, STATE_PULSE) then
 			--debugLog("ENERGYBOSS: barrier pulse")
 			if not entity_isState(me, STATE_HITBARRIER) and not entity_isState(me, STATE_MOVEBACKFROMBARRIER) then			
-				lineBone = entity_collideSkeletalVsLine(me, entity_x(barrier), entity_y(barrier)+500, entity_x(barrier), entity_y(barrier)-500, 8)
+				local lineBone = entity_collideSkeletalVsLine(me, entity_x(v.barrier), entity_y(v.barrier)+500, entity_x(v.barrier), entity_y(v.barrier)-500, 8)
 				if lineBone ~= 0 then
 					--debugLog("ENERGYBOSS: hit barrier!")
-					bx,by = bone_getPosition(lineBone)
-					spawnParticleEffect("HitEnergyBarrierBig", entity_x(barrier), by)
-					bone_damageFlash(bone_head)
-					bone_damageFlash(bone_body)
-					hits = hits - 1
-					if hits <= 0 then
+					local bx,by = bone_getPosition(lineBone)
+					spawnParticleEffect("HitEnergyBarrierBig", entity_x(v.barrier), by)
+					bone_damageFlash(v.bone_head)
+					bone_damageFlash(v.bone_body)
+					v.hits = v.hits - 1
+					if v.hits <= 0 then
 						entity_setState(me, STATE_COLLAPSE)						
 					else
 						entity_setState(me, STATE_HITBARRIER, 1)
@@ -317,66 +319,67 @@ function update(me, dt)
 	end
 	
 	if entity_isState(me, STATE_FIRE) then
-		fireBit = fireBit - dt
-		if fireBit < 0 then
-			entity_setTarget(me, naija)
-			offx, offy = 0
-			while shotsFired < 3 do
-				if shotsFired == 3 then
+		v.fireBit = v.fireBit - dt
+		if v.fireBit < 0 then
+			entity_setTarget(me, v.naija)
+			local offx, offy = 0
+			while v.shotsFired < 3 do
+				local velx, vely = 0, 0
+				if v.shotsFired == 3 then
 					velx = 100
 					vely = 50
-				elseif shotsFired == 0 then
+				elseif v.shotsFired == 0 then
 					velx = 100
 					vely = 25
-				elseif shotsFired == 1 then
+				elseif v.shotsFired == 1 then
 					velx = 100
 					vely = 0
-				elseif shotsFired == 2 then
+				elseif v.shotsFired == 2 then
 					velx = 100
 					vely = -25
 				end	
 				--entity_fireAtTarget(me, "Purple", 1, 500, 100, 0, 0, offx, offy, velx, vely)
-				s = createShot("EnergyBoss", me, entity_getTarget(me), entity_getPosition(me))
+				local s = createShot("EnergyBoss", me, entity_getTarget(me), entity_getPosition(me))
 				shot_setAimVector(s, velx, vely)
 				
-				shotsFired = shotsFired + 1
+				v.shotsFired = v.shotsFired + 1
 			end
 			entity_setState(me, STATE_IDLE)
 		end
 	end
 	
 	if entity_isState(me, STATE_IDLE) then
-		if moveDelay <= 0 and entity_x(me) < node_x(maxMove)
-		and entity_x(naija) < entity_x(me)+1200 then
+		if v.moveDelay <= 0 and entity_x(me) < node_x(v.maxMove)
+		and entity_x(v.naija) < entity_x(me)+1200 then
 			entity_setState(me, STATE_MOVING)
 		else
-			if awoken then
-				fireDelay = fireDelay - dt
-				if fireDelay <= 0 then
-					fireDelay = 0
+			if v.awoken then
+				v.fireDelay = v.fireDelay - dt
+				if v.fireDelay <= 0 then
+					v.fireDelay = 0
 					entity_setState(me, STATE_FIRE)
 				end
 			end
 			
 			if entity_isState(me, STATE_IDLE) then
-				attackDelay = attackDelay - dt
-				if attackDelay <= 0 and entity_x(naija) < entity_x(me)+800 then
-					attackDelay = 1
+				v.attackDelay = v.attackDelay - dt
+				if v.attackDelay <= 0 and entity_x(v.naija) < entity_x(me)+800 then
+					v.attackDelay = 1
 					entity_setState(me, STATE_ATTACK)
 				end
 			end
 		end
 	end
-	if entity_isState(me, STATE_MOVING) and entity_x(me) >= node_x(maxMove) then
+	if entity_isState(me, STATE_MOVING) and entity_x(me) >= node_x(v.maxMove) then
 		if entity_isInterpolating() then
 			entity_animate(me, "idle")
 		end
 		entity_stopInterpolating(me)
-		entity_setPosition(me, node_x(maxMove), entity_y(me))
+		entity_setPosition(me, node_x(v.maxMove), entity_y(me))
 	end
-	if (entity_isState(me, STATE_MOVEBACK) or entity_isState(me, STATE_MOVEBACKFROMBARRIER)) and entity_x(me) <= node_x(minMove) then
+	if (entity_isState(me, STATE_MOVEBACK) or entity_isState(me, STATE_MOVEBACKFROMBARRIER)) and entity_x(me) <= node_x(v.minMove) then
 		entity_stopInterpolating(me)
-		entity_setPosition(me, node_x(minMove), entity_y(me))
+		entity_setPosition(me, node_x(v.minMove), entity_y(me))
 	end
 	if entity_isState(me, STATE_MOVING) or entity_isState(me, STATE_MOVEBACK) or entity_isState(me, STATE_MOVEBACKFROMBARRIER) then
 		if not entity_isInterpolating(me) then
@@ -385,15 +388,15 @@ function update(me, dt)
 	end
 	entity_handleShotCollisionsSkeletal(me)	
 	entity_clearTargetPoints(me)
-	entity_addTargetPoint(me, bone_getWorldPosition(bone_head))
+	entity_addTargetPoint(me, bone_getWorldPosition(v.bone_head))
 	if entity_isState(me, STATE_ATTACK) then
-		entity_setLookAtPoint(me, bone_getWorldPosition(bone_claw))
+		entity_setLookAtPoint(me, bone_getWorldPosition(v.bone_claw))
 		entity_setNaijaReaction(me, "shock")
 	else
-		entity_setLookAtPoint(me, bone_getWorldPosition(bone_jaw))
+		entity_setLookAtPoint(me, bone_getWorldPosition(v.bone_jaw))
 		entity_setNaijaReaction(me, "")
 	end
-	--entity_setEnergyShotTargetPosition(me, bone_getWorldPosition(bone_head))	
+	--entity_setEnergyShotTargetPosition(me, bone_getWorldPosition(v.bone_head))
 end
 
 function enterState(me)
@@ -402,32 +405,32 @@ function enterState(me)
 		entity_animate(me, "idle", LOOP_INF)
 	elseif entity_isState(me, STATE_ATTACK) then
 		playSfx("EnergyBoss-Attack", 900+math.random(200))
-		x, y = bone_getPosition(bone_jaw)
-		if entity_isPositionInRange(naija, x, y, 600)
-		and entity_y(naija) < y+64
-		and entity_y(naija) > y-64
+		local x, y = bone_getPosition(v.bone_jaw)
+		if entity_isPositionInRange(v.naija, x, y, 600)
+		and entity_y(v.naija) < y+64
+		and entity_y(v.naija) > y-64
 		then
 			entity_animate(me, "bite")
-			attack = ATTACK_BITE
+			v.attack = ATTACK_BITE
 		else
-			if entity_y(naija) < entity_y(me)-200 then
+			if entity_y(v.naija) < entity_y(me)-200 then
 				entity_animate(me, "attackUp")
-				attack = ATTACK_UP
+				v.attack = ATTACK_UP
 			else
 				entity_animate(me, "lungeBite")
-				attack = ATTACK_DOWN
+				v.attack = ATTACK_DOWN
 			end
 		end
 	elseif entity_isState(me, STATE_FIRE) then
-		shotsFired = 0
+		v.shotsFired = 0
 		entity_animate(me, "firing")
-		fireDelay = 4
+		v.fireDelay = 4
 	elseif entity_isState(me, STATE_MOVING) then
-		if hits <= 1 then
-			maxMove = maxMove2
+		if v.hits <= 1 then
+			v.maxMove = v.maxMove2
 		end	
 		entity_animate(me, "moveForward", LOOP_INF)
-		if entity_x(orb) > entity_x(barrier) then
+		if entity_x(v.orb) > entity_x(v.barrier) then
 			entity_setPosition(me, entity_x(me)+(800/2), entity_y(me), 3.5/2)
 		else
 			entity_setPosition(me, entity_x(me)+800, entity_y(me), 3.5)
@@ -435,13 +438,13 @@ function enterState(me)
 	elseif entity_isState(me, STATE_MOVEBACK) then
 		entity_animate(me, "moveBackward", LOOP_INF)
 		
-		if entity_x(orb) > entity_x(barrier) then
-			moveDelay = 999
+		if entity_x(v.orb) > entity_x(v.barrier) then
+			v.moveDelay = 999
 		else
-			moveDelay = moveDelay + 10
+			v.moveDelay = v.moveDelay + 10
 		end
-		attackDelay = 0
-		fireDelay = 0
+		v.attackDelay = 0
+		v.fireDelay = 0
 		playSfx("EnergyBoss-Hurt", 900+math.random(200))
 		entity_animate(me, "hurt")
 		entity_setPosition(me, entity_x(me)-500, entity_y(me), 1.6)
@@ -454,9 +457,9 @@ function enterState(me)
 	elseif entity_isState(me, STATE_MOVEBACKFROMBARRIER) then
 		--entity_animate(me, "idle", LOOP_INF)
 		--entity_setPosition(me, entity_x(me)-(1500*0.80), entity_y(me), 2)
-		nodeName = string.format("bossbackloc%d", hits)
+		local nodeName = string.format("bossbackloc%d", v.hits)
 		debugLog(string.format("nodeName: %s", nodeName))
-		backNode = getNode(nodeName)
+		local backNode = getNode(nodeName)
 		entity_setPosition(me, node_x(backNode), entity_y(me), -800)
 	elseif entity_isState(me, STATE_COLLAPSE) then
 		clearShots()
@@ -464,7 +467,7 @@ function enterState(me)
 		setFlag(FLAG_ENERGYBOSSDEAD, 1)	
 		entity_setDamageTarget(me, DT_AVATAR_ENERGYBLAST, false)
 		entity_setDamageTarget(me, DT_AVATAR_SHOCK, false)	
-		endTextDelay = 6.5
+		v.endTextDelay = 6.5
 		
 		entity_spawnParticlesFromCollisionMask(me, "energyboss-hit", 4)
 		
@@ -481,12 +484,12 @@ function enterState(me)
 		cam_toEntity(getNaija())
 		]]--
 	elseif entity_isState(me, STATE_COLLAPSED) then
-		orb = getEntityByID(4)
-		holder = getEntityByID(3)
-		if orb and holder then
-			entity_setPosition(orb, entity_x(holder), entity_y(holder))
+		v.orb = getEntityByID(4)
+		v.holder = getEntityByID(3)
+		if v.orb and v.holder then
+			entity_setPosition(v.orb, entity_x(v.holder), entity_y(v.holder))
 		end
-		collectibleNode = getNode("COLLECTIBLE")
+		local collectibleNode = getNode("COLLECTIBLE")
 		createEntity("CollectibleEnergyBoss", "", node_x(collectibleNode), node_y(collectibleNode))
 		--debugLog("animating dead")
 		entity_setDamageTarget(me, DT_AVATAR_ENERGYBLAST, false)
@@ -504,7 +507,7 @@ function enterState(me)
 			--entity_setFlag(me, 1)
 		--end
 	elseif entity_isState(me, STATE_INTRO) then
-		awoken = true
+		v.awoken = true
 		playSfx("EnergyBoss-Die", 800)
 		shakeCamera(10, 3)
 		entity_stopInterpolating(me)
@@ -519,7 +522,7 @@ end
 function animationKey(me, key)
 	if entity_isState(me, STATE_APPEAR) then
 		if key == 5 then
-			x, y = bone_getWorldPosition(bone_claw)
+			local x, y = bone_getWorldPosition(v.bone_claw)
 			spawnParticleEffect("Dirt", x,y)
 			playSfx("RockHit-Big")
 		elseif key == 7 then
@@ -527,13 +530,13 @@ function animationKey(me, key)
 		elseif key == 9 then
 			playSfx("Bite")
 		elseif key == 15 then
-			x, y = bone_getWorldPosition(bone_claw)
+			local x, y = bone_getWorldPosition(v.bone_claw)
 			spawnParticleEffect("Dirt", x,y)
 			--playSfx("RockHit-Big")
 		elseif key == 16 then
 			playSfx("Gulp")
 		elseif key == 17 then
-			x, y = bone_getWorldPosition(bone_claw)
+			local x, y = bone_getWorldPosition(v.bone_claw)
 			spawnParticleEffect("Dirt", x,y)
 			playSfx("RockHit-Big")
 		end
@@ -553,16 +556,16 @@ function animationKey(me, key)
 			entity_spawnParticlesFromCollisionMask(me, "energyboss-hit", 4)
 		end
 	else
-		if attack == ATTACK_DOWN then
+		if v.attack == ATTACK_DOWN then
 			if entity_isState(me, STATE_ATTACK) and key == 4 then
-				x, y = bone_getWorldPosition(bone_claw)
+				local x, y = bone_getWorldPosition(v.bone_claw)
 				spawnParticleEffect("Dirt", x,y)
 				playSfx("RockHit-Big")
 				shakeCamera(15, 0.5)
 			end
-		elseif attack == ATTACK_UP then
+		elseif v.attack == ATTACK_UP then
 			if entity_isState(me, STATE_ATTACK) and key == 4 then
-				x, y = bone_getWorldPosition(bone_claw)
+				local x, y = bone_getWorldPosition(v.bone_claw)
 				spawnParticleEffect("Dirt", x,y)
 				playSfx("RockHit-Big")
 				shakeCamera(15, 0.5)
@@ -575,7 +578,7 @@ function exitState(me)
 	if entity_isState(me, STATE_HITBARRIER) then
 		entity_setState(me, STATE_MOVEBACKFROMBARRIER)
 	elseif entity_isState(me, STATE_MOVING) then
-		moveDelay = 4
+		v.moveDelay = 4
 	end
 end
 

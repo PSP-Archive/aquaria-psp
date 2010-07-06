@@ -17,12 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 function init(me)
 	if isFlag(FLAG_MAINAREA_TRANSTURTLE_ROCK, 1) then
-		rock = node_getNearestEntity(me, "Rock0005")
-		node = getNode("TRANSTURTLE_ROCK_MOVED")
+		local rock = node_getNearestEntity(me, "Rock0005")
+		local node = getNode("TRANSTURTLE_ROCK_MOVED")
 		if node ~= 0 then
 			entity_setPosition(rock, node_x(node), node_y(node))
 		end

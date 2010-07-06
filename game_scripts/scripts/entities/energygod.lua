@@ -17,13 +17,15 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- Energy God
 -- ================================================================================================
 
 dofile("scripts/entities/entityinclude.lua")
 
-naija = getNaija()
+v.naija = getNaija()
 
 function init(me)	
 	setupBasicEntity(
@@ -56,13 +58,13 @@ end
 function update(me, dt)
 
 --[[
-	bone = entity_collideSkeletalVsCircle(me, getNaija())
-	if bone ~= 0 or entity_x(naija) < entity_x(me) then
+	local bone = entity_collideSkeletalVsCircle(me, getNaija())
+	if bone ~= 0 or entity_x(v.naija) < entity_x(me) then
 		entity_push(getNaija(), 1200, 0, 1)
 	end
 	]]--
 	
-	if entity_x(naija) < entity_x(me) and entity_x(naija) > entity_x(me) - 256 then
+	if entity_x(v.naija) < entity_x(me) and entity_x(v.naija) > entity_x(me) - 256 then
 		entity_push(getNaija(), 1200, 0, 1)
 	end
 end

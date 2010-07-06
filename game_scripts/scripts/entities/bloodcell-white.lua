@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/bloodcell-common.lua")
 
-fireDelay = 0
-fireDelayTime = 1
+v.fireDelay = 0
+v.fireDelayTime = 1
 
 function init(me)
 	commonInit(me, "bloodcell-white")
@@ -29,8 +31,8 @@ function init(me)
 end
 
 function fire(me)
-	e = getFirstEntity()
-	target = 0
+	local e = getFirstEntity()
+	local target = 0
 	while e ~= 0 do
 		if entity_getEntityType(e)==ET_ENEMY and not eisv(e, EV_TYPEID, EVT_CELLWHITE) and not eisv(e, EV_TYPEID, EVT_PET) then
 			if entity_isEntityInRange(me, e, 450) then
@@ -41,37 +43,37 @@ function fire(me)
 		e = getNextEntity()
 	end
 	if target ~= 0 then
-		s = createShot("energyblast", me, target, entity_x(me), entity_y(me))
+		local s = createShot("energyblast", me, target, entity_x(me), entity_y(me))
 	end
-	fireDelay = fireDelayTime + randRange(0,2)
+	v.fireDelay = v.fireDelayTime + randRange(0,2)
 end
 
 function update(me, dt)
 	commonUpdate(me, dt)
 	
-	if sing then
+	if v.sing then
 		entity_moveTowardsTarget(me, dt, 300)
 	end
 	
-	fireDelay = fireDelay - dt
-	if fireDelay < 0 then
+	v.fireDelay = v.fireDelay - dt
+	if v.fireDelay < 0 then
 		fire(me)
 	end
 
-	rangeNode = entity_getNearestNode(me, "KILLENTITY")
+	local rangeNode = entity_getNearestNode(me, "KILLENTITY")
 	if node_isPositionIn(rangeNode, entity_x(me), entity_y(me)) then
 		entity_setState(me, STATE_DIE)
 	end
 end
 
 function songNote(me, note)
-	r,g,b = getNoteColor(note)
-	bone_setColor(glow, r*0.5+0.5, g*0.5+0.5, b*0.5+0.5)
-	bone_alpha(glow, 0.4, 1)
-	sing = true
+	local r,g,b = getNoteColor(note)
+	bone_setColor(v.glow, r*0.5+0.5, g*0.5+0.5, b*0.5+0.5)
+	bone_alpha(v.glow, 0.4, 1)
+	v.sing = true
 end
 
 function songNoteDone(me, note, t)
-	bone_alpha(glow, 0, 4)
-	sing = false
+	bone_alpha(v.glow, 0, 4)
+	v.sing = false
 end

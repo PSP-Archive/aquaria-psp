@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- M A U L
 -- ================================================================================================
@@ -26,11 +28,11 @@ dofile("scripts/entities/entityinclude.lua")
 -- entity specific
 STATE_FIRE				= 1000
 STATE_PULLBACK			= 1001
-fireDelay = 0
-spread = 5
+v.fireDelay = 0
+v.spread = 5
 
-dir = 0
-n = 0
+v.dir = 0
+v.n = 0
  
 -- ================================================================================================
 -- FUNCTIONS
@@ -57,8 +59,8 @@ function init(me)
 	
 	--entity_setSegs(me, 16, 2, 0.2, 0.2, 0, -0.03, 32, 0)
 	entity_setDeathParticleEffect(me, "TinyRedExplode")
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	entity_setEatType(me, EAT_FILE, "Loper")
 end
 
@@ -66,28 +68,28 @@ function update(me, dt)
 	entity_handleShotCollisions(me)	
 	entity_touchAvatarDamage(me, 20, 1, 1200)
 	
-	if dir==0 then
+	if v.dir == 0 then
 		entity_addVel(me, -1000, 0)
 	else
 		entity_addVel(me, 1000, 0)
 	end
 	
-	if entity_isEntityInRange(me, n, 512) then
-		if (entity_isFlippedHorizontal(me) and entity_x(n) > entity_x(me)) or
-		(not entity_isFlippedHorizontal(me) and entity_x(n) <= entity_x(me)) then
+	if entity_isEntityInRange(me, v.n, 512) then
+		if (entity_isFlippedHorizontal(me) and entity_x(v.n) > entity_x(me)) or
+		(not entity_isFlippedHorizontal(me) and entity_x(v.n) <= entity_x(me)) then
 			entity_setMaxSpeedLerp(me, 0.5, 0.2)
-			fireDelay = fireDelay + dt
-			if fireDelay > 0.2 then
-				fireDelay = 0
-				if spread < 0 then
-					spread = 6
+			v.fireDelay = v.fireDelay + dt
+			if v.fireDelay > 0.2 then
+				v.fireDelay = 0
+				if v.spread < 0 then
+					v.spread = 6
 				end
-				spread = spread - 1
-				if spread == 0 then
-					spread = -1
-					fireDelay = -1
+				v.spread = v.spread - 1
+				if v.spread == 0 then
+					v.spread = -1
+					v.fireDelay = -1
 				else
-					s = createShot("Loper", me, entity_getTarget(me))
+					local s = createShot("Loper", me, entity_getTarget(me))
 					--[[
 					s = entity_fireAtTarget(me, "Purple", 1, 500, 800, 3, 64)
 					shot_setNice(s, "Shots/FatSpine", "", "SpineHit")
@@ -96,8 +98,8 @@ function update(me, dt)
 			end
 		end
 	else
-		if fireDelay <0 then
-			fireDelay= fireDelay + dt
+		if v.fireDelay < 0 then
+			v.fireDelay= v.fireDelay + dt
 		end
 		entity_setMaxSpeedLerp(me, 1.0, 0.2)
 	end
@@ -113,10 +115,10 @@ end
 
 function hitSurface(me)
 	entity_flipHorizontal(me)
-	if dir == 0 then
-		dir = 1
-	elseif dir == 1 then 
-		dir = 0
+	if v.dir == 0 then
+		v.dir = 1
+	elseif v.dir == 1 then 
+		v.dir = 0
 	end
 end
 

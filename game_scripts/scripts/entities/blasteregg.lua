@@ -17,8 +17,10 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-hatchTime		= 10
-plantedTime		= 20
-entityTypeName	= "Blaster"
-itemName		= "BlasterEgg"
+v = getVars()
+
+v.hatchTime			= 10
+v.plantedTime		= 20
+v.entityTypeName	= "Blaster"
+v.itemName			= "BlasterEgg"
 dofile("Scripts/entities/egg.lua")

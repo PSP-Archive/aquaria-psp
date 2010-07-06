@@ -17,29 +17,32 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
-n = 0
-dad = 0
-bone = 0
-babySpawn = 0
+v.n = 0
+v.dad = 0
+v.bone = 0
+v.babySpawn = 0
 
-momVisionTime =  0.5
-momVisionDelay = momVisionTime
-momEyes = 0
+v.momVisionTime =  0.5
+v.momVisionDelay = v.momVisionTime
+v.momEyes = 0
 
 
-started = false
-createDelayTime = 20
-createDelay = createDelayTime
+v.started = false
+v.createDelayTime = 20
+v.createDelay = v.createDelayTime
 
 STATE_GOTODAD	= 1000
 STATE_MOURN		= 1001
 STATE_MOMVISION = 1002
 
-fireDelay = 2
-shotDelay = 0.1
-shots = 0
-numShots = 8
+v.fireDelay = 2
+v.shotDelay = 0.1
+v.shots = 0
+v.numShots = 8
+v.angle = 0
  
 function init(me)
 	setupEntity(me)
@@ -61,20 +64,20 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	dad = entity_getNearestEntity(me, "SunkenDad")
-	bone = entity_getBoneByName(dad, "MomPosition")
-	babySpawn = entity_getBoneByName(dad, "BabySpawn")
+	v.n = getNaija()
+	v.dad = entity_getNearestEntity(me, "SunkenDad")
+	v.bone = entity_getBoneByName(v.dad, "MomPosition")
+	v.babySpawn = entity_getBoneByName(v.dad, "BabySpawn")
 	--[[
-	x,y = bone_getWorldPosition(bone)
+	local x, y = bone_getWorldPosition(v.bone)
 	entity_setPosition(me, x, y, 0.5)
 	]]--
 	
-	entity_setTarget(me, dad)
+	entity_setTarget(me, v.dad)
 end
 
 function update(me, dt)
-	if not started then
+	if not v.started then
 		return
 	end
 	if not entity_isState(me, STATE_DEATHSCENE) then
@@ -82,16 +85,16 @@ function update(me, dt)
 	end
 	
 	
-	--debugLog(string.format("createDelay: %f", createDelay))
+	--debugLog(string.format("createDelay: %f", v.createDelay))
 	if entity_isState(me, STATE_MOMVISION) then
 		--[[
-		momVisionDelay = momVisionDelay - dt
-		if momVisionDelay < 0 then
-			momVisionDelay = momVisionTime
-			x = entity_x(n)
-			node = entity_getNearestNode(n, "MOMEYES")
+		v.momVisionDelay = v.momVisionDelay - dt
+		if v.momVisionDelay < 0 then
+			v.momVisionDelay = v.momVisionTime
+			x = entity_x(v.n)
+			node = entity_getNearestNode(v.n, "MOMEYES")
 			dist = 300
-			x = x + entity_velx(n)*0.5
+			x = x + entity_velx(v.n)*0.5
 			if chance(50) then
 				createEntity("MomEyes", "", x-dist, node_y(node))
 				createEntity("MomEyes", "", x, node_y(node))
@@ -102,38 +105,38 @@ function update(me, dt)
 		end
 		]]--
 		--[[
-		momVisionDelay = momVisionDelay - dt
-		if momVisionDelay < 0 then
-			momVisionDelay = momVisionTime
-			s = createShot("MomVision", "", entity_x(momEyes), entity_y(momEyes))
-			shot_setAimVector(s, entity_x(n) - entity_x(momEyes), entity_y(n) - entity_y(momEyes))
+		v.momVisionDelay = v.momVisionDelay - dt
+		if v.momVisionDelay < 0 then
+			v.momVisionDelay = v.momVisionTime
+			s = createShot("MomVision", "", entity_x(v.momEyes), entity_y(v.momEyes))
+			shot_setAimVector(s, entity_x(v.n) - entity_x(v.momEyes), entity_y(v.n) - entity_y(v.momEyes))
 		end
 		]]--
 	end
 	if entity_isState(me, STATE_IDLE) then
-		if not (entity_getHealth(dad) < 220) then
-			createDelay = createDelay - dt
-			if createDelay < 0 then
-				if entity_isState(dad, STATE_IDLE) then
+		if not (entity_getHealth(v.dad) < 220) then
+			v.createDelay = v.createDelay - dt
+			if v.createDelay < 0 then
+				if entity_isState(v.dad, STATE_IDLE) then
 					--debugLog("setting dad to waitForKiss")
-					entity_setState(dad, STATE_WAITFORKISS, -1, true)
+					entity_setState(v.dad, STATE_WAITFORKISS, -1, true)
 					entity_setState(me, STATE_GOTODAD)
-					createDelay = createDelayTime
+					v.createDelay = v.createDelayTime
 				end			
 			end
 		else
-			fireDelay = fireDelay - dt
-			if fireDelay < 0 then
-				shotDelay = shotDelay - dt
-				if shotDelay < 0 then
-					shots = shots + 1
-					shotDelay = 0.7
-					s = createShot("zygoteshot-mom", me, n)
-					shot_setAimVector(s, math.sin(angle), math.cos(angle))
-					angle = angle + ((3.14*2)/numShots) * shots
-					if shots >= numShots then
-						fireDelay = 3
-						shots = 0
+			v.fireDelay = v.fireDelay - dt
+			if v.fireDelay < 0 then
+				v.shotDelay = v.shotDelay - dt
+				if v.shotDelay < 0 then
+					v.shots = v.shots + 1
+					v.shotDelay = 0.7
+					local s = createShot("zygoteshot-mom", me, v.n)
+					shot_setAimVector(s, math.sin(v.angle), math.cos(v.angle))
+					v.angle = v.angle + ((3.14*2)/v.numShots) * v.shots
+					if v.shots >= v.numShots then
+						v.fireDelay = 3
+						v.shots = 0
 					end
 				end
 			end
@@ -153,9 +156,9 @@ function update(me, dt)
 		entity_updateMovement(me, dt)
 	end
 	if entity_isState(me, STATE_KISS) then
-		x,y = bone_getWorldPosition(bone)
+		local x, y = bone_getWorldPosition(v.bone)
 		entity_setPosition(me, x, y, 0.5)
-		entity_flipToEntity(me, dad)
+		entity_flipToEntity(me, v.dad)
 	end
 	entity_handleShotCollisionsSkeletal(me)
 end
@@ -168,34 +171,34 @@ function enterState(me)
 		entity_animate(me, "fly", -1)	
 	elseif entity_isState(me, STATE_GOTODAD) then
 		entity_animate(me, "fly", -1)
-		x,y = bone_getWorldPosition(bone)
+		local x, y = bone_getWorldPosition(v.bone)
 		--debugLog(string.format("pos(%f,%f)", x, y))
 		entity_clearVel(me)
 		entity_setStateTime(me, entity_setPosition(me, x, y, -1 * 300))
 	elseif entity_isState(me, STATE_KISS) then		
 		entity_setStateTime(me, entity_animate(me, "kiss"))
-		x,y = bone_getWorldPosition(bone)
+		local x, y = bone_getWorldPosition(v.bone)
 		entity_setPosition(me, x, y, -1 * 100)
-		entity_setState(dad, STATE_KISS, -1, true)
+		entity_setState(v.dad, STATE_KISS, -1, true)
 	elseif entity_isState(me, STATE_WEAK) then
-		node = getNode("GROUNDLEVEL")
+		local node = getNode("GROUNDLEVEL")
 		entity_setPosition(me, entity_x(me), node_y(node), -500)
 		entity_animate(me, "weak")
 		entity_setStateTime(me, 12)
-		entity_setState(dad, STATE_RAGE, -1, true)
+		entity_setState(v.dad, STATE_RAGE, -1, true)
 	elseif entity_isState(me, STATE_MOMVISION) then
 		debugLog("mom vision")
 		--[[
-		momEyes = createEntity("MomEyes", "", entity_x(me), entity_y(me)-800)
+		v.momEyes = createEntity("MomEyes", "", entity_x(me), entity_y(me)-800)
 		entity_setStateTime(me, 20)
-		momVisionDelay = 0
+		v.momVisionDelay = 0
 		]]--
 		entity_setStateTime(me, 3)
 	elseif entity_isState(me, STATE_DEATHSCENE) then
 		entity_setStateTime(me, -1)
 		entity_clearVel(me)
 	elseif entity_isState(me, STATE_START) then
-		started = true
+		v.started = true
 		entity_setStateTime(me, 0.1)	
 	end
 end
@@ -205,9 +208,9 @@ function exitState(me)
 		debugLog("state goToDad done")
 		entity_setState(me, STATE_KISS)
 	elseif entity_isState(me, STATE_KISS) then
-		if not entity_isState(dad, STATE_DEATHSCENE) then
-			--entity_setState(dad, STATE_IDLE)
-			x, y = bone_getWorldPosition(babySpawn)
+		if not entity_isState(v.dad, STATE_DEATHSCENE) then
+			--entity_setState(v.dad, STATE_IDLE)
+			local x, y = bone_getWorldPosition(v.babySpawn)
 			createEntity("Zygote", "", x, y)
 			playSfx("sunkendad-headspurt")
 			spawnParticleEffect("sunkendad-headspurt", x, y)
@@ -215,19 +218,19 @@ function exitState(me)
 			entity_setState(me, STATE_IDLE)
 		end
 	elseif entity_isState(me, STATE_WEAK) then
-		if not entity_isState(dad, STATE_DEATHSCENE) and not (entity_getHealthPerc(dad) <= 0) then
-			if entity_getHealth(dad) >= 220 then
-				entity_setState(dad, STATE_CALM, -1, true)
+		if not entity_isState(v.dad, STATE_DEATHSCENE) and not (entity_getHealthPerc(v.dad) <= 0) then
+			if entity_getHealth(v.dad) >= 220 then
+				entity_setState(v.dad, STATE_CALM, -1, true)
 			end
 			entity_setState(me, STATE_MOMVISION)
 		end
 	elseif entity_isState(me, STATE_MOMVISION) then
-		if momEyes ~= 0 then
-			entity_setState(momEyes, STATE_DONE)
+		if v.momEyes ~= 0 then
+			entity_setState(v.momEyes, STATE_DONE)
 		end
 		
-		if not entity_isState(dad, STATE_DEATHSCENE) and not (entity_getHealthPerc(dad) <= 0) then
-			entity_setState(dad, STATE_IDLE)
+		if not entity_isState(v.dad, STATE_DEATHSCENE) and not (entity_getHealthPerc(v.dad) <= 0) then
+			entity_setState(v.dad, STATE_IDLE)
 			entity_setState(me, STATE_IDLE)
 		end
 		
@@ -237,7 +240,7 @@ function exitState(me)
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if not (entity_getHealth(dad) < 220) then
+	if not (entity_getHealth(v.dad) < 220) then
 		if not entity_isState(me, STATE_WEAK) then
 			-- for debug
 			--or damageType == DT_AVATAR_ENERGYBLAST

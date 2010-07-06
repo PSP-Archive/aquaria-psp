@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- K I N G   C R A B
 -- ================================================================================================
@@ -28,7 +30,7 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-fireDelay = 2
+v.fireDelay = 2
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -97,12 +99,12 @@ function update(dt)
 		if entity_isTargetInRange(64) then
 			entity_pushTarget(500)
 		end
-		if fireDelay > 0 then
-			fireDelay = fireDelay - dt
-			if fireDelay < 0 then
+		if v.fireDelay > 0 then
+			v.fireDelay = v.fireDelay - dt
+			if v.fireDelay < 0 then
 				-- dmg, mxspd, homing, numsegs, out
 				entity_fireAtTarget(1, 1000, 200, 3, 64)
-				fireDelay = 5
+				v.fireDelay = 5
 			end
 		end
 	end

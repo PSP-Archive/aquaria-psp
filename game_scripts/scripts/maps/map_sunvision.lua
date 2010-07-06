@@ -17,9 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/maps/finalcommon.lua")
 
-test = false
+v.test = false
 
 function init()
 	setCutscene(1,1)
@@ -29,20 +31,20 @@ function init()
 	
 	setOverrideVoiceFader(0.5)
 	
-	node = getNode("HIDENAIJA")
+	local node = getNode("HIDENAIJA")
 	entity_setPosition(getNaija(), node_x(node), node_y(node))
 
 	
-	camDummy = createEntity("empty")
-	s1c1 = getNode("S1C1")
-	s1c2 = getNode("S1C2")
-	s1c3 = getNode("S1C3")
+	local camDummy = createEntity("empty")
+	local s1c1 = getNode("S1C1")
+	local s1c2 = getNode("S1C2")
+	local s1c3 = getNode("S1C3")
 	
-	s2c1 = getNode("S2C1")
-	s2c2 = getNode("S2C2")
-	s2c3 = getNode("S2C3")
+	local s2c1 = getNode("S2C1")
+	local s2c2 = getNode("S2C2")
+	local s2c3 = getNode("S2C3")
 	
-	s3c1 = getNode("S3C1")
+	local s3c1 = getNode("S3C1")
 	
 		
 	-- 1
@@ -161,15 +163,15 @@ function init()
 
 	setOverrideVoiceFader(-1)
 	
-	if test then
+	if v.test then
 		fade2(0, 0.5, 1, 1, 1)
 	
-		cam_toEntity(n)
+		cam_toEntity(v.n)
 		setSceneColor(1, 1, 1, 5)
 	else
 		learnSong(SONG_SUNFORM)
 		watch(1)
-		entity_idle(n)
+		entity_idle(v.n)
 		changeForm(FORM_SUN)
 		
 		setCutscene(0)

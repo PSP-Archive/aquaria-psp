@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/maps/finalcommon.lua")
 
 function hasQuit()
@@ -31,21 +33,21 @@ function init()
 	--return
 	fade2(0, 0, 1, 1, 1)
 	overrideZoom(0.8)
-	n = getNaija()
+	local n = getNaija()
 	entity_setPosition(n, 0, 0)
 	playMusicOnce("Intro")
 	
 	user_set_demo_intro(0)
 	user_save()
 	
-	camDummy = createEntity("Empty")
-	start1 = getNode("START1")
-	start2 = getNode("START2")
-	start3 = getNode("START3")
+	local camDummy = createEntity("Empty")
+	local start1 = getNode("START1")
+	local start2 = getNode("START2")
+	local start3 = getNode("START3")
 	
-	end1 = getNode("END1")
-	end2 = getNode("END2")
-	end3 = getNode("END3")
+	local end1 = getNode("END1")
+	local end2 = getNode("END2")
+	local end3 = getNode("END3")
 	
 	-- 1
 	entity_warpToNode(camDummy, start1)

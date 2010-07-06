@@ -17,23 +17,25 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 dofile(appendUserDataPath("_mods/jukebox/scripts/jukeboxinclude.lua"))
 
-local naija = 0
-mbDown = false
+v.naija = 0
+v.mbDown = false
 
 function init(me)
 	resetContinuity()
 	setOverrideMusic("")
 
-	naija = getNaija()
+	v.naija = getNaija()
 
-	entity_heal(naija, 999)
+	entity_heal(v.naija, 999)
 	cam_toNode(me)
 	cam_setPosition(node_x(me), node_y(me))
-	entity_setInvincible(naija, true)
-	entity_setState(naija, STATE_TITLE)
+	entity_setInvincible(v.naija, true)
+	entity_setState(v.naija, STATE_TITLE)
 
 
 	setMousePos(400, 550)
@@ -46,8 +48,8 @@ function init(me)
 
 	local throne = getNode("naija")
 	avatar_toggleCape(false)
-	entity_animate(naija, "sitthrone", -1, 4)
-	entity_setPosition(naija, node_x(throne), node_y(throne))
+	entity_animate(v.naija, "sitthrone", -1, 4)
+	entity_setPosition(v.naija, node_x(throne), node_y(throne))
 
 	setMousePos(400, 550)
 
@@ -65,17 +67,17 @@ function update(me, dt)
 		toggleCursor(true, 0.1)
 	end
 
-	scale = 800.0/1024.0 + 0.01
+	local scale = 800.0/1024.0 + 0.01
 	
 	overrideZoom(scale, 0)
 	
 	entity_setPosition(n, node_getPosition(getNode("NAIJA")))
 	
-	if (isLeftMouse() or isRightMouse()) and not mbDown then
-		mbDown = true
-	elseif (not isLeftMouse() and not isRightMouse()) and mbDown then
-		mbDown = false
-		node = getNodeToActivate()
+	if (isLeftMouse() or isRightMouse()) and not v.mbDown then
+		v.mbDown = true
+	elseif (not isLeftMouse() and not isRightMouse()) and v.mbDown then
+		v.mbDown = false
+		local node = getNodeToActivate()
 		setNodeToActivate(0)
 		stopCursorGlow()
 		if node ~= 0 then

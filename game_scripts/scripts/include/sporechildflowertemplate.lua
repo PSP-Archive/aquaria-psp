@@ -17,9 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-openTimer = 8
+v.openTimer = 8
 
 function commonInit(me, gfx)
 	setupEntity(me)
@@ -45,18 +47,18 @@ function commonUpdate(me, dt)
 		entity_setState(me, STATE_CLOSED)
 	end	
 	if entity_isState(me, STATE_IDLE) or entity_isState(me, STATE_CLOSED) then
-		iter = 0
-		ent = getEntity(iter)
+		local iter = 0
+		local ent = getEntity(iter)
 		while ent~=0 do
 			if entity_getAnimationName(ent)=="openFlower" then
 				if entity_isEntityInRange(me, ent, 128) then
-					openTimer = openTimer - dt
+					v.openTimer = v.openTimer - dt
 				end
 			end
 			iter = iter + 1
 			ent = getEntity(iter)
 		end
-		if openTimer < 0 then
+		if v.openTimer < 0 then
 			entity_setState(me, STATE_OPEN)
 		end
 	end

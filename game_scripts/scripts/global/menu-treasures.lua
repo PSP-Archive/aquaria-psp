@@ -17,12 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 function hitWatch(tlen)
-	h = entity_getHealth(getNaija())
+	local h = entity_getHealth(getNaija())
 	
-	t = 0
+	local t = 0
 	while t < tlen do
 		watch(FRAME_TIME)
 		t = t + FRAME_TIME

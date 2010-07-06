@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- G R O U N D   S H O C K E R   A T T A C K
 -- ================================================================================================
@@ -27,8 +29,8 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L   V A R I A B L E S 
 -- ================================================================================================
 
-direction = 0
-life = 0.87
+v.direction = 0
+v.life = 0.87
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -65,14 +67,14 @@ function commonInit(me, dir)
 	entity_alpha(me, 0)
 	entity_scale(me, 0)
 	
-	direction = dir
+	v.direction = dir
 end
 
 function postInit(me)
 	entity_setState(me, STATE_IDLE)
 	
 	-- FLIP HORIZONTALLY
-	if direction >= 1 then 
+	if v.direction >= 1 then 
 		entity_fh(me)
 		entity_switchSurfaceDirection(me)
 	end
@@ -80,8 +82,8 @@ end
 
 function update(me, dt)
 	-- DESTROY AFTER TIME
-	life = life - dt
-	if life <= 0 then
+	v.life = v.life - dt
+	if v.life <= 0 then
 		entity_alpha(me, 0, 0.23)
 		entity_scale(me, 0, 0, 0.23)
 		entity_delete(me, 0.23)

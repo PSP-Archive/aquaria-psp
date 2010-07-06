@@ -17,14 +17,16 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 ANIMLAYER_LI = 0
 ANIMLAYER_BOAT = 1
-n = 0
+v.n = 0
 
-headNormal = 0
-headShock = 0
+v.headNormal = 0
+v.headShock = 0
 
 function init(me)
 	setupEntity(me)
@@ -35,13 +37,13 @@ function init(me)
 	entity_setCull(me, false)
 	entity_setState(me, STATE_IDLE)
 	
-	headNormal = entity_getBoneByName(me, "Head")
-	headShock = entity_getBoneByName(me, "HeadShock")
+	v.headNormal = entity_getBoneByName(me, "Head")
+	v.headShock = entity_getBoneByName(me, "HeadShock")
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -54,11 +56,11 @@ function enterState(me)
 	elseif entity_isState(me, STATE_ON) then
 		entity_animate(me, "idle", -1, ANIMLAYER_LI)
 	elseif entity_isState(me, STATE_OFF) then
-		bone_setVisible(headNormal, 0)
-		bone_setVisible(headShock, 1)
+		bone_setVisible(v.headNormal, 0)
+		bone_setVisible(v.headShock, 1)
 	elseif entity_isState(me, STATE_ATTACK) then
-		bone_setVisible(headNormal, 1)
-		bone_setVisible(headShock, 0)
+		bone_setVisible(v.headNormal, 1)
+		bone_setVisible(v.headShock, 0)
 		entity_animate(me, "puzzled", 0, ANIMLAYER_LI)
 	end
 end

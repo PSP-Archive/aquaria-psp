@@ -17,16 +17,18 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-jaw = 0
-head = 0
-trappedEnt = 0
-getOutHits = 0
-hx=0
-hy=0
-hurtTimer = 0
+v.n = 0
+v.jaw = 0
+v.head = 0
+v.trappedEnt = 0
+v.getOutHits = 0
+v.hx = 0
+v.hy = 0
+v.hurtTimer = 0
 
 STATE_TRAP		= 1001
 STATE_TRAPPED	= 1002
@@ -47,8 +49,8 @@ function init(me)
 	entity_setCullRadius(me, 1024)
 	--entity_generateCollisionMask(me)
 	
-	jaw = entity_getBoneByName(me, "Jaw")
-	head = entity_getBoneByName(me, "Head")
+	v.jaw = entity_getBoneByName(me, "Jaw")
+	v.head = entity_getBoneByName(me, "Head")
 	
 	entity_setState(me, STATE_IDLE)	
 	
@@ -62,17 +64,17 @@ function init(me)
 end
 
 function entityDied(me, ent)
-	if trappedEnt == ent then
+	if v.trappedEnt == ent then
 		trappedEnd = 0
 		entity_setState(me, STATE_IDLE, -1, 1)
 	end
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
-	node = entity_getNearestNode(me, "FLIP")
+	local node = entity_getNearestNode(me, "FLIP")
 	if node ~= 0 and node_isEntityIn(node, me) then
 		entity_fh(me)
 	end
@@ -82,22 +84,22 @@ function update(me, dt)
 	--entity_handleShotCollisionsSkeletal(me)
 	
 
-	hx, hy = bone_getWorldPosition(head)
+	v.hx, v.hy = bone_getWorldPosition(v.head)
 	
 	entity_clearTargetPoints(me)
-	entity_addTargetPoint(me, hx, hy)
+	entity_addTargetPoint(me, v.hx, v.hy)
 	
 	entity_handleShotCollisions(me)
 	
 	if entity_isState(me, STATE_IDLE) then
-		ent = getFirstEntity()
+		local ent = getFirstEntity()
 		while ent ~= 0 do
 			if ent ~= me and entity_isDamageTarget(ent, DT_ENEMY_TRAP) and entity_isEntityInRange(me, ent, 256) then
 				if not entity_isDead(ent) then
 					if not eisv(ent, EV_TYPEID, EVT_PET) and
 					not entity_isName(ent, "ubervine") and
 					not (entity_getEntityType(ent)==ET_INGREDIENT) then
-						trappedEnt = ent
+						v.trappedEnt = ent
 						entity_setState(me, STATE_TRAP)
 						break
 					end
@@ -107,7 +109,7 @@ function update(me, dt)
 		end
 	end
 	if entity_isState(me, STATE_TRAPPED) then
-		if trappedEnt ~= 0 and (entity_getEntityType(trappedEnt)==ET_AVATAR or trappedEnt == getLi()) then
+		if v.trappedEnt ~= 0 and (entity_getEntityType(v.trappedEnt)==ET_AVATAR or v.trappedEnt == getLi()) then
 			entity_setDamageTarget(me, DT_AVATAR_LIZAP, true)
 		end
 	else
@@ -117,20 +119,20 @@ function update(me, dt)
 		--[[
 
 		ent = getFirstEntity()
-		trappedEnt = 0
+		v.trappedEnt = 0
 		while ent ~= 0 do
 			if ent ~= me and entity_isEntityInRange(me, ent, 256) then
-				trappedEnt = ent
+				v.trappedEnt = ent
 				break
 			end
 			ent = getNextEntity()
 		end
 		]]--
-		if trappedEnt ~= 0 then	
-			if entity_getEntityType(trappedEnt)==ET_AVATAR or trappedEnt==getLi() then
+		if v.trappedEnt ~= 0 then	
+			if entity_getEntityType(v.trappedEnt)==ET_AVATAR or v.trappedEnt==getLi() then
 				toggleLiCombat(true)
 			end
-			debugLog(string.format("trapped ent:%s", entity_getName(trappedEnt)))
+			debugLog(string.format("trapped ent:%s", entity_getName(v.trappedEnt)))
 			entity_setState(me, STATE_TRAPPED)
 		else
 			entity_setState(me, STATE_IDLE)
@@ -142,26 +144,26 @@ function update(me, dt)
 	end
 	]]--
 	
-	if entity_isState(me, STATE_TRAP) and trappedEnt~=0 then
-		entity_setPosition(trappedEnt, hx, hy, 0.1)
-		if entity_isDead(trappedEnt) then
-			trappedEnt = 0
+	if entity_isState(me, STATE_TRAP) and v.trappedEnt ~= 0 then
+		entity_setPosition(v.trappedEnt, v.hx, v.hy, 0.1)
+		if entity_isDead(v.trappedEnt) then
+			v.trappedEnt = 0
 			entity_setState(me, STATE_IDLE)
 		end		
-	elseif entity_isState(me, STATE_TRAPPED) and trappedEnt~=0 then
-		entity_setPosition(trappedEnt, hx, hy)
-		hurtTimer = hurtTimer + dt
-		if hurtTimer > 1 then
-			if entity_getEntityType(trappedEnt) == ET_ENEMY then
-				entity_damage(trappedEnt, me, 2, DT_ENEMY_TRAP)
+	elseif entity_isState(me, STATE_TRAPPED) and v.trappedEnt ~= 0 then
+		entity_setPosition(v.trappedEnt, v.hx, v.hy)
+		v.hurtTimer = v.hurtTimer + dt
+		if v.hurtTimer > 1 then
+			if entity_getEntityType(v.trappedEnt) == ET_ENEMY then
+				entity_damage(v.trappedEnt, me, 2, DT_ENEMY_TRAP)
 			else
-				entity_damage(trappedEnt, me, 1, DT_ENEMY_TRAP)
+				entity_damage(v.trappedEnt, me, 1, DT_ENEMY_TRAP)
 			end
-			if entity_isDead(trappedEnt) then
-				trappedEnt = 0
+			if entity_isDead(v.trappedEnt) then
+				v.trappedEnt = 0
 				entity_setState(me, STATE_IDLE)
 			end
-			hurtTimer = 0
+			v.hurtTimer = 0
 		end
 	end
 end
@@ -172,7 +174,7 @@ function enterState(me)
 	elseif entity_isState(me, STATE_TRAP) then
 		entity_animate(me, "trap")
 	elseif entity_isState(me, STATE_TRAPPED) then
-		hurtTimer = 0
+		v.hurtTimer = 0
 		entity_animate(me, "trapped", -1)
 	elseif entity_isState(me, STATE_RELEASE) then
 		entity_animate(me, "release", -1)
@@ -185,13 +187,13 @@ function exitState(me)
 	elseif entity_isState(me, STATE_RELEASE) then
 		entity_setState(me, STATE_IDLE)
 	elseif entity_isState(me, STATE_TRAPPED) then
-		--entity_addVel(trappedEnt, -800, 0)
-		if trappedEnt ~= 0 then
-			entity_push(trappedEnt, -800, 0, 1)
+		--entity_addVel(v.trappedEnt, -800, 0)
+		if v.trappedEnt ~= 0 then
+			entity_push(v.trappedEnt, -800, 0, 1)
 		end
-		trappedEnt = 0
-		if trapDelay == 0 then
-			trapDelay = 1.5
+		v.trappedEnt = 0
+		if v.trapDelay == 0 then
+			v.trapDelay = 1.5
 		end
 	end
 end
@@ -199,12 +201,12 @@ end
 function damage(me, attacker, bone, damageType, dmg)
 	if entity_isState(me, STATE_TRAPPED) then
 		
-		getOutHits = getOutHits  + dmg
-		if getOutHits > 5 then
-			getOutHits = 0
+		v.getOutHits = v.getOutHits + dmg
+		if v.getOutHits > 5 then
+			v.getOutHits = 0
 			entity_setState(me, STATE_RELEASE)
 		end
-		debugLog(string.format("getOutHits: %d", getOutHits))		
+		debugLog(string.format("getOutHits: %d", v.getOutHits))
 		return true
 	end
 	return false

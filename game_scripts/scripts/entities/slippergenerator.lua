@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- S L I P P E R  L O B S T E R
 -- ================================================================================================
@@ -27,7 +29,7 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-delay = 1.0
+v.delay = 1.0
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -53,18 +55,18 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	--entity_setTarget(me, n)
+	v.n = getNaija()
+	--entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 
-	if delay > 0 then
-		delay = delay - dt
+	if v.delay > 0 then
+		v.delay = v.delay - dt
 	else
-		ent = createEntity("SlipperLobster", "", entity_x(me), entity_y(me))
+		local ent = createEntity("SlipperLobster", "", entity_x(me), entity_y(me))
 		entity_rotate(ent, entity_getRotation(me))
-		delay = 10.0
+		v.delay = 10.0
 	end
 end
 

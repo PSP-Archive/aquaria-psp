@@ -17,24 +17,26 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
-add = math.random(50)
+v.add = math.random(50)
 
-minCap = 400
-maxCap = 700
-cap = minCap
+v.minCap = 400
+v.maxCap = 700
+v.cap = v.minCap
 
-body = 0
-glow = 0
+v.body = 0
+v.glow = 0
 
-singingDelay = 0
+v.singingDelay = 0
 
-curNote = 0
+v.curNote = 0
 
-singing = false
+v.singing = false
 
 function commonInit(me, tex)	
 	setupEntity(me)
@@ -44,11 +46,11 @@ function commonInit(me, tex)
 	--entity_setTexture(me, "title/minnow")
 	entity_setAllDamageTargets(me, false)
 
-	body = entity_getBoneByName(me, "Body")
-	glow = entity_getBoneByName(me, "Glow")
+	v.body = entity_getBoneByName(me, "Body")
+	v.glow = entity_getBoneByName(me, "Glow")
 	
 	if tex ~= "" then
-		bone_setTexture(body, tex)
+		bone_setTexture(v.body, tex)
 	end
 	
 	if chance(50) then
@@ -61,16 +63,16 @@ function commonInit(me, tex)
 	
 	--entity_alpha(me, 0.5)
 	
-	bone_alpha(body, 0.5)
+	bone_alpha(v.body, 0.5)
 	
 	entity_setState(me, STATE_IDLE)
 	esetv(me, EV_LOOKAT, 0)
 	
-	bone_setBlendType(glow, BLEND_ADD)
+	bone_setBlendType(v.glow, BLEND_ADD)
 	
-	bone_alpha(glow, 0)
-	bone_scale(glow, 2, 2)
-	bone_scale(glow, 4, 4, 1, -1, 1)
+	bone_alpha(v.glow, 0)
+	bone_scale(v.glow, 2, 2)
+	bone_scale(v.glow, 4, 4, 1, -1, 1)
 	
 	entity_addRandomVel(me, 600)
 	
@@ -78,53 +80,53 @@ function commonInit(me, tex)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)	
-	cap = cap - dt*400
-	if cap < minCap then
-		cap = minCap
+	v.cap = v.cap - dt*400
+	if v.cap < v.minCap then
+		v.cap = v.minCap
 	end
-	if singing and avatar_isBursting() then
-		cap = maxCap
-		add = 600
+	if v.singing and avatar_isBursting() then
+		v.cap = v.maxCap
+		v.add = 600
 	end
 	--entity_doCollisionAvoidance(me, dt, 4, 0.5)
 	
 	
 	entity_doCollisionAvoidance(me, dt, 5, 0.5)
 	
-	--x, y = getMouseWorldPos()
+	--local x, y = getMouseWorldPos()
 	
-	if singing then
-		x,y = entity_getPosition(n)
+	if v.singing then
+		local x, y = entity_getPosition(v.n)
 		
-		entity_moveTowards(me, x, y, dt, 300+add)
+		entity_moveTowards(me, x, y, dt, 300+v.add)
 		
 		entity_doEntityAvoidance(me, dt, 32, 0.5)
 		
-		if singingDelay > 0 then
-			singingDelay = singingDelay - dt
-			if singingDelay < 0 then
-				singing = false
+		if v.singingDelay > 0 then
+			v.singingDelay = v.singingDelay - dt
+			if v.singingDelay < 0 then
+				v.singing = false
 			end
 		end
 	else
-		ent = entity_getNearestEntity(me, entity_getName(me), 256)
+		local ent = entity_getNearestEntity(me, entity_getName(me), 256)
 		if ent ~= 0 then
-			x,y = entity_getPosition(ent)
-			entity_moveTowards(me, x, y, dt, 800+add)
+			local x, y = entity_getPosition(ent)
+			entity_moveTowards(me, x, y, dt, 800+v.add)
 		end
 		entity_doEntityAvoidance(me, dt, 40, 0.5)
 		--entity_doEntityAvoidance(me, dt, 32, 
 	end
 	
-	vx = entity_velx(me)
-	vy = entity_vely(me)
+	local vx = entity_velx(me)
+	local vy = entity_vely(me)
 	
-	vx, vy = vector_cap(vx, vy, cap)
+	vx, vy = vector_cap(vx, vy, v.cap)
 	entity_clearVel(me)
 	entity_addVel(me, vx, vy)
 	
@@ -133,7 +135,7 @@ function update(me, dt)
 	--entity_updateMovement(me, dt)
 	entity_rotateToVel(me)
 	
-	len = vector_getLength(vx, vy)
+	local len = vector_getLength(vx, vy)
 	addInfluence(entity_x(me), entity_y(me), 16, len)
 end
 
@@ -157,22 +159,22 @@ function hitSurface(me)
 end
 
 function songNote(me, note)
-	curNote = note 
-	singing = true
+	v.curNote = note 
+	v.singing = true
 	
-	singingDelay = 0
+	v.singingDelay = 0
 	
-	r, g, b = getNoteColor(note)
-	bone_alpha(glow, 0.5, 1)
-	bone_setColor(glow, r, g, b, 1)
+	local r, g, b = getNoteColor(note)
+	bone_alpha(v.glow, 0.5, 1)
+	bone_setColor(v.glow, r, g, b, 1)
 end
 
 function songNoteDone(me, note)
-	if note == curNote then
-		singingDelay = 3
+	if note == v.curNote then
+		v.singingDelay = 3
 		
-		bone_alpha(glow, 0, 4)
-		bone_setColor(glow, 1, 1, 1, 4)
+		bone_alpha(v.glow, 0, 4)
+		bone_setColor(v.glow, 1, 1, 1, 4)
 	end
 end
 

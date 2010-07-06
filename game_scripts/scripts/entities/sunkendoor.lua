@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-hits = 0
+v.n = 0
+--v.hits = 0
 
 function init(me)
 	setupEntity(me)
@@ -42,17 +44,17 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 	entity_handleShotCollisionsSkeletal(me)
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if bone ~= 0 then
-		entity_clearVel(n)
-		entity_addVel(n, 500, 0)
-		entity_setPosition(n, entity_x(n)+2, entity_y(n))
+		entity_clearVel(v.n)
+		entity_addVel(v.n, 500, 0)
+		entity_setPosition(v.n, entity_x(v.n)+2, entity_y(v.n))
 	end
 end
 
@@ -72,8 +74,8 @@ function damage(me, attacker, bone, damageType, dmg)
 	if entity_isState(me, STATE_IDLE) then
 	--[[
 		if damageType == DT_AVATAR_LIZAP then
-			hits = hits + dmg
-			if hits > 5 then
+			v.hits = v.hits + dmg
+			if v.hits > 5 then
 				entity_setState(me, STATE_OPEN)
 			end
 		end

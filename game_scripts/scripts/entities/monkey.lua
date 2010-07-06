@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 
 dofile("scripts/entities/entityinclude.lua")
 
@@ -28,14 +30,14 @@ STATE_FALLING		= 1004
 STATE_DROWN			= 1005
 STATE_DROWNED		= 1006
 
-treeNode = 0
-moveTimer = 0
-minNode = 0
-maxNode = 0
-walkSpd = 170+math.random(50)
+v.treeNode = 0
+v.moveTimer = 0
+v.minNode = 0
+v.maxNode = 0
+v.walkSpd = 170+math.random(50)
 
-soundDelay = math.random(3)+2
-hitSoundDelay = 0
+v.soundDelay = math.random(3)+2
+v.hitSoundDelay = 0
 
 function init(me)
 	setupBasicEntity(me, 
@@ -58,12 +60,12 @@ function init(me)
 	
 	entity_scale(me, 0.6, 0.6)
 	
-	minNode = entity_getNearestNode(me, "MONKEYMIN")
-	maxNode = entity_getNearestNode(me, "MONKEYMAX")
-	node = entity_getNearestNode(me, "TREE")
+	v.minNode = entity_getNearestNode(me, "MONKEYMIN")
+	v.maxNode = entity_getNearestNode(me, "MONKEYMAX")
+	local node = entity_getNearestNode(me, "TREE")
 	if node ~= 0 and node_isEntityIn(node, me) then
 		debugLog("FOUND TREE!")
-		treeNode = node
+		v.treeNode = node
 		entity_setState(me, STATE_WALL)
 	else
 		debugLog("no tree :|")
@@ -99,27 +101,27 @@ function update(me, dt)
 	end
 	if entity_isState(me, STATE_IDLE) then	
 	--[[
-		node = entity_getNearestNode(me, "TREE")
+		local node = entity_getNearestNode(me, "TREE")
 		if node ~=0 and node_isEntityIn(node, me) then
-			treeNode = node
+			v.treeNode = node
 			entity_setState(me, STATE_CLIMBUP)			
 		end	
 		]]--
 		--[[
-		moveTimer = moveTimer + dt
-		if moveTimer > 2.2 then
+		v.moveTimer = v.moveTimer + dt
+		if v.moveTimer > 2.2 then
 			entity_flipHorizontal(me)
 			entity_switchSurfaceDirection(me)
-			moveTimer = 0
+			v.moveTimer = 0
 		end
 		]]--	
-		if minNode and maxNode then
-			if entity_x(me) < node_x(minNode) and not entity_isfh(me) then
+		if v.minNode and v.maxNode then
+			if entity_x(me) < node_x(v.minNode) and not entity_isfh(me) then
 				entity_flipHorizontal(me)
 				entity_switchSurfaceDirection(me, 0)
 				--entity_adjustPositionBySurfaceNormal(me, 2)
 				--entity_clampToSurface(me)
-			elseif entity_x(me) > node_x(maxNode) and entity_isfh(me) then
+			elseif entity_x(me) > node_x(v.maxNode) and entity_isfh(me) then
 				entity_flipHorizontal(me)
 				entity_switchSurfaceDirection(me, 1)
 				--entity_clampToSurface(me)				
@@ -131,11 +133,11 @@ function update(me, dt)
 			]]--			
 		end
 
-		entity_moveAlongSurface(me, dt, walkSpd, 6, 20)
+		entity_moveAlongSurface(me, dt, v.walkSpd, 6, 20)
 		entity_rotateToSurfaceNormal(me, 0.1)
-		soundDelay = soundDelay - dt
-		if soundDelay < 0 then
-			soundDelay = math.random(3)+4
+		v.soundDelay = v.soundDelay - dt
+		if v.soundDelay < 0 then
+			v.soundDelay = math.random(3)+4
 			entity_sound(me, "Monkey-Idle", math.random(200)+900)
 		end
 	end
@@ -149,10 +151,10 @@ function update(me, dt)
 	entity_checkSplash(me)
 	entity_handleShotCollisions(me)
 	
-	if hitSoundDelay > 0 then
-		hitSoundDelay = hitSoundDelay - dt
-		if hitSoundDelay < 0 then
-			hitSoundDelay = 0
+	if v.hitSoundDelay > 0 then
+		v.hitSoundDelay = v.hitSoundDelay - dt
+		if v.hitSoundDelay < 0 then
+			v.hitSoundDelay = 0
 		end
 	end
 	
@@ -177,9 +179,9 @@ function damage(me, attacker, bone, damageType, dmg)
 			return false
 		end
 	end
-	if hitSoundDelay == 0 then
+	if v.hitSoundDelay == 0 then
 		playSfx("Monkey-Hit")
-		hitSoundDelay = 0.3 + math.random(2)*0.1
+		v.hitSoundDelay = 0.3 + math.random(2)*0.1
 	end
 	return true
 end
@@ -216,7 +218,7 @@ function enterState(me)
 		entity_setDeathSound(me, "")
 	elseif entity_isState(me, STATE_CLIMBDOWN) then
 		entity_animate(me, "wall", LOOP_INF)
-		entity_followPath(me, treeNode, SPEED_VERYSLOW, 1)
+		entity_followPath(me, v.treeNode, SPEED_VERYSLOW, 1)
 	end
 end
 

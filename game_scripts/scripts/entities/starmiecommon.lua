@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- S T A R M I E   C O M M O N   S C R I P T
 -- ================================================================================================
@@ -27,20 +29,20 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L   V A R I A B L E S 
 -- ================================================================================================
 
-rotDir = math.random(2)-1	-- Random direction for spinning 'round Naija
+v.rotDir = math.random(2)-1	-- Random direction for spinning 'round Naija
 
-shotDelay = 0
-sD = 6	-- Time between shots
+v.shotDelay = 0
+v.sD = 6	-- Time between shots
 
-animSpeed = 1
-openDelay = 0
+v.animSpeed = 1
+v.openDelay = 0
 
-maxSpeed = 700
-shotForce = 432	-- For pushing Starmie around
+v.maxSpeed = 700
+v.shotForce = 432	-- For pushing Starmie around
 
-pYo = 2			-- Pupil y offset
-pupilFreeze = 0
-blinkTime = 0
+v.pYo = 2			-- Pupil y offset
+v.pupilFreeze = 0
+v.blinkTime = 0
  
 -- ================================================================================================
 -- F U N C T I O N S
@@ -76,9 +78,9 @@ function commonInit(me, skin)
 		entity_initSkeletal(me, "Starmie", "Starmie2")
 	end
 	
-	pupil = entity_getBoneByName(me, "Pupil")
-	lid = entity_getBoneByName(me, "Lid")
-	eye = entity_getBoneByName(me, "Eye")
+	v.pupil = entity_getBoneByName(me, "Pupil")
+	v.lid = entity_getBoneByName(me, "Lid")
+	v.eye = entity_getBoneByName(me, "Eye")
 	
 	entity_setState(me, STATE_IDLE)
 	
@@ -100,13 +102,13 @@ function update(me, dt)
 		entity_findTarget(me, 321)
 		
 		if not entity_hasTarget(me) then
-			bone_setPosition(pupil, 0, pYo)
+			bone_setPosition(v.pupil, 0, v.pYo)
 		else
 			entity_setState(me, STATE_OPEN)
 		end
 	elseif entity_getState(me)==STATE_OPEN then
-		if openDelay > 0 then openDelay = openDelay - dt
-		elseif openDelay <= 0 then
+		if v.openDelay > 0 then v.openDelay = v.openDelay - dt
+		elseif v.openDelay <= 0 then
 			entity_setState(me, STATE_HOSTILE)
 		end
 	end
@@ -116,60 +118,60 @@ function update(me, dt)
 		entity_findTarget(me, 2000)
 		
 		-- TIME BETWEEN SHOTS
-		if shotDelay > 0 then shotDelay = shotDelay - dt
-		else shotDelay = 0 end
+		if v.shotDelay > 0 then v.shotDelay = v.shotDelay - dt
+		else v.shotDelay = 0 end
 		-- PUPIL FREEZE COUNTDOWN
-		if pupilFreeze > 0 then pupilFreeze = pupilFreeze - dt
-		else pupilFreeze = 0 end
+		if v.pupilFreeze > 0 then v.pupilFreeze = v.pupilFreeze - dt
+		else v.pupilFreeze = 0 end
 		
 		-- DO BLINKING
-		if blinkTime > 0 and pupilFreeze == 0 then blinkTime = blinkTime - dt
-		elseif blinkTime <= 0 and blinkTime > -0.18 then
-			bone_alpha(lid, 1)
-			blinkTime = blinkTime - dt
+		if v.blinkTime > 0 and v.pupilFreeze == 0 then v.blinkTime = v.blinkTime - dt
+		elseif v.blinkTime <= 0 and v.blinkTime > -0.18 then
+			bone_alpha(v.lid, 1)
+			v.blinkTime = v.blinkTime - dt
 		else
-			bone_alpha(lid, 0, 0.024)
-			blinkTime = 5 + (math.random(600) * 0.01)
+			bone_alpha(v.lid, 0, 0.024)
+			v.blinkTime = 5 + (math.random(600) * 0.01)
 		end
 
 		if not entity_hasTarget(me) then
 			-- RETURN TO "HIDING"
 			entity_clearVel(me)
 			entity_setState(me, STATE_IDLE)
-			bone_setPosition(pupil, 0, pYo)
+			bone_setPosition(v.pupil, 0, v.pYo)
 			entity_rotate(me, randAngle360())
 		else
-			if pupilFreeze == 0 and blinkTime > 0 then
+			if v.pupilFreeze == 0 and v.blinkTime > 0 then
 				-- EYE TRACKING
-				nX, nY = entity_getPosition(getNaija())	-- Naija's position
-				sX, sY = entity_getPosition(me)			-- Starmie's position
-				x = (nX - sX)
-				y = (nY - (sY+pYo))
+				v.nX, v.nY = entity_getPosition(getNaija())	-- Naija's position
+				local sX, sY = entity_getPosition(me)			-- Starmie's position
+				local x = (v.nX - sX)
+				local y = (v.nY - (sY+v.pYo))
 				x, y = vector_cap(x, y, 7.5)
-				bone_setPosition(pupil, x, y, 0.24)
+				bone_setPosition(v.pupil, x, y, 0.24)
 				
 				-- ATTACK
-				if shotDelay == 0 and entity_hasTarget(me) then entity_setState(me, STATE_ATTACK) end
+				if v.shotDelay == 0 and entity_hasTarget(me) then entity_setState(me, STATE_ATTACK) end
 			else
-				if shotDelay == 0 then shotDelay = shotDelay + 0.34 end	-- Helps keep Starmie stunned when being hit
+				if v.shotDelay == 0 then v.shotDelay = v.shotDelay + 0.34 end	-- Helps keep Starmie stunned when being hit
 			end
 
 			-- MOVEMENT
-			entity_moveAround(me, nX, nY, dt, 255, rotDir)
+			entity_moveAround(me, v.nX, v.nY, dt, 255, v.rotDir)
 			entity_moveTowardsTarget(me, dt, 186)
-			if not entity_isTargetInRange(me, 1248) then entity_moveTowardsTarget(me, dt, shotForce) end -- Move in if far away
+			if not entity_isTargetInRange(me, 1248) then entity_moveTowardsTarget(me, dt, v.shotForce) end -- Move in if far away
 		end
 	end
 	
 	if entity_getState(me)==STATE_ATTACK then
 		-- BOUNCE STARMIE AFTER SHOOTING
-		entity_moveTowardsTarget(me, 1, -(shotForce * 0.9))
+		entity_moveTowardsTarget(me, 1, -(v.shotForce * 0.9))
 		entity_setState(me, STATE_HOSTILE)
 	end
 
 	-- SPEED UP/SLOW DOWN ROTATION BASED ON ACTUAL SPEED
-	animSpeed = ((entity_getVelLen(me) / maxSpeed) * 2) + 0.2
-	entity_setAnimLayerTimeMult(me, 0, animSpeed)
+	v.animSpeed = ((entity_getVelLen(me) / v.maxSpeed) * 2) + 0.2
+	entity_setAnimLayerTimeMult(me, 0, v.animSpeed)
 	
 	entity_doEntityAvoidance(me, dt, 123, 0.32)
 	entity_doCollisionAvoidance(me, dt, 8, 0.6)
@@ -188,45 +190,45 @@ function update(me, dt)
 end
 
 function enterState(me)
-	appearSpeed = 0.30
-	lookSpeed = 0.2
+	local appearSpeed = 0.30
+	local lookSpeed = 0.2
 
 	-- HIDE STARMIE IN THE BACKGROUND...
 	if entity_getState(me)==STATE_IDLE then
-		bone_setPosition(pupil, 0, pYo)
-		bone_alpha(lid, 1)
+		bone_setPosition(v.pupil, 0, v.pYo)
+		bone_alpha(v.lid, 1)
 		entity_scale(me, 0.7, 0.7)
 		entity_color(me, 0.6, 0.6, 0.6)
 	
 		entity_animate(me, "idle", LOOP_INF)
-		animSpeed = 0
+		v.animSpeed = 0
 		
-		shotDelay = 1 + (math.random(50) * 0.1)
-		entity_setMaxSpeed(me, maxSpeed/8)
+		v.shotDelay = 1 + (math.random(50) * 0.1)
+		entity_setMaxSpeed(me, v.maxSpeed/8)
 		
-		blinkTime = 5 + (math.random(600) * 0.01)
+		v.blinkTime = 5 + (math.random(600) * 0.01)
 	
 	-- BRING STARMIE TO LIFE!
 	elseif entity_getState(me)==STATE_OPEN then
 		entity_sound(me, "StarmieAwake")
 	
 		-- SPIN IN THE PROPER DIRECTION, BASED ON HOW STARMIE IS ROTATING AROUND NAIJA
-		if rotDir == 0 then entity_animate(me, "spinLeft", LOOP_INF)
-		elseif rotDir == 1 then entity_animate(me, "spinRight", LOOP_INF) end
+		if v.rotDir == 0 then entity_animate(me, "spinLeft", LOOP_INF)
+		elseif v.rotDir == 1 then entity_animate(me, "spinRight", LOOP_INF) end
 		
-		animSpeed = 1
+		v.animSpeed = 1
 		
-		bone_setPosition(pupil, 0, pYo)
-		bone_alpha(lid, 0, appearSpeed) --fade away the eyelid
+		bone_setPosition(v.pupil, 0, v.pYo)
+		bone_alpha(v.lid, 0, appearSpeed) --fade away the eyelid
 		entity_scale(me, 1.2, 1.2, appearSpeed) --scale to normal size
 		entity_color(me, 1, 1, 1, appearSpeed)	--set to normal colour
-		bone_scale(pupil, 1.27, 1.27)
-		bone_scale(pupil, 1, 1, appearSpeed) -- Pupil adjusting to light -> may have to tweak timing to get it lookin' nice
+		bone_scale(v.pupil, 1.27, 1.27)
+		bone_scale(v.pupil, 1, 1, appearSpeed) -- Pupil adjusting to light -> may have to tweak timing to get it lookin' nice
 		
 		entity_rotate(me, 0, lookSpeed)
-		openDelay = appearSpeed + lookSpeed
+		v.openDelay = appearSpeed + lookSpeed
 		
-		entity_setMaxSpeed(me, maxSpeed/4)
+		entity_setMaxSpeed(me, v.maxSpeed/4)
 		entity_moveTowards(me, entity_x(getNaija()), entity_y(getNaija()), 1, -1234)
 		
 		
@@ -234,43 +236,43 @@ function enterState(me)
 		entity_setDamageTarget(me, DT_AVATAR_LIZAP, true)
 		
 	elseif entity_getState(me)==STATE_HOSTILE then
-		openDelay = 0
-		pupilFreeze = 0
-		entity_setMaxSpeed(me, maxSpeed)
+		v.openDelay = 0
+		v.pupilFreeze = 0
+		entity_setMaxSpeed(me, v.maxSpeed)
 	
 	-- SHOT WEB, LOL
 	elseif entity_getState(me)==STATE_ATTACK then
-		pupx, pupy = bone_getWorldPosition(pupil)
+		local pupx, pupy = bone_getWorldPosition(v.pupil)
 		spawnParticleEffect("StarShot", pupx, pupy)
-		s = createShot("StarFire", me, entity_getTarget(me))
+		local s = createShot("StarFire", me, entity_getTarget(me))
 		shot_setOut(s, 12)	
 		
-		bone_setColor(pupil, 2, 2, 0)
-		bone_setColor(pupil, 1, 1, 1, 0.15)
-		bone_alpha(pupil, 0.45)
-		bone_alpha(pupil, 1, 0.5)
-		bone_scale(pupil, 1.27, 1.27)
-		bone_scale(pupil, 1, 1, 0.32)
+		bone_setColor(v.pupil, 2, 2, 0)
+		bone_setColor(v.pupil, 1, 1, 1, 0.15)
+		bone_alpha(v.pupil, 0.45)
+		bone_alpha(v.pupil, 1, 0.5)
+		bone_scale(v.pupil, 1.27, 1.27)
+		bone_scale(v.pupil, 1, 1, 0.32)
 		
-		bone_setColor(eye, 1, 1, 0)
-		bone_setColor(eye, 1, 1, 1, 0.04)
+		bone_setColor(v.eye, 1, 1, 0)
+		bone_setColor(v.eye, 1, 1, 1, 0.04)
 		
-		shotDelay = sD
+		v.shotDelay = v.sD
 	end
 end
 
 -- TAKE DAMAGE -> STUN STARMIE WHEN HIT
 function damage(me, attacker, bone, damageType, dmg, x, y)
-	bone_setPosition(pupil, 0, pYo, 0.021)
-	bone_scale(pupil, 0.76, 0.76)
-	bone_scale(pupil, 1, 1, 0.1)
-	pupilFreeze = 0.32
+	bone_setPosition(v.pupil, 0, v.pYo, 0.021)
+	bone_scale(v.pupil, 0.76, 0.76)
+	bone_scale(v.pupil, 1, 1, 0.1)
+	v.pupilFreeze = 0.32
 	
-	entity_moveTowards(me, x, y, 1, -shotForce)
+	entity_moveTowards(me, x, y, 1, -v.shotForce)
 
 	if entity_getState(me)==STATE_IDLE then	
 		entity_setState(me, STATE_OPEN)
-		pupilFreeze = 0
+		v.pupilFreeze = 0
 	end
 	
 	return true

@@ -17,12 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-timer 			= 0
-growTime 		= 0.2
-size			= 32
-life			= 4
+v.timer			= 0
+v.growTime		= 0.2
+v.size			= 32
+v.life			= 4
 
 function init(me)
 	setupEntity(me)
@@ -30,7 +32,7 @@ function init(me)
 	
 	entity_setTexture(me, "ForestGod/Vine")
 	
-	entity_setCollideRadius(me, size)
+	entity_setCollideRadius(me, v.size)
 	entity_setState(me, STATE_IDLE)
 	
 	entity_setCanLeaveWater(me, true)
@@ -56,24 +58,24 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function songNote(me, note)
 end
 
 function update(me, dt)
-	if life < 0 then return end
+	if v.life < 0 then return end
 	
 	if entity_getAlpha(me) > 0.6 then
-		if entity_touchAvatarDamage(me, size, 1, 1000) then
-			entity_clearVel(n)
-			entity_touchAvatarDamage(me, size, 1, 1000)
+		if entity_touchAvatarDamage(me, v.size, 1, 1000) then
+			entity_clearVel(v.n)
+			entity_touchAvatarDamage(me, v.size, 1, 1000)
 		end
 	end
 	
-	life = life - dt
-	if life < 0 then
+	v.life = v.life - dt
+	if v.life < 0 then
 		entity_delete(me, 0.5)
 		entity_alpha(me, 0, 0.5)
 	end
@@ -94,7 +96,7 @@ end
 
 function enterState(me)
 	if entity_isState(me, STATE_OFF) then
-		life = 0
+		v.life = 0
 		entity_delete(me, 0.5)
 		entity_alpha(me, 0, 0.5)
 	end

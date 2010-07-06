@@ -17,31 +17,33 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/pullplantcommon.lua")
 
 function init(me)
-	n1 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETING)
+	local n1 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETING)
 	if n1 ~= 0 and node_isEntityIn(n1, me) then
 		commonInit(me, "", node_getContent(n1), node_getAmount(n1))
 	else
-		n2 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETENT)
+		local n2 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETENT)
 		if n2 ~= 0 and node_isEntityIn(n2, me) then
 			commonInit(me, node_getContent(n2), "", node_getAmount(n2))		
 		else
-			d = false
+			local d = false
 
 			if not d then
-				s = randRange(1,100)
+				local s = randRange(1,100)
 				if s == 1 then
 					commonInit(me, "", "HealingPoultice")
 				elseif s < 7 then
 					commonInit(me, "", "LeafPoultice")
 				else
 
-				r = randRange(1, 7)
+				local r = randRange(1, 7)
 				if r == 1 then
 					if isMapName("forest04") then
-						t = randRange(1,8)
+						local t = randRange(1,8)
 						if t == 1 then
 							commonInit(me, "", "RainbowMushroom")
 						else

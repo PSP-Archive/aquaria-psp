@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- B L A S T E R
 -- ================================================================================================
@@ -27,11 +29,11 @@ dofile("scripts/entities/entityinclude.lua")
 STATE_FIRE				= 1000
 STATE_PULLBACK			= 1001
 STATE_WAITING			= 1002
-fireDelay = 0
-motherChance = 10
-soundDelay = 0
+v.fireDelay = 0
+v.motherChance = 10
+v.soundDelay = 0
 
-shotsFired = 0
+v.shotsFired = 0
  
 -- ================================================================================================
 -- FUNCTIONS
@@ -61,7 +63,7 @@ function init(me)
 	
 	entity_scale(me, 1.2, 1.2)
 	
-	soundDelay = math.random(3)+1
+	v.soundDelay = math.random(3)+1
 	
 	entity_setEatType(me, EAT_FILE, "Blaster")
 	
@@ -96,10 +98,10 @@ function update(me, dt)
 			end
 		end
 		
-		if fireDelay > 0 then
-			fireDelay = fireDelay - dt
-			if fireDelay < 0 then
-				fireDelay = 0
+		if v.fireDelay > 0 then
+			v.fireDelay = v.fireDelay - dt
+			if v.fireDelay < 0 then
+				v.fireDelay = 0
 			end
 		end
 		
@@ -109,16 +111,16 @@ function update(me, dt)
 			else
 				if entity_isTargetInRange(me, 1600) then				
 					entity_moveTowardsTarget(me, dt, 400)		-- move in if we're too far away
-					if entity_isTargetInRange(me, 350) and fireDelay==0 then
+					if entity_isTargetInRange(me, 350) and v.fireDelay==0 then
 						entity_setState(me, STATE_FIRE)
 					end
 				end
 							
 			end
-			soundDelay = soundDelay - dt 
-			if soundDelay < 0 then
+			v.soundDelay = v.soundDelay - dt
+			if v.soundDelay < 0 then
 				entity_playSfx(me, "BlasterIdle")
-				soundDelay = math.random(3)+1
+				v.soundDelay = math.random(3)+1
 			end
 		end
 		if entity_getState(me)==STATE_FIRE then
@@ -149,12 +151,12 @@ end
 
 function enterState(me)
 	if entity_getState(me)==STATE_IDLE then
-		fireDelay = 1
+		v.fireDelay = 1
 		entity_setMaxSpeed(me, 600)
 	elseif entity_getState(me)==STATE_FIRE then
 		entity_setStateTime(me, 0.2)
 		entity_setMaxSpeed(me, 800)
-		s = createShot("BigBlasterFire", me, entity_getTarget(me))
+		local s = createShot("BigBlasterFire", me, entity_getTarget(me))
 		shot_setOut(s, 32)
 	elseif entity_getState(me)==STATE_PULLBACK then
 		if chance(50) then
@@ -166,14 +168,14 @@ function enterState(me)
 		clearShots()
 		entity_setStateTime(me, 99)
 		debugLog("spawning egg")
-		entity_setInvincible(n, true)
-		entity_idle(n)
+		entity_setInvincible(v.n, true)
+		entity_idle(v.n)
 		
 		cam_toEntity(me)
 		entity_setInternalOffset(me, 0, 0)
 		entity_setInternalOffset(me, 0, 10, 0.1, -1)
 		playSfx("BossDieSmall")
-		entity_idle(n)
+		entity_idle(v.n)
 		fade(1, 0.5, 1, 1, 1)
 		watch(0.5)
 		fade(0, 1, 1, 1, 1)
@@ -189,9 +191,9 @@ function enterState(me)
 		watch(0.2)
 		watch(0.5)
 		fade(0, 1, 1, 1, 1)
-		node = getNode("EGGLOC")
+		local node = getNode("EGGLOC")
 		debugLog(string.format("node(%d, %d", node_x(node), node_y(node)))
-		e = createEntity("CollectibleBlasterEgg", "", node_x(node), node_y(node))
+		local e = createEntity("CollectibleBlasterEgg", "", node_x(node), node_y(node))
 		cam_toEntity(e)
 		watch(3)
 		cam_toEntity(getNaija())
@@ -201,15 +203,15 @@ end
 
 function exitState(me)
 	if entity_getState(me)==STATE_FIRE then
-		shotsFired = shotsFired + 1
-		if shotsFired < 8 then
+		v.shotsFired = v.shotsFired + 1
+		if v.shotsFired < 8 then
 			entity_setState(me, STATE_FIRE)
 		else
 			entity_setState(me, STATE_PULLBACK, 1)
 		end
 		
 	elseif entity_getState(me)==STATE_PULLBACK then
-		shotsFired = 0
+		v.shotsFired = 0
 		entity_setState(me, STATE_IDLE)
 	end
 end
@@ -218,7 +220,7 @@ function hitSurface(me)
 end
 
 function activate(me)
-	msg1("Naija: Pet!")
+	--msg1("Naija: Pet!")
 	entity_setBehaviorType(me, BT_ACTIVEPET)
 end
 

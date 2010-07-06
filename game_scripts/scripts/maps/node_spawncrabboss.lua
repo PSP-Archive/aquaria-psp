@@ -17,29 +17,31 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-mergog = 0
+v.mergog = 0
 
 function spawnEgg(me)
-	node = getNode("COLLECTIBLECRABCOSTUMELOCATION")
+	local node = getNode("COLLECTIBLECRABCOSTUMELOCATION")
 	createEntity("CollectibleCrabCostume", "", node_x(node), node_y(node))
 end
 
 function init(me)
 	if isFlag(FLAG_MINIBOSS_CRAB, 0) then
-		mergog = createEntity("CrabBoss", "", node_x(me), node_y(me))
+		v.mergog = createEntity("CrabBoss", "", node_x(me), node_y(me))
 	else
 		spawnEgg(me)
 	end
 end
 
 function update(me, dt)
-	if mergog ~= 0 then
-		if entity_isState(mergog, STATE_DEAD) then
+	if v.mergog ~= 0 then
+		if entity_isState(v.mergog, STATE_DEAD) then
 			setFlag(FLAG_MINIBOSS_CRAB, 1)
 			spawnEgg(me)
-			mergog = 0
+			v.mergog = 0
 		end
 	end
 end

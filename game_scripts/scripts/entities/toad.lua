@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- AGGRO HOPPER
 -- ================================================================================================
@@ -31,11 +33,11 @@ STATE_JUMPPREP			= 1002
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-jumpDelay = 0+math.random(3)
-moveTimer = 0
-rotateOffset = 0
-mouthOpen = 0
-fireDelay = 2
+v.jumpDelay = 0+math.random(3)
+v.moveTimer = 0
+v.rotateOffset = 0
+v.mouthOpen = 0
+v.fireDelay = 2
 
 STATE_FIREPREP = 1003
 STATE_FIRE	 = 1004
@@ -79,8 +81,8 @@ function init(me)
 	entity_clampToSurface(me)
 	entity_setState(me, STATE_IDLE)
 	
-	mouthOpen = entity_getBoneByName(me, "Head-MouthOpen")
-	bone_alpha(mouthOpen, 0)
+	v.mouthOpen = entity_getBoneByName(me, "Head-MouthOpen")
+	bone_alpha(v.mouthOpen, 0)
 	
 	entity_setInternalOffset(me, 0, -20)
 	
@@ -99,19 +101,18 @@ function update(me, dt)
 		if not(entity_hasTarget(me)) then
 			entity_findTarget(me, 1200)
 		else
-			fireDelay = fireDelay - dt
-			if fireDelay < 0 then
-				fireDelay = math.random(2)+0.75
+			v.fireDelay = v.fireDelay - dt
+			if v.fireDelay < 0 then
+				v.fireDelay = math.random(2)+0.75
 				entity_setState(me, STATE_FIREPREP)
 			end
 			if entity_isTargetInRange(me, 600) then
-				jumpDelay = jumpDelay - dt
+				v.jumpDelay = v.jumpDelay - dt
 				if entity_getHealth(me) < 3 then
-					jumpDelay = jumpDelay - dt*2
+					v.jumpDelay = v.jumpDelay - dt*2
 				end
-				if jumpDelay < 0 then
-					angry = true
-					jumpDelay = 3+math.random(2)
+				if v.jumpDelay < 0 then
+					v.jumpDelay = 3+math.random(2)
 					entity_setState(me, STATE_JUMPPREP)
 				end
 			end
@@ -152,12 +153,12 @@ function hitSurface(me)
 end
 ]]--
 
-bounces = 0
+v.bounces = 0
 function hitSurface(me)
-	cx, cy = getLastCollidePosition()
+	local cx, cy = getLastCollidePosition()
 	spawnParticleEffect("HitSurface", cx, cy)
 	if entity_getState(me)==STATE_JUMP then		
-		--nx, ny = getWallNormal(cx, cy)
+		--local nx, ny = getWallNormal(cx, cy)
 		--if ny < 0 then
 		if entity_checkSurface(me, 6, STATE_IDLE, -1) then
 		end
@@ -166,8 +167,8 @@ function hitSurface(me)
 			land(me)
 			entity_setState(me, STATE_IDLE)
 		else
-			bounces = bounces + 1
-			if bounces > 8 then
+			v.bounces = v.bounces + 1
+			if v.bounces > 8 then
 				land(me)
 				entity_setState(me, STATE_IDLE)
 			end
@@ -176,12 +177,12 @@ function hitSurface(me)
 	end
 end
 
-weight = 600
+v.weight = 600
 function enterState(me)
 	if entity_getState(me)==STATE_IDLE then
 		entity_setWeight(me, 0)
 		entity_animate(me, "idle", LOOP_INF)
-		entity_setMaxSpeed(me, weight)
+		entity_setMaxSpeed(me, v.weight)
 		entity_clearVel(me)
 		--entity_adjustPositionBySurfaceNormal(me, 16)
 	elseif entity_isState(me, STATE_TRANSITION) then
@@ -191,12 +192,12 @@ function enterState(me)
 	elseif entity_getState(me)==STATE_JUMPPREP then
 		entity_animate(me, "jumpPrep")
 	elseif entity_getState(me)==STATE_JUMP then
-		bounces = 0
-		entity_setWeight(me, weight)
+		v.bounces = 0
+		entity_setWeight(me, v.weight)
 		entity_animate(me, "jump")
-		rotateOffset = 0
+		v.rotateOffset = 0
 		--entity_applySurfaceNormalForce(me, 800)
-		force = 1200
+		local force = 1200
 		if entity_x(getNaija()) < entity_x(me) then
 			entity_addVel(me, -force, -force*0.75)
 		else
@@ -206,15 +207,15 @@ function enterState(me)
 		entity_rotate(me, 0, 1)
 	elseif entity_isState(me, STATE_FIREPREP) then
 		entity_animate(me, "idle", LOOP_INF)
-		bone_alpha(mouthOpen, 1, 0.1)
+		bone_alpha(v.mouthOpen, 1, 0.1)
 		entity_setStateTime(me, 0.5)
 	elseif entity_isState(me, STATE_FIRE) then
-		spd = 700
-		--homing = 100
-		--s = entity_fireAtTarget(me, "", 1, spd, 0, 0, 32)
-		s = createShot("BouncyBall", me, entity_getTarget(me))
-		vx=0
-		vy=0
+		local spd = 700
+		--local homing = 100
+		--local s = entity_fireAtTarget(me, "", 1, spd, 0, 0, 32)
+		local s = createShot("BouncyBall", me, entity_getTarget(me))
+		local vx = 0
+		local vy = 0
 		if chance(50) then
 			vx, vy = entity_getAimVector(me, -20, 1)
 		else
@@ -229,7 +230,7 @@ function enterState(me)
 		]]--
 
 		entity_setStateTime(me, 0.5)
-		bone_alpha(mouthOpen, 0, 0.1)
+		bone_alpha(v.mouthOpen, 0, 0.1)
 	end
 end
 
@@ -239,7 +240,7 @@ function exitState(me)
 	elseif entity_isState(me, STATE_FIREPREP) then
 		entity_setState(me, STATE_FIRE)		
 	elseif entity_isState(me, STATE_FIRE) then
-		bone_alpha(mouthOpen, 0, 0.2)
+		bone_alpha(v.mouthOpen, 0, 0.2)
 		entity_setState(me, STATE_IDLE)
 	end
 end

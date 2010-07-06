@@ -17,15 +17,17 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
-maxFireDelay = 2
+v.maxFireDelay = 2
 
-fireDelay = maxFireDelay
+v.fireDelay = v.maxFireDelay
 
-btm = 0
+v.btm = 0
 
 function init(me)
 	setupEntity(me)
@@ -37,39 +39,39 @@ function init(me)
 	
 	entity_setState(me, STATE_IDLE)
 	
-	btm = entity_getBoneByName(me, "btm")
+	v.btm = entity_getBoneByName(me, "btm")
 	
-	bone_alpha(btm, 0.5, 0.1, -1, 1)
+	bone_alpha(v.btm, 0.5, 0.1, -1, 1)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 	entity_updateMovement(me, dt)
 
 	entity_handleShotCollisionsSkeletal(me)
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	
 	if bone ~= 0 then
-		if avatar_isBursting() and entity_setBoneLock(n, me, bone) then
+		if avatar_isBursting() and entity_setBoneLock(v.n, me, bone) then
 		else
-			bx, by = bone_getWorldPosition(bone)
-			x, y = entity_getPosition(n)
+			local bx, by = bone_getWorldPosition(bone)
+			local x, y = entity_getPosition(v.n)
 			x = x - bx
 			y = y - by
 			x,y = vector_setLength(x, y, 2000)
-			entity_clearVel(n)
-			entity_addVel(n, x, y)
+			entity_clearVel(v.n)
+			entity_addVel(v.n, x, y)
 		end
 	end
 	
-	fireDelay = fireDelay - dt
-	if fireDelay <= 0 then
-		fireDelay = maxFireDelay
-		s = createShot("creatorform6-hand", me, n)
+	v.fireDelay = v.fireDelay - dt
+	if v.fireDelay <= 0 then
+		v.fireDelay = v.maxFireDelay
+		local s = createShot("creatorform6-hand", me, v.n)
 		shot_setOut(s, 64)
 		shot_setAimVector(s, 0, 800)
 	end

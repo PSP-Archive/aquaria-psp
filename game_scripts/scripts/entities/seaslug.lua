@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- S E A  S L U G
 -- ================================================================================================
@@ -28,9 +30,9 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-fireDelay = 2
-moveTimer = 0
-shellOff = 0
+v.fireDelay = 2
+v.moveTimer = 0
+v.shellOff = 0
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -69,14 +71,14 @@ function update(dt)
 	-- dt, pixelsPerSecond, climbHeight, outfromwall
 	entity_moveAlongSurface(dt, 80, 6, 24)
 	-- entity_rotateToSurfaceNormal(0.1)
-	moveTimer = moveTimer + dt*80
-	if moveTimer > 800 then
+	v.moveTimer = v.moveTimer + dt*80
+	if v.moveTimer > 800 then
 		entity_flipHorizontal()
 		entity_switchSurfaceDirection()
-		moveTimer = 0
+		v.moveTimer = 0
 	end
-	if shellOff==0 and entity_getHealth() < 10 then
-		shellOff = 1
+	if v.shellOff==0 and entity_getHealth() < 10 then
+		v.shellOff = 1
 		entity_partAlpha("Shell", 0, 1)
 	end
 	if not(entity_hasTarget()) then
@@ -86,13 +88,13 @@ function update(dt)
 			entity_pushTarget(500)
 			entity_hurtTarget(1)
 		end
-		if shellOff==1 then
-			if fireDelay > 0 then
-				fireDelay = fireDelay - dt
-				if fireDelay < 0 then
+		if v.shellOff==1 then
+			if v.fireDelay > 0 then
+				v.fireDelay = v.fireDelay - dt
+				if v.fireDelay < 0 then
 					-- dmg, mxspd, homing, numsegs, out
 					entity_fireAtTarget(1, 400, 200, 3, 64)
-					fireDelay = 2
+					v.fireDelay = 2
 				end
 			end
 		end
