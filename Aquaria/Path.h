@@ -22,8 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../BBGE/Base.h"
 #include "../BBGE/Particles.h"
-
-struct lua_State;
+#include "ScriptInterface.h"
 
 class PathNode
 {
@@ -103,7 +102,7 @@ public:
 
 	void activate(Entity *e=0);
 	void refreshScript();
-	lua_State *L;
+	Script *script;
 	bool updateFunction;
 	bool activateFunction;
 	bool cursorActivation;
