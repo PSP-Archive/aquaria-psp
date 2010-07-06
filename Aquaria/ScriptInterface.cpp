@@ -597,29 +597,6 @@ luaFunc(shot_setAimVector)
 	luaReturnNum(0);
 }
 
-// shot, texture, particles
-// (kills segs)
-luaFunc(shot_setNice)
-{
-	/*
-	Shot *shot = getShot(L);
-	if (shot)
-	{
-		shot->setTexture(getString(L,2));
-		shot->setParticleEffect(getString(L, 3));
-		shot->hitParticleEffect = getString(L, 4);
-		shot->hitSound = getString(L, 5);
-		shot->noSegs();
-		int blend = lua_tonumber(L, 6);
-		shot->setBlendType(blend);
-		shot->scale = Vector(1,1);
-	}
-	*/
-	debugLog("shot_setNice is deprecated");
-
-	luaReturnNum(0);
-}
-
 luaFunc(entity_addIgnoreShotDamageType)
 {
 	Entity *e = entity(L);
@@ -8413,7 +8390,6 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(entity_fireAtTarget);  // FIXME: still used by several scripts
 	luaRegister(entity_setAffectedBySpells);  // FIXME: still used by several scripts
-	luaRegister(shot_setNice);  // FIXME: still used by loper.lua, toad.lua
 }
 
 void ScriptInterface::destroyBaseLuaVM()
