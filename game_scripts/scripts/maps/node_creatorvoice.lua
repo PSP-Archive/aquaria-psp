@@ -29,7 +29,7 @@ function init(me)
 end
 
 function update(me)
-	if node_isEntityInside(me, v.n) and not v.done then
+	if node_isEntityIn(me, v.n) and not v.done then
 		voice("Laugh1")
 		v.done = true
 		--[[

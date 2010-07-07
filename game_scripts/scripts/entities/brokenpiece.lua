@@ -51,8 +51,6 @@ function postInit(me)
 end
 
 function update(me, dt)
-	local vx = entity_velx(me)
-	
 	if avatar_isRolling() and entity_isEntityInRange(me, v.n, 256) then
 		local vx, vy = entity_getPosition(v.n) - entity_getPosition(me)
 		vx, vy = vector_setLength(vx, vy, 1000*dt)
@@ -63,6 +61,7 @@ function update(me, dt)
 		entity_addVel(me, entity_velx(v.n)*0.75, entity_vely(v.n)*0.75)
 	end
 	
+	local vx = entity_velx(me)
 	entity_rotate(me, entity_getRotation(me)+dt*vx)	
 	
 	entity_updateMovement(me, dt)

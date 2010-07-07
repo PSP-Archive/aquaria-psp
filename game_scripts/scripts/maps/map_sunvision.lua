@@ -19,12 +19,14 @@
 
 v = getVars()
 
-dofile("scripts/maps/finalcommon.lua")
+dofile("scripts/entities/entityinclude.lua")
 
 v.test = false
 
 function init()
 	setCutscene(1,1)
+
+	local n = getNaija()
 	
 	fade2(0, 1, 1, 1, 1)
 	--return
@@ -166,12 +168,12 @@ function init()
 	if v.test then
 		fade2(0, 0.5, 1, 1, 1)
 	
-		cam_toEntity(v.n)
+		cam_toEntity(n)
 		setSceneColor(1, 1, 1, 5)
 	else
 		learnSong(SONG_SUNFORM)
 		watch(1)
-		entity_idle(v.n)
+		entity_idle(n)
 		changeForm(FORM_SUN)
 		
 		setCutscene(0)

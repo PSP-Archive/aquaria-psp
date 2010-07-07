@@ -67,7 +67,7 @@ function init(me)
 	entity_initSkeletal(me, "DarkJelly")
 	
 	entity_setEntityType(me, ET_NEUTRAL)
-	entity_setDamageTarget(me, false)
+	entity_setAllDamageTargets(me, false)
 	
 	entity_setEntityLayer(me, -4)
 		

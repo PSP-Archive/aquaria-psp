@@ -43,6 +43,6 @@ function update(me, dt)
 
 	local rangeNode = entity_getNearestNode(me, "KILLENTITY")
 	if node_isPositionIn(rangeNode, entity_x(me), entity_y(me)) then
-		entity_setState(me, STATE_DIE)
+		entity_setState(me, STATE_DEAD)
 	end
 end

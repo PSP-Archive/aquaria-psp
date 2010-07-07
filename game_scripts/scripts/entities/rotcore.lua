@@ -61,7 +61,7 @@ function init(me)
 	
 	for i=1,6 do
 		v.eyes[i] = entity_getBoneByIdx(me, i)
-		bone_rotate(v.eyes[i], bone_getRotation(v.eyes[o])+180, 2)
+		bone_rotate(v.eyes[i], bone_getRotation(v.eyes[i])+180, 2)
 		v.eyeHits[i] = 0
 		v.beams[i] = 0
 	end

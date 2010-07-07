@@ -245,7 +245,7 @@ function enterState(me)
 		beam_setTexture(v.beam, "particles/Beam")
 	elseif entity_isState(me, STATE_DEATHSCENE) then
 		if v.beam ~= 0 then
-			beam_destroy(v.beam)
+			beam_delete(v.beam)
 			v.beam = 0
 		end
 		clearShots()

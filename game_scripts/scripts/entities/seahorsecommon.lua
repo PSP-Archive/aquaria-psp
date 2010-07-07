@@ -306,12 +306,7 @@ function update(me, dt)
 			--entity_addVel(me, 0, -2000)
 			local vx = entity_velx(me)
 			local vy = entity_vely(me)
-			entity_clearVel(me)
-			entity_addVel(me, vx*4, vy*4)
-			
-			vx = entity_velx(me)
-			vy = entity_vely(me)
-			
+			vx, vy = vx*4, vy*4
 			vx, vy = vector_cap(vx, vy, 1100)
 			entity_clearVel(me)
 			entity_addVel(me, vx, vy)

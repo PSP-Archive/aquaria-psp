@@ -71,8 +71,6 @@ function update(me, dt)
 	
 	overrideZoom(scale, 0)
 	
-	entity_setPosition(n, node_getPosition(getNode("NAIJA")))
-	
 	if (isLeftMouse() or isRightMouse()) and not v.mbDown then
 		v.mbDown = true
 	elseif (not isLeftMouse() and not isRightMouse()) and v.mbDown then

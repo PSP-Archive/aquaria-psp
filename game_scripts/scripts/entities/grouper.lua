@@ -29,7 +29,7 @@ v.ing = 0
 
 v.mouthState = 0
 
-MOUT_IDLE		= 0
+MOUTH_IDLE		= 0
 MOUTH_OPEN	 	= 1
 MOUTH_CLOSED	= 2
 
@@ -63,7 +63,7 @@ function init(me)
 	bone_alpha(v.eyeglow, 0)
 	
 	v.bite = entity_getBoneByName(me, "bite")
-	bone_alpha(v.bite)
+	bone_alpha(v.bite, 0)
 	
 	esetv(me, EV_ENTITYDIED, 1)
 	

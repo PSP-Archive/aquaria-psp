@@ -65,7 +65,7 @@ end
 
 function entityDied(me, ent)
 	if v.trappedEnt == ent then
-		trappedEnd = 0
+		v.trappedEnt = 0
 		entity_setState(me, STATE_IDLE, -1, 1)
 	end
 end

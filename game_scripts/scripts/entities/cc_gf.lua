@@ -33,6 +33,7 @@ v.ly = 0
 v.node = 0
 
 v.seen = false
+v.done = false
 
 function init(me)
 	setupEntity(me)

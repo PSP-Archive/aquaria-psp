@@ -140,6 +140,7 @@ function exitState(me)
 	if entity_isState(me, STATE_CHARGE1) then
 		entity_sound(me, "PowerUp")
 		entity_sound(me, "FizzleBarrier")
+		-- FIXME: bx,by are unset here; what should they be set to?  --achurch
 		v.beam = createBeam(bx, by, entity_getRotation(me)-180)
 		beam_setTexture(v.beam, "particles/Beam")
 		entity_setState(me, STATE_IDLE)

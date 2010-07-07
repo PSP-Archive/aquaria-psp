@@ -416,7 +416,6 @@ function update(me, dt)
 			v.delay = 0
 			
 			local t = 3
-			local t2 = 7
 			local t2 = 10
 			if v.hits/v.maxHits < 0.5 then
 				t = 1.5

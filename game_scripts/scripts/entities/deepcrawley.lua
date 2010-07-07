@@ -163,7 +163,7 @@ function damage(me, attacker, bone, damageType, dmg)
 		v.size = v.size + dmg
 		v.maxSpeed = v.maxSpeed + dmg * 10
 		if v.size >= 16 then
-			entity_setState(me, STATE_EXPLODE)
+			entity_setState(me, STATE_DEAD)
 		end	
 		--entity_setCollideRadius(me, getRadius(me))
 		entity_setCollideRadius(me, entity_getCollideRadius(me)-(v.size*0.5))

@@ -73,7 +73,7 @@ function postInit(me)
 	v.n = getNaija()
 	entity_setTarget(me, v.n)
 	entity_update(me, math.random(100)/200.0)
-	v.inCurrent = entity_updateCurrents(me, dt)
+	v.inCurrent = entity_updateCurrents(me, 0)
 	
 	v.groupNode = entity_getNearestNode(me, "JELLYBOUNCE")
 	grabBounceGroup(me)

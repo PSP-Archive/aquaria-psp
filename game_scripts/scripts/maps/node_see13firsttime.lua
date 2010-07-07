@@ -31,7 +31,7 @@ v.my = 0
 function init(me)
 	v.n = getNaija()
 	v.mia = createEntity("13_Progression", "", node_x(me), node_y(me))
-	entity_alpha(v.mia)
+	entity_alpha(v.mia, 0)
 	
 	v.mx, v.my = node_getPosition(getNode("13spawn"))
 end

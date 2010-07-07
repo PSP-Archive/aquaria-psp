@@ -48,11 +48,6 @@ function init(me)
 	bone_alpha(entity_getBoneByName(me, "Glow"), 0)
 end
 
-function setWarpSceneNode(scene, node)
-	v.sceneName = scene
-	v.nodeName = node
-end
-
 function update(me, dt)
 	if isForm(FORM_SPIRIT) then
 		--entity_say(me, "...naija...")

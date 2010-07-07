@@ -89,9 +89,10 @@ function update(me, dt)
 	if v.cap < v.minCap then
 		v.cap = v.minCap
 	end
+	local add = v.add
 	if v.singing and avatar_isBursting() then
 		v.cap = v.maxCap
-		v.add = 600
+		add = 600
 	end
 	--entity_doCollisionAvoidance(me, dt, 4, 0.5)
 	
@@ -103,7 +104,7 @@ function update(me, dt)
 	if v.singing then
 		local x, y = entity_getPosition(v.n)
 		
-		entity_moveTowards(me, x, y, dt, 300+v.add)
+		entity_moveTowards(me, x, y, dt, 300+add)
 		
 		entity_doEntityAvoidance(me, dt, 32, 0.5)
 		
@@ -117,7 +118,7 @@ function update(me, dt)
 		local ent = entity_getNearestEntity(me, entity_getName(me), 256)
 		if ent ~= 0 then
 			local x, y = entity_getPosition(ent)
-			entity_moveTowards(me, x, y, dt, 800+v.add)
+			entity_moveTowards(me, x, y, dt, 800+add)
 		end
 		entity_doEntityAvoidance(me, dt, 40, 0.5)
 		--entity_doEntityAvoidance(me, dt, 32, 

@@ -56,6 +56,7 @@ function postInit(me)
 	v.range = entity_getNearestNode(me, "13range")
 end
 
+v.doFirstVision = false
 v.done1st = false
 v.over = false
 v.is = false	

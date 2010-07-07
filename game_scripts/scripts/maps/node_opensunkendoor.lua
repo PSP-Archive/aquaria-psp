@@ -84,11 +84,11 @@ function activate(me)
 	--- click
 	playSfx("sunkendoor-unlock")
 	
-	entity_msg(li, "expression", 5)
+	entity_msg(li, "expression", EXPRESSION_SURPRISE)
 	
 	watch(0.8)
 	
-	entity_msg(li, "expression", 2)
+	entity_msg(li, "expression", EXPRESSION_HAPPY)
 	
 	playSfx("sunkendoor-open")
 	entity_setState(v.door, STATE_OPEN)

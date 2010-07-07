@@ -145,7 +145,7 @@ function damage(me, attacker, bone, damageType, dmg)
 		
 		v.size = v.size + dmg
 		if v.size >= 8 then
-			entity_setState(me, STATE_EXPLODE)
+			entity_setState(me, STATE_DEAD)
 		end	
 		--entity_setCollideRadius(me, getRadius(me))
 		entity_setCollideRadius(me, entity_getCollideRadius(me)+(8+(v.size*0.5)))
@@ -157,7 +157,7 @@ function damage(me, attacker, bone, damageType, dmg)
 end
 
 function enterState(me)
-	if entity_isState(me, STATE_EXPLODE) then
+	if entity_isState(me, STATE_DEAD) then
 		--local shotSpd = 500
 		local maxa = 3.14 * 2
 		local a = 0

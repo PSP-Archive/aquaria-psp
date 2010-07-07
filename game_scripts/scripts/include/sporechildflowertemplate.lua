@@ -46,22 +46,6 @@ function commonUpdate(me, dt)
 	if entity_isState(me, STATE_CLOSE) and not entity_isAnimating(me) then
 		entity_setState(me, STATE_CLOSED)
 	end	
-	if entity_isState(me, STATE_IDLE) or entity_isState(me, STATE_CLOSED) then
-		local iter = 0
-		local ent = getEntity(iter)
-		while ent~=0 do
-			if entity_getAnimationName(ent)=="openFlower" then
-				if entity_isEntityInRange(me, ent, 128) then
-					v.openTimer = v.openTimer - dt
-				end
-			end
-			iter = iter + 1
-			ent = getEntity(iter)
-		end
-		if v.openTimer < 0 then
-			entity_setState(me, STATE_OPEN)
-		end
-	end
 end
 
 function songNote(me, note)

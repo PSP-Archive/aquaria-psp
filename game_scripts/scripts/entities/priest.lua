@@ -187,7 +187,7 @@ function update(me, dt)
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if entity_IsState(me, STATE_WAIT) then
+	if entity_isState(me, STATE_WAIT) then
 		return false
 	end
 	if entity_isState(me, STATE_SPIRIT) or entity_isState(me, STATE_DYING) then

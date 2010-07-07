@@ -24,6 +24,8 @@ dofile("scripts/entities/bloodcell-common.lua")
 v.fireDelay = 0
 v.fireDelayTime = 1
 
+v.sing = false
+
 function init(me)
 	commonInit(me, "bloodcell-white")
 	
@@ -62,7 +64,7 @@ function update(me, dt)
 
 	local rangeNode = entity_getNearestNode(me, "KILLENTITY")
 	if node_isPositionIn(rangeNode, entity_x(me), entity_y(me)) then
-		entity_setState(me, STATE_DIE)
+		entity_setState(me, STATE_DEAD)
 	end
 end
 

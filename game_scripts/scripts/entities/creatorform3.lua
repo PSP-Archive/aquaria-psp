@@ -623,7 +623,7 @@ function exitState(me)
 	elseif entity_getState(me) == STATE_AVOIDING_WALLS then
 		entity_setState(me, STATE_SWIMMING)
 		v.angle = entity_getRotation(me)
-		entity_rotateToAngle(me, v.angle, 0.1)
+		entity_rotateTo(me, v.angle, 0.1)
 		
 	elseif entity_isState(me, STATE_TRANSITION) then
 		local bx, by = bone_getWorldPosition(v.tail)

@@ -37,9 +37,10 @@ v.leaf2				= 0
 
 function commonInit(me, ent, ing, amt)
 	setupEntity(me)
-	v.amount = amt
-	if v.amount == 0 then
+	if amt == 0 then
 		v.amount = 1
+	else
+		v.amount = amt
 	end
 	entity_setEntityType(me, ET_NEUTRAL)
 	entity_initSkeletal(me, "PullPlant")

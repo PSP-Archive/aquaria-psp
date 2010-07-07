@@ -29,7 +29,7 @@ function init()
 end
 
 function update(me, dt)
-	if node_isEntiyIn(me, v.n) then
+	if node_isEntityIn(me, v.n) then
 		v.timer = v.timer - dt
 		if v.timer < 0 then
 			v.timer = v.interval

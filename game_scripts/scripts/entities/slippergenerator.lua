@@ -73,10 +73,6 @@ end
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_animate(me, "idle", -1)
-	elseif entity_isState(me, STATE_ROTATE) then
-		entity_animate(me, "idle", -1)
-	elseif entity_isState(me, STATE_WALK) then
-		entity_animate(me, "idle", -1)		
 	end
 		
 end

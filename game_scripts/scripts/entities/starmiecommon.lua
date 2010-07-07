@@ -141,12 +141,12 @@ function update(me, dt)
 			bone_setPosition(v.pupil, 0, v.pYo)
 			entity_rotate(me, randAngle360())
 		else
+			local nX, nY = entity_getPosition(getNaija())	-- Naija's position
 			if v.pupilFreeze == 0 and v.blinkTime > 0 then
 				-- EYE TRACKING
-				v.nX, v.nY = entity_getPosition(getNaija())	-- Naija's position
-				local sX, sY = entity_getPosition(me)			-- Starmie's position
-				local x = (v.nX - sX)
-				local y = (v.nY - (sY+v.pYo))
+				local sX, sY = entity_getPosition(me)	-- Starmie's position
+				local x = (nX - sX)
+				local y = (nY - (sY+v.pYo))
 				x, y = vector_cap(x, y, 7.5)
 				bone_setPosition(v.pupil, x, y, 0.24)
 				
@@ -157,7 +157,7 @@ function update(me, dt)
 			end
 
 			-- MOVEMENT
-			entity_moveAround(me, v.nX, v.nY, dt, 255, v.rotDir)
+			entity_moveAround(me, nX, nY, dt, 255, v.rotDir)
 			entity_moveTowardsTarget(me, dt, 186)
 			if not entity_isTargetInRange(me, 1248) then entity_moveTowardsTarget(me, dt, v.shotForce) end -- Move in if far away
 		end

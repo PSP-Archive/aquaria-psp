@@ -53,14 +53,15 @@ function update(me, dt)
 	if v.cap < v.minCap then
 		v.cap = v.minCap
 	end
+	local add = v.add
 	if isLeftMouse() then
 		v.cap = v.maxCap
-		v.add = 600
+		add = 600
 	end
 	--entity_doCollisionAvoidance(me, dt, 4, 0.5)
 	entity_doEntityAvoidance(me, dt, 16, 0.5)
 	local x, y = getMouseWorldPos()
-	entity_moveTowards(me, x, y, dt, 800+v.add)
+	entity_moveTowards(me, x, y, dt, 800+add)
 	
 	local vx = entity_velx(me)
 	local vy = entity_vely(me)

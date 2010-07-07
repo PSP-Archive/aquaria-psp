@@ -326,7 +326,7 @@ function enterState(me)
 	elseif entity_isState(me, STATE_TRANSITION) then
 		if v.chestMonster ~= 0 then
 			entity_delete(v.chestMonster)
-			v.chestMonter = 0
+			v.chestMonster = 0
 		end
 		
 		bone_setAnimated(v.eye, ANIM_ALL)

@@ -143,8 +143,10 @@ function update(me, dt)
 		end
 		]]--
 	end
+	local gx, gy = bone_getWorldPosition(v.boneGlow)
+	quad_setPosition(v.glow, gx, gy, 0.1)
 	if entity_isState(me, STATE_IDLE) then
-		if entity_isPositionInRange(v.n, v.gx, v.gy, 200) then
+		if entity_isPositionInRange(v.n, gx, gy, 200) then
 			entity_sound(me, "AnglerAwake", 950 + math.random(100))
 			entity_setState(me, STATE_LUNGE)
 			
@@ -153,8 +155,6 @@ function update(me, dt)
 	if math.abs(entity_x(me)-entity_x(v.n)) > 300 then
 		entity_flipToEntity(me, v.n)
 	end
-	v.gx,v.gy = bone_getWorldPosition(v.boneGlow)
-	quad_setPosition(v.glow, v.gx,v.gy, 0.1)
 	
 	entity_handleShotCollisionsSkeletal(me)
 	local bone = entity_collideSkeletalVsCircle(me, v.n)

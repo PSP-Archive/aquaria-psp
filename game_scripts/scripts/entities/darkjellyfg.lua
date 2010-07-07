@@ -72,7 +72,6 @@ function init(me)
 	entity_initSkeletal(me, "DarkJelly", "DarkJellyFG")
 	
 	entity_setEntityType(me, ET_NEUTRAL)
-	entity_setDamageTarget(me, false)
 	
 	entity_setEntityLayer(me, 0)
 		
@@ -107,8 +106,8 @@ function init(me)
 end
 
 function postInit(me)
-	entity_update(me, math.random(100)/100.0)
 	v.n = getNaija()
+	entity_update(me, math.random(100)/100.0)
 end
 
 function update(me, dt)

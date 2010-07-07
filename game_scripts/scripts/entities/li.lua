@@ -88,13 +88,6 @@ v.flipDelay = 0
 
 v.n = 0
 
-normal = 0
-angry = 1
-happy = 2
-hurt = 3
-laugh = 4
-surprise = 5
-
 v.zapDelay = 0.1
 
 v.breathTimer = 0
@@ -363,16 +356,16 @@ function song(me, song)
 	else
 		if song == SONG_ENERGYFORM then
 			v.nearNaijaTimer = 0
-			expression(me, surprise, 1.5)
+			expression(me, EXPRESSION_SURPRISE, 1.5)
 			entity_flipToEntity(me, v.n)
 			--entity_moveTowardsTarget(me, 1, -1000)
 		elseif song == SONG_BEASTFORM then
 			v.nearNaijaTimer = 0
-			expression(me, angry, 4)
+			expression(me, EXPRESSION_ANGRY, 4)
 			entity_flipToEntity(me, v.n)
 		elseif song == SONG_NATUREFORM then
 			v.nearNaijaTimer = 2
-			expression(me, happy, 3)
+			expression(me, EXPRESSION_HAPPY, 3)
 			entity_flipToEntity(me, v.n)		
 		end
 	end
@@ -480,7 +473,7 @@ function update(me, dt)
 						if ing_hasIET(v.ent, IET_LI) then
 							
 							-- move toward
-							expression(me, happy, 2)
+							expression(me, EXPRESSION_HAPPY, 2)
 							--entity_moveTowards(me, entity_x(v.ent), entity_y(v.ent), dt, 500)
 							entity_setTarget(me, v.ent)
 							--entity_updateMovement(me, dt)
@@ -496,10 +489,10 @@ function update(me, dt)
 							v.nearEnemyTimer = v.nearEnemyTimer + dt*2
 							v.nearNaijaTimer = v.nearNaijaTimer - dt
 							if v.nearEnemyTimer > 10 then
-								expression(me, angry, 2)
+								expression(me, EXPRESSION_ANGRY, 2)
 								v.nearEnemyTimer = 10
 							else
-								expression(me, surprise, 1)
+								expression(me, EXPRESSION_SURPRISE, 1)
 							end
 							entity_setNaijaReaction(me, "")
 						end
@@ -509,7 +502,7 @@ function update(me, dt)
 						if entity_getHealth(v.ent) > 2 and isForm(FORM_NORMAL) and not avatar_isSinging() then
 							v.nearNaijaTimer = v.nearNaijaTimer + dt*2
 							if v.nearNaijaTimer > 4 then
-								expression(me, happy, 1)
+								expression(me, EXPRESSION_HAPPY, 1)
 							end
 							if v.nearNaijaTimer > 5 then
 								entity_setNaijaReaction(me, "smile")
@@ -553,13 +546,13 @@ function update(me, dt)
 		if v.nearNaijaTimer < 0 then v.nearNaijaTimer = 0 end
 		
 		if entity_getHealth(v.n) > v.naijaLastHealth then
-			expression(me, happy, 2)
+			expression(me, EXPRESSION_HAPPY, 2)
 		end
 		v.naijaLastHealth = entity_getHealth(v.n)
 		if entity_getHealth(v.n) < 1 then
-			expression(me, hurt, 2)
+			expression(me, EXPRESSION_HURT, 2)
 		end
-		if isFlag(FLAG_LICOMBAT, 1) and not entity_isState(me, STATE_LIPUPPET) then
+		if isFlag(FLAG_LICOMBAT, 1) and not entity_isState(me, STATE_PUPPET) then
 			if v.zapDelay > 0 then
 				v.zapDelay = v.zapDelay - dt
 				if v.zapDelay < 0 then
@@ -576,7 +569,7 @@ function update(me, dt)
 		v.expressionTimer	= v.expressionTimer - dt
 		if v.expressionTimer < 0 then
 			v.expressionTimer = 0
-			expression(me, normal, 0)
+			expression(me, EXPRESSION_NORMAL, 0)
 		end
 	end	
 	if entity_isState(me, STATE_IDLE) then
@@ -685,7 +678,7 @@ function update(me, dt)
 				v.ent = 0
 				v.ing = 0
 				entity_setState(me, STATE_EAT)
-				expression(me, happy, 2)
+				expression(me, EXPRESSION_HAPPY, 2)
 				
 				--debugLog("setting li power!")
 				setLiPower(1, 30)
@@ -743,7 +736,7 @@ function update(me, dt)
 	elseif entity_isState(me, STATE_HUG) then
 		--debugLog("state hug")
 		entity_setMaxSpeedLerp(me, 2)
-		expression(me, happy, 0.5)
+		expression(me, EXPRESSION_HAPPY, 0.5)
 		if entity_getRiding(v.n) == me then
 			entity_animate(v.n, "hugLi", 0, 3)
 			if v.curNote ~= -1 then
@@ -774,7 +767,7 @@ function update(me, dt)
 			--[[
 			ent = entity_getNearestEntity(me, "", 400, ET_ENEMY)
 			if ent ~= 0 then
-				expression(me, angry, 1)
+				expression(me, EXPRESSION_ANGRY, 1)
 				entity_setState(me, STATE_IDLE)
 				entity_flipToEntity(me, ent)
 				entity_flipToEntity(v.n, ent)
@@ -863,7 +856,7 @@ function cutscene(me)
 	
 	entity_animate(me, "choke", LOOP_INF)
 	
-	expression(me, hurt, 99)
+	expression(me, EXPRESSION_HURT, 99)
 	
 	entity_watchForPath(v.n)
 	
@@ -883,7 +876,7 @@ function cutscene(me)
 	entity_animate(v.n, "kissLi")
 	cam_toNode(getNode("KISSCAM"))
 	watch(1)
-	expression(me, normal, 99)
+	expression(me, EXPRESSION_NORMAL, 99)
 	entity_animate(me, "getKissed")
 	entity_setPosition(v.n, entity_x(me)-23, entity_y(me), 1, 0, 0, 1)
 	watch(1)
@@ -898,7 +891,7 @@ function cutscene(me)
 	entity_offset(me, 0, 8, 2, -1, 1)
 	]]--
 	setNaijaHeadTexture("blink")
-	expression(me, surprise, 2)
+	expression(me, EXPRESSION_SURPRISE, 2)
 	entity_animate(v.n, "kissLiLoop", LOOP_INF)
 	entity_animate(me, "kissLiLoop", LOOP_INF)
 	--entity_animate(v.n, "getKissedLoop", LOOP_INF)
@@ -1025,7 +1018,7 @@ function cutscene(me)
 	voice("Naija_NaijaAwakes4")
 	watchForVoice()	
 	entity_animate(me, "holdFish", -1, LAYER_UPPERBODY)
-	expression(me, happy, 5)
+	expression(me, EXPRESSION_HAPPY, 5)
 	entity_stopAllAnimations(v.n)
 	entity_idle(v.n)
 	cam_toEntity(me)
@@ -1202,6 +1195,7 @@ function enterState(me, state)
 		end
 		
 		entity_setNaijaReaction(me, "")
+		-- FIXME: There's no "shock" expression; what was intended?  --achurch
 		expression(me, shock, 1)
 		
 		entity_clearVel(me)

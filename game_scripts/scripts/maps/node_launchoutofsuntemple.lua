@@ -29,7 +29,7 @@ end
 
 function update(me, dt)
 	if not v.ran and node_isEntityIn(me, v.n) then
-		rand = true
+		v.ran = true
 		entity_addVel(v.n, -500, -500)
 		if hasLi() then
 			local li = getLi()

@@ -67,7 +67,7 @@ function update(me, dt)
 	local rangeNode = entity_getNearestNode(me, "KILLENTITY")
 	if node_isPositionIn(rangeNode, entity_x(me), entity_y(me)) then
 		v.drop = 0
-		entity_setState(me, STATE_DIE)	
+		entity_setState(me, STATE_DEAD)	
 	end
 
 	entity_doEntityAvoidance(me, dt, 32, 0.5)

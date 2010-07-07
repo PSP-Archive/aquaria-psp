@@ -34,7 +34,7 @@ if v.isenergylearned == false then
  if node_isEntityIn(me, v.n) then
    setControlHint("You've found a new song! You can now use ENERGY form!", 0, 0, 0, 16)
    learnSong(1)
-   v.isenergylearned = True
+   v.isenergylearned = true
  end
 end 
 
