@@ -55,21 +55,21 @@ function update(me, dt)
 				while e~=0 do
 					if e ~= me and entity_isName(e, "TubeFlower") then
 					
-						v.n = getNaija()
+						local n = getNaija()
 						--debugLog("Warping!")
-						entity_idle(v.n)
+						entity_idle(n)
 						--local dx, dy = entity_getVectorToEntity(me, e)
 						cam_toEntity(e)
 						watch(1)
-						entity_idle(v.n)
-						entity_alpha(v.n, 0)
+						entity_idle(n)
+						entity_alpha(n, 0)
 						entity_setState(e, STATE_OPEN)
 						
 						
-						--esetv(v.n, EV_NOINPUTNOVEL, 0)
+						--esetv(n, EV_NOINPUTNOVEL, 0)
 						local dx, dy = entity_getNormal(e)
 						dx, dy = vector_setLength(dx, dy, 32)
-						entity_setPosition(v.n, entity_x(e)+dx, entity_y(e)+dy)
+						entity_setPosition(n, entity_x(e)+dx, entity_y(e)+dy)
 						watch(0.5)
 						
 					
@@ -77,18 +77,18 @@ function update(me, dt)
 						while einc ~= 0 do
 							if eisv(einc, EV_TYPEID, EVT_PET) then
 								--debugLog(string.format("petname: %s", entity_getName(einc)))
-								entity_setPosition(einc, entity_x(v.n), entity_y(v.n))
+								entity_setPosition(einc, entity_x(n), entity_y(n))
 							end
 							einc = getNextEntity()
 						end
 						
 						
-						entity_alpha(v.n, 1, 0.2)
+						entity_alpha(n, 1, 0.2)
 						local dx, dy = vector_setLength(dx, dy, 400)
-						entity_addVel(v.n, dx, dy)
-						entity_flipToVel(v.n)
-						cam_toEntity(v.n)
-						entity_idle(v.n)
+						entity_addVel(n, dx, dy)
+						entity_flipToVel(n)
+						cam_toEntity(n)
+						entity_idle(n)
 						
 						--wait(0.5)
 						
@@ -116,8 +116,8 @@ function update(me, dt)
 						
 						--watch(0.2)
 						
-						--esetv(v.n, EV_NOINPUTNOVEL, 1)
-						--entity_idle(v.n)
+						--esetv(n, EV_NOINPUTNOVEL, 1)
+						--entity_idle(n)
 						entity_setState(e, STATE_CLOSE)
 						
 						break
