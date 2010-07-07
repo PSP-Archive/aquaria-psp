@@ -39,6 +39,13 @@ extern "C"
 ScriptInterface *si = 0;
 const bool throwLuaErrors = false;
 
+// Set this to true to complain loudly (via errorLog()) whenever a script
+// tries to get or set a global variable.
+const bool complainOnGlobalVar = false;
+// Set this to true to complain whenever a script tries to get an undefined
+// thread-local variable.
+const bool complainOnUndefLocal = false;
+
 //============================================================================================
 // S C R I P T  C O M M A N D S
 //============================================================================================
@@ -256,8 +263,106 @@ static SkeletalSprite *getSkeletalSprite(Entity *e)
 #define luaReturnVec2(x,y)	do {lua_pushnumber(L, (x)); lua_pushnumber(L, (y)); return 2;} while(0)
 #define luaReturnVec3(x,y,z)	do {lua_pushnumber(L, (x)); lua_pushnumber(L, (y)); lua_pushnumber(L, (z)); return 3;} while(0)
 
-#define luaRegister(func)	lua_register(baseState, #func, l_##func);
+#define luaRegister(func)	lua_register(state, #func, l_##func);
 
+
+luaFunc(getVars)
+{
+	lua_getglobal(L, "_threadvars");
+	lua_pushlightuserdata(L, L);
+	lua_gettable(L, -2);
+	lua_remove(L, -2);
+	return 1;
+}
+
+luaFunc(indexWarnGlobal)
+{
+	lua_pushvalue(L, -1);
+	lua_rawget(L, -3);
+	lua_remove(L, -3);
+	if (lua_isnil(L, -1))
+	{
+		lua_Debug ar;
+		// Don't warn on undefined gets from C code, since those are
+		// usually just attempts to call script functions.
+		if (lua_getstack(L, 1, &ar))
+		{
+			lua_getinfo(L, "Sl", &ar);
+			std::ostringstream os;
+			os << "WARNING: " << ar.short_src << ":" << ar.currentline
+			   << ": script tried to get/call undefined global variable "
+			   << lua_tostring(L, -2);
+			errorLog(os.str());
+		}
+	}
+	lua_remove(L, -2);
+
+	return 1;
+}
+
+luaFunc(indexWarnThread)
+{
+	lua_pushvalue(L, -1);
+	lua_rawget(L, -3);
+	lua_remove(L, -3);
+	if (lua_isnil(L, -1))
+	{
+		lua_Debug ar;
+		if (lua_getstack(L, 1, &ar))
+		{
+			lua_getinfo(L, "Sl", &ar);
+		}
+		else
+		{
+			snprintf(ar.short_src, sizeof(ar.short_src), "???");
+			ar.currentline = 0;
+		}
+		std::ostringstream os;
+		os << "WARNING: " << ar.short_src << ":" << ar.currentline
+		   << ": script tried to get/call undefined thread variable "
+		   << lua_tostring(L, -2);
+		errorLog(os.str());
+	}
+	lua_remove(L, -2);
+
+	return 1;
+}
+
+luaFunc(newindexWarnGlobal)
+{
+	if (!lua_isfunction(L, -1))
+	{
+		lua_Debug ar;
+		if (lua_getstack(L, 1, &ar))
+		{
+			lua_getinfo(L, "Sl", &ar);
+		}
+		else
+		{
+			snprintf(ar.short_src, sizeof(ar.short_src), "???");
+			ar.currentline = 0;
+		}
+		// Don't warn on entityinclude.lua constants.
+		if (!strstr(ar.short_src, "entityinclude"))
+		{
+			lua_pushvalue(L, -2);
+			const char *varname = lua_tostring(L, -1);
+			// Don't warn on the "v" global.
+			if (strcmp(varname, "v") != 0)
+			{
+				std::ostringstream os;
+				os << "WARNING: " << ar.short_src << ":" << ar.currentline
+				   << ": script set global variable " << lua_tostring(L, -1);
+				errorLog(os.str());
+			}
+			lua_pop(L, 1);
+		}
+	}
+
+	lua_rawset(L, -3);
+	lua_pop(L, 1);
+	return 0;
+}
 
 luaFunc(dofile_caseinsensitive)
 {
@@ -594,29 +699,6 @@ luaFunc(shot_setAimVector)
 	{
 		shot->setAimVector(Vector(ax, ay));
 	}
-	luaReturnNum(0);
-}
-
-// shot, texture, particles
-// (kills segs)
-luaFunc(shot_setNice)
-{
-	/*
-	Shot *shot = getShot(L);
-	if (shot)
-	{
-		shot->setTexture(getString(L,2));
-		shot->setParticleEffect(getString(L, 3));
-		shot->hitParticleEffect = getString(L, 4);
-		shot->hitSound = getString(L, 5);
-		shot->noSegs();
-		int blend = lua_tonumber(L, 6);
-		shot->setBlendType(blend);
-		shot->scale = Vector(1,1);
-	}
-	*/
-	debugLog("shot_setNice is deprecated");
-
 	luaReturnNum(0);
 }
 
@@ -7314,8 +7396,6 @@ void ScriptInterface::init()
 	currentParticleEffect = 0;
 	//collideEntity = 0;
 
-	createBaseLuaVM();
-
 //	particleEffectScripts
 	//loadParticleEffectScripts();
 }
@@ -7334,6 +7414,7 @@ ParticleEffectScript *ScriptInterface::getParticleEffectScriptByIdx(int idx)
 
 void ScriptInterface::loadParticleEffectScripts()
 {
+#if 0  // FIXME: not used
 	//particleEffectScripts
 	std::ifstream in("scripts/particleEffects/ParticleEffects.txt");
 	std::string line;
@@ -7345,8 +7426,7 @@ void ScriptInterface::loadParticleEffectScripts()
 		is >> v >> n;
 		//ggggerrorLog (n);
 
-		lua_State *L;
-		dsq->scriptInterface.initLuaVM(&L);
+		lua_State *L = dsq->scriptInterface.createLuaThread(baseState);
 		std::string file = "scripts/particleEffects/" + n + ".lua";
 		file = core->adjustFilenameCase(file);
 		int fail = (luaL_loadfile(L, file.c_str()));
@@ -7359,6 +7439,7 @@ void ScriptInterface::loadParticleEffectScripts()
 		particleEffectScripts[n].name = n;
 		particleEffectScripts[n].idx = v;
 	}
+#endif
 }
 
 bool ScriptInterface::setCurrentEntity(Entity *e)
@@ -7372,29 +7453,36 @@ bool ScriptInterface::setCurrentEntity(Entity *e)
 	return true;
 }
 
-void ScriptInterface::createBaseLuaVM()
+lua_State *ScriptInterface::createLuaVM()
 {
 #ifdef BBGE_BUILD_PSP
-	baseState = lua_newstate(lalloc, NULL);  // Use a custom allocator for PSP.
+	lua_State *state = lua_newstate(lalloc, NULL);  // Use a custom allocator for the PSP.
 #else
-	baseState = lua_open();				/* opens Lua */
+	lua_State *state = lua_open();	/* opens Lua */
 #endif
-	luaopen_base(baseState);				/* opens the basic library */
-	luaopen_table(baseState);				/* opens the table library */
-	luaopen_string(baseState);				/* opens the string lib. */
-	luaopen_math(baseState);				/* opens the math lib. */
-	//luaopen_os(baseState);				/* opens the os lib */
+	luaopen_base(state);			/* opens the basic library */
+	luaopen_table(state);			/* opens the table library */
+	luaopen_string(state);			/* opens the string lib. */
+	luaopen_math(state);			/* opens the math lib. */
+	//luaopen_os(state);			/* opens the os lib */
 
 	// override Lua's standard dofile(), so we can handle filename case issues.
-	lua_register(baseState, "dofile", l_dofile_caseinsensitive);
+	lua_register(state, "dofile", l_dofile_caseinsensitive);
 
-	//luaopen_io(baseState);				/* opens the I/O library */
+	//luaopen_io(state);			/* opens the I/O library */
 
 	// Keep a table of active threads (so they aren't garbage-collected).
-	lua_newtable(baseState);
-	lua_setglobal(baseState, "_threadtable");
+	lua_newtable(state);
+	lua_setglobal(state, "_threadtable");
+
+	// Also keep a table of local variable tables for each thread
+	// (returned by getVars()).
+	lua_newtable(state);
+	lua_setglobal(state, "_threadvars");
 
 	// Register all custom functions.
+
+	luaRegister(getVars);
 
 	luaRegister(shakeCamera);
 	luaRegister(upgradeHealth);
@@ -7640,7 +7728,7 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(entity_setActivationType);
 	luaRegister(entity_setColor);
-	lua_register(baseState, "entity_color", l_entity_setColor);
+	lua_register(state, "entity_color", l_entity_setColor);
 	luaRegister(entity_playSfx);
 
 	luaRegister(isQuitFlag);
@@ -7738,7 +7826,7 @@ void ScriptInterface::createBaseLuaVM()
 	luaRegister(entity_pushTarget);
 	luaRegister(entity_flipHorizontal);
 	luaRegister(entity_flipVertical);
-	lua_register(baseState, "entity_fh", l_entity_flipHorizontal);
+	lua_register(state, "entity_fh", l_entity_flipHorizontal);
 	luaRegister(entity_fhTo);
 	luaRegister(entity_update);
 	luaRegister(entity_msg);
@@ -8288,7 +8376,7 @@ void ScriptInterface::createBaseLuaVM()
 
 
 	luaRegister(entity_isFlippedHorizontal);
-	lua_register(baseState, "entity_isfh", l_entity_isFlippedHorizontal);
+	lua_register(state, "entity_isfh", l_entity_isFlippedHorizontal);
 	luaRegister(entity_isFlippedVertical);
 
 	luaRegister(entity_setWidth);
@@ -8391,58 +8479,66 @@ void ScriptInterface::createBaseLuaVM()
 
 	luaRegister(entity_fireAtTarget);  // FIXME: still used by several scripts
 	luaRegister(entity_setAffectedBySpells);  // FIXME: still used by several scripts
-	luaRegister(shot_setNice);  // FIXME: still used by loper.lua, toad.lua
+
+
+	// All done, return the new state.
+
+	return state;
 }
 
-void ScriptInterface::destroyBaseLuaVM()
+void ScriptInterface::destroyLuaVM(lua_State *state)
 {
-	if (baseState)
-	{
-		lua_close(baseState);
-		baseState = 0;
-	}
+	if (state)
+		lua_close(state);
 }
 
-void ScriptInterface::initLuaVM(lua_State **L)
+lua_State *ScriptInterface::createLuaThread(lua_State *baseState)
 {
-	if (!baseState)
-	{
-		debugLog("No base state!");
-		*L = 0;
-		return;
-	}
-
-	*L = lua_newthread(baseState);
-	if (!*L)
-		return;
-
-	// Give the thread its own environment (for non-localized variables
-	// in scripts), but fall back to the base environment for identifiers
-	// that aren't found.
-	lua_newtable(baseState);  // Environment table
-	lua_newtable(baseState);  // Metatable
-	lua_pushvalue(baseState, LUA_GLOBALSINDEX);
-	lua_setfield(baseState, -2, "__index");  // -2 = metatable
-	lua_setmetatable(baseState, -2);         // -2 = environment table
-	lua_setfenv(baseState, -2);              // -2 = thread
+	lua_State *thread = lua_newthread(baseState);
+	if (!thread)
+		return NULL;
 
 	// Save the thread object in a Lua table to prevent it from being
 	// garbage-collected.
 	lua_getglobal(baseState, "_threadtable");
-	lua_pushlightuserdata(baseState, *L);
+	lua_pushlightuserdata(baseState, thread);
 	lua_pushvalue(baseState, -3);  // -3 = thread
 	lua_rawset(baseState, -3);     // -3 = _threadtable
 	lua_pop(baseState, 2);
+
+	// Create a local variable table for this thread.
+	lua_getglobal(baseState, "_threadvars");
+	lua_pushlightuserdata(baseState, thread);
+	lua_newtable(baseState);
+	if (complainOnUndefLocal)
+	{
+		if (!lua_getmetatable(baseState, -1))
+			lua_newtable(baseState);
+		lua_pushcfunction(baseState, l_indexWarnThread);
+		lua_setfield(baseState, -2, "__index");
+		lua_setmetatable(baseState, -2);
+	}
+	lua_rawset(baseState, -3);     // -3 = _threadvars
+	lua_pop(baseState, 1);
+
+	return thread;
 }
 
-void ScriptInterface::closeLuaVM(lua_State *L)
+void ScriptInterface::destroyLuaThread(lua_State *baseState, lua_State *thread)
 {
-	// Threads are not explicitly closed; instead, we delete them from the
-	// global thread table, thus allowing them to be garbage-collected.
-	// collectGarbage() can be called at a convenient time to forcibly free
-	// all dead thread resources.
+	// Threads are not explicitly closed; instead, we delete the thread
+	// resources from the state-global tables, thus allowing them to be
+	// garbage-collected.  collectGarbage() can be called at a convenient
+	// time to forcibly free all dead thread resources.
+
 	lua_getglobal(baseState, "_threadtable");
-	lua_pushlightuserdata(baseState, L);
+	lua_pushlightuserdata(baseState, thread);
+	lua_pushnil(baseState);
+	lua_rawset(baseState, -3);
+	lua_pop(baseState, 1);
+
+	lua_getglobal(baseState, "_threadvars");
+	lua_pushlightuserdata(baseState, thread);
 	lua_pushnil(baseState);
 	lua_rawset(baseState, -3);
 	lua_pop(baseState, 1);
@@ -8450,22 +8546,33 @@ void ScriptInterface::closeLuaVM(lua_State *L)
 
 void ScriptInterface::collectGarbage()
 {
-	lua_gc(baseState, LUA_GCCOLLECT, 0);
+	for (ScriptFileMap::iterator i = loadedScripts.begin(); i != loadedScripts.end(); i++)
+	{
+		lua_gc((*i).second, LUA_GCCOLLECT, 0);
+	}
 }
 
 void ScriptInterface::shutdown()
 {
+#if 0  // FIXME: not used
 	for (ParticleEffectScripts::iterator i = particleEffectScripts.begin(); i != particleEffectScripts.end(); i++)
 	{
 		ParticleEffectScript *p = &(*i).second;
 		if (p->lua)
 		{
-			closeLuaVM(p->lua);
+			destroyLuaThread(p->lua);
 			p->lua = 0;
 		}
 	}
+#endif
 
-	destroyBaseLuaVM();
+	if (loadedScripts.begin() != loadedScripts.end())
+	{
+		for (ScriptFileMap::iterator i = loadedScripts.begin(); i != loadedScripts.end(); i++)
+		{
+			debugLog("Script still in use at shutdown: " + (*i).first);
+		}
+	}
 }
 
 void ScriptInterface::setCurrentParticleData(ParticleData *p)
@@ -8478,90 +8585,159 @@ void ScriptInterface::setCurrentParticleEffect(ScriptedParticleEffect *p)
 	currentParticleEffect = p;
 }
 
-bool ScriptInterface::runScriptNum(const std::string &script, const std::string &func, int num)
+Script *ScriptInterface::openScript(const std::string &file)
 {
-	noMoreConversationsThisRun = false;
-	std::string file = script;
-	if (script.find('/')==std::string::npos)
-		file = "scripts/" + script + ".lua";
-	file = core->adjustFilenameCase(file);
-	int fail = (luaL_loadfile(baseState, file.c_str()));
-	if (fail)
+	std::string realFile = core->adjustFilenameCase(file);
+
+	lua_State *baseState = loadedScripts[realFile];
+	if (!baseState)
 	{
-		debugLog(lua_tostring(baseState, -1));
-		debugLog("(error loading script: " + script + " from file [" + file + "])");
-		//errorLog ("error in [" + file + "]");
-		return false;
+		baseState = createLuaVM();
+		if (!baseState)
+		{
+			debugLog("Unable to create new state for script [" + realFile + "]");
+			loadedScripts.erase(realFile);  // HACK: needed because operator[] inserts an empty element  --achurch
+			return NULL;
+		}
+
+		int result = luaL_loadfile(baseState, realFile.c_str());
+		if (result != 0)
+		{
+			debugLog(lua_tostring(baseState, -1));
+			debugLog("(error loading script [" + realFile + "])");
+			destroyLuaVM(baseState);
+			loadedScripts.erase(realFile);  // HACK: see above
+			return NULL;
+		}
+
+		lua_setglobal(baseState, "_module");
+
+		if (complainOnGlobalVar)
+		{
+			if (!lua_getmetatable(baseState, LUA_GLOBALSINDEX))
+				lua_newtable(baseState);
+			lua_pushcfunction(baseState, l_indexWarnGlobal);
+			lua_setfield(baseState, -2, "__index");
+			lua_pushcfunction(baseState, l_newindexWarnGlobal);
+			lua_setfield(baseState, -2, "__newindex");
+			lua_setmetatable(baseState, LUA_GLOBALSINDEX);
+		}
+
+		loadedScripts[realFile] = baseState;
+	}
+
+	lua_State *thread = createLuaThread(baseState);
+	if (!thread)
+	{
+		debugLog("Unable to create new thread for script [" + realFile + "]");
+		return NULL;
+	}
+
+	lua_getglobal(thread, "_module");
+	int result = lua_pcall(thread, 0, 0, 0);
+	if (result != 0)
+	{
+		debugLog(lua_tostring(thread, -1));
+		debugLog("(error doing initial run of script [" + realFile + "])");
+		destroyLuaThread(baseState, thread);
+		return NULL;
+	}
+
+	Script *script = new Script;
+	script->L = thread;
+	script->file = realFile;
+
+	return script;
+}
+
+void ScriptInterface::pushScriptFunc(Script *script, const char *name)
+{
+	// FIXME: Temporary HACK to load thread-scope variable table.
+	l_getVars(script->L);
+	lua_setglobal(script->L, "v");
+
+	lua_getglobal(script->L, name);
+}
+
+void ScriptInterface::closeScript(Script *script)
+{
+	lua_State *baseState = loadedScripts[script->file];
+	if (!baseState)
+	{
+		debugLog("Lost base state for script [" + script->file + "]");
+		delete script;
+		loadedScripts.erase(script->file);  // HACK: see above
+		return;
+	}
+
+	destroyLuaThread(baseState, script->L);
+
+	// If this was the last instance of this script, unload the script itself.
+	lua_getglobal(baseState, "_threadtable");
+	lua_pushnil(baseState);
+	int empty = (lua_next(baseState, -2) == 0);
+	if (empty)
+	{
+		destroyLuaVM(baseState);
+		loadedScripts.erase(script->file);
 	}
 	else
 	{
-		fail = lua_pcall(baseState, 0, 0, 0);
-		if (fail)
-		{
-			errorLog(lua_tostring(baseState, -1));
-			debugLog("(error doing initial run of script: " + script + ")");
-		}
-
-		lua_getfield(baseState, LUA_GLOBALSINDEX, func.c_str());
-		lua_pushnumber(baseState, num);
-		int fail = lua_pcall(baseState, 1, 0, 0);
-		if (fail)
-		{
-			debugLog(lua_tostring(baseState, -1));
-			debugLog("(error calling func: " + func + " in script: " + script + ")");
-		}
+		lua_pop(baseState, 3);  // _threadtable, key, value
 	}
+
+	delete script;
+}
+
+bool ScriptInterface::runScriptNum(const std::string &file, const std::string &func, int num)
+{
+	noMoreConversationsThisRun = false;
+	std::string realFile = file;
+	if (file.find('/')==std::string::npos)
+		realFile = "scripts/" + file + ".lua";
+	Script *script = openScript(realFile);
+	if (!script)
+		return false;
+
+	lua_getfield(script->L, LUA_GLOBALSINDEX, func.c_str());
+	lua_pushnumber(script->L, num);
+	int result = lua_pcall(script->L, 1, 0, 0);
+	if (result != 0)
+	{
+		debugLog(lua_tostring(script->L, -1));
+		debugLog("(error calling func: " + func + " in script: " + file + ")");
+		closeScript(script);
+		return false;
+	}
+
+	closeScript(script);
 	return true;
 }
 
-bool ScriptInterface::runScript(const std::string &script, const std::string &func)
+bool ScriptInterface::runScript(const std::string &file, const std::string &func)
 {
 	noMoreConversationsThisRun = false;
-	std::string file = script;
-	if (script.find('/')==std::string::npos)
-	{
-		file = "scripts/" + script;
-		if (file.find(".lua") == std::string::npos)
-			file += ".lua";
-	}
-	file = core->adjustFilenameCase(file);
-	int fail = (luaL_loadfile(baseState, file.c_str()));
-	if (fail)
-	{
-		debugLog(lua_tostring(baseState, -1));
-		debugLog("(error loading script: " + script + " from file [" + file + "])");
-		//errorLog ("error in [" + file + "]");
+	std::string realFile = file;
+	if (file.find('/')==std::string::npos)
+		realFile = "scripts/" + file + ".lua";
+	Script *script = openScript(realFile);
+	if (!script)
 		return false;
-	}
-	else
-	{
-		if (!func.empty())
-		{
-			fail = lua_pcall(baseState, 0, 0, 0);
-			if (fail)
-			{
-				errorLog(lua_tostring(baseState, -1));
-				debugLog("(error doing initial run of script: " + script + ")");
-			}
 
-			lua_getfield(baseState, LUA_GLOBALSINDEX, func.c_str());
-			int fail = lua_pcall(baseState, 0, 0, 0);
-			if (fail)
-			{
-				debugLog(lua_tostring(baseState, -1));
-				debugLog("(error calling func: " + func + " in script: " + script + ")");
-			}
-		}
-		else
+	if (!func.empty())
+	{
+		lua_getfield(script->L, LUA_GLOBALSINDEX, func.c_str());
+		int result = lua_pcall(script->L, 0, 0, 0);
+		if (result != 0)
 		{
-			fail = lua_pcall(baseState, 0, 0, 0);
-			if (fail)
-			{
-				errorLog(lua_tostring(baseState, -1));
-				debugLog("(error calling script: " + script + ")");
-			}
+			debugLog(lua_tostring(script->L, -1));
+			debugLog("(error calling func: " + func + " in script: " + file + ")");
+			closeScript(script);
+			return false;
 		}
 	}
+
+	closeScript(script);
 	return true;
 }
 

@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 -- throw rocks
-n = 0
+v.n = 0
 function init(me)
 	setupEntity(me)
 	entity_initSkeletal(me, "CC_Kid")
@@ -33,8 +35,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	--entity_fh(me)	
 end
 
@@ -52,7 +54,7 @@ end
 
 function exitState(me)
 	if entity_isState(me, STATE_TRANSFORM) then
-		e = createEntity("Scavenger", "", entity_x(me), entity_y(me))
+		local e = createEntity("Scavenger", "", entity_x(me), entity_y(me))
 		entity_setState(e, STATE_GROW, -1, 1)
 		entity_alpha(e, 0)
 		entity_alpha(e, 1, 0.5)

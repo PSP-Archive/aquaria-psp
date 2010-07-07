@@ -17,22 +17,24 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-glow = 0
-boneGlow = 0
-lungeDelay = 0
+v.n = 0
+v.glow = 0
+v.boneGlow = 0
+v.lungeDelay = 0
 
 STATE_AROUSED		= 1001
 STATE_LUNGE			= 1002
-hitDelay = 0
-lunging = false
+v.hitDelay = 0
+v.lunging = false
 
 function init(me)
-	glow = createQuad("Naija/LightFormGlow", 13)
-	quad_scale(glow, 3, 3, 1)
-	quad_alpha(glow, 1)	
+	v.glow = createQuad("Naija/LightFormGlow", 13)
+	quad_scale(v.glow, 3, 3, 1)
+	quad_alpha(v.glow, 1)	
 	
 	setupEntity(me)
 	entity_setEntityType(me, ET_ENEMY)
@@ -41,7 +43,7 @@ function init(me)
 	
 	entity_generateCollisionMask(me)	
 		
-	boneGlow = entity_getBoneByName(me, "Glow")
+	v.boneGlow = entity_getBoneByName(me, "Glow")
 	
 	entity_setCullRadius(me, 30000)
 	
@@ -86,15 +88,15 @@ function dieNormal(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
-	if hitDelay > 0 then
-		hitDelay = hitDelay - dt
-		if hitDelay < 0 then
-			hitDelay = 0
+	if v.hitDelay > 0 then
+		v.hitDelay = v.hitDelay - dt
+		if v.hitDelay < 0 then
+			v.hitDelay = 0
 		end
 	end
 
@@ -106,13 +108,13 @@ function update(me, dt)
 			entity_moveTowardsTarget(me, dt, 600)
 		end
 		entity_doCollisionAvoidance(me, dt, 12, 0.5)
-		if not entity_isEntityInRange(me, n, 1200) then
+		if not entity_isEntityInRange(me, v.n, 1200) then
 			entity_clearVel(me)
 			entity_setState(me, STATE_IDLE)
 		else
-			lungeDelay = lungeDelay + dt 
-			if lungeDelay > 3 then
-				lungeDelay = 0
+			v.lungeDelay = v.lungeDelay + dt 
+			if v.lungeDelay > 3 then
+				v.lungeDelay = 0
 				entity_setState(me, STATE_LUNGE)
 			end
 		end		
@@ -123,14 +125,14 @@ function update(me, dt)
 		
 	end
 	if entity_isState(me, STATE_LUNGE) then
-		if not lunging then
+		if not v.lunging then
 			entity_doFriction(me, dt, 1000)
 		else
 			entity_moveTowardsTarget(me, dt, 500)
 		end
 
 		--[[
-		e = getFirstEntity()
+		local e = getFirstEntity()
 		while e ~= 0 do
 			if e~=me and not entity_isDead(e) and entity_getEntityType(e) == ET_ENEMY and entity_isDamageTarget(e, DT_AVATAR_BITE) then
 				if entity_isEntityInRange(me, e, 96) then
@@ -141,27 +143,27 @@ function update(me, dt)
 		end
 		]]--
 	end
+	local gx, gy = bone_getWorldPosition(v.boneGlow)
+	quad_setPosition(v.glow, gx, gy, 0.1)
 	if entity_isState(me, STATE_IDLE) then
-		if entity_isPositionInRange(n, gx, gy, 200) then
+		if entity_isPositionInRange(v.n, gx, gy, 200) then
 			entity_sound(me, "AnglerAwake", 950 + math.random(100))
 			entity_setState(me, STATE_LUNGE)
 			
 		end
 	end
-	if math.abs(entity_x(me)-entity_x(n)) > 300 then
-		entity_flipToEntity(me, n)
+	if math.abs(entity_x(me)-entity_x(v.n)) > 300 then
+		entity_flipToEntity(me, v.n)
 	end
-	gx,gy = bone_getWorldPosition(boneGlow)
-	quad_setPosition(glow, gx,gy, 0.1)	
 	
 	entity_handleShotCollisionsSkeletal(me)
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if bone ~=0 then
 		if entity_isState(me, STATE_IDLE) then
 			entity_setState(me, STATE_AROUSED)
 		end
 		if avatar_isTouchHit() then
-			entity_damage(n, me, 1)
+			entity_damage(v.n, me, 1)
 		end
 		entity_pushTarget(me, 500)
 	end	
@@ -170,21 +172,21 @@ end
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_animate(me, "idle", -1)
-		if glow ~= 0 then
-			quad_scale(glow, 3, 3, 1)
-			quad_alpha(glow, 1)
+		if v.glow ~= 0 then
+			quad_scale(v.glow, 3, 3, 1)
+			quad_alpha(v.glow, 1)
 		end
 	elseif entity_isState(me, STATE_AROUSED) then
 		entity_setDamageTarget(me, DT_AVATAR_LIZAP, true)
 		entity_animate(me, "aroused", -1)
-		quad_scale(glow, 9, 9, 0.8)
+		quad_scale(v.glow, 9, 9, 0.8)
 	elseif entity_isState(me, STATE_LUNGE) then
 		entity_setDamageTarget(me, DT_AVATAR_LIZAP, true)
-		lunging = false
-		quad_scale(glow, 6, 6, 0.8)
+		v.lunging = false
+		quad_scale(v.glow, 6, 6, 0.8)
 		entity_sound(me, "AnglerAwake", 1000 + math.random(100))
 		entity_setStateTime(me, entity_animate(me, "lunge"))
-		--entity_rotateToEntity(me, n)
+		--entity_rotateToEntity(me, v.n)
 	elseif entity_isState(me, STATE_DEATHSCENE) then
 		shakeCamera(2, 2)
 		playSfx("AnglerDie")
@@ -193,7 +195,7 @@ function enterState(me)
 	elseif entity_isState(me, STATE_DEAD) then
 		spawnParticleEffect("BigFishDie", entity_getPosition(me))
 		spawnParticleEffect("TinyRedExplode", entity_getPosition(me))
-		quad_delete(glow, 3)
+		quad_delete(v.glow, 3)
 	end
 end
 
@@ -210,7 +212,7 @@ function damage(me, attacker, bone, damageType, dmg)
 		entity_setState(me, STATE_AROUSED, -1, 1)
 	end
 	if entity_isState(me, STATE_AROUSED) then
-		lungeDelay = lungeDelay - 0.1
+		v.lungeDelay = v.lungeDelay - 0.1
 	end
 	--entity_sound(me, "AnglerHit", 1000 + math.random(100))
 	return true
@@ -219,11 +221,11 @@ end
 function animationKey(me, key)
 	if entity_isState(me, STATE_LUNGE) then
 		if key == 2 then
-			lunging = true
+			v.lunging = true
 			entity_setMaxSpeedLerp(me, 2.0)
 			entity_setMaxSpeedLerp(me, 1, 2)
 			entity_moveTowardsTarget(me, 1, 8000)
-			entity_flipToEntity(me, n)
+			entity_flipToEntity(me, v.n)
 			--[[
 			if entity_isfh(me) then
 				entity_rotateToVel(me, 0.1, -90)
@@ -241,12 +243,12 @@ end
 
 function hitSurface(me)
 	if entity_isState(me, STATE_LUNGE) then
-		if hitDelay == 0 then
+		if v.hitDelay == 0 then
 			entity_sound(me, "BigRockHit", 900+math.random(200))
-			cx, cy = getLastCollidePosition()
+			local cx, cy = getLastCollidePosition()
 			spawnParticleEffect("Dirt", cx, cy)
 			shakeCamera(5, 0.5)
-			hitDelay = 0.8
+			v.hitDelay = 0.8
 		end
 	end
 end

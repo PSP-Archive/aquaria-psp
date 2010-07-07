@@ -17,14 +17,16 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-note = 0
-node = 0
+v.n = 0
+v.note = 0
+v.node = 0
 
 function commonInit(me, myNote)
-	note = myNote
+	v.note = myNote
 	setupEntity(me)
 	entity_setEntityType(me, ET_NEUTRAL)
 	entity_setTexture(me, "particles/bigglow")
@@ -36,13 +38,13 @@ function commonInit(me, myNote)
 	
 	entity_setBlendType(me, BLEND_ADD)
 	
-	entity_setColor(me, getNoteColor(note))
+	entity_setColor(me, getNoteColor(v.note))
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
-	node = getNode("WHALELAMPPUZZLEBRAIN")
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
+	v.node = getNode("WHALELAMPPUZZLEBRAIN")
 end
 
 function update(me, dt)
@@ -57,8 +59,8 @@ function enterState(me)
 		entity_alpha(me, 0.5)
 		entity_alpha(me, 1, 1, -1, 1, 1)
 		
-		if node ~= 0 then
-			node_activate(node, me)
+		if v.node ~= 0 then
+			node_activate(v.node, me)
 		end
 	end
 end
@@ -89,8 +91,8 @@ function song(me, song)
 end
 
 function lightFlare(me)
-	if entity_isEntityInRange(me, n, 256) then
-		entity_soundFreq(me, getNoteName(note), 0.5, 4)
+	if entity_isEntityInRange(me, v.n, 256) then
+		entity_soundFreq(me, getNoteName(v.note), 0.5, 4)
 		debugLog("STATE ON")
 		entity_setState(me, STATE_ON)
 	end

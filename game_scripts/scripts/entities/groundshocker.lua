@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- G R O U N D   S H O C K E R
 -- ================================================================================================
@@ -27,16 +29,16 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L   V A R I A B L E S 
 -- ================================================================================================
 
-moveTimer = 3.2 + (math.random(432) * 0.01)
+v.moveTimer = 3.2 + (math.random(432) * 0.01)
 
-shotTimer = 2.1 + (math.random(210) * 0.01)
+v.shotTimer = 2.1 + (math.random(210) * 0.01)
 
-shellOn = true
-pullTime = 1.11
+v.shellOn = true
+v.pullTime = 1.11
 
-attackTime = 0.7
+v.attackTime = 0.7
 
-mT = 0
+v.mT = 0
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -63,8 +65,8 @@ function init(me)
 	entity_setDropChance(me, 12)
 	
 	entity_initSkeletal(me, "GroundShocker")
-	bone_core = entity_getBoneByName(me, "Core")
-	bone_shell = entity_getBoneByName(me, "Shell")
+	v.bone_core = entity_getBoneByName(me, "Core")
+	v.bone_shell = entity_getBoneByName(me, "Shell")
 	entity_generateCollisionMask(me)
 	
 	entity_setAllDamageTargets(me, false)
@@ -75,7 +77,7 @@ function init(me)
 	esetvf(me, EV_CLAMPTRANSF, 0.2)
 	entity_clampToSurface(me)
 	
-	bone_setSegs(bone_core)
+	bone_setSegs(v.bone_core)
 	
 	loadSound("groundshocker-attack")
 end
@@ -93,18 +95,18 @@ end
 function update(me, dt)
 	entity_findTarget(me, 690)		-- Active range
 	
-	attackTime = attackTime - dt
-	if attackTime <= 0 then attackTime = 0 end
+	v.attackTime = v.attackTime - dt
+	if v.attackTime <= 0 then v.attackTime = 0 end
 	
 	-- MOVE ALONG SURFACE
-	if attackTime <= 0 then
+	if v.attackTime <= 0 then
 		if eisv(me, EV_CLAMPING, 0) then
 				
-			 entity_moveAlongSurface(me, dt, 32)
+			entity_moveAlongSurface(me, dt, 32)
 			
-			moveTimer = moveTimer - dt
-			if moveTimer <= 0 then 
-				moveTimer = 3.2 + (math.random(432) * 0.01)
+			v.moveTimer = v.moveTimer - dt
+			if v.moveTimer <= 0 then 
+				v.moveTimer = 3.2 + (math.random(432) * 0.01)
 				
 				if chance(78) then entity_switchSurfaceDirection(me) end
 			end
@@ -113,50 +115,50 @@ function update(me, dt)
 	entity_rotateToSurfaceNormal(me, 0.34)
 	
 	-- SHOOT FOOLS
-	shotTimer = shotTimer - dt
-	if shotTimer <= 0 then
-		shotTimer = 2.1 + (math.random(210) * 0.01)
+	v.shotTimer = v.shotTimer - dt
+	if v.shotTimer <= 0 then
+		v.shotTimer = 2.1 + (math.random(210) * 0.01)
 		
-		attackTime = 0.7
+		v.attackTime = 0.7
 		
-		meX, meY = bone_getWorldPosition(bone_core)
-		nX, nY = entity_getNormal(me)
+		local meX, meY = bone_getWorldPosition(v.bone_core)
+		local nX, nY = entity_getNormal(me)
 		nX, nY = vector_setLength(nX, nY, 16)
 		spawnParticleEffect("GroundShockerShock", entity_x(me), entity_y(me))
-		ent_shockL = createEntity("GroundShockerAttackL", "", entity_x(me) + nX, entity_y(me) + nY)
-		ent_shockR = createEntity("GroundShockerAttackR", "", entity_x(me) + nX, entity_y(me) + nY)
+		createEntity("GroundShockerAttackL", "", entity_x(me) + nX, entity_y(me) + nY)
+		createEntity("GroundShockerAttackR", "", entity_x(me) + nX, entity_y(me) + nY)
 
 		entity_sound(me, "groundshocker-attack")
 	end
 	
-	if shellOn == true then
+	if v.shellOn == true then
 		-- PULL OFF SHELL
 		if entity_isBeingPulled(me) then
-			if pullTime > 0 then
-				pullTime = pullTime - dt
+			if v.pullTime > 0 then
+				v.pullTime = v.pullTime - dt
 			else
-				shellOn = false
-				bone_alpha(bone_shell, 0, 0.1)
+				v.shellOn = false
+				bone_alpha(v.bone_shell, 0, 0.1)
 				entity_setProperty(me, EP_MOVABLE, false)
 				entity_setAllDamageTargets(me, true)
 				
-				meX, meY = bone_getWorldPosition(bone_core)
-				nX, nY = entity_getNormal(me)
+				local meX, meY = bone_getWorldPosition(v.bone_core)
+				local nX, nY = entity_getNormal(me)
 				nX, nY = vector_setLength(nX, nY, 256)
-				ent_shell = createEntity("GroundShockerShell", "", entity_x(me) + nX/4, entity_y(me) + nY/4)
+				local ent_shell = createEntity("GroundShockerShell", "", entity_x(me) + nX/4, entity_y(me) + nY/4)
 				entity_rotateToVec(ent_shell, nX, nY)
 				entity_moveTowards(ent_shell, entity_x(getNaija()), entity_y(getNaija()), 1, 1234)
 			end
 		else
-			pullTime = 1.11
+			v.pullTime = 1.11
 		end
 		
 		entity_handleShotCollisionsSkeletal(me)
 		
-		bone = entity_collideSkeletalVsCircle(me, getNaija())
+		local bone = entity_collideSkeletalVsCircle(me, getNaija())
 		if bone ~= 0 then
-			nX, nY = entity_getPosition(getNaija())
-			bX, bY = bone_getWorldPosition(bone)
+			local nX, nY = entity_getPosition(getNaija())
+			local bX, bY = bone_getWorldPosition(bone)
 			nX = nX - bX
 			nY = nY - bY
 			nX, nY = vector_setLength(nX, nY, 600)
@@ -171,8 +173,8 @@ end
 function enterState(me)
 	if entity_getState(me) == STATE_IDLE then
 		entity_animate(me, "idle", LOOP_INF)
-		bone_setSegs(bone_core, 4, 4, 0.6, 0.6, -0.022, 0, 4.8, 1)
-		moveTimer = mT + (math.random(432) * 0.01)
+		bone_setSegs(v.bone_core, 4, 4, 0.6, 0.6, -0.022, 0, 4.8, 1)
+		v.moveTimer = v.mT + (math.random(432) * 0.01)
 	end
 end
 
@@ -180,7 +182,7 @@ function exitState(me)
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if shellOn == true then
+	if v.shellOn == true then
 		return false
 	else
 		return true

@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 function init(me)
@@ -24,7 +26,7 @@ end
 
 function update(me, dt)
 	if isFlag(FLAG_SUNTEMPLE_LIGHTCRYSTAL, 0) then
-		light = node_getNearestEntity(me, "LightCrystalCharged")
+		local light = node_getNearestEntity(me, "LightCrystalCharged")
 		if light ~= 0 and node_isEntityIn(me, light) then
 			setFlag(FLAG_SUNTEMPLE_LIGHTCRYSTAL, 1)
 		end

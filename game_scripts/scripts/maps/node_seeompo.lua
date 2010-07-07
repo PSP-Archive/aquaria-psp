@@ -17,33 +17,35 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-ompo = 0
-n = 0
-d = false
+v.ompo = 0
+v.n = 0
+v.done = false
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me)
-	if isFlag(FLAG_OMPO, 2) and ompo == 0 then
-		ompo = getEntity("Ompo")
+	if isFlag(FLAG_OMPO, 2) and v.ompo == 0 then
+		v.ompo = getEntity("Ompo")
 	end
-	if not d and isFlag(FLAG_OMPO, 2) and node_isEntityIn(me, n) then
-		d = true
-		entity_idle(n)
+	if not v.done and isFlag(FLAG_OMPO, 2) and node_isEntityIn(me, v.n) then
+		v.done = true
+		entity_idle(v.n)
 		watch(1)
 		setCameraLerpDelay(0.5)
-		cam_toEntity(ompo)
+		cam_toEntity(v.ompo)
 		watch(1)
 		emote(EMOTE_NAIJAUGH)
 		watch(1)
-		entity_offset(ompo, 0, -32, 0.1, 7, 1)
+		entity_offset(v.ompo, 0, -32, 0.1, 7, 1)
 		playSfx("Ompo")
 		watch(1)
-		cam_toEntity(n)
+		cam_toEntity(v.n)
 		watch(2)
 		emote(EMOTE_NAIJASADSIGH)
 		watch(1)

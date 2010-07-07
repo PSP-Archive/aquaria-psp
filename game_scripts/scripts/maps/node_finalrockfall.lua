@@ -17,19 +17,21 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-delay = 0
+v.delay = 0
 
 function init(me)
-	delay = randRange(1, 3)
+	v.delay = randRange(1, 3)
 end
 
 function update(me, dt)
-	delay = delay - dt
-	if delay <= 0 then
-		delay = 4
-		--e = createEntity("rock0006", "", node_x(me), node_y(me))
+	v.delay = v.delay - dt
+	if v.delay <= 0 then
+		v.delay = 4
+		--local e = createEntity("rock0006", "", node_x(me), node_y(me))
 		--entity_addVel(e, 0, 500)
 		--entity_setLife(e, 20)
 	end

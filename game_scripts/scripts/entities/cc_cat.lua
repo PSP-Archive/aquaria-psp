@@ -17,17 +17,19 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 -- get beat up by CC_BeatCat
-n = 0
+v.n = 0
 
 function createKid(node)
 --[[
-	x = node_x(node)
-	y = node_y(node)
+	local x = node_x(node)
+	local y = node_y(node)
 	]]--
-	ent = createEntity("CC_Kid", "", node_getPosition(node))
+	local ent = createEntity("CC_Kid", "", node_getPosition(node))
 	entity_alpha(ent, 0)
 	entity_alpha(ent, 1, 2)
 end
@@ -58,8 +60,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -110,8 +112,8 @@ function activate(me)
 	elseif isFlag(FLAG_SUNKENCITY_PUZZLE, 6) then
 		setFlag(FLAG_SUNKENCITY_PUZZLE, 7)
 		-- create head
-		headNode = getNode("STATUEHEAD")
-		ent = createEntity("CC_StatueHead", "", node_x(headNode), node_y(headNode))		
+		local headNode = getNode("STATUEHEAD")
+		local ent = createEntity("CC_StatueHead", "", node_x(headNode), node_y(headNode))		
 		entity_alpha(ent, 0)
 		entity_alpha(ent, 1, 1)
 	end

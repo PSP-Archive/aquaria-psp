@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 function init(me)
@@ -29,7 +31,7 @@ function action(me, action, state)
 	if getNodeToActivate() == me and state == 1 then
 		if action == ACTION_MENULEFT then
 			debugLog("L!")
-			node = getNode("TITLE_CONTINUE")
+			local node = getNode("TITLE_CONTINUE")
 			setNodeToActivate(node)
 			setMousePos(toWindowFromWorld(node_x(node), node_y(node)-20))
 			return false
@@ -45,7 +47,7 @@ function activate(me)
 	spawnParticleEffect("TitleEffect1", node_x(me), node_y(me))
 	watch(0.5)
 	
-	doQuit = false
+	local doQuit = false
 	
 	if confirm("", "exit") then
 		doQuit = true

@@ -17,11 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-attached = 0
-bone_attach = 0
+v.n = 0
+v.attached = 0
+v.bone_attach = 0
 
 function init(me)
 	setupEntity(me)
@@ -29,7 +31,7 @@ function init(me)
 	entity_initSkeletal(me, "airship")
 
 	for i=1,2 do
-		blade = entity_getBoneByIdx(me, i)
+		local blade = entity_getBoneByIdx(me, i)
 		bone_scale(blade, 0.1, 1, 0.1, -1, 1)
 	end
 	
@@ -43,19 +45,19 @@ function init(me)
 	
 	entity_fh(me)
 	
-	bone_attach = entity_getBoneByName(me, "attach")
-	bone_alpha(bone_attach, 0)
+	v.bone_attach = entity_getBoneByName(me, "attach")
+	bone_alpha(v.bone_attach, 0)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
-	if attached then
-		bx, by = bone_getWorldPosition(bone_attach)
-		entity_setPosition(attached, bx, by)
+	if v.attached then
+		local bx, by = bone_getWorldPosition(v.bone_attach)
+		entity_setPosition(v.attached, bx, by)
 	end
 end
 
@@ -90,9 +92,9 @@ end
 function activate(me)
 end
 
-function msg(me, msg, v)
+function msg(me, msg, val)
 	if msg == "attach" then
-		attached = v
+		v.attached = val
 	end
 end
 

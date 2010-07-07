@@ -17,9 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
 
-n = 0
-done = false
+
+v.n = 0
+v.done = false
 
 function init(me)
 	
@@ -27,10 +29,10 @@ end
 
 function update(me, dt)
 	if isDeveloperKeys() then
-		n = getNaija()
-		if not done and node_isEntityIn(me, n) then
-			spawnAllIngredients(entity_x(n), entity_y(n))
-			done = true
+		v.n = getNaija()
+		if not v.done and node_isEntityIn(me, v.n) then
+			spawnAllIngredients(entity_x(v.n), entity_y(v.n))
+			v.done = true
 		end
 	end
 end

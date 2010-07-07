@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- G R A B B Y   A R M   (beta)
 -- ================================================================================================
@@ -27,23 +29,23 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L   V A R I A B L E S
 -- ================================================================================================
  
-grabDelay = 0
+v.grabDelay = 0
 
-n = 0
-li = 0
-grabbedEnt = 0
+v.n = 0
+v.li = 0
+v.grabbedEnt = 0
 
-numGrabHits = 6
-grabHits = numGrabHits
+v.numGrabHits = 6
+v.grabHits = v.numGrabHits
 
-bone_front = 0
-bone_back = 0
-
-
+v.bone_front = 0
+v.bone_back = 0
 
 
 
-sz = 1.1
+
+
+v.sz = 1.1
 
 -- ================================================================================================
 -- S T A T E S
@@ -77,11 +79,11 @@ function init(me)
 	entity_setCullRadius(me, 1024)
 	
 	entity_initSkeletal(me, "GrabbyArm")
-	bone_front = entity_getBoneByName(me, "Front")
-	bone_back = entity_getBoneByName(me, "Back")
+	v.bone_front = entity_getBoneByName(me, "Front")
+	v.bone_back = entity_getBoneByName(me, "Back")
 	
-	bone_setSegs(bone_front, 2, 8, 0.3, 0.3, -0.020, 0, 6, 1)
-	bone_setSegs(bone_back, 2, 8, 0.34, 0.34, -0.023, 0, 7, 1)
+	bone_setSegs(v.bone_front, 2, 8, 0.3, 0.3, -0.020, 0, 6, 1)
+	bone_setSegs(v.bone_back, 2, 8, 0.34, 0.34, -0.023, 0, 7, 1)
 	
 	entity_setState(me, STATE_IDLE)
 	
@@ -89,18 +91,18 @@ function init(me)
 	
 	entity_setEntityLayer(me, -2)
 	
-	entity_scale(me, sz, sz)
+	entity_scale(me, v.sz, v.sz)
 	
 	entity_setState(me, STATE_IN, -1, 1)
 end
 
 function postInit(me)
-entity_animate(me, "idle", LOOP_INF)
+	entity_animate(me, "idle", LOOP_INF)
 
-	n = getNaija()
-	li = getLi()
+	v.n = getNaija()
+	v.li = getLi()
 	
-	node = entity_getNearestNode(me, "FLIP")
+	local node = entity_getNearestNode(me, "FLIP")
 	if node ~= 0 and node_isEntityIn(node, me) then
 		entity_fh(me)
 	end
@@ -114,44 +116,44 @@ function update(me, dt)
 
 	-- GRAB NAIJA AND LI WHEN NEAR
 	if entity_getState(me) == STATE_IDLE then
-		if grabDelay > 0 then grabDelay = grabDelay - dt
-		elseif grabDelay <= 0 then
-			grabDelay = 0
+		if v.grabDelay > 0 then v.grabDelay = v.grabDelay - dt
+		elseif v.grabDelay <= 0 then
+			v.grabDelay = 0
 			
-			grabRange = 74
-			if entity_isEntityInRange(me, n, grabRange) then
-				grabbedEnt = n
+			v.grabRange = 74
+			if entity_isEntityInRange(me, v.n, v.grabRange) then
+				v.grabbedEnt = v.n
 				entity_setState(me, STATE_TRAP)
 				
-			elseif entity_isEntityInRange(me, li, grabRange) then
-				grabbedEnt = li
+			elseif entity_isEntityInRange(me, v.li, v.grabRange) then
+				v.grabbedEnt = v.li
 				entity_setState(me, STATE_TRAP)
 				
 			end
 		end
 	elseif entity_isState(me, STATE_IN) then
-		if grabDelay > 0 then grabDelay = grabDelay - dt
-		elseif grabDelay <= 0 then
-			grabRange = 128
-			if entity_isEntityInRange(me, n, grabRange) then
+		if v.grabDelay > 0 then v.grabDelay = v.grabDelay - dt
+		elseif v.grabDelay <= 0 then
+			v.grabRange = 128
+			if entity_isEntityInRange(me, v.n, v.grabRange) then
 				entity_setState(me, STATE_OUT)
 			end
 		end
 	elseif entity_getState(me) == STATE_TRAP then
-		if grabbedEnt ~= 0 then
+		if v.grabbedEnt ~= 0 then
 			-- HOLD GRABBED ENTITY
-			entity_setPosition(grabbedEnt, entity_x(me), entity_y(me), 0.06)
+			entity_setPosition(v.grabbedEnt, entity_x(me), entity_y(me), 0.06)
 			
 			-- RELEASE GRABBED ENTITY WHEN HURT ENOUGH
-			if grabHits <= 0 then
-				grabHits = 0
-				grabbedEnt = 0
+			if v.grabHits <= 0 then
+				v.grabHits = 0
+				v.grabbedEnt = 0
 				entity_setState(me, STATE_IN)
 			end
 			
 			-- FREE UP WHEN GRABBED ENTITY IS DEAD
-			if entity_isDead(grabbedEnt) then
-				grabbedEnt = 0
+			if entity_isDead(v.grabbedEnt) then
+				v.grabbedEnt = 0
 				entity_setState(me, STATE_IN)
 			end
 		end
@@ -165,24 +167,24 @@ end
 
 function enterState(me)
 	if entity_getState(me) == STATE_IDLE then
-		grabHits = 0
+		v.grabHits = 0
 		entity_animate(me, "idle", LOOP_INF)
 		entity_setDamageTarget(me, DT_AVATAR_LIZAP, false)
 		
 	elseif entity_getState(me) == STATE_TRAP then
-		grabHits = numGrabHits
+		v.grabHits = v.numGrabHits
 		entity_setDamageTarget(me, DT_AVATAR_LIZAP, true)
 		toggleLiCombat(true)
 	elseif entity_isState(me, STATE_IN) then
 		entity_setInternalOffset(me, 0, 300, 1, 0, 0)
-		bone_setRenderPass(bone_front, 0)
+		bone_setRenderPass(v.bone_front, 0)
 		entity_setAllDamageTargets(me, false)
 	elseif entity_isState(me, STATE_OUT) then
 		entity_setAllDamageTargets(me, true)
-		t = 0.3
+		local t = 0.3
 		entity_setInternalOffset(me, 0, 0, t, 0, 0)
 		entity_setStateTime(me, t)
-		bone_setRenderPass(bone_front, 3)
+		bone_setRenderPass(v.bone_front, 3)
 	end
 end
 
@@ -190,9 +192,9 @@ function exitState(me)
 	if entity_getState(me) == STATE_IDLE then
 
 	elseif entity_getState(me) == STATE_TRAP then
-		grabHits = 0
+		v.grabHits = 0
 		entity_setDamageTarget(me, DT_AVATAR_LIZAP, false)
-		grabDelay = 3.5
+		v.grabDelay = 3.5
 		entity_touchAvatarDamage(me, 64, 0, 321)	-- Bump Naija out when released
 	elseif entity_isState(me, STATE_OUT) then
 		entity_setState(me, STATE_IDLE)
@@ -202,8 +204,8 @@ end
 function damage(me, attacker, bone, damageType, dmg, x, y)
 	-- HURT TO RELEASE HELD ENTITY
 	if entity_isState(me, STATE_TRAP) then 
-		grabHits = grabHits - dmg
-		bone_damageFlash(bone_front)
+		v.grabHits = v.grabHits - dmg
+		bone_damageFlash(v.bone_front)
 	end
 	
 	return false

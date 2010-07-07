@@ -17,17 +17,19 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
-hatchMax = 5
-hatchTimer = hatchMax
+v.hatchMax = 5
+v.hatchTimer = v.hatchMax
 
-rollTimer = 0
-rollMax = 2
+v.rollTimer = 0
+v.rollMax = 2
 
-hint = false
+v.hint = false
 
 function init(me)
 	setupEntity(me, "Collectibles/egg-dumbo")
@@ -35,7 +37,7 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
@@ -43,41 +45,41 @@ function update(me, dt)
 		entity_alpha(me, 0)
 	end
 	
-	if isFlag(FLAG_PET_DUMBO, 0) and not hint and entity_isEntityInRange(me, n, 256) then
+	if isFlag(FLAG_PET_DUMBO, 0) and not v.hint and entity_isEntityInRange(me, v.n, 256) then
 		playSfx("secret")
 		setControlHint(getStringBank(32), 0, 0, 0, 6, "collectibles/egg-dumbo")
-		hint = true
+		v.hint = true
 	end
 	
 	--[[
 	if entity_isState(me, STATE_IDLE) and entity_getAlpha(me) == 1 and isFlag(FLAG_PET_DUMBO, 0) then
-		hatchTimer = hatchTimer + dt*0.5
-		if hatchTimer > hatchMax then
-			hatchTimer = hatchMax
+		v.hatchTimer = v.hatchTimer + dt*0.5
+		if v.hatchTimer > v.hatchMax then
+			v.hatchTimer = v.hatchMax
 		end
 	end
 	]]--
 	if entity_getAlpha(me) == 1 and isFlag(FLAG_PET_DUMBO, 0) then
-		if entity_isEntityInRange(me, n, 300) then
+		if entity_isEntityInRange(me, v.n, 300) then
 			entity_offset(me, math.random(2)-1, 0)
-			hatchTimer = hatchTimer - dt
-			if hatchTimer < 0 then
+			v.hatchTimer = v.hatchTimer - dt
+			if v.hatchTimer < 0 then
 				
-				hatchTimer = 0
+				v.hatchTimer = 0
 				entity_setState(me, STATE_HATCH)
 			end
 		else
 			entity_offset(me, 0, 0)
-			hatchTimer = hatchTimer + dt*0.5
-			if hatchTimer > hatchMax then
-				hatchTimer = hatchMax
+			v.hatchTimer = v.hatchTimer + dt*0.5
+			if v.hatchTimer > v.hatchMax then
+				v.hatchTimer = v.hatchMax
 			end
 		end
 	end
 	
-	rollTimer = rollTimer + dt
-	if rollTimer >= rollMax then
-		rollTimer = 0
+	v.rollTimer = v.rollTimer + dt
+	if v.rollTimer >= v.rollMax then
+		v.rollTimer = 0
 		entity_rotate(me, 0)
 		if chance(50) then
 			entity_rotate(me, -30, 0.2, 3, 1, 1)
@@ -90,9 +92,9 @@ end
 function lightFlare(me)
 	--[[
 	if entity_getAlpha(me) == 1 and isFlag(FLAG_PET_DUMBO, 0) then
-		hatchTimer = hatchTimer - 3.1
-		if hatchTimer <= 0 then
-			hatchTimer = 0
+		v.hatchTimer = v.hatchTimer - 3.1
+		if v.hatchTimer <= 0 then
+			v.hatchTimer = 0
 			
 			entity_setState(me, STATE_HATCH)
 		end
@@ -115,7 +117,7 @@ function exitState(me, state)
 	if entity_isState(me, STATE_HATCH) then
 		
 		setFlag(FLAG_PET_DUMBO, 1)
-		e = setActivePet(FLAG_PET_DUMBO)
+		local e = setActivePet(FLAG_PET_DUMBO)
 		
 		if e ~= 0 then
 			entity_setPosition(e, entity_x(me), entity_y(me))

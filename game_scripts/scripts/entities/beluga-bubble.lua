@@ -17,11 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
-life = 10
+v.life = 10
 
 function init(me)
 	setupEntity(me)
@@ -41,8 +43,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function pop(me)
@@ -54,15 +56,15 @@ end
 function update(me, dt)
 	entity_updateMovement(me, dt)
 	
-	life = life - dt
-	if life < 0 then
+	v.life = v.life - dt
+	if v.life < 0 then
 		pop(me)
 		return
 	end
 	
-	if entity_isEntityInRange(me, n, 40) then
-		vx = entity_velx(n)
-		vy = entity_vely(n)
+	if entity_isEntityInRange(me, v.n, 40) then
+		local vx = entity_velx(v.n)
+		local vy = entity_vely(v.n)
 		if vector_isLength2DIn(vx, vy, 600) then
 			-- push
 			entity_moveTowardsTarget(me, dt, -500)
@@ -93,7 +95,7 @@ function hitSurface(me)
 end
 
 function songNote(me, note)
-	r,g,b = getNoteColor(note)
+	local r,g,b = getNoteColor(note)
 	entity_setColor(me, r,g,b, 0.2)
 end
 

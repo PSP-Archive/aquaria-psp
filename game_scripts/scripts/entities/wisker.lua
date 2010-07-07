@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- WISKER
 
 dofile("scripts/entities/entityinclude.lua")
@@ -25,13 +27,13 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-fireDelay = 2
-moveTimer = 0
-charge = 0
+v.fireDelay = 2
+v.moveTimer = 0
+v.charge = 0
 
 STATE_CHARGE = 1000
 STATE_DELAY = 1001
-inited = false
+v.inited = false
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -71,18 +73,18 @@ function update(me, dt)
 		entity_rotateToSurfaceNormal(me, 0.1)
 
 		-- entity_rotateToSurfaceNormal(0.1)
-		moveTimer = moveTimer + dt
-		if moveTimer > 4 then
+		v.moveTimer = v.moveTimer + dt
+		if v.moveTimer > 4 then
 			entity_switchSurfaceDirection(me)
-			moveTimer = 0
+			v.moveTimer = 0
 		end	
 		if not(entity_hasTarget(me)) then
 			entity_findTarget(me, 1200)
 		else
-			if fireDelay > 0 then
-				fireDelay = fireDelay - dt
-				if fireDelay < 0 then
-					fireDelay = 3
+			if v.fireDelay > 0 then
+				v.fireDelay = v.fireDelay - dt
+				if v.fireDelay < 0 then
+					v.fireDelay = 3
 					entity_setState(me, STATE_CHARGE)
 				end
 			end
@@ -110,7 +112,7 @@ function enterState(me)
 end
 
 function fireShot(me, a)
-	s = createShot("WiskerShot", me, entity_getTarget(me))
+	local s = createShot("WiskerShot", me, entity_getTarget(me))
 	shot_setAimVector(s, entity_getAimVector(me, a, 1))
 	shot_setOut(s, 32)
 	

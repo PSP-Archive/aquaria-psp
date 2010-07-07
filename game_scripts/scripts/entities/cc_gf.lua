@@ -17,20 +17,23 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 -- moves around
 -- follows dropped flowers
 
-n = 0
-singDelay = 60
-goBackTimer = 0
-miny = 0
-lx=0
-ly=0
-node = 0
+v.n = 0
+v.singDelay = 60
+v.goBackTimer = 0
+v.miny = 0
+v.lx = 0
+v.ly = 0
+v.node = 0
 
-seen = false
+v.seen = false
+v.done = false
 
 function init(me)
 	setupEntity(me)
@@ -42,42 +45,42 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
-	miny = entity_y(me)-300
+	v.miny = entity_y(me)-300
 	
 	--node = getNode("CCWANTGF")
 	--cc = createEntity("CC_WantGF", "", node_x(node), node_y(node))
 
 --[[	
 	if isFlag(FLAG_SUNKENCITY_PUZZLE, 3) or isFlag(FLAG_SUNKENCITY_PUZZLE, 4) then
-		n2 = getNode("GFREST")
-		x = node_x(n2)
-		y = node_y(n2)
+		local n2 = getNode("GFREST")
+		local x = node_x(n2)
+		local y = node_y(n2)
 		entity_setPosition(me, x, y)
-		done = true
-		node = getNode("CATGETBEAT")
-		cat = createEntity("CC_Cat", "", node_x(node), node_y(node))
+		v.done = true
+		v.node = getNode("CATGETBEAT")
+		cat = createEntity("CC_Cat", "", node_x(v.node), node_y(v.node))
 	end
 	]]--
 end
 
 function update(me, dt)
 	if getFlag(FLAG_SUNKENCITY_PUZZLE) <= SUNKENCITY_GF then
-		if entity_isState(me, STATE_IDLE) and not done then
-			if goBackTimer > 0 then
-				goBackTimer = goBackTimer - dt
-				if goBackTimer < 0 then
-					entity_setPosition(me, lx, ly, math.abs(entity_x(me)-lx)*0.003, 0, 0)
+		if entity_isState(me, STATE_IDLE) and not v.done then
+			if v.goBackTimer > 0 then
+				v.goBackTimer = v.goBackTimer - dt
+				if v.goBackTimer < 0 then
+					entity_setPosition(me, v.lx, v.ly, math.abs(entity_x(me)-v.lx)*0.003, 0, 0)
 				end
 			end
 		end
 	end
-	if entity_isState(me, STATE_IDLE) and not seen then
+	if entity_isState(me, STATE_IDLE) and not v.seen then
 		if getFlag(FLAG_SUNKENCITY_PUZZLE) <= SUNKENCITY_GF then
 			if entity_isEntityInRange(me, getNaija(), 512) then
-				seen = true
+				v.seen = true
 				entity_idle(getNaija())
 				
 				cam_toEntity(me)
@@ -134,18 +137,18 @@ function sporesDropped(me, x, y, t)
 	if not entity_isState(me, STATE_IDLE) then
 		return
 	end
-	if not done then
+	if not v.done then
 		if entity_isPositionInRange(me, x, y, 700) then
-			if lx==0 and ly==0 then
-				lx,ly=entity_getPosition(me)
+			if v.lx == 0 and v.ly == 0 then
+				v.lx,v.ly = entity_getPosition(me)
 			end
 			if not isObstructed(x, y-80) then
-				if y > miny then
+				if y > v.miny then
 					entity_setPosition(me, x, y-128, math.abs(entity_x(me)-x)*0.005, 0, 0)
 				else
 					entity_setPosition(me, x, entity_y(me), math.abs(entity_x(me)-x)*0.005, 0, 0)
 				end
-				goBackTimer = 4
+				v.goBackTimer = 4
 				if x >= entity_x(me) then
 					if not entity_isfh(me) then	entity_fh(me) end
 				else

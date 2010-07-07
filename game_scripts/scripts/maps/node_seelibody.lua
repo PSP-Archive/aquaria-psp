@@ -17,18 +17,20 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-done = false
+v.done = false
 
 function init(me)
 end
 
 function update(me, dt)
-	if not hasSong(SONG_DUALFORM) and not done and not hasLi() and node_isEntityIn(me, getNaija()) then
-		done = true
+	if not hasSong(SONG_DUALFORM) and not v.done and not hasLi() and node_isEntityIn(me, getNaija()) then
+		v.done = true
 		
-		li = getEntity("li")
+		local li = getEntity("li")
 		if li ~= 0 then
 			entity_idle(getNaija())
 			entity_flipToEntity(getNaija(), li)

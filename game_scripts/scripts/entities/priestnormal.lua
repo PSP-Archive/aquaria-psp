@@ -17,9 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
 function init(me)
 	setupEntity(me)
@@ -33,7 +35,7 @@ function init(me)
 end
 
 function checkNodeAnim(me, name)
-	node = entity_getNearestNode(me, name)
+	local node = entity_getNearestNode(me, name)
 	if node~=0 and node_isEntityIn(node, me) then
 		entity_animate(me, name, -1)
 	end
@@ -41,12 +43,12 @@ end
 
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
 	entity_animate(me, "idle", -1)
 	
-	flip = entity_getNearestNode(me, "FLIP")
+	local flip = entity_getNearestNode(me, "FLIP")
 	if flip~=0 and node_isEntityIn(flip, me) then
 		entity_fh(me)
 	end

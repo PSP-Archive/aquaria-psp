@@ -17,15 +17,17 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- Energy Boss CLIMB
 -- ================================================================================================
 
 dofile("scripts/entities/entityinclude.lua")
 
-node = 0
+v.node = 0
 
-speed = 550
+v.speed = 550
 
 function init(me)	
 	setupBasicEntity(
@@ -50,20 +52,20 @@ function init(me)
 	
 	--entity_flipHorizontal(me)	
 	entity_generateCollisionMask(me)	
-	node = getNode("NARROW")	
+	v.node = getNode("NARROW")	
 end
 
 function update(me, dt)
 	entity_handleShotCollisionsSkeletal(me)
 	
-	bone = entity_collideSkeletalVsCircle(me, getNaija())
+	local bone = entity_collideSkeletalVsCircle(me, getNaija())
 	if bone ~= 0 then
 		entity_damage(getNaija(), me, 1000)
 		entity_push(getNaija(), 0, -1200, 1)
 	end
 
-	if entity_y(me)-256 > node_y(node) then
-		entity_setPosition(me, entity_x(me), entity_y(me) - speed * dt)
+	if entity_y(me)-256 > node_y(v.node) then
+		entity_setPosition(me, entity_x(me), entity_y(me) - v.speed * dt)
 	end
 end
 

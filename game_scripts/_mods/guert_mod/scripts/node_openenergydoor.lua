@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 function init(me)
@@ -24,9 +26,9 @@ function init(me)
 end
 
 function activate(me)	
-	energyOrb = node_getNearestEntity(me, "EnergyOrb")
+	local energyOrb = node_getNearestEntity(me, "EnergyOrb")
 	if energyOrb ~= 0 and entity_isState(energyOrb, STATE_CHARGED) then		
-		door = node_getNearestEntity(me, "EnergyDoor")
+		local door = node_getNearestEntity(me, "EnergyDoor")
 		if door ~= 0 then
 			entity_setState(door, STATE_OPEN)
 		end

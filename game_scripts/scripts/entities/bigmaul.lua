@@ -17,18 +17,20 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- BIG MAUL
 -- ================================================================================================
 
 dofile("scripts/entities/entityinclude.lua")
 
-shotDelay = 2
-shotDelay2 = 0
-shots = 3
-createtimer = 0.5
+v.shotDelay = 2
+v.shotDelay2 = 0
+v.shots = 3
+v.createtimer = 0.5
 
-cr = 80
+v.cr = 80
 
 function init(me)
 	setupBasicEntity(
@@ -38,7 +40,7 @@ function init(me)
 	1,								-- manaballamount
 	1,								-- exp
 	1,								-- money
-	cr,								-- collideRadius (only used if hit entities is on)
+	v.cr,								-- collideRadius (only used if hit entities is on)
 	STATE_IDLE,						-- initState
 	90,								-- sprite width
 	90,								-- sprite height
@@ -60,17 +62,17 @@ function update(me, dt)
 	if not entity_hasTarget(me) then
 		entity_findTarget(me, 1000)
 	else
-		shotDelay = shotDelay - dt
-		if shotDelay < 0 then
-			shotDelay2 = shotDelay2 - dt
-			if shotDelay2 < 0 then
+		v.shotDelay = v.shotDelay - dt
+		if v.shotDelay < 0 then
+			v.shotDelay2 = v.shotDelay2 - dt
+			if v.shotDelay2 < 0 then
 				entity_fireAtTarget(me, 1, 1000, 1500, 5, 64)
-				shots = shots - 1
-				shotDelay2 = 0.2
-				if shots <= 0 then
-					shotDelay = 1
-					shotDelay2 = 0
-					shots = 3
+				v.shots = v.shots - 1
+				v.shotDelay2 = 0.2
+				if v.shots <= 0 then
+					v.shotDelay = 1
+					v.shotDelay2 = 0
+					v.shots = 3
 				end
 			end
 		end
@@ -78,14 +80,14 @@ function update(me, dt)
 		entity_flipToEntity(me, entity_getTarget(me))
 	end
 
-	createtimer = createtimer - dt
-	if createtimer < 1 then
-		n = 10
+	v.createtimer = v.createtimer - dt
+	if v.createtimer < 1 then
+		local n = 10
 		while n > 0 do
 			createEntity("Maul", "", entity_x(me), entity_y(me))
 			n = n - 1
 		end
-		createtimer = 30
+		v.createtimer = 30
 	end
 
 	entity_doEntityAvoidance(me, dt, 256, 0.2)
@@ -95,7 +97,7 @@ function update(me, dt)
 	
 	
 	entity_handleShotCollisions(me)
-	entity_touchAvatarDamage(me, cr, 1, 1000)
+	entity_touchAvatarDamage(me, v.cr, 1, 1000)
 end
 
 function enterState(me)
@@ -121,7 +123,7 @@ function damage(me, attacker, bone, damageType, dmg)
 end
 
 function dieNormal(me)
-	p = randRange(1, 100)
+	local p = randRange(1, 100)
 	if p <= 10 then -- 10%
 		spawnIngredient("ToughCake", entity_x(me), entity_y(me))
 	elseif p > 10 and p <= 30 then -- 20%

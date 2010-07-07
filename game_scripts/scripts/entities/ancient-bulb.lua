@@ -17,18 +17,20 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-noteDown = -1
-note1 = -1
-note2 = -1
-note3 = -1
+v.n = 0
+v.noteDown = -1
+v.note1 = -1
+v.note2 = -1
+v.note3 = -1
 
-ingToSpawn = ""
-entToSpawn = ""
+v.ingToSpawn = ""
+v.entToSpawn = ""
 
-amount = 0
+v.amount = 0
 
 function init(me)
 	setupEntity(me)
@@ -46,40 +48,40 @@ function init(me)
 	
 	entity_animate(me, "idle")
 	
-	note2 = getRandNote()
+	v.note2 = getRandNote()
 	
-	entity_setColor(me, getNoteColor(note2))
+	entity_setColor(me, getNoteColor(v.note2))
 	
 	entity_setEntityLayer(me, 1)
 	
-	n1 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETING)
+	local n1 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETING)
 	if n1 ~= 0 and node_isEntityIn(n1, me) then
-		ingToSpawn = node_getContent(n1)
-		amount = node_getAmount(n1)	if amount == 0 then amount = 1 end
+		v.ingToSpawn = node_getContent(n1)
+		v.amount = node_getAmount(n1)	if v.amount == 0 then v.amount = 1 end
 	else
-		n2 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETENT)
+		local n2 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETENT)
 		if n2 ~= 0 and node_isEntityIn(n2, me) then
-			entToSpawn = node_getContent(n2)
-			amount = node_getAmount(n2)	if amount == 0 then amount = 1 end
+			v.entToSpawn = node_getContent(n2)
+			v.amount = node_getAmount(n2)	if v.amount == 0 then v.amount = 1 end
 		end
 	end
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 
-	if noteDown ~= -1 and entity_isEntityInRange(me, n, 800) then
-		rotspd = 0.8
-		if noteDown == note2 then
+	if v.noteDown ~= -1 and entity_isEntityInRange(me, v.n, 800) then
+		local rotspd = 0.8
+		if v.noteDown == v.note2 then
 			entity_moveTowardsTarget(me, dt, 1000)
 			entity_setMaxSpeedLerp(me, 2.0, 0)
 			
 			entity_rotateToVel(me, rotspd)
-		elseif noteDown == note1 or noteDown == note3 then			
+		elseif v.noteDown == v.note1 or v.noteDown == v.note3 then
 			entity_moveTowardsTarget(me, dt, 500)
 			if entity_doEntityAvoidance(me, dt, 128, 1.0) then
 				entity_setMaxSpeedLerp(me, 0.2)
@@ -90,7 +92,7 @@ function update(me, dt)
 		end			
 		
 	else
-		noteDown = -1
+		v.noteDown = -1
 		entity_rotate(me, 0, 0.5, 0, 0, 1)
 		entity_setMaxSpeedLerp(me, 0.2, 2)
 	end
@@ -114,18 +116,18 @@ function exitState(me)
 			
 			entity_setFlag(me, 1)
 			
-			bx, by = bone_getWorldPosition(bulb)
+			local bx, by = bone_getWorldPosition(v.bulb)
 			
-			if ingToSpawn ~= "" or entToSpawn ~= "" then
+			if v.ingToSpawn ~= "" or v.entToSpawn ~= "" then
 				playSfx("secret")
 			end
-			if ingToSpawn ~= "" then
-				for i=1,amount do
-					ing = spawnIngredient(ingToSpawn, bx, by, 1, (i==1))
+			if v.ingToSpawn ~= "" then
+				for i=1,v.amount do
+					spawnIngredient(v.ingToSpawn, bx, by, 1, (i==1))
 				end
-			elseif entToSpawn ~= "" then
-				for i=1,amount do
-					createEntity(entToSpawn, "", bx, by)
+			elseif v.entToSpawn ~= "" then
+				for i=1,v.amount do
+					createEntity(v.entToSpawn, "", bx, by)
 				end
 			end
 		end
@@ -143,11 +145,11 @@ function hitSurface(me)
 end
 
 function songNote(me, note)
-	noteDown = note
+	v.noteDown = note
 end
 
 function songNoteDone(me, note)
-	noteDown = -1
+	v.noteDown = -1
 end
 
 function song(me, song)

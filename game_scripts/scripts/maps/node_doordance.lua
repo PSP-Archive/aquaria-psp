@@ -17,17 +17,19 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
 
-door = 0
+
+v.door = 0
 
 function init(me)
-	door = node_getNearestEntity(me, "EnergyDoor")
+	v.door = node_getNearestEntity(me, "EnergyDoor")
 
 end
 
 function update(me, dt)
-	if door == 0 then
+	if v.door == 0 then
 		debugLog("door is 0")
 	end
-	entity_setPosition(door, entity_x(door)+dt*10, entity_y(door))
+	entity_setPosition(v.door, entity_x(v.door)+dt*10, entity_y(v.door))
 end

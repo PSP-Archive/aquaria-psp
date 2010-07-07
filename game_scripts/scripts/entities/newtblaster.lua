@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- NEWT BLASTER
 -- ================================================================================================
@@ -31,12 +33,12 @@ dofile("scripts/entities/entityinclude.lua")
 STATE_HIDE 		= 1000
 STATE_MOVING	= 1001
 
-tailEnd = 0
-hits = 0
+v.tailEnd = 0
+v.hits = 0
 
-fireDelayTime = 0.5
-fireDelay = fireDelayTime
-orient = ORIENT_UP
+v.fireDelayTime = 0.5
+v.fireDelay = v.fireDelayTime
+v.orient = ORIENT_UP
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -68,7 +70,7 @@ function init(me)
 	entity_setDropChance(me, 100, 2)
 	entity_setDeathScene(me, true)
 	
-	tailEnd = entity_getBoneByName(me, "TailEnd")
+	v.tailEnd = entity_getBoneByName(me, "TailEnd")
 	
 	loadSound("newtblaster-die")
 	entity_setDeathSound(me, "newtblaster-die")
@@ -111,51 +113,51 @@ function update(me, dt)
 		if entity_isState(me, STATE_IDLE) then
 			entity_touchAvatarDamage(me, 48, 1, 1000)
 			-- fire if in range
-			fireDelay = fireDelay - dt
-			if fireDelay < 0 then
-				--vx, vy = bone_getNormal(tailEnd)
-				x, y = bone_getPosition(tailEnd)
+			v.fireDelay = v.fireDelay - dt
+			if v.fireDelay < 0 then
+				--local vx, vy = bone_getNormal(v.tailEnd)
+				local x, y = bone_getPosition(v.tailEnd)
 				--bone_getOrientation()
 				--entity_playSfx(me, "BasicShot")
 				--entity_fireAtTarget(me, "NewtFire", 1, 150, 10, 3, 32, 0, 0, 0, 0, x, y)
-				s = createShot("NewtFire", me, entity_getTarget(me), x, y)
-				tx, ty = entity_getPosition(entity_getTarget(me))
+				local s = createShot("NewtFire", me, entity_getTarget(me), x, y)
+				local tx, ty = entity_getPosition(entity_getTarget(me))
 				shot_setAimVector(s, tx-x, ty-y)
 				
-				fireDelay = fireDelayTime
+				v.fireDelay = v.fireDelayTime
 			end
 		end
 	end
-	speed = 400
+	local speed = 400
 	if entity_isState(me, STATE_HIDE) then
-		check = 256
-		block = 6
-		if orient == ORIENT_LEFT then
+		local check = 256
+		local block = 6
+		if v.orient == ORIENT_LEFT then
 			if not isObstructedBlock(entity_x(me)-check, entity_y(me), block) then
 				entity_setPosition(me, entity_x(me)-speed*dt, entity_y(me))
 			else
-				orient = orient + 1
+				v.orient = v.orient + 1
 			end
-		elseif orient == ORIENT_RIGHT then
+		elseif v.orient == ORIENT_RIGHT then
 			if not isObstructedBlock(entity_x(me)+check, entity_y(me), block) then
 				entity_setPosition(me, entity_x(me)+speed*dt, entity_y(me))
 			else
-				orient = orient + 1
+				v.orient = v.orient + 1
 			end
-		elseif orient == ORIENT_DOWN then
+		elseif v.orient == ORIENT_DOWN then
 			if not isObstructedBlock(entity_x(me), entity_y(me)+check, block) then
 				entity_setPosition(me, entity_x(me), entity_y(me)+speed*dt)
 			else
-				orient = orient + 1
+				v.orient = v.orient + 1
 			end
-		elseif orient == ORIENT_UP then
+		elseif v.orient == ORIENT_UP then
 			if not isObstructedBlock(entity_x(me), entity_y(me)-check, block) then
 				entity_setPosition(me, entity_x(me), entity_y(me)-speed*dt)
 			else
-				orient = orient + 1
+				v.orient = v.orient + 1
 			end			
 		else
-			orient = 0
+			v.orient = 0
 		end
 	end
 	--[[
@@ -179,7 +181,7 @@ function enterState(me)
 		entity_alpha(me, 1, 0.5)
 	elseif entity_isState(me, STATE_HIDE) then
 		
-		orient = math.random(4)
+		v.orient = math.random(4)
 		entity_setEntityType(me, ET_NEUTRAL)
 		entity_alpha(me, 0.1, 1)
 		entity_setColor(me, 0.5, 0.5, 1, 0.5)
@@ -187,10 +189,10 @@ function enterState(me)
 	elseif entity_isState(me, STATE_MOVING) then
 		entity_animate(me, "crawl", LOOP_INF)
 	elseif entity_isState(me, STATE_DEATHSCENE) then
-		ox = entity_x(me)
-		oy = entity_y(me)
+		local ox = entity_x(me)
+		local oy = entity_y(me)
 		entity_setStateTime(me, 99)
-		--entity_idle(n)
+		--entity_idle(v.n)
 		--cam_toEntity(me)
 		entity_animate(me, "fall", -1)
 		--entity_setPosition(me, entity_x(me), entity_y(me)+1000, 2)
@@ -210,9 +212,9 @@ end
 
 function damage(me, attacker, bone, damageType, dmg)
 	if entity_getAlpha(me) == 1 then
-		hits = hits + dmg
-		if hits > 5 then
-			hits = 0
+		v.hits = v.hits + dmg
+		if v.hits > 5 then
+			v.hits = 0
 			if entity_isState(me, STATE_IDLE) then		
 				entity_setState(me, STATE_HIDE, 3.5 + math.random(200)/200.0)
 			end

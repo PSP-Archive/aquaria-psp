@@ -17,28 +17,30 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-energyGod = 0
+v.energyGod = 0
 
 function init(me)
-	energyGod = getEntity("EnergyGod")
+	v.energyGod = getEntity("EnergyGod")
 	node_setCursorActivation(me, false)
 	if getStory() >= 5.1 then
-		entity_delete(energyGod)
-		energyGod = 0
+		entity_delete(v.energyGod)
+		v.energyGod = 0
 	end
 end
 
 function song(me, song)
 	if isStory(5) then
 		if song == SONG_ENERGYFORM then			
-			entity_flipToEntity(getNaija(), energyGod)
+			entity_flipToEntity(getNaija(), v.energyGod)
 			wnd(1)
 			txt("At last, I am free. Now use the gift of my spirit, little Naija.")
 			--txt("ENERGY GOD FADES AWAY")			
 			wnd(0)
-			entity_delete(energyGod, 3)
+			entity_delete(v.energyGod, 3)
 			watch(3)
 			voice("naija_energyform")
 			setStory(5.1)
@@ -50,8 +52,8 @@ function update(me, dt)
 	if getStory()<5 then
 		if entity_x(getNaija()) < node_x(me) then
 			
-			naija = getNaija()
-			energyDoor = node_getNearestEntity(me, "EnergyDoor")
+			local naija = getNaija()
+			local energyDoor = node_getNearestEntity(me, "EnergyDoor")
 			if energyDoor ~= 0 then
 				entity_setState(energyDoor, STATE_CLOSE)
 			end
@@ -61,7 +63,7 @@ function update(me, dt)
 			entity_clearVel(naija)
 			setStory(5)
 			watch(3.1)
-			entity_flipToEntity(naija, energyGod)
+			entity_flipToEntity(naija, v.energyGod)
 			wnd(1)
 			
 			txt("Creature: Who goes there?")			
@@ -83,12 +85,12 @@ function update(me, dt)
 			-- [[ACTION...
 			--txt("Action: ENERGY GOD GRABS NAIJA")
 			
-			entity_animate(energyGod, "grabTransition")
+			entity_animate(v.energyGod, "grabTransition")
 			watch(0.25)
 			-- ...ACTION]]
 			setNaijaHeadTexture("Pain")
 			entity_animate(getNaija(), "trapped", LOOP_INF)						
-			entity_animate(energyGod, "grabLoop", LOOP_INF)
+			entity_animate(v.energyGod, "grabLoop", LOOP_INF)
 			watch(1)
 			wnds(1)
 			txt("Naija: What? Put me down!")
@@ -115,7 +117,7 @@ function update(me, dt)
 			txt("Naija: You want to... die?")			
 			wnd(0)
 			
-			entity_animate(energyGod, "idle", LOOP_INF)
+			entity_animate(v.energyGod, "idle", LOOP_INF)
 			--ENERGY GOD RELASES NAIJA
 			
 			setNaijaHeadTexture("")
@@ -123,7 +125,7 @@ function update(me, dt)
 			
 			entity_swimToNode(naija, getNode("NAIJA_BACKOFF"))
 			entity_watchForPath(naija)
-			entity_flipToEntity(naija, energyGod)
+			entity_flipToEntity(naija, v.energyGod)
 			wnd(1)
 			txt("Nerhaji: What was truly me has long since died. All that remains is to free my spirit.")
 			txt("Nerhaji: I will teach you the Song that will bind me to the void, once and for all.")

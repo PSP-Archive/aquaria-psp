@@ -17,11 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-evolveTimer = 0
-fireDelay = 2
+v.n = 0
+v.evolveTimer = 0
+v.fireDelay = 2
 
 function init(me)
 	setupEntity(me)
@@ -29,7 +31,7 @@ function init(me)
 	entity_setTexture(me, "RotBaby/Form2")
 	entity_setCollideRadius(me, 20)
 	
-	evolveTimer = 3 + math.random(3)
+	v.evolveTimer = 3 + math.random(3)
 	entity_addRandomVel(me, 500)
 	
 	
@@ -49,7 +51,7 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
@@ -74,9 +76,9 @@ function update(me, dt)
 	entity_handleShotCollisions(me)
 	entity_touchAvatarDamage(me, entity_getCollideRadius(me), 0.5, 400)
 	
-	if evolveTimer > 0 then
-		evolveTimer = evolveTimer - dt
-		if evolveTimer < 0 then
+	if v.evolveTimer > 0 then
+		v.evolveTimer = v.evolveTimer - dt
+		if v.evolveTimer < 0 then
 			spawnParticleEffect("TinyRedExplode", entity_getPosition(me))
 			createEntity("RotBaby-Form3", "", entity_getPosition(me))
 			entity_sound(me, "rotcore-birth")
@@ -85,10 +87,10 @@ function update(me, dt)
 	end
 
 	
-	fireDelay = fireDelay - dt
-	if fireDelay < 0 then
-		fireDelay = math.random(3)+2
-		s = createShot("BlasterFire", me, entity_getTarget(me))
+	v.fireDelay = v.fireDelay - dt
+	if v.fireDelay < 0 then
+		v.fireDelay = math.random(3)+2
+		local s = createShot("BlasterFire", me, entity_getTarget(me))
 		shot_setOut(s, 32)
 		entity_moveTowardsTarget(me, 1, -1000)
 	end

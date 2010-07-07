@@ -17,23 +17,25 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n=0
+v.n = 0
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
 	if isFlag(FLAG_VISION_VEIL, 0) then
-		if node_isEntityIn(me, n) then
+		if node_isEntityIn(me, v.n) then
 			setCutscene(1,1)
 			setFlag(FLAG_VISION_VEIL, 1)
-			entity_idle(n)
-			entity_setInvincible(n, true)
+			entity_idle(v.n)
+			entity_setInvincible(v.n, true)
 			watch(1)
-			entity_animate(n, "agony", -1)			
+			entity_animate(v.n, "agony", -1)
 			watch(2)
 			pause()
 			voice("Naija_Vision_Veil")
@@ -44,7 +46,7 @@ function update(me, dt)
 			hideImage()
 			toggleBlackBars(0)
 			unpause()
-			entity_setInvincible(n, false)
+			entity_setInvincible(v.n, false)
 		end
 	end
 end

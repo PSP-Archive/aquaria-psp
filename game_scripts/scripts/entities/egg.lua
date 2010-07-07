@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- generic egg
 dofile("scripts/entities/entityinclude.lua")
 
@@ -31,9 +33,9 @@ end
 function hatch()
 	entity_stopTimer()	
 	if entity_getState()==STATE_IDLE then
-		entity_createEntity(entityTypeName)
+		entity_createEntity(v.entityTypeName)
 	elseif entity_getState()==STATE_PLANTED then
-		entity_createPet(entityTypeName)
+		entity_createPet(v.entityTypeName)
 	end
 	entity_delete()
 	entity_setState(STATE_HATCH)
@@ -49,7 +51,7 @@ function update()
 			entity_findTarget(800)
 		else
 			if entity_isTargetInRange(64) then
-				pickupItem(itemName, 1)
+				pickupItem(v.itemName, 1)
 				entity_delete()
 			end
 		end
@@ -58,9 +60,9 @@ end
 
 function enterState()
 	if entity_getState()==STATE_PLANTED then
-		entity_resetTimer(plantedTime)
+		entity_resetTimer(v.plantedTime)
 	elseif entity_getState()==STATE_IDLE then
-		entity_resetTimer(hatchTime)
+		entity_resetTimer(v.hatchTime)
 	end
 end
 

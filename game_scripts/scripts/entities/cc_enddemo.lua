@@ -17,9 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
 
 function init(me)
@@ -38,17 +40,17 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
-done = false
-inScene = false
+v.done = false
+v.inScene = false
 function cutScene(me)
-	if inScene then return end
-	done = true
-	inScene = true
+	if v.inScene then return end
+	v.done = true
+	v.inScene = true
 	-- mother arrives, sings song in loop
-	entity_idle(n)
+	entity_idle(v.n)
 	cam_toEntity(me)
 	
 	watch(2)
@@ -74,7 +76,7 @@ function cutScene(me)
 end
 
 function update(me, dt)
-	if entity_isEntityInRange(me, n, 256) then
+	if entity_isEntityInRange(me, v.n, 256) then
 		cutScene(me)
 	end
 end

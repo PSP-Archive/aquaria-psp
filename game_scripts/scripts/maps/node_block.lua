@@ -17,19 +17,21 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
-	if node_isEntityIn(me, n) then
-		x = entity_x(n) - node_x(me)
-		y = entity_y(n) - node_y(me)
+	if node_isEntityIn(me, v.n) then
+		local x = entity_x(v.n) - node_x(me)
+		local y = entity_y(v.n) - node_y(me)
 		vector_setLength(x, y, 2000*dt)
-		entity_addVel(n, x, y)
+		entity_addVel(v.n, x, y)
 	end
 end

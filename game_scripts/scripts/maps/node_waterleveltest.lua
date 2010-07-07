@@ -17,15 +17,17 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-oldWaterLevel = 0
-waterLevelCounter = 0
+v = getVars()
+
+v.oldWaterLevel = 0
+v.waterLevelCounter = 0
 
 function init(me)
-	oldWaterLevel = getWaterLevel()
+	v.oldWaterLevel = getWaterLevel()
 end
 
 function update(me, dt)
 	-- lower the water
-	waterLevelCounter = waterLevelCounter + 100*dt
-	setWaterLevel(oldWaterLevel + waterLevelCounter)
+	v.waterLevelCounter = v.waterLevelCounter + 100*dt
+	setWaterLevel(v.oldWaterLevel + v.waterLevelCounter)
 end

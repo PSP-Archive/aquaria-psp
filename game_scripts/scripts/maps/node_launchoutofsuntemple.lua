@@ -17,21 +17,23 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-ran = false
-n = 0
+v.ran = false
+v.n = 0
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
-	if not ran and node_isEntityIn(me, n) then
-		rand = true
-		entity_addVel(n, -500, -500)
+	if not v.ran and node_isEntityIn(me, v.n) then
+		v.ran = true
+		entity_addVel(v.n, -500, -500)
 		if hasLi() then
-			li = getLi()
-			node = getNode("LIFROMSUN")
+			local li = getLi()
+			local node = getNode("LIFROMSUN")
 			entity_setPosition(li, node_x(node), node_y(node))
 		end
 	end

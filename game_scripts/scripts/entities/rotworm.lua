@@ -17,25 +17,26 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 -- entity specific
-STATE_SOMETHING			= 1000
 STATE_GOTOHOLE			= 1001
 STATE_HIDE				= 1002
 STATE_SHOW				= 1003
  
-chaseDelay = 0
-lastNode = 0
-node = 0
+v.chaseDelay = 0
+v.lastHole = 0
+v.node = 0
 
-holeDelay = 0
-holeSpd = 0
+v.holeDelay = 0
+v.holeSpd = 0
 
-nextHoleDelay = 8
+v.nextHoleDelay = 8
 
-segDist = 32
-dist = 0
+v.segDist = 32
+v.dist = 0
 
 function init(me)
 	setupBasicEntity(me, 
@@ -59,7 +60,7 @@ function init(me)
 	entity_initSegments(me, 
 	9,								-- num segments
 	0,								-- minDist
-	segDist,							-- maxDist
+	v.segDist,							-- maxDist
 	"rotworm/segment",				-- body tex
 	"rotworm/tail",					-- tail tex
 	128,							-- width
@@ -73,12 +74,12 @@ end
 
 function update(me, dt)	
 	if entity_isState(me, STATE_HIDE) then
-		dist = dist - dt*48
-		if dist < 1 then
-			dist = 1
+		v.dist = v.dist - dt*48
+		if v.dist < 1 then
+			v.dist = 1
 			entity_alpha(me, 0, 0.1)
 		end
-		entity_setSegsMaxDist(me, dist)	
+		entity_setSegsMaxDist(me, v.dist)	
 		entity_clearVel(me)
 		entity_updateMovement(me, dt)
 	end
@@ -97,16 +98,16 @@ function update(me, dt)
 		end
 		]]--		
 	end
-	if chaseDelay > 0 then
-		chaseDelay = chaseDelay - dt
-		if chaseDelay < 0 then
-			chaseDelay = 0
+	if v.chaseDelay > 0 then
+		v.chaseDelay = v.chaseDelay - dt
+		if v.chaseDelay < 0 then
+			v.chaseDelay = 0
 		end
 	end
 	if entity_isState(me, STATE_IDLE) then
-		holeDelay = holeDelay + dt
-		if holeDelay > nextHoleDelay then
-			holeDelay = 0
+		v.holeDelay = v.holeDelay + dt
+		if v.holeDelay > v.nextHoleDelay then
+			v.holeDelay = 0
 			entity_setState(me, STATE_GOTOHOLE)		
 		end
 	end
@@ -116,22 +117,22 @@ function update(me, dt)
 		if not entity_isFollowingPath(me) then
 			entity_setState(me, STATE_HIDE, 4)
 		end
-		x=node_x(node)
-		y=node_y(node)
+		x=node_x(v.node)
+		y=node_y(v.node)
 		]]--
-		if node ~= 0 then
-			if entity_isPositionInRange(me, node_x(node), node_y(node), 64) then							
+		if v.node ~= 0 then
+			if entity_isPositionInRange(me, node_x(v.node), node_y(v.node), 64) then							
 				entity_setState(me, STATE_HIDE, 4+math.random(3))
 			else
-				holeSpd = holeSpd + 200*dt
+				v.holeSpd = v.holeSpd + 200*dt
 				--[[
-				if holeSpd > 1500 then
-					holeSpd = 1500
+				if v.holeSpd > 1500 then
+					v.holeSpd = 1500
 				end
 				]]--
-				x=node_x(node)-entity_x(me)
-				y=node_y(node)-entity_y(me)
-				x, y = vector_setLength(x, y, holeSpd*dt)
+				local x = node_x(v.node)-entity_x(me)
+				local y = node_y(v.node)-entity_y(me)
+				x, y = vector_setLength(x, y, v.holeSpd*dt)
 
 				entity_addVel(me, x, y)
 			end
@@ -148,7 +149,7 @@ function update(me, dt)
 		if not entity_hasTarget(me) then
 			entity_findTarget(me, 700)
 		else
-			--if chaseDelay==0 then
+			--if v.chaseDelay==0 then
 			if entity_isTargetInRange(me, 1000) then
 				if entity_getHealth(me) < 6 then
 					entity_setMaxSpeed(me, 450)
@@ -177,42 +178,42 @@ end
 
 function enterState(me)
 	if entity_getState(me)==STATE_IDLE then
-		nextHoleDelay = 6 + math.random(6)
-		entity_setSegsMaxDist(me, segDist)
+		v.nextHoleDelay = 6 + math.random(6)
+		entity_setSegsMaxDist(me, v.segDist)
 		--entity_flipVertical(me)
 	elseif entity_isState(me, STATE_GOTOHOLE) then
-		holeSpd = 300
+		v.holeSpd = 300
 		--entity_flipVertical(me)
 		if chance(50) then
-			node = entity_getNearestNode(getNaija(), "ROTWORM-HOLE")
+			v.node = entity_getNearestNode(getNaija(), "ROTWORM-HOLE")
 		else
-			node = entity_getNearestNode(me, "ROTWORM-HOLE")
+			v.node = entity_getNearestNode(me, "ROTWORM-HOLE")
 		end
-		if node ~= 0 then
-			lastHole = node
+		if v.node ~= 0 then
+			v.lastHole = v.node
 		end	
 		entity_setMaxSpeedLerp(me, 2)
 		entity_setStateTime(me, 6+math.random(4))
 		--[[
-		node = entity_getNearestNode(me, "ROTWORM-HOLE")
-		if node ~= 0 then
-			lastHole = node
-			entity_swimToNode(me, node, SPEED_NORMAL)
+		v.node = entity_getNearestNode(me, "ROTWORM-HOLE")
+		if v.node ~= 0 then
+			v.lastHole = v.node
+			entity_swimToNode(me, v.node, SPEED_NORMAL)
 		end
 		]]--
 	elseif entity_isState(me, STATE_HIDE) then
 		entity_clearVel(me)
 		--entity_alpha(me, 0.0, 1.0)
-		dist = segDist
-		entity_setPosition(me, node_x(node), node_y(node), 0.2)
+		v.dist = v.segDist
+		entity_setPosition(me, node_x(v.node), node_y(v.node), 0.2)
 		entity_setDamageTarget(me, DT_AVATAR_ENERGYBLAST, false)
 		entity_setDamageTarget(me, DT_AVATAR_SHOCK, false)
 		entity_setDamageTarget(me, DT_AVATAR_PET, false)
 		entity_setDamageTarget(me, DT_AVATAR_LIZAP, false)
 	elseif entity_isState(me, STATE_SHOW) then
-		node = entity_getNearestNode(me, "ROTWORM-HOLE", lastHole)
-		if node ~= 0 then
-			entity_setPosition(me, node_x(node), node_y(node))
+		v.node = entity_getNearestNode(me, "ROTWORM-HOLE", v.lastHole)
+		if v.node ~= 0 then
+			entity_setPosition(me, node_x(v.node), node_y(v.node))
 			entity_warpSegments(me)
 		end	
 		entity_clearVel(me)

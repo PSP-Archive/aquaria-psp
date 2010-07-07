@@ -17,55 +17,56 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-boss = 0
-ompo = 0
-start = 0
-goto = 0
-eatPos = 0
+v.n = 0
+v.boss = 0
+v.ompo = 0
+v.start = 0
+v.goto = 0
+v.eatPos = 0
 
 function init(me)
-	start = getNode("OMPOSTART")
-	goto = getNode("OMPOGOTO")
-	boss = getEntity("EnergyBoss")
-	eatPos = getNode("EATPOS")
-	n = getNaija()
+	v.start = getNode("OMPOSTART")
+	v.goto = getNode("OMPOGOTO")
+	v.boss = getEntity("EnergyBoss")
+	v.eatPos = getNode("EATPOS")
+	v.n = getNaija()
 	if isFlag(FLAG_OMPO, 4) then
-		entity_alpha(boss, 0)
+		entity_alpha(v.boss, 0)
 	end
-	boss = getEntity("EnergyBoss")
 end
 
-c = false
+v.c = false
 function update(me)
-	if c then return end
+	if v.c then return end
 	
-	if node_isEntityIn(me, n) and isFlag(FLAG_OMPO, 4) and isFlag(FLAG_ENERGYBOSSDEAD, 0) then
-		c = true
+	if node_isEntityIn(me, v.n) and isFlag(FLAG_OMPO, 4) and isFlag(FLAG_ENERGYBOSSDEAD, 0) then
+		v.c = true
 		
 		
-		entity_idle(n)
-		if entity_isfh(n) then entity_fh(n) end
+		entity_idle(v.n)
+		if entity_isfh(v.n) then entity_fh(v.n) end
 		musicVolume(0.5, 1)
 		watch(1)
 		
 		
 		
-		ompo = createEntity("Ompo", "", node_x(start), node_y(start))
-		entity_alpha(ompo, 0)
-		entity_alpha(ompo, 1, 1)
-		entity_setState(ompo, STATE_INTRO)
-		entity_flipToEntity(ompo, n)
+		v.ompo = createEntity("Ompo", "", node_x(v.start), node_y(v.start))
+		entity_alpha(v.ompo, 0)
+		entity_alpha(v.ompo, 1, 1)
+		entity_setState(v.ompo, STATE_INTRO)
+		entity_flipToEntity(v.ompo, v.n)
 		
 		playSfx("Ompo")
 		watch(0.5)
 		
-		--cam_toEntity(ompo)
+		--cam_toEntity(v.ompo)
 		
-		entity_setPosition(ompo, node_x(goto), node_y(goto), 3, 0, 0, 1)
-		--entity_setEntityLayer(ompo, 0)
+		entity_setPosition(v.ompo, node_x(v.goto), node_y(v.goto), 3, 0, 0, 1)
+		--entity_setEntityLayer(v.ompo, 0)
 		watch(3)
 		
 		musicVolume(0, 5)
@@ -75,11 +76,11 @@ function update(me)
 		
 		
 		
-		entity_alpha(boss, 1, 0.1)
-		entity_setPosition(boss, node_x(eatPos), node_y(eatPos))
+		entity_alpha(v.boss, 1, 0.1)
+		entity_setPosition(v.boss, node_x(v.eatPos), node_y(v.eatPos))
 		
 		--
-		entity_setState(boss, STATE_APPEAR)
+		entity_setState(v.boss, STATE_APPEAR)
 		
 		watch(1.3)
 		
@@ -91,11 +92,11 @@ function update(me)
 		
 		setGameSpeed(1)
 		
-		entity_alpha(ompo, 0)
-		entity_setPosition(ompo, 0, 0)
+		entity_alpha(v.ompo, 0)
+		entity_setPosition(v.ompo, 0, 0)
 		
 		-- now,  set the bone on
-		boneOmpo = entity_getBoneByName(boss, "Ompo")
+		local boneOmpo = entity_getBoneByName(v.boss, "Ompo")
 		
 		bone_setVisible(boneOmpo, true)
 		bone_scale(boneOmpo, 0.4, 0.4)
@@ -104,11 +105,11 @@ function update(me)
 		
 		playSfx("Bite")
 		
-		cam_toEntity(boss)
+		cam_toEntity(v.boss)
 	
 		--[[
 		watch(0.5)
-		ct = 0
+		local ct = 0
 		while entity_isAnimating(boss) do
 			watch(0.2)
 			--playSfx("Bite")
@@ -124,7 +125,7 @@ function update(me)
 		playSfx("Gulp")
 		]]--
 		
-		while entity_isAnimating(boss) do
+		while entity_isAnimating(v.boss) do
 			watch(FRAME_TIME)
 		end
 		
@@ -132,18 +133,18 @@ function update(me)
 		--watch(0.5)
 		
 		
-		cam_toEntity(boss)
+		cam_toEntity(v.boss)
 		
-		entity_setState(boss, STATE_INTRO)
+		entity_setState(v.boss, STATE_INTRO)
 		
 		watch(1.5)
 		
 		playMusic("BigBoss")
 		
-		cam_toEntity(n)
+		cam_toEntity(v.n)
 		
 		setFlag(FLAG_OMPO, 5)
 		
-		c = false
+		v.c = false
 	end
 end

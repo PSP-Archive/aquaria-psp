@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- P E T  N A U T I L U S
 
 dofile("scripts/entities/entityinclude.lua")
@@ -24,12 +26,12 @@ dofile("scripts/entities/entityinclude.lua")
 STATE_ATTACKPREP		= 1000
 STATE_ATTACK			= 1001
 
-lungeDelay = 0
+v.lungeDelay = 0
 
-spinDir = -1
+v.spinDir = -1
 
-rot = 0
-shotDrop = 0
+v.rot = 0
+v.shotDrop = 0
 
 function init(me)
 	setupBasicEntity(
@@ -54,12 +56,12 @@ function init(me)
 	
 	
 	entity_rotate(me, 360, 1, LOOP_INF)
-	lungeDelay = 1.0
+	v.lungeDelay = 1.0
 	loadSound("Nautilus")
 	
 	entity_scale(me, 0.75, 0.75)
 	
-	rot = 0
+	v.rot = 0
 	
 	esetv(me, EV_LOOKAT, 0)
 	esetv(me, EV_ENTITYDIED, 1)
@@ -73,7 +75,7 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
@@ -82,8 +84,8 @@ function update(me, dt)
 	else
 		entity_setColor(me, 1, 1, 1, 1)
 	end
-	if not isInputEnabled() or not entity_isUnderWater(n) then
-		entity_setPosition(me, entity_x(n), entity_y(n), 0.3)
+	if not isInputEnabled() or not entity_isUnderWater(v.n) then
+		entity_setPosition(me, entity_x(v.n), entity_y(v.n), 0.3)
 		entity_alpha(me, 0, 0.1)
 		return
 	else
@@ -91,52 +93,52 @@ function update(me, dt)
 	end
 	
 
-	naijaUnder = entity_y(n) > getWaterLevel()
+	local naijaUnder = entity_y(v.n) > getWaterLevel()
 	if naijaUnder then
 		if entity_y(me)-32 < getWaterLevel() then
 			entity_setPosition(me, entity_x(me), getWaterLevel()+32)
 		end
 	else
 		if entity_isState(me, STATE_FOLLOW) then
-			entity_setPosition(me, entity_x(n), entity_y(n), 0.1)
+			entity_setPosition(me, entity_x(v.n), entity_y(v.n), 0.1)
 		end
 	end
 	
 	if entity_isState(me, STATE_FOLLOW) then
-		rot = rot + dt*0.2
-		if rot > 1 then
-			rot = rot - 1
+		v.rot = v.rot + dt*0.2
+		if v.rot > 1 then
+			v.rot = v.rot - 1
 		end
-		dist = 100
-		t = 0
-		x = 0
-		y = 0
+		local dist = 100
+		local t = 0
+		local x = 0
+		local y = 0
 		if avatar_isRolling() then
 			dist = 90
-			spinDir = -avatar_getRollDirection()
-			t = rot * 6.28
+			v.spinDir = -avatar_getRollDirection()
+			t = v.rot * 6.28
 		else
-			t = rot * 6.28
+			t = v.rot * 6.28
 		end
 		
-		if not entity_isEntityInRange(me, n, 1024) then
-			entity_setPosition(me, entity_getPosition(n))
+		if not entity_isEntityInRange(me, v.n, 1024) then
+			entity_setPosition(me, entity_getPosition(v.n))
 		end
 		
-		a = t
+		local a = t
 		x = x + math.sin(a)*dist
 		y = y + math.cos(a)*dist
 		
 		if naijaUnder then
-			entity_setPosition(me, entity_x(n)+x, entity_y(n)+y, 0.6)
+			entity_setPosition(me, entity_x(v.n)+x, entity_y(v.n)+y, 0.6)
 		end
 		
 		--entity_handleShotCollisions(me)
 		
-		lungeDelay = lungeDelay - (dt * (getPetPower()+1))
-		if lungeDelay < 0 then
-			lungeDelay = 3
-			ent = entity_getNearestEntity(me, "", 512, ET_ENEMY, DT_AVATAR_PET)
+		v.lungeDelay = v.lungeDelay - (dt * (getPetPower()+1))
+		if v.lungeDelay < 0 then
+			v.lungeDelay = 3
+			local ent = entity_getNearestEntity(me, "", 512, ET_ENEMY, DT_AVATAR_PET)
 			if ent~=0 and not entity_isDamageTarget(ent, DT_AVATAR_PETNAUTILUS) then
 				ent = 0
 			end
@@ -149,10 +151,10 @@ function update(me, dt)
 	end
 	if entity_isState(me, STATE_ATTACK) then
 		entity_updateMovement(me, dt)
-		shotDrop = shotDrop - dt
-		if shotDrop < 0 then
+		v.shotDrop = v.shotDrop - dt
+		if v.shotDrop < 0 then
 			createShot("PetNautilus", me, 0, entity_x(me), entity_y(me))
-			shotDrop = 0.05
+			v.shotDrop = 0.05
 		end
 		entity_moveTowardsTarget(me, dt, 5000)
 	end
@@ -160,7 +162,7 @@ end
 
 function entityDied(me, ent)
 	debugLog("Pet_Nautilus: entity died")
-	t = entity_getTarget(me)
+	local t = entity_getTarget(me)
 	if t ~= 0 then
 		--debugLog(string.format("target name: %s", entity_getName(t)))
 	end
@@ -179,7 +181,7 @@ function enterState(me)
 		entity_setMaxSpeed(me, 0)
 		entity_doGlint(me, "Glint", BLEND_ADD)
 	elseif entity_isState(me, STATE_ATTACK) then
-		shotDrop = 0
+		v.shotDrop = 0
 		entity_enableMotionBlur(me)
 		entity_setMaxSpeed(me, 1000)
 		entity_moveTowardsTarget(me, 1, 10000)

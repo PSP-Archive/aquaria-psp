@@ -17,9 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
 function init(me)
 	setupEntity(me)
@@ -35,8 +37,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -81,7 +83,7 @@ end
 
 function msg(me, msg)
 	if msg == "g" then
-		sx, sy = entity_getScale(me)
+		local sx, sy = entity_getScale(me)
 		entity_scale(me, sx+0.1, sy+0.1, 0.5)
 	end
 end

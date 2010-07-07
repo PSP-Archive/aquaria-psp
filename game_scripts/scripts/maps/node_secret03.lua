@@ -17,33 +17,35 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 
 --function bASDFASDF () ()A {}}A SDFASJDF end end end
 
-n = 0
-mia = 0
-baby = 0
+v.n = 0
+v.mia = 0
+v.baby = 0
 
-done = false
+v.done = false
 
 function init(me)
-	n = getNaija()
-	mia = getEntity("MiaGhost")
-	baby = getEntity("NaijaChildGhost")
+	v.n = getNaija()
+	v.mia = getEntity("MiaGhost")
+	v.baby = getEntity("NaijaChildGhost")
 	
-	entity_fh(mia)
-	entity_alpha(mia, 0)
-	entity_alpha(baby, 0)
+	entity_fh(v.mia)
+	entity_alpha(v.mia, 0)
+	entity_alpha(v.baby, 0)
 	
 	fade2(0, 1)
 end
 
 function update(me, dt)
-	if not done and isFlag(FLAG_SECRET03, 0) then 
-		if node_isEntityIn(me, n) then
-			done = true
+	if not v.done and isFlag(FLAG_SECRET03, 0) then 
+		if node_isEntityIn(me, v.n) then
+			v.done = true
 			
 			setFlag(FLAG_SECRET03, 1)
 			
@@ -51,9 +53,9 @@ function update(me, dt)
 			
 			changeForm(FORM_NORMAL)
 			
-			entity_idle(n)
+			entity_idle(v.n)
 			
-			cam_toEntity(mia)
+			cam_toEntity(v.mia)
 			
 			setSceneColor(0.5, 0.5, 1, 2)
 			watch(2)

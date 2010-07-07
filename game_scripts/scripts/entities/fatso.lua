@@ -17,9 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
 function init(me)
 	setupEntity(me)
@@ -40,19 +42,19 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 	entity_updateMovement(me, dt)
 
 	if entity_touchAvatarDamage(me, entity_getCollideRadius(me), 0) then
-		if avatar_isBursting() and entity_setBoneLock(n, me) then
+		if avatar_isBursting() and entity_setBoneLock(v.n, me) then
 			-- yay!
 		else
-			x, y = entity_getVectorToEntity(me, n, 1000)
-			entity_addVel(n, x, y)
+			local x, y = entity_getVectorToEntity(me, v.n, 1000)
+			entity_addVel(v.n, x, y)
 		end
 	end
 end

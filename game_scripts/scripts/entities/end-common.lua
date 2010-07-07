@@ -17,13 +17,15 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-spirit = 0
-n1 = 0
-n2 = 0
-n3 = 0
-n4 = 0
+v.spirit = 0
+v.n1 = 0
+v.n2 = 0
+v.n3 = 0
+v.n4 = 0
 
 function initEnd(flag, skel)
 	if isFlag(FLAG_ENDING, flag) then
@@ -38,24 +40,24 @@ function initEnd(flag, skel)
 end
 
 function endBit(spiritNodeName, anim)
-	sn = getNode(spiritNodeName)
+	local sn = getNode(spiritNodeName)
 	
-	entity_setPosition(spirit, node_x(sn), node_y(sn))
+	entity_setPosition(v.spirit, node_x(sn), node_y(sn))
 	
-	entity_animate(spirit, anim, -1)
+	entity_animate(v.spirit, anim, -1)
 	
 	
 end
 
 function doEnd1(spiritNodeName, anim)
-	cam_toNode(n1)
+	cam_toNode(v.n1)
 	watch(0.2)
 	
-	cam_toNode(n1)
+	cam_toNode(v.n1)
 end
 
 function doEnd2(spiritNodeName, anim)
-	cam_toNode(n3)
+	cam_toNode(v.n3)
 	watch(0.2)
 	
 end

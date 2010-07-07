@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/maps/finalcommon.lua")
 
 function init()
@@ -25,15 +27,15 @@ function init()
 	if isFlag(FLAG_FINAL, FINAL_START) then
 		setFlag(FLAG_LI, 200)
 	
-		node = getNode("LIHEART")
-		ent = getLi()
+		local node = getNode("LIHEART")
+		local ent = getLi()
 		if ent == 0 then
 			ent = createEntity("Li", "")
 		end
 		entity_setPosition(ent, node_x(node), node_y(node))
 		entity_setState(ent, STATE_TRAPPEDINCREATOR, -1, 1)
 		
-		node = getNode("CCHEART")
-		ent = createEntity("CC_Final", "", node_x(node), node_y(node))
+		local node = getNode("CCHEART")
+		local ent = createEntity("CC_Final", "", node_x(node), node_y(node))
 	end
 end

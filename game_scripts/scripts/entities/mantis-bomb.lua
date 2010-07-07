@@ -17,15 +17,17 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
-timer = 0
+v.timer = 0
 
-flashing = false
+v.flashing = false
 
-pulled = false
+v.pulled = false
 
 function init(me)
 	setupEntity(me)
@@ -50,8 +52,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function explode(me)
@@ -59,10 +61,10 @@ function explode(me)
 	entity_delete(me)
 	shakeCamera(4, 1)
 	
-	maxa = 3.14 * 2
-	a = 0
+	local maxa = 3.14 * 2
+	local a = 0
 	while a < maxa do
-		s= createShot("mantisbomb", me)
+		local s = createShot("mantisbomb", me)
 		shot_setAimVector(s, math.sin(a), math.cos(a))
 		a = a + (3.14*2)/16.0
 	end
@@ -81,26 +83,26 @@ function update(me, dt)
 		entity_setMaxSpeed(me, 800)
 	end
 	
-	timer = timer + dt
-	if timer > 5 and not flashing then
-		flashing = true
+	v.timer = v.timer + dt
+	if v.timer > 5 and not v.flashing then
+		v.flashing = true
 		entity_color(me, 1, 1, 1)
 		entity_color(me, 1, 0.0, 0.0, 0.1, -1, 1)
 		entity_offset(me, -10, 0)
 		entity_offset(me, 10, 0, 0.05, -1, 1)
 	end
-	if timer > 10 then
+	if v.timer > 10 then
 		explode(me)
 		return
 	end
 	
 	if entity_isBeingPulled(me) then
-		pulled = true
+		v.pulled = true
 	end
-	if not entity_isBeingPulled(me) and pulled then
-		pulled = false
-		vx = entity_velx(me)
-		vy = entity_vely(me)
+	if not entity_isBeingPulled(me) and v.pulled then
+		v.pulled = false
+		local vx = entity_velx(me)
+		local vy = entity_vely(me)
 		
 		entity_clearVel(me)
 		entity_addVel(me, vx*0.25, vy*0.25)
@@ -124,8 +126,8 @@ end
 function exitState(me)
 end
 
-function msg(me, str, v)
-	if str == "exp" then
+function msg(me, msg)
+	if msg == "exp" then
 		explode(me)
 	end
 end

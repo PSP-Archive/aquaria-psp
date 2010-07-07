@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-lamp = 0
-door = 0
+v.lamp = 0
+v.door = 0
 
 function init(me)
 	node_setCursorActivation(me, false)
@@ -30,15 +32,15 @@ function activate(me)
 end
 
 function update(me, dt)
-	if lamp == 0 then
-		lamp = node_getNearestEntity(me, "songlamp1")
+	if v.lamp == 0 then
+		v.lamp = node_getNearestEntity(me, "songlamp1")
 	end
-	if door == 0 then
-		door = node_getNearestEntity(me, "EnergyDoor")
+	if v.door == 0 then
+		v.door = node_getNearestEntity(me, "EnergyDoor")
 	end
-	if lamp ~= 0 and entity_isState(lamp, STATE_ON) then		
-		if door ~= 0 and not entity_isState(door, STATE_OPEN) and not entity_isState(door, STATE_OPENED) then
-			entity_setState(door, STATE_OPEN)
+	if v.lamp ~= 0 and entity_isState(v.lamp, STATE_ON) then
+		if v.door ~= 0 and not entity_isState(v.door, STATE_OPEN) and not entity_isState(v.door, STATE_OPENED) then
+			entity_setState(v.door, STATE_OPEN)
 		end
 	end
 end

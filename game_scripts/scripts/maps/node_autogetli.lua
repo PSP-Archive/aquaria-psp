@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 function init(me)
@@ -25,9 +27,9 @@ end
 function update(me, dt)
 	if not hasLi() then
 		if node_isEntityIn(me, getNaija()) then
-			n = getNaija()
+			local n = getNaija()
 			setFlag(FLAG_LI, 100)
-			li = createEntity("li", "", entity_x(n), entity_y(n))
+			local li = createEntity("li", "", entity_x(n), entity_y(n))
 			setLi(li)
 			
 		end

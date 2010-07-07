@@ -17,33 +17,36 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 STATE_MOVING 	= 1001
 
-n = 0
-eyes = {}
-eyeHits = {}
-beams = {}
-nut = 0
-node = 0
-beamTimer = 0
-addBeamIdx = -1
-addBeamDelay = 0
-vdir = 0
-hdir = -1
-hdirTimer = 6
-movingSpawnTimer = 3
-movingBeamTimer = 8
+v.n = 0
+v.eyes = {}
+v.eyeHits = {}
+v.beams = {}
+v.nut = 0
+v.node = 0
+v.door = 0
+v.beamTimer = 0
+v.addBeamIdx = -1
+v.addBeamDelay = 0
+v.vdir = 0
+v.hdir = -1
+v.hdirTimer = 6
+v.movingSpawnTimer = 3
+v.movingBeamTimer = 8
 
-soundDelay = 0
+v.soundDelay = 0
 
-rotSpeed = 40
+v.rotSpeed = 40
 
 function clearBarriers()
-	if node ~= 0 then
+	if v.node ~= 0 then
 		-- do magic
-		node_setElementsInLayerActive(node, 2, false)
+		node_setElementsInLayerActive(v.node, 2, false)
 		reconstructGrid()
 	end
 end
@@ -57,16 +60,16 @@ function init(me)
 	entity_setHealth(me, 34) -- 26
 	
 	for i=1,6 do
-		eyes[i] = entity_getBoneByIdx(me, i)
-		bone_rotate(eyes[i], bone_getRotation(eyes[o])+180, 2)
-		eyeHits[i] = 0
-		beams[i] = 0
+		v.eyes[i] = entity_getBoneByIdx(me, i)
+		bone_rotate(v.eyes[i], bone_getRotation(v.eyes[i])+180, 2)
+		v.eyeHits[i] = 0
+		v.beams[i] = 0
 	end
 	
 	entity_setState(me, STATE_IDLE)
 	entity_setCullRadius(me, 1024)
 	
-	nut = entity_getBoneByName(me, "Nut")
+	v.nut = entity_getBoneByName(me, "Nut")
 	
 	--entity_rotate(me, 360, 3)
 	entity_offset(me, 0, 16, 3,-1,1,1)
@@ -92,179 +95,179 @@ end
 
 function clearBeams()
 	for i=1,6 do
-		if beams[i]~=0 then
-			beam_delete(beams[i])
-			beams[i] = 0
+		if v.beams[i]~=0 then
+			beam_delete(v.beams[i])
+			v.beams[i] = 0
 		end
-		eyeHits[i] = 0
-		bone_rotateOffset(eyes[i], 0, 0.5, 0, 0, 1)
+		v.eyeHits[i] = 0
+		bone_rotateOffset(v.eyes[i], 0, 0.5, 0, 0, 1)
 	end
-	addBeamIdx = -1
+	v.addBeamIdx = -1
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
-	node = entity_getNearestNode(me, "CORERANGE")
-	door = getEntity("CathedralDoor")
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
+	v.node = entity_getNearestNode(me, "CORERANGE")
+	v.door = getEntity("CathedralDoor")
 	if entity_isFlag(me, 1) then
 		clearBarriers()
 		entity_delete(me)
 		
-		if door ~= 0 then
-			entity_msg(door, "DoorDownPre")
+		if v.door ~= 0 then
+			entity_msg(v.door, "DoorDownPre")
 		end		
 	end
 end
 
 function cueAddEyeBeam(me, idx)
-	eyeHits[idx] = 1000
-	if beams[idx] == 0 then
-		bone_rotateOffset(eyes[idx], 180, 0.5, 0, 0, 1)				
-		if addBeamIdx ~= -1 and addBeamIdx ~= idx then
-			addEyeBeam(me, addBeamIdx)
+	v.eyeHits[idx] = 1000
+	if v.beams[idx] == 0 then
+		bone_rotateOffset(v.eyes[idx], 180, 0.5, 0, 0, 1)				
+		if v.addBeamIdx ~= -1 and v.addBeamIdx ~= idx then
+			addEyeBeam(me, v.addBeamIdx)
 		end
-		addBeamIdx = idx
-		addBeamDelay = 0.5
-		beamTimer = 6
+		v.addBeamIdx = idx
+		v.addBeamDelay = 0.5
+		v.beamTimer = 6
 	end
 end
 
 function addEyeBeam(me, idx)
-	if beams[idx]==0 then
-		bx, by = bone_getWorldPosition(eyes[idx])
-		beams[idx] = createBeam(bx, by, bone_getWorldRotation(eyes[idx])-90)
-		beam_setTexture(beams[idx], "particles/Beam")
+	if v.beams[idx] == 0 then
+		local bx, by = bone_getWorldPosition(v.eyes[idx])
+		v.beams[idx] = createBeam(bx, by, bone_getWorldRotation(v.eyes[idx])-90)
+		beam_setTexture(v.beams[idx], "particles/Beam")
 		
 		entity_sound(me, "rotcore-beam")
 		
-		c = 0
+		local c = 0
 		for i=1,6 do 
-			if beams[i] ~= 0 then
+			if v.beams[i] ~= 0 then
 				c = c + 1
 			end
 		end
 		if c >= 6 then
-			beamTimer = 0
+			v.beamTimer = 0
 			entity_setState(me, STATE_OPEN)
 		end
 	end
 end
 
-seen = false
+v.seen = false
 
 function update(me, dt)
-	if addBeamDelay > 0 then
-		addBeamDelay = addBeamDelay - dt
-		if addBeamDelay < 0 then
-			addBeamDelay = 0			
-			addEyeBeam(me, addBeamIdx)
-			addBeamIdx = -1
+	if v.addBeamDelay > 0 then
+		v.addBeamDelay = v.addBeamDelay - dt
+		if v.addBeamDelay < 0 then
+			v.addBeamDelay = 0			
+			addEyeBeam(me, v.addBeamIdx)
+			v.addBeamIdx = -1
 		end
 	end
 	
-	soundDelay = soundDelay - dt
-	if soundDelay <= 0 then
-		soundDelay = 0.6 + math.random(2) * 0.6
+	v.soundDelay = v.soundDelay - dt
+	if v.soundDelay <= 0 then
+		v.soundDelay = 0.6 + math.random(2) * 0.6
 		entity_sound(me, "rotcore-idle")
 	end
 	
-	if entity_isEntityInRange(me, n, 900) then
+	if entity_isEntityInRange(me, v.n, 900) then
 		overrideZoom(0.5, 0.2)
 	else
 		overrideZoom(0)
 	end
 	
-	if not seen and entity_isEntityInRange(me, n, 800) then
+	if not v.seen and entity_isEntityInRange(me, v.n, 800) then
 		emote(EMOTE_NAIJAUGH)
-		seen = true
+		v.seen = true
 	end
 
 	entity_handleShotCollisionsSkeletal(me)
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if bone ~= 0 then
-		nx,ny = entity_getPosition(n)
-		cx,cy = entity_getPosition(me)
-		x = nx-cx
-		y = 0
+		local nx,ny = entity_getPosition(v.n)
+		local cx,cy = entity_getPosition(me)
+		local x = nx-cx
+		local y = 0
 		x,y = vector_setLength(x,y,2000)
-		entity_addVel(n, x, y)
-		entity_damage(n, me, 0.5)
+		entity_addVel(v.n, x, y)
+		entity_damage(v.n, me, 0.5)
 	end
 	if entity_isState(me, STATE_IDLE) then
-		if beamTimer > 0 then
-			beamTimer = beamTimer - dt
-			if beamTimer <= 0 then
+		if v.beamTimer > 0 then
+			v.beamTimer = v.beamTimer - dt
+			if v.beamTimer <= 0 then
 				clearBeams()
 			end
 		end
-		if entity_isEntityInRange(me, n, 1000) then
+		if entity_isEntityInRange(me, v.n, 1000) then
 			entity_setMaxSpeedLerp(me, 0.15, 0.1)
 			entity_moveTowardsTarget(me, dt, 400)
 		end
 	end
 	if entity_isState(me, STATE_MOVING) then
-		hdirTimer = hdirTimer - dt
-		if hdirTimer < 0 then
-			hdirTimer = math.random(2)+4
-			if hdir == -1 then
-				hdir = 1
+		v.hdirTimer = v.hdirTimer - dt
+		if v.hdirTimer < 0 then
+			v.hdirTimer = math.random(2)+4
+			if v.hdir == -1 then
+				v.hdir = 1
 			else
-				hdir = -1
+				v.hdir = -1
 			end
 		end
 		entity_setMaxSpeedLerp(me, 1, 0.1)
-		entity_rotate(me, entity_getRotation(me)+dt*rotSpeed*hdir)
-		if vdir == 0 then
+		entity_rotate(me, entity_getRotation(me)+dt*v.rotSpeed*v.hdir)
+		if v.vdir == 0 then
 			entity_addVel(me, 0, -500*dt)
 		else
 			entity_addVel(me, 0, 500*dt)
 		end
-		entity_addVel(me, hdir*100*dt, 0)
-		movingSpawnTimer = movingSpawnTimer - dt
-		if movingSpawnTimer < 0 then
-			bx,by = bone_getWorldPosition(nut)
+		entity_addVel(me, v.hdir*100*dt, 0)
+		v.movingSpawnTimer = v.movingSpawnTimer - dt
+		if v.movingSpawnTimer < 0 then
+			local bx, by = bone_getWorldPosition(v.nut)
 			for i=1,2 do
 				createEntity("RotBaby-Form1", "", bx, by+i*10)
 				playSfx("rotcore-birth")
 			end	
-			movingSpawnTimer = math.random(4) + 8
+			v.movingSpawnTimer = math.random(4) + 8
 		end
-		movingBeamTimer = movingBeamTimer - dt
-		if movingBeamTimer < -100 then
-			if movingBeamTimer <= -100 - 4 then
+		v.movingBeamTimer = v.movingBeamTimer - dt
+		if v.movingBeamTimer < -100 then
+			if v.movingBeamTimer <= -100 - 4 then
 				clearBeams()
-				movingBeamTimer = math.random(2) + 4
+				v.movingBeamTimer = math.random(2) + 4
 			end
-		elseif movingBeamTimer < 0 then
+		elseif v.movingBeamTimer < 0 then
 			clearBeams()
 			cueAddEyeBeam(me, math.random(6))
-			movingBeamTimer = -100			
+			v.movingBeamTimer = -100			
 		end		
 	end
 	entity_updateMovement(me, dt)
 	for i=1,6 do
-		if beams[i]~=0 then
-			bone = eyes[i]
-			beam_setAngle(beams[i], bone_getWorldRotation(bone)+90)
-			beam_setPosition(beams[i], bone_getWorldPosition(bone))
+		if v.beams[i]~=0 then
+			bone = v.eyes[i]
+			beam_setAngle(v.beams[i], bone_getWorldRotation(bone)+90)
+			beam_setPosition(v.beams[i], bone_getWorldPosition(bone))
 		end
 	end
 	entity_clearTargetPoints(me)
 	if not entity_isState(me, STATE_OPEN) and not entity_isState(me, STATE_MOVING) then
 		for i=1,6 do
-			entity_addTargetPoint(me, bone_getWorldPosition(eyes[i]))
+			entity_addTargetPoint(me, bone_getWorldPosition(v.eyes[i]))
 		end
 	end
 	if entity_isState(me, STATE_OPEN) or entity_isState(me, STATE_MOVING) then
-		entity_addTargetPoint(me, bone_getWorldPosition(nut))
+		entity_addTargetPoint(me, bone_getWorldPosition(v.nut))
 	end
 end
 
-incut = false
+v.incut = false
 
 function enterState(me)
-	if incut then return end
+	if v.incut then return end
 	
 	if entity_isState(me, STATE_IDLE) then
 		entity_animate(me, "idle", -1)
@@ -276,7 +279,7 @@ function enterState(me)
 		clearBeams()
 		entity_setStateTime(me, entity_animate(me, "hideNut"))
 	elseif entity_isState(me, STATE_DEATHSCENE) then
-		incut = true
+		v.incut = true
 		clearBeams()
 		entity_setStateTime(me, 99)
 		
@@ -301,7 +304,7 @@ function enterState(me)
 		fade2(1, 0.2, 1, 1, 1)
 		watch(0.2)
 		
-		entity_heal(n, 1)
+		entity_heal(v.n, 1)
 		
 		spawnParticleEffect("rotcore-die", entity_x(me), entity_y(me))
 		
@@ -312,13 +315,13 @@ function enterState(me)
 		watch(2)
 		
 		entity_setStateTime(me, 0.01)
-		incut = false
+		v.incut = false
 	elseif entity_isState(me, STATE_MOVING) then
 		clearBeams()
 	elseif entity_isState(me, STATE_DEAD) then
 		clearBarriers()
-		if door ~= 0 then
-			entity_msg(door, "DoorDown")
+		if v.door ~= 0 then
+			entity_msg(v.door, "DoorDown")
 		end
 		overrideZoom(0)
 		entity_setFlag(me, 1)
@@ -329,7 +332,7 @@ function exitState(me)
 	if entity_isState(me, STATE_OPEN) then
 		entity_setState(me, STATE_MOVING)
 	elseif entity_isState(me, STATE_CLOSE) then
-		bx,by = bone_getWorldPosition(nut)
+		local bx, by = bone_getWorldPosition(v.nut)
 		for i=1,6 do
 			createEntity("RotBaby-Form1", "", bx, by+i*10)
 		end
@@ -341,16 +344,16 @@ function damage(me, attacker, bone, damageType, dmg)
 	if bone_isName(bone,"Eye") or bone_isName(bone, "Nut") then
 		bone_damageFlash(bone)
 	end
-	if bone == nut then
+	if bone == v.nut then
 		playSfx("rotcore-hurt")
 		return true
 	end
 	if not entity_isState(me, STATE_OPEN) and not entity_isState(me, STATE_MOVING) then
-		idx = bone_getIndex(bone)
+		local idx = bone_getIndex(bone)
 		if idx >= 1 and idx <= 6 then
 			-- is an eye!
-			eyeHits[idx] = eyeHits[idx] + dmg
-			if eyeHits[idx] >= 1 and eyeHits[idx] < 1000 then
+			v.eyeHits[idx] = v.eyeHits[idx] + dmg
+			if v.eyeHits[idx] >= 1 and v.eyeHits[idx] < 1000 then
 				cueAddEyeBeam(me, idx)
 			end
 		end
@@ -363,12 +366,12 @@ end
 
 function hitSurface(me)
 	if entity_isState(me, STATE_MOVING) then
-		nx, ny = getWallNormal(getLastCollidePosition())
+		local nx, ny = getWallNormal(getLastCollidePosition())
 		if math.abs(ny) > 0.5 then
-			if vdir==0 then
-				vdir = 1
+			if v.vdir==0 then
+				v.vdir = 1
 			else
-				vdir = 0
+				v.vdir = 0
 			end
 		end
 	end

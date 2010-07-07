@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- I C E   C H U N K   C O M M O N   S C R I P T
 -- ================================================================================================
@@ -27,19 +29,19 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L   V A R I A B L E S
 -- ================================================================================================
 
-n = 0
+v.n = 0
 
-maxSpeed = 321 + math.random(32)
-chunkSize = 0
-width = 0
-dir = -1
+v.maxSpeed = 321 + math.random(32)
+v.chunkSize = 0
+v.width = 0
+v.dir = -1
  
 -- ================================================================================================
 -- F U N C T I O N S
 -- ================================================================================================
 
 function commonInit(me, size)
-	chunkSize = size
+	v.chunkSize = size
 
 	setupBasicEntity(
 	me,
@@ -55,7 +57,7 @@ function commonInit(me, size)
 	1,								-- particle "explosion" type, maps to particleEffects.txt -1 = none
 	1,								-- 0/1 hit other entities off/on (uses collideRadius)
 	4000,							-- updateCull -1: disabled, default: 4000
-	layer
+	v.layer
 	)
 	
 	loadSound("IceChunkBreak")
@@ -68,78 +70,78 @@ function commonInit(me, size)
 	entity_setDeathScene(me, true)
 	
 	-- SLIGHT SCALE AND COLOUR VARIATION
-	sz = 0.8 + (math.random(400) * 0.001)
+	local sz = 0.8 + (math.random(400) * 0.001)
 	entity_scale(me, sz, sz)
-	cl = 1.0 - (math.random(2345) * 0.0001)
+	local cl = 1.0 - (math.random(2345) * 0.0001)
 	entity_color(me, cl, cl, cl)
 	
 	-- IF LARGE
-	if chunkSize <= 0 then
-		chunkSize = 0
+	if v.chunkSize <= 0 then
+		v.chunkSize = 0
 		entity_setTexture(me, "IceChunk/Large")
-		width = 154 
+		v.width = 154 
 		entity_setHealth(me, 8)
 	
 	-- IF MEDIUM
-	elseif chunkSize == 1 then
-		chunkSize = 1
+	elseif v.chunkSize == 1 then
+		v.chunkSize = 1
 		entity_setTexture(me, "IceChunk/Medium")
-		width = 76
+		v.width = 76
 		entity_setHealth(me, 4)
-		maxSpeed = maxSpeed * 1.23
+		v.maxSpeed = v.maxSpeed * 1.23
 	
 	-- IF SMALL
 	else
-		chunkSize = 2
+		v.chunkSize = 2
 		entity_setTexture(me, "IceChunk/Small")
-		width = 42
+		v.width = 42
 		entity_setHealth(me, 2)
-		maxSpeed = maxSpeed * 1.54
+		v.maxSpeed = v.maxSpeed * 1.54
 	end
 	
-	width = width * sz
-	entity_setCollideRadius(me, width)
+	v.width = v.width * sz
+	entity_setCollideRadius(me, v.width)
 	entity_setDeathSound(me, "")
 	entity_alpha(me, 0.9)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 
-	entity_setMaxSpeed(me, maxSpeed)
+	entity_setMaxSpeed(me, v.maxSpeed)
 	entity_rotate(me, randAngle360())
 	entity_addRandomVel(me, 123)
 	
-	if chance(50) then dir = 1 end
+	if chance(50) then v.dir = 1 end
 end
 
 function update(me, dt)
 	entity_clearTargetPoints(me)
 	
 	-- ROTATE GENTLY
-	rotSpeed = (entity_getVelLen(me)/300) + 1
-	if entity_velx(me) < 0 then dir = -1
-	else dir = 1 end
-	entity_rotateTo(me, entity_getRotation(me) + (rotSpeed * dir))
+	local rotSpeed = (entity_getVelLen(me)/300) + 1
+	if entity_velx(me) < 0 then v.dir = -1
+	else v.dir = 1 end
+	entity_rotateTo(me, entity_getRotation(me) + (rotSpeed * v.dir))
 	
 	-- IF LARGE
-	if chunkSize == 0 then
+	if v.chunkSize == 0 then
 		-- LOCK ON TO BIG CHUNK
-		if entity_touchAvatarDamage(me, width*1.1, 0) then
-			if avatar_isBursting() and entity_setBoneLock(n, me) then
+		if entity_touchAvatarDamage(me, v.width*1.1, 0) then
+			if avatar_isBursting() and entity_setBoneLock(v.n, me) then
 			else
-				vecX, vecY = entity_getVectorToEntity(me, n, 1000)
-				entity_addVel(n, vecX, vecY)
+				local vecX, vecY = entity_getVectorToEntity(me, v.n, 1000)
+				entity_addVel(v.n, vecX, vecY)
 			end
 		end
 		
-		if entity_getBoneLockEntity(n) ~= me and entity_touchAvatarDamage(me, width, 0, 321) then
+		if entity_getBoneLockEntity(v.n) ~= me and entity_touchAvatarDamage(me, v.width, 0, 321) then
 		end
 	
 	-- IF MEDIUM
-	elseif chunkSize == 1 then
+	elseif v.chunkSize == 1 then
 		-- NAIJA COLLISION
-		if entity_getBoneLockEntity(n) ~= me and entity_touchAvatarDamage(me, width, 0, 210) then
+		if entity_getBoneLockEntity(v.n) ~= me and entity_touchAvatarDamage(me, v.width, 0, 210) then
 			if avatar_isBursting() then
 				entity_moveTowards(me, entity_x(getNaija()), entity_y(getNaija()), 1, -456)
 			else
@@ -148,9 +150,9 @@ function update(me, dt)
 		end
 	
 	-- IF SMALL
-	elseif chunkSize == 2 then
+	elseif v.chunkSize == 2 then
 		-- NAIJA COLLISION
-		if entity_getBoneLockEntity(n) ~= me and entity_touchAvatarDamage(me, width, 0, 128) then
+		if entity_getBoneLockEntity(v.n) ~= me and entity_touchAvatarDamage(me, v.width, 0, 128) then
 			if avatar_isBursting() then
 				entity_moveTowards(me, entity_x(getNaija()), entity_y(getNaija()), 1, -1234)
 			else
@@ -160,8 +162,8 @@ function update(me, dt)
 	end
 
 	-- AVOIDANCE
-	if entity_getBoneLockEntity(n) ~= me then entity_doEntityAvoidance(me, dt, width*1.1, 1.23) end
-	entity_doCollisionAvoidance(me, dt, ((width*0.01)*7)+1, 0.421)
+	if entity_getBoneLockEntity(v.n) ~= me then entity_doEntityAvoidance(me, dt, v.width*1.1, 1.23) end
+	entity_doCollisionAvoidance(me, dt, ((v.width*0.01)*7)+1, 0.421)
 	-- MOVEMENT
 	if entity_getVelLen(me) > 64 then entity_doFriction(me, dt, 42) end
 	entity_updateMovement(me, dt)
@@ -173,7 +175,7 @@ function enterState(me)
 	if entity_getState(me) == STATE_IDLE then
 	
 	elseif entity_getState(me) == STATE_DEATHSCENE then
-		deathTime = 0.23
+		local deathTime = 0.23
 		entity_setStateTime(me, deathTime)
 		entity_alpha(me, 0, deathTime)
 		entity_scale(me, 0, 0, deathTime)
@@ -181,9 +183,10 @@ function enterState(me)
 		
 		entity_sound(me, "IceChunkBreak")
 		
-		if chunkSize ~= 2 then
+		if v.chunkSize ~= 2 then
 			for i=1,3 do
-				if chunkSize == 0 then
+				local newChunk
+				if v.chunkSize == 0 then
 					newChunk = createEntity("IceChunkMedium", "", entity_x(me) + (math.random(8) - 4), entity_y(me) + (math.random(8) - 4))
 				else
 					newChunk = createEntity("IceChunkSmall", "", entity_x(me) + (math.random(4) - 2), entity_y(me) + (math.random(4) - 2))

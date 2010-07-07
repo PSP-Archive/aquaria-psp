@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-delayMax = 2
-delay = delayMax
+v.delayMax = 2
+v.delay = v.delayMax
 
 function commonInit(me, gfx)
 	setupBasicEntity(me, 
@@ -44,9 +46,9 @@ function commonInit(me, gfx)
 end
 
 function update(me, dt)
-	delay = delay - dt
-	if delay < 0 then
-		delay = delayMax
+	v.delay = v.delay - dt
+	if v.delay < 0 then
+		v.delay = v.delayMax
 		entity_fireGas(me, 96, 2.1, 0.5, "Gas", 0, 0.8, 0.6, 0, -128, 3)
 	end
 end

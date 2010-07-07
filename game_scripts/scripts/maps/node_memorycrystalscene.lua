@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 function init(me)	
@@ -29,16 +31,16 @@ function run(me)
 	if isFlag(FLAG_NAIJA_MEMORYCRYSTAL, 0) then
 		setFlag(FLAG_NAIJA_MEMORYCRYSTAL, 1)
 		
-		n = getNaija()		
+		local n = getNaija()		
 		entity_idle(n)
 		
 		entity_flipToNode(n, getNode("SAVEPOINT"))
 		
-		camNode = getNode("MEMORYCRYSTALCAM1")
-		camNode2 = getNode("MEMORYCRYSTALCAM2")
-		camNode3 = getNode("MEMORYCRYSTALCAM3")
-		camNode4 = getNode("SAVEPOINT")
-		camDummy = createEntity("Empty")
+		local camNode = getNode("MEMORYCRYSTALCAM1")
+		local camNode2 = getNode("MEMORYCRYSTALCAM2")
+		local camNode3 = getNode("MEMORYCRYSTALCAM3")
+		local camNode4 = getNode("SAVEPOINT")
+		local camDummy = createEntity("Empty")
 		entity_warpToNode(camDummy, camNode)
 		
 		setCameraLerpDelay(1.0)

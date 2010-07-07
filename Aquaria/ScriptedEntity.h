@@ -27,7 +27,7 @@ struct lua_State;
 class ScriptedEntity : public CollideEntity, public Segmented
 {
 public:
-	ScriptedEntity(const std::string &script, Vector position, EntityType et = ET_ENEMY, BehaviorType bt = BT_NORMAL);
+	ScriptedEntity(const std::string &scriptName, Vector position, EntityType et = ET_ENEMY, BehaviorType bt = BT_NORMAL);
 	void init();
 	void postInit();
 	void destroy();
@@ -113,7 +113,7 @@ protected:
 	void onHitWall();
 	bool reverseSegments;
 	int moneyAmount, expType;
-	lua_State *L;
+	Script *script;
 	void onUpdate(float dt);
 	void onEnterState(int action);
 	void onExitState(int action);

@@ -17,14 +17,16 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-door = 0
+v.door = 0
 function init(me)
 	node_setCursorActivation(me, true)
-	door = node_getNearestEntity(me, "EnergyDoor")
-	if door ~= 0 and isFlag(FLAG_MITHALAS_THRONEROOM,1) then
-		entity_setState(door, STATE_OPENED)
+	v.door = node_getNearestEntity(me, "EnergyDoor")
+	if v.door ~= 0 and isFlag(FLAG_MITHALAS_THRONEROOM,1) then
+		entity_setState(v.door, STATE_OPENED)
 	end
 end
 
@@ -32,7 +34,7 @@ function update(me, dt)
 end
 
 function activate(me)
-	n = getNaija()
+	local n = getNaija()
 	
 	entity_idle(n)
 	
@@ -51,9 +53,9 @@ function activate(me)
 		if isFlag(FLAG_SEAL_PRINCE,1) then
 			debugLog("OPENED DOOR")
 			
-			entity_setState(door, STATE_OPEN)
+			entity_setState(v.door, STATE_OPEN)
 			setFlag(FLAG_MITHALAS_THRONEROOM, 1)
-			cam_toEntity(door)
+			cam_toEntity(v.door)
 			watch(2)
 			cam_toEntity(n)
 		end

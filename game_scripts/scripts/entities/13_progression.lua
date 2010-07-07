@@ -17,16 +17,18 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-curNode = 1
-lastNode = 0
-bone_head = 0
+v.n = 0
+v.curNode = 1
+v.lastNode = 0
+v.bone_head = 0
 
-leaveNode = 0
+v.leaveNode = 0
 
-range = 0
+v.range = 0
 
 function init(me)
 	setupEntity(me)
@@ -39,33 +41,32 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)	
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
-	entity_setPosition(me, node_getPosition(lastNode))
-	
-	load = false
+	entity_setPosition(me, node_getPosition(v.lastNode))
 	
 	entity_initSkeletal(me, "13")
 	entity_scale(me, 0.6, 0.6)
 	entity_animate(me, "idle", -1)
-	bone_head = entity_getBoneByName(me, "Head")
+	v.bone_head = entity_getBoneByName(me, "Head")
 	
 
 	
-	range = entity_getNearestNode(me, "13range")
+	v.range = entity_getNearestNode(me, "13range")
 end
 
-done1st = false
-over = false
-is = false	
+v.doFirstVision = false
+v.done1st = false
+v.over = false
+v.is = false	
 
 function update(me, dt)
-	entity_setLookAtPoint(me, bone_getWorldPosition(bone_head))
+	entity_setLookAtPoint(me, bone_getWorldPosition(v.bone_head))
 	
-	if doFirstVision and not over then
-		if node_isEntityIn(range, n) and not is then	
-			is = true
+	if v.doFirstVision and not v.over then
+		if node_isEntityIn(v.range, v.n) and not v.is then
+			v.is = true
 			
 			setCutscene(1,0)
 			-- do scene
@@ -74,28 +75,28 @@ function update(me, dt)
 			
 			musicVolume(0, 2)
 			
-			--entity_clearVel(n)
-			entity_idle(n)
-			entity_setInvincible(n, true)
+			--entity_clearVel(v.n)
+			entity_idle(v.n)
+			entity_setInvincible(v.n, true)
 			-- watch for seahorse!
 			watch(1)
 			
 			overrideZoom(0.9, 4)
 			
-			entity_flipToEntity(me, n)
-			entity_flipToEntity(n, me)		
+			entity_flipToEntity(me, v.n)
+			entity_flipToEntity(v.n, me)
 			
-			entity_swimToNode(n, getNode("NAIJA_13"), SPEED_NORMAL)
-			entity_watchForPath(n)
+			entity_swimToNode(v.n, getNode("NAIJA_13"), SPEED_NORMAL)
+			entity_watchForPath(v.n)
 			
-			entity_flipToEntity(me, n)
-			entity_flipToEntity(n, me)				
+			entity_flipToEntity(me, v.n)
+			entity_flipToEntity(v.n, me)
 			watch(2)
 			entity_animate(me, "touchNaija")
 			watch(1)
 			
 
-			ompo = getEntity("Ompo")
+			local ompo = getEntity("Ompo")
 			entity_msg(ompo, "fade")
 			
 			playSfx("13Touch")
@@ -109,16 +110,15 @@ function update(me, dt)
 			
 			stopMusic()
 			fade2(1, 0.1, 1, 1, 1)
-			ox, oy = entity_getPosition(n)
 			
 			learnSong(SONG_ENERGYFORM)
 			changeForm(FORM_ENERGY)
 			
 			setCanChangeForm(false)
 			
-			sn = getNode("FIRSTVISIONSTART")
-			entity_setPosition(n, node_x(sn), node_y(sn))
-			entity_fh(n)
+			local sn = getNode("FIRSTVISIONSTART")
+			entity_setPosition(v.n, node_x(sn), node_y(sn))
+			entity_fh(v.n)
 			fade2(0, 2, 1, 1, 1)
 			
 			overrideZoom(0)
@@ -128,23 +128,23 @@ function update(me, dt)
 			setInvincibleOnNested(false)
 			avatar_setCanDie(false)
 			
-			cn = getNode("FIRSTVISIONEXIT")
+			local cn = getNode("FIRSTVISIONEXIT")
 			
-			c = 0
-			while not node_isEntityIn(cn, n) do 
+			local c = 0
+			while not node_isEntityIn(cn, v.n) do 
 				wait(FRAME_TIME)
-				if entity_getHealth(n) <= 1 then
-					entity_heal(n, 1)
+				if entity_getHealth(v.n) <= 1 then
+					entity_heal(v.n, 1)
 					c = c + 1
 				end
 				if c > 3 then
 					break
 				end
 			end
-			entity_heal(n, 100)
+			entity_heal(v.n, 100)
 			fade2(1, 0.5, 1, 1, 1)
 			watch(0.5)
-			entity_heal(n, 100)
+			entity_heal(v.n, 100)
 			
 			setCanChangeForm(true)
 			changeForm(FORM_NORMAL)
@@ -152,16 +152,16 @@ function update(me, dt)
 			
 			setInvincibleOnNested(true)
 			
-			n13 = getNode("NAIJA_13")
+			local n13 = getNode("NAIJA_13")
 			
-			entity_setPosition(n, node_x(n13), node_y(n13))
-			entity_rotate(n, 0)
-			entity_flipToEntity(n, me)
-			entity_idle(n)
-			entity_offset(n, 0, 0)
+			entity_setPosition(v.n, node_x(n13), node_y(n13))
+			entity_rotate(v.n, 0)
+			entity_flipToEntity(v.n, me)
+			entity_idle(v.n)
+			entity_offset(v.n, 0, 0)
 			watch(1)
 			
-			entity_heal(n, 100)
+			entity_heal(v.n, 100)
 			avatar_setCanDie(true)
 			
 			fade2(0, 0.5, 1, 1, 1)
@@ -174,13 +174,13 @@ function update(me, dt)
 			watch(5)
 			
 			entity_alpha(me, 0.01, 3)
-			over = true
+			v.over = true
 			entity_setPosition(me, entity_x(me)+50, entity_y(me)-50, 5, 0, 0, 1)
 			setMusicToPlay("OpenWaters")
 			playMusic("OpenWaters")					
 			watch(2)
 
-			entity_setInvincible(n, false)
+			entity_setInvincible(v.n, false)
 			entity_rotate(me, -90, 2, 0, 0, 1)
 			playSfx("mia-sillygirl")
 			watch(1)
@@ -188,7 +188,7 @@ function update(me, dt)
 			
 			
 			entity_animate(me, "trail")
-			nx, ny = node_getPosition(getNode("13LEAVE"))
+			local nx, ny = node_getPosition(getNode("13LEAVE"))
 			entity_setPosition(me, nx, ny, 8, 0, 0, 1)
 			entity_setCullRadius(me, 4000)
 			watch(0.5)
@@ -203,7 +203,7 @@ function update(me, dt)
 			beaconEffect(BEACON_SONGCAVE)
 			
 			setCutscene(0,0)
-			is = false
+			v.is = false
 			--entity_setState(me, STATE_TRANS, 2)
 		end
 	end
@@ -218,6 +218,6 @@ end
 
 function msg(me, msg)
 	if msg == "firstvision" then
-		doFirstVision = true
+		v.doFirstVision = true
 	end
 end

@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- T U R R E T
 -- ================================================================================================
@@ -27,15 +29,15 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-fireDelay = 0
-moveTimer = 0
+v.fireDelay = 0
+v.moveTimer = 0
 
 STATE_MOVING = 1000
 STATE_FIRING = 1001
-rounds = 0
-orb = 0
+v.rounds = 0
+v.orb = 0
 
-fireRate = 0.75
+v.fireRate = 0.75
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -65,12 +67,12 @@ function init(me)
 	entity_moveAlongSurface(me, 0, 1, 6, 40)
 	entity_rotateToSurfaceNormal(me, 0.1)
 	
-	orb = entity_getBoneByName(me, "Orb")
+	v.orb = entity_getBoneByName(me, "Orb")
 	
 	entity_setDeathParticleEffect(me, "Explode")
 	--[[
 	
-	bone_setColor(orb, 0, 0, 1)
+	bone_setColor(v.orb, 0, 0, 1)
 	]]--
 
 	entity_setState(me, STATE_IDLE)
@@ -88,8 +90,8 @@ function update(me, dt)
 	if entity_isState(me, STATE_MOVING) then
 		entity_moveAlongSurface(me, dt, 100, 6, 40)
 		entity_rotateToSurfaceNormal(me, 0.1)
-		moveTimer = moveTimer + dt
-		if moveTimer > 3 then
+		v.moveTimer = v.moveTimer + dt
+		if v.moveTimer > 3 then
 			entity_setState(me, STATE_IDLE)
 		end
 	else
@@ -98,29 +100,29 @@ function update(me, dt)
 	end
 	if entity_isState(me, STATE_IDLE) then
 		if entity_hasTarget(me) then
-			if rounds < 3 then
+			if v.rounds < 3 then
 				entity_setState(me, STATE_FIRING)
-				rounds = rounds + 1
+				v.rounds = v.rounds + 1
 			else
-				rounds = 0
+				v.rounds = 0
 				entity_setState(me, STATE_MOVING)
 			end
 		end
 	end
 	if entity_isState(me, STATE_FIRING) then
 		if entity_hasTarget(me) then
-			fireDelay = fireDelay - dt
-			if fireDelay < 0 then
+			v.fireDelay = v.fireDelay - dt
+			if v.fireDelay < 0 then
 				-- dmg, mxspd, homing, numsegs, out
 				
-				vx, vy = bone_getNormal(orb)
+				local vx, vy = bone_getNormal(v.orb)
 				--bone_getOrientation()
 				--entity_playSfx(me, "BasicShot")
 				--entity_fireAtTarget(me, "Turret", 1, 100, 0, 3, 32, 0, -48, vx, vy)
-				s = createShot("Turret", me, entity_getTarget(me), bone_getWorldPosition(orb))
+				local s = createShot("Turret", me, entity_getTarget(me), bone_getWorldPosition(v.orb))
 				shot_setAimVector(s, vx, vy)
 				shot_setOut(s, 32)
-				fireDelay = fireRate
+				v.fireDelay = v.fireRate
 			end
 		end
 		if not entity_isAnimating(me) then
@@ -133,7 +135,7 @@ function enterState(me)
 	if entity_getState(me)==STATE_IDLE then
 		entity_animate(me, "idle", LOOP_INF)
 	elseif entity_getState(me) == STATE_MOVING then
-		moveTimer = 0
+		v.moveTimer = 0
 		entity_switchSurfaceDirection(me)
 		entity_animate(me, "walk", LOOP_INF)
 	elseif entity_getState(me) == STATE_FIRING then

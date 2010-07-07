@@ -17,21 +17,23 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-orb = 0
+v.orb = 0
 
 function init(me)
-	orb = getEntity("EnergyOrb")
+	v.orb = getEntity("EnergyOrb")
 	if getFlag(FLAG_DEEPWHALE) > 1 then
-		entity_delete(orb)
-		orb = 0
+		entity_delete(v.orb)
+		v.orb = 0
 	end
 end
 
 function update(me, dt)
-	if orb ~= 0 and node_isEntityIn(me, orb) then
+	if v.orb ~= 0 and node_isEntityIn(me, v.orb) then
 		setFlag(FLAG_DEEPWHALE, 2)
-		orb = 0
+		v.orb = 0
 	end
 end

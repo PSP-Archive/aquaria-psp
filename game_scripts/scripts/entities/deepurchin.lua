@@ -17,13 +17,15 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-glow = 0
-boneGlow = 0
-dir = 1
-dirTimer = 0
+v.n = 0
+v.glow = 0
+v.boneGlow = 0
+v.dir = 1
+v.dirTimer = 0
 
 function init(me)
 	setupEntity(me)
@@ -38,18 +40,18 @@ function init(me)
 	
 	entity_setState(me, STATE_IDLE)
 	
-	boneGlow = entity_getBoneByName(me, "Glow")
-	glow = createQuad("Naija/LightFormGlow", 13)
-	quad_scale(glow, 8, 8)
-	quad_alpha(glow, 0)
+	v.boneGlow = entity_getBoneByName(me, "Glow")
+	v.glow = createQuad("Naija/LightFormGlow", 13)
+	quad_scale(v.glow, 8, 8)
+	quad_alpha(v.glow, 0)
 	entity_setDamageTarget(me, DT_AVATAR_ENERGYBLAST, true)
 	entity_setDamageTarget(me, DT_AVATAR_SHOCK, true)
 	entity_setUpdateCull(me, 3000)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -57,25 +59,25 @@ function update(me, dt)
 	if entity_touchAvatarDamage(me, entity_getCollideRadius(me), 1, 800) then		
 	end
 	
-	dirTimer = dirTimer + dt
-	if dirTimer > 3 then
-		dirTimer = 0
-		dir = -dir
+	v.dirTimer = v.dirTimer + dt
+	if v.dirTimer > 3 then
+		v.dirTimer = 0
+		v.dir = -v.dir
 	end
 	
-	entity_addVel(me, 1000*dt*dir, 0)
+	entity_addVel(me, 1000*dt*v.dir, 0)
 	
 	entity_updateMovement(me, dt)
-	quad_setPosition(glow, entity_getPosition(me))
+	quad_setPosition(v.glow, entity_getPosition(me))
 	
 	
 	
-	if entity_isEntityInRange(me, n, 256) then
-		quad_alpha(glow, 1, 0.8)
-		bone_alpha(boneGlow, 1, 0.8)
+	if entity_isEntityInRange(me, v.n, 256) then
+		quad_alpha(v.glow, 1, 0.8)
+		bone_alpha(v.boneGlow, 1, 0.8)
 	else
-		quad_alpha(glow, 0, 0.3)
-		bone_alpha(boneGlow, 0, 0.3)
+		quad_alpha(v.glow, 0, 0.3)
+		bone_alpha(v.boneGlow, 0, 0.3)
 	end
 end
 
@@ -83,7 +85,7 @@ function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_DEAD) then
-		quad_delete(glow)
+		quad_delete(v.glow)
 	end
 end
 
@@ -92,7 +94,7 @@ end
 
 function damage(me, attacker, bone, damageType, dmg, x, y)
 	if damageType == DT_AVATAR_SHOCK then
-		x,y = entity_getPosition(n)
+		x,y = entity_getPosition(v.n)
 	end
 	if damageType == DT_AVATAR_ENERGYBLAST or damageType == DT_AVATAR_SHOCK then
 		if y > entity_y(me) + 50 and x > entity_x(me)-32 and x < entity_x(me)+32 then

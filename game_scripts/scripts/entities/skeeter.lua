@@ -17,9 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
 STATE_INACTIVE = 1000
 STATE_BURSTRIGHT		= 1001
@@ -27,9 +29,9 @@ STATE_BURSTLEFT			= 1002
 STATE_BURSTLEFTPREP		= 1003
 STATE_BURSTRIGHTPREP	= 1004
 
-level = 0
-burstDelay = 2
-lastDir = 0
+v.level = 0
+v.burstDelay = 2
+v.lastDir = 0
 
 function init(me)
 	setupEntity(me)
@@ -51,15 +53,15 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
-	level = entity_y(me)
+	v.level = entity_y(me)
 end
 
 function update(me, dt)
 	if entity_isState(me, STATE_INACTIVE) then
-		if math.abs(getWaterLevel()-level) < 50 then
+		if math.abs(getWaterLevel()-v.level) < 50 then
 			entity_setState(me, STATE_IDLE)
 		end
 	else
@@ -68,7 +70,7 @@ function update(me, dt)
 		entity_handleShotCollisions(me)
 		entity_touchAvatarDamage(me, entity_getCollideRadius(me), 1, 800)
 
-		entity_setPosition(me, entity_x(me), level)
+		entity_setPosition(me, entity_x(me), v.level)
 		
 		if entity_isState(me, STATE_BURSTRIGHT) then
 			entity_addVel(me, 1000*dt, 0)
@@ -79,21 +81,21 @@ function update(me, dt)
 			entity_doFriction(me, dt, 300)
 			entity_doEntityAvoidance(me, dt, 32, 0.5)
 			
-			burstDelay = burstDelay - dt
-			if burstDelay < 0 then
-				burstDelay = 0.5 + math.random(200)/200.0
-				if lastDir == 0 then
+			v.burstDelay = v.burstDelay - dt
+			if v.burstDelay < 0 then
+				v.burstDelay = 0.5 + math.random(200)/200.0
+				if v.lastDir == 0 then
 					entity_setState(me, STATE_BURSTLEFTPREP)
-					lastDir = 1
+					v.lastDir = 1
 				else
 					entity_setState(me, STATE_BURSTRIGHTPREP)
-					lastDir = 0
+					v.lastDir = 0
 				end
 			end
 		end
 		
 		
-		if math.abs(getWaterLevel()-level) > 50 then
+		if math.abs(getWaterLevel()-v.level) > 50 then
 			entity_setState(me, STATE_INACTIVE)
 		end
 	end

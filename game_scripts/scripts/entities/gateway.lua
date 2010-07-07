@@ -17,11 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-t = 0
-b = 0
+v.n = 0
+v.t = 0
+v.b = 0
 
 function init(me)
 	setupEntity(me)
@@ -37,10 +39,10 @@ function init(me)
 		bone_setSegs(entity_getBoneByIdx(me, i), 2, 8, 0.8, 0.8, -0.018, 0, 6, 1)
 	end
 	
-	b = entity_getNearestNode(me, "gatewayblock")
-	if b ~= 0 and node_isEntityIn(b, me) then
+	v.b = entity_getNearestNode(me, "gatewayblock")
+	if v.b ~= 0 and node_isEntityIn(v.b, me) then
 	else
-		b = 0
+		v.b = 0
 	end
 	
 	entity_setHealth(me, 2)
@@ -69,8 +71,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -78,35 +80,35 @@ function update(me, dt)
 	
 	entity_handleShotCollisionsSkeletal(me)
 	
-	if b ~= 0 then
-		if node_isEntityIn(b, n) then
-			xd = entity_x(n) - node_x(b)
-			yd = 0
+	if v.b ~= 0 then
+		if node_isEntityIn(v.b, v.n) then
+			local xd = entity_x(v.n) - node_x(v.b)
+			local yd = 0
 			vector_setLength(xd, yd, 1000)
-			entity_addVel(n, xd, yd)
+			entity_addVel(v.n, xd, yd)
 			entity_touchAvatarDamage(me, 0, 1, 0, 1)
 			avatar_fallOffWall()
 		end
 	end
 		
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if bone ~= 0 then
-		entity_clearVel(n)
-		if entity_x(n) > entity_x(me) then
-			entity_addVel(n, 500, 0)
+		entity_clearVel(v.n)
+		if entity_x(v.n) > entity_x(me) then
+			entity_addVel(v.n, 500, 0)
 		else
-			entity_addVel(n, -500, 0)
+			entity_addVel(v.n, -500, 0)
 		end
 		entity_touchAvatarDamage(me, 0, 1, 0, 1)
 		avatar_fallOffWall()
 	end
 	
 	
-	t = t + dt
-	if t > 4 then
-		toomany = 4
-		c = 0
-		e = getFirstEntity()
+	v.t = v.t + dt
+	if v.t > 4 then
+		local toomany = 4
+		local c = 0
+		local e = getFirstEntity()
 		while e~=0 do
 			if entity_isEntityInRange(me, e, 1500) then
 				if eisv(e, EV_TYPEID, EVT_GATEWAYMUTANT) then
@@ -124,7 +126,7 @@ function update(me, dt)
 			entity_alpha(e, 0)
 			entity_alpha(e, 1, 0.5)
 		end
-		t = 0
+		v.t = 0
 	end
 end
 
@@ -137,8 +139,8 @@ function enterState(me)
 		playSfx("gateway-die")
 		
 		spawnParticleEffect("gateway-die", entity_x(me), entity_y(me))
-		entity_idle(n)
-		entity_flipToEntity(n, me)
+		entity_idle(v.n)
+		entity_flipToEntity(v.n, me)
 		cam_toEntity(me)
 		shakeCamera(4, 4)
 		entity_offset(me, 5, 0, 0.1, -1)
@@ -147,7 +149,7 @@ function enterState(me)
 			bone_setSegs(entity_getBoneByIdx(me, i), 2, 8, 1, 1, -0.1, 0, 6, 0)
 		end
 		watch(2)
-		cam_toEntity(n)
+		cam_toEntity(v.n)
 		entity_setStateTime(me, 0)
 		
 		spawnParticleEffect("gateway-die", entity_x(me), entity_y(me))

@@ -17,18 +17,20 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-naija = 0
-door = 0
-done = false
+v.naija = 0
+v.door = 0
+v.done = false
 
 function init(me)
-	naija = getNaija()
+	v.naija = getNaija()
 	node_setCursorActivation(me, false)
-	door = node_getNearestEntity(me, "EnergyDoor")
-	if door ~= 0 then
-		entity_setState(door, STATE_OPENED)
+	v.door = node_getNearestEntity(me, "EnergyDoor")
+	if v.door ~= 0 then
+		entity_setState(v.door, STATE_OPENED)
 	end
 end
 
@@ -36,13 +38,13 @@ function activate(me)
 end
 
 function update(me, dt)
-	if not done and getStory() <= 8 then
-		if node_isEntityIn(me, naija) then
-			done = true
+	if not v.done and getStory() <= 8 then
+		if node_isEntityIn(me, v.naija) then
+			v.done = true
 			
-			boss = node_getNearestEntity(me, "EnergyBoss")
+			local boss = node_getNearestEntity(me, "EnergyBoss")
 			setStory(8)
-			entity_setState(door, STATE_CLOSE)
+			entity_setState(v.door, STATE_CLOSE)
 			entity_flipToEntity(getNaija(), boss)
 			wnd(1)
 			txt("Naija: ...")

@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- song cave collectible
 
 dofile("scripts/include/collectibletemplate.lua")
@@ -32,6 +34,7 @@ end
 function enterState(me, state)
 	commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
+		local ent
 		ent = createEntity("BioPlant", "", entity_x(me)-150, entity_y(me)-100)
 		entity_rotate(ent, entity_getRotation(ent)-10)
 		ent = createEntity("BioPlant", "", entity_x(me)+25, entity_y(me)-120)

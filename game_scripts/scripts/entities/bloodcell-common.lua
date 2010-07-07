@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-glow = 0
+v.n = 0
+v.glow = 0
 
 function commonInit(me, skel)
 	setupEntity(me)
@@ -36,17 +38,17 @@ function commonInit(me, skel)
 	
 	entity_setState(me, STATE_IDLE)
 	
-	off = randRange(1, 100) * 0.002
+	local off = randRange(1, 100) * 0.002
 	entity_scale(me, 1-off, 0.8-off)
 	entity_scale(me, 0.8-off, 1-off, 0.5, -1, 1, 1)
 	entity_rotate(me, 360, 30, -1)
 	
 	entity_setCullRadius(me, 128)
 	
-	glow = entity_getBoneByName(me, "glow")
-	bone_setBlendType(glow, BLEND_ADD)
-	bone_scale(glow, 10, 10)
-	bone_alpha(glow, 0)
+	v.glow = entity_getBoneByName(me, "glow")
+	bone_setBlendType(v.glow, BLEND_ADD)
+	bone_scale(v.glow, 10, 10)
+	bone_alpha(v.glow, 0)
 	
 	entity_setUpdateCull(me, 2000)
 	
@@ -54,8 +56,8 @@ function commonInit(me, skel)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
 	entity_update(me, randRange(1, 4)*0.1)
 end

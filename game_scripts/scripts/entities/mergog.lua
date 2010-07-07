@@ -17,30 +17,32 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 STATE_FIREPREP		= 1000
 STATE_BEAMPREP		= 1001
 STATE_BEAMFIRE		= 1002
 
-n = 0
-head = 0
-mergog = 0
+v.n = 0
+v.head = 0
+v.mergog = 0
 
-shot_bones = {0,0,0,0,0}
+v.shot_bones = {0,0,0,0,0}
 
-shot = 1
+v.shot = 1
 
-attackDelay = 0
-attackDelayMax = 8
+v.attackDelay = 0
+v.attackDelayMax = 8
 
-shotDelay = 0
-shotDelayMax = 0.02
+v.shotDelay = 0
+v.shotDelayMax = 0.02
 
-firePos = 0
+v.firePos = 0
 
-beam = 0
-pokeTimer = 0
+v.beam = 0
+v.pokeTimer = 0
 
 function init(me)
 	setupBasicEntity(
@@ -75,11 +77,11 @@ function init(me)
 	entity_setHealth(me, 100)
 	--entity_setHealth(me, 5)
 	
-	head = entity_getBoneByName(me, "Head")
-	mergog = entity_getBoneByName(me, "Mergog")
+	v.head = entity_getBoneByName(me, "Head")
+	v.mergog = entity_getBoneByName(me, "Mergog")
 	
 	for i=1,5 do
-		shot_bones[i] = entity_getBoneByIdx(me, 9+i)
+		v.shot_bones[i] = entity_getBoneByIdx(me, 9+i)
 	end
 	
 	entity_setMaxSpeed(me, 1200)
@@ -98,15 +100,15 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
-	firePos = getNode("FIREPOS")
+	v.firePos = getNode("FIREPOS")
 end
 
 function update(me, dt)
 	if entity_isState(me, STATE_PREP) then
-		if entity_isEntityInRange(me, n, 1024) then
+		if entity_isEntityInRange(me, v.n, 1024) then
 			emote(NAIJA_EMOTEGIGGLE)
 			playMusic("Miniboss")
 			entity_setState(me, STATE_IDLE)
@@ -116,9 +118,9 @@ function update(me, dt)
 	overrideZoom(0.45, 1)
 	
 	if entity_isState(me, STATE_IDLE) then
-		attackDelay = attackDelay + dt
-		if attackDelay > attackDelayMax then
-			attackDelay = 0
+		v.attackDelay = v.attackDelay + dt
+		if v.attackDelay > v.attackDelayMax then
+			v.attackDelay = 0
 			if entity_getHealthPerc(me) < 0.5 then
 				if chance(50) then
 					entity_setState(me, STATE_FIREPREP)
@@ -136,28 +138,28 @@ function update(me, dt)
 		end
 
 		
-		if math.abs(entity_x(me) - entity_x(n)) > 50 then
-			entity_flipToEntity(me, n)
+		if math.abs(entity_x(me) - entity_x(v.n)) > 50 then
+			entity_flipToEntity(me, v.n)
 		end
 	end
 	
 	if entity_isState(me, STATE_FIRE) then
-		shotDelay = shotDelay + dt
-		if shotDelay > shotDelayMax then
-			shotDelay = 0
-			bx, by = bone_getWorldPosition(shot_bones[shot])
-			shot = shot + 1
-			if shot > 5 then
-				shot = 1
+		v.shotDelay = v.shotDelay + dt
+		if v.shotDelay > v.shotDelayMax then
+			v.shotDelay = 0
+			local bx, by = bone_getWorldPosition(v.shot_bones[v.shot])
+			v.shot = v.shot + 1
+			if v.shot > 5 then
+				v.shot = 1
 			end
-			s = createShot("Mermog", me, n, bx, by)
-			x, y = randVector()
+			local s = createShot("Mermog", me, v.n, bx, by)
+			local x, y = randVector()
 			if y > x then
-				t = x
+				local t = x
 				x = y
 				y = t
 			end
-			if entity_x(n) < entity_x(me) then
+			if entity_x(v.n) < entity_x(me) then
 				if x > 0 then
 					x = -x
 				end
@@ -172,21 +174,21 @@ function update(me, dt)
 		debugLog("beamfire")
 		entity_moveTowardsTarget(me, dt, -200)
 		entity_addVel(me, -500*dt, 0)
-		if entity_y(n) < entity_y(me) then
+		if entity_y(v.n) < entity_y(me) then
 			entity_addVel(me, 0, -1000*dt)
-		elseif entity_y(n) > entity_y(me) then
+		elseif entity_y(v.n) > entity_y(me) then
 			entity_addVel(me, 0, 1000*dt)
 		end
-		beam_setPosition(beam, entity_x(me), entity_y(me)+20)
+		beam_setPosition(v.beam, entity_x(me), entity_y(me)+20)
 	end
 	
 	if entity_isState(me, STATE_IDLE) or entity_isState(me, STATE_BEAMFIRE) then
-		pokeTimer = pokeTimer + dt
-		if pokeTimer > 2 then
+		v.pokeTimer = v.pokeTimer + dt
+		if v.pokeTimer > 2 then
 			entity_moveTowardsTarget(me, 1, 1000)
-			pokeTimer = 0
+			v.pokeTimer = 0
 		else
-			if pokeTimer > 1 then
+			if v.pokeTimer > 1 then
 				entity_addVel(me, 0, -1000*dt)
 			end
 			entity_doCollisionAvoidance(me, dt, 4, 1)
@@ -206,9 +208,9 @@ function update(me, dt)
 	]]--
 	entity_touchAvatarDamage(me, 100, 1, 2000)
 	
-	entity_setLookAtPoint(me, bone_getWorldPosition(mergog))
+	entity_setLookAtPoint(me, bone_getWorldPosition(v.mergog))
 	entity_clearTargetPoints(me)
-	entity_addTargetPoint(me, bone_getWorldPosition(mergog))
+	entity_addTargetPoint(me, bone_getWorldPosition(v.mergog))
 end
 
 function enterState(me)
@@ -217,14 +219,14 @@ function enterState(me)
 		entity_animate(me, "idle", LOOP_INF)
 	elseif entity_isState(me, STATE_FIRE) then
 		playSfx("mergog-laugh")
-		shot = 1
+		v.shot = 1
 		entity_animate(me, "fire", LOOP_INF)
 	elseif entity_isState(me, STATE_FIREPREP) then
 		if entity_isfh(me) then
 			entity_fh(me)
 		end
 		entity_setStateTime(me, 2.5)
-		entity_setPosition(me, node_x(firePos), node_y(firePos), 2, 0, 0, 1)
+		entity_setPosition(me, node_x(v.firePos), node_y(v.firePos), 2, 0, 0, 1)
 	elseif entity_isState(me, STATE_BEAMPREP) then
 		playSfx("mergog-laugh")
 		entity_setStateTime(me, entity_animate(me, "beamPrep"))
@@ -235,23 +237,23 @@ function enterState(me)
 	elseif entity_isState(me, STATE_BEAMFIRE) then
 		entity_animate(me, "fire", -1)
 		entity_setStateTime(me, 5)
-		x, y = entity_getPosition(me)
+		local x, y = entity_getPosition(me)
 	
 		playSfx("rotcore-beam")
-		beam = createBeam(x, y, 180)
-		beam_setAngle(beam, 90)
-		beam_setTexture(beam, "particles/Beam")
+		v.beam = createBeam(x, y, 180)
+		beam_setAngle(v.beam, 90)
+		beam_setTexture(v.beam, "particles/Beam")
 	elseif entity_isState(me, STATE_DEATHSCENE) then
-		if beam ~= 0 then
-			beam_destroy(beam)
-			beam = 0
+		if v.beam ~= 0 then
+			beam_delete(v.beam)
+			v.beam = 0
 		end
 		clearShots()
 		entity_stopInterpolating(me)
 		entity_setStateTime(me, 99)
 		fadeOutMusic(6)
-		entity_idle(n)
-		entity_setInvincible(n, true)
+		entity_idle(v.n)
+		entity_setInvincible(v.n, true)
 		cam_toEntity(me)
 		entity_offset(me, 0, 0)
 		entity_offset(me, 10, 0, 0.1, -1, 1)
@@ -281,8 +283,8 @@ function enterState(me)
 		watch(1.2)
 		fade(0, 0.5, 1, 1, 1)
 		
-		cam_toEntity(n)
-		entity_setInvincible(n, false)
+		cam_toEntity(v.n)
+		entity_setInvincible(v.n, false)
 		overrideZoom(0, 1)
 		entity_setStateTime(me, 0.1)
 		entity_setState(me, STATE_DEAD, -1, 1)
@@ -295,14 +297,14 @@ function enterState(me)
 end
 
 --[[
-			beam_setAngle(beam, entity_getRotation(me)-180)
-			beam_setPosition(beam, entity_getPosition(me))	
-			delay = delay + dt
-			if delay >= 3 then
+			beam_setAngle(v.beam, entity_getRotation(me)-180)
+			beam_setPosition(v.beam, entity_getPosition(me))
+			v.delay = v.delay + dt
+			if v.delay >= 3 then
 				entity_setUpdateCull(me, 1024)
-				delay = 0
-				beam_delete(beam)
-				beam = 0
+				v.delay = 0
+				beam_delete(v.beam)
+				v.beam = 0
 				bone_setColor(bone_eyes, 1, 1, 1, 1)
 			end
 			]]--
@@ -314,14 +316,14 @@ function exitState(me)
 	elseif entity_isState(me, STATE_BEAMPREP) then
 		entity_setState(me, STATE_BEAMFIRE)
 	elseif entity_isState(me, STATE_BEAMFIRE) then
-		beam_delete(beam)
-		beam = 0
+		beam_delete(v.beam)
+		v.beam = 0
 		entity_setState(me, STATE_IDLE)
 	end
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if bone == mergog then
+	if bone == v.mergog then
 		return true
 	end
 	return false

@@ -17,12 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- LIGHT CRYSTAL
 
 dofile("scripts/entities/entityinclude.lua")
-charge = 0
-delay = 1
-glow = 0
+v.charge = 0
+v.delay = 1
+v.glow = 0
 
 function init(me)
 	setupEntity(me)
@@ -38,29 +40,29 @@ function init(me)
 	
 	entity_initSkeletal(me, "LightCrystal")
 	entity_animate(me, "idle", -1)
-	bone_glow = entity_getBoneByName(me, "Glow")
-	bone_alpha(bone_glow, 0)
-	glow = createQuad("Naija/LightFormGlow", 13)
-	quad_scale(glow, 6, 6)
-	quad_alpha(glow, 0)
+	v.bone_glow = entity_getBoneByName(me, "Glow")
+	bone_alpha(v.bone_glow, 0)
+	v.glow = createQuad("Naija/LightFormGlow", 13)
+	quad_scale(v.glow, 6, 6)
+	quad_alpha(v.glow, 0)
 end
 
 function update(me, dt)
 	entity_updateMovement(me, dt)
 	entity_updateCurrents(me)
-	quad_setPosition(glow, entity_getPosition(me))
+	quad_setPosition(v.glow, entity_getPosition(me))
 end
 
 function enterState(me)
 	if entity_isState(me, STATE_CHARGED) then
-		quad_alpha(glow, 1)
-		bone_alpha(bone_glow, 1)
+		quad_alpha(v.glow, 1)
+		bone_alpha(v.bone_glow, 1)
 	elseif entity_isState(me, STATE_CHARGE) then
-		quad_alpha(glow, 1, 1.5)
-		bone_alpha(bone_glow, 1, 1.5)
+		quad_alpha(v.glow, 1, 1.5)
+		bone_alpha(v.bone_glow, 1, 1.5)
 		playSfx("SunForm")
 	elseif entity_isState(me, STATE_DEAD) then
-		quad_delete(glow)
+		quad_delete(v.glow)
 	end
 end
 

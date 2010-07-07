@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- SPIKEBALL
 -- ================================================================================================
@@ -24,14 +26,14 @@
 dofile("scripts/entities/entityinclude.lua")
 
 -- entity specific
-dir = 0
+v.dir = 0
  
 -- ================================================================================================
 -- FUNCTIONS
 -- ================================================================================================
 
 function commonInit(me, initDir)
-	dir = initDir
+	v.dir = initDir
 	setupBasicEntity(
 	me,
 	"SpikeyEgg",					-- texture
@@ -56,8 +58,8 @@ end
 
 function update(me, dt)
 --[[
-	spd = 500
-	if dir == 0 then
+	local spd = 500
+	if v.dir == 0 then
 		entity_addVel(me, 0, spd*dt)
 	else
 		entity_addVel(me, 0, -spd*dt)
@@ -77,10 +79,10 @@ end
 
 function hitSurface(me)
 	entity_clearVel(me)
-	if dir == 0 then
-		dir = 1
+	if v.dir == 0 then
+		v.dir = 1
 	else
-		dir = 0
+		v.dir = 0
 	end
 end
 

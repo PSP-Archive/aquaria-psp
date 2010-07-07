@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-running = false
-t = 12
+v.running = false
+v.t = 12
 
 function init(me)
 	--node_setCursorActivation(me, true)
@@ -28,20 +30,20 @@ function init(me)
 end
 	
 function activate(me)
-	if running then return end
+	if v.running then return end
 	
 	playSfx("kathunk")
-	running = true
-	lvl = node_y(me)
+	v.running = true
+	local lvl = node_y(me)
 	if (getWaterLevel() ~= lvl) then
 		setFlag(FLAG_SUNTEMPLE_WATERLEVEL, 1)
-		setWaterLevel(lvl, t)
+		setWaterLevel(lvl, v.t)
 	else
-		node = getNode("SUNTEMPLE_GEAR3")
-		setWaterLevel(node_y(node), t)
+		local node = getNode("SUNTEMPLE_GEAR3")
+		setWaterLevel(node_y(node), v.t)
 		setFlag(FLAG_SUNTEMPLE_WATERLEVEL, 2)
 	end
-	running = false
+	v.running = false
 end
 
 function update(me, dt)

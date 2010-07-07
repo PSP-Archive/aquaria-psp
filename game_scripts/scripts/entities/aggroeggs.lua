@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- M O N E Y E
 -- ================================================================================================
@@ -24,10 +26,10 @@
 dofile("scripts/entities/entityinclude.lua")
 
 
-spawnTime = 5
-spawnTimer = 1
+v.spawnTime = 5
+v.spawnTimer = 1
 
-bounces = 0
+v.bounces = 0
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
@@ -68,15 +70,15 @@ function update(me, dt)
 	else
 		
 		if entity_isEntityInRange(me, getNaija(), 900) then
-			spawnTimer = spawnTimer - dt
-			if spawnTimer < 0 then
+			v.spawnTimer = v.spawnTimer - dt
+			if v.spawnTimer < 0 then
 				--debugLog("Spawning")
-				out = 100
-				nx, ny = entity_getNormal(me)
+				local out = 100
+				local nx, ny = entity_getNormal(me)
 				nx = nx * out
 				ny = ny * out
-				spawnTimer = spawnTime
-				moneye = createEntity("aggrobaby", "", entity_x(me)+nx, entity_y(me)+ny)
+				v.spawnTimer = v.spawnTime
+				local moneye = createEntity("aggrobaby", "", entity_x(me)+nx, entity_y(me)+ny)
 				spawnParticleEffect("MoneyeBirth", entity_x(me)+nx, entity_y(me)+ny)
 				entity_alpha(moneye, 0)
 				entity_alpha(moneye, 1, 0.5)
@@ -84,7 +86,7 @@ function update(me, dt)
 				entity_sound(me, "aggroeggs-spawn")
 			end
 		else
-			spawnTimer = spawnTimer - dt*0.3
+			v.spawnTimer = v.spawnTimer - dt*0.3
 		end
 	end
 	entity_handleShotCollisions(me)
@@ -105,8 +107,8 @@ function hitSurface(me)
 	if entity_isState(me, STATE_GROW) then
 		
 		entity_rotateToSurfaceNormal(me)
-		bounces = bounces + 1
-		if bounces > 3 then
+		v.bounces = v.bounces + 1
+		if v.bounces > 3 then
 			entity_setState(me, STATE_IDLE)
 		end
 	end

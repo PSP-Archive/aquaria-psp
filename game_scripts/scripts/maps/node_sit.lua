@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 function init(me)
@@ -24,15 +26,15 @@ function init(me)
 end
 	
 function activate(me)
-	n = getNaija()
+	v.n = getNaija()
 	avatar_fallOffWall()
-	entity_idle(n)
-	entity_setInvincible(n, true)
-	entity_swimToNode(n, me)
-	entity_watchForPath(n)
+	entity_idle(v.n)
+	entity_setInvincible(v.n, true)
+	entity_swimToNode(v.n, me)
+	entity_watchForPath(v.n)
 	--avatar_toggleCape(false)
-	entity_animate(n, "sitBack", LOOP_INF)
-	--entity_animate(n, "trailerIntroAnim2", LOOP_INF)
+	entity_animate(v.n, "sitBack", LOOP_INF)
+	--entity_animate(v.n, "trailerIntroAnim2", LOOP_INF)
 	overrideZoom(0.5, 2)
 	watch(2)
 	
@@ -42,14 +44,14 @@ function activate(me)
 	while (not isLeftMouse()) and (not isRightMouse()) do
 		watch(FRAME_TIME)		
 	end
-	entity_idle(n)
-	entity_addVel(n, 0, -200)
+	entity_idle(v.n)
+	entity_addVel(v.n, 0, -200)
 	overrideZoom(1, 1)
-	esetv(n, EV_NOINPUTNOVEL, 0)
+	esetv(v.n, EV_NOINPUTNOVEL, 0)
 	watch(1)
-	esetv(n, EV_NOINPUTNOVEL, 1)
+	esetv(v.n, EV_NOINPUTNOVEL, 1)
 	overrideZoom(0)
-	entity_setInvincible(n, false)
+	entity_setInvincible(v.n, false)
 	
 	--avatar_toggleCape(true)
 end

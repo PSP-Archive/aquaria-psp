@@ -17,9 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 STATE_BEFOREMEET = 1005
 
 function init(me)
@@ -35,15 +37,15 @@ function init(me)
 end
 
 function postInit(me)
-	entity_setTarget(me, n)
+	entity_setTarget(me, v.n)
 	
 	if isFlag(FLAG_LI, 101) or isFlag(FLAG_LI, 102) then
 		if isMapName("licave") or isMapName("vedhacave") then
-			li = getLi()
+			local li = getLi()
 			if li == 0 then
 				li = createEntity("li", "", 0,0)
 			end
-			liNode = getNode("LICAVE")
+			local liNode = getNode("LICAVE")
 			entity_setPosition(li, node_x(liNode), node_y(liNode))
 			setLi(li)
 		end
@@ -67,11 +69,11 @@ function activate(me)
 				playSfx("changeclothes1")
 			end
 			
-			li = getLi()
+			local li = getLi()
 			if li ~= 0 then
 				debugLog("SET BEFORE MEET")
 				entity_setState(li, STATE_BEFOREMEET, -1, 1)
-				liNode = getNode("LICAVE")
+				local liNode = getNode("LICAVE")
 				entity_setPosition(li, node_x(liNode), node_y(liNode))
 			end
 			
@@ -82,7 +84,7 @@ function activate(me)
 			--[[
 			li = getLi()
 			if li ~= 0 then
-				h = entity_getBoneByName(li, "Helmet")
+				local h = entity_getBoneByName(li, "Helmet")
 				bone_alpha(h, 0)
 			end
 			]]--
@@ -102,7 +104,7 @@ function enterState(me)
 end
 
 function update(me, dt)
-	n = getNaija()
+	v.n = getNaija()
 	if entity_isState(me, STATE_OFF) then
 		if isFlag(FLAG_LI, 100) then
 			entity_setState(me, STATE_ON)

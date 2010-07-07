@@ -17,21 +17,23 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-timer = 0
-interval = 1
+v.timer = 0
+v.interval = 1
 
 function init()
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
-	if node_isEntiyIn(me, n) then
-		timer = timer - dt
-		if timer < 0 then
-			timer = interval
-			entity_damage(n, me, 2)
+	if node_isEntityIn(me, v.n) then
+		v.timer = v.timer - dt
+		if v.timer < 0 then
+			v.timer = v.interval
+			entity_damage(v.n, me, 2)
 		end
 	end
 end

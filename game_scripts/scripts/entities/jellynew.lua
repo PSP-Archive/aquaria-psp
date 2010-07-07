@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- J E L L Y - Version 2.0   (alpha)
 -- ================================================================================================
@@ -39,10 +41,10 @@ STATE_WIGGLING = 1005
 -- L O C A L   V A R I A B L E S 
 -- ================================================================================================
 
-mT = 2.1
-moveTimer = mT
+v.mT = 2.1
+v.moveTimer = v.mT
 
-bumpForce = 134
+v.bumpForce = 134
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -87,29 +89,29 @@ function update(me, dt)
 		-- ...IF NAIJA'S THRUSTING
 		if avatar_isBursting() then
 			-- Bounce Jelly hard
-			nX, nY = entity_getPosition(getNaija())
-			entity_moveTowards(me, nX, nY, 1, -(bumpForce*1.4))
+			local nX, nY = entity_getPosition(getNaija())
+			entity_moveTowards(me, nX, nY, 1, -(v.bumpForce*1.4))
 			
 		-- ...IF NAIJA'S RIDING SOMETHING
 		elseif entity_getRiding(getNaija()) ~= 0 then
 			-- Bounce Ride and Jelly away from eachother
-			ride = entity_getRiding(getNaija())
-			rX, rY = entity_getPosition(ride);
-			nX, nY = entity_getPosition(getNaija())
-			entity_moveTowards(ride, nX, nX, 1, -(bumpForce*2.0))
-			entity_moveTowards(me, rX, rY, 1, -bumpForce)
+			local ride = entity_getRiding(getNaija())
+			local rX, rY = entity_getPosition(ride);
+			local nX, nY = entity_getPosition(getNaija())
+			entity_moveTowards(ride, nX, nX, 1, -(v.bumpForce*2.0))
+			entity_moveTowards(me, rX, rY, 1, -v.bumpForce)
 		
 		-- ...IF NAIJA'S ONLY MOVING
 		else
 			-- Bounce Jelly lightly
-			nX, nY = entity_getPosition(getNaija())
-			entity_moveTowards(me, nX, nY, 1, -bumpForce)
+			local nX, nY = entity_getPosition(getNaija())
+			entity_moveTowards(me, nX, nY, 1, -v.bumpForce)
 		end
 		
 		-- Reset movement stuff
 		--[[
-		moveState = MOVE_STATE_UP
-		moveTimer = 0
+		v.moveState = MOVE_STATE_UP
+		v.moveTimer = 0
 		entity_rotateToVel(me, 7.6)
 		entity_scale(me, 1, 1, 1.3, 0, 0, 1)
 		
@@ -118,21 +120,21 @@ function update(me, dt)
 	end
 	
 	-- MOVEMENT STUFF
-	if moveState == MOVE_STATE_DOWN then
+	if v.moveState == MOVE_STATE_DOWN then
 		-- Time before thrust
-		if moveTimer > 0 then moveTimer = moveTimer - dt
+		if v.moveTimer > 0 then v.moveTimer = v.moveTimer - dt
 		else		
 			-- THRUST UP
-			xVel = 43 + math.random(234)
+			local xVel = 43 + math.random(234)
 			if chance(50) then xVel = -xVel end
 			
 			-- Thrust
 			entity_clearVel(me)
-			entity_addVel(me, xVel, -thrustStrength)
+			entity_addVel(me, xVel, -v.thrustStrength)
 			entity_rotateToVel(me, 0.56)
 
-			moveState = MOVE_STATE_UP
-			moveTimer = 0
+			v.moveState = MOVE_STATE_UP
+			v.moveTimer = 0
 			
 			entity_scale(me, 0.8, 1.1, 1.2, 0, 0, 1)
 		end
@@ -140,14 +142,14 @@ function update(me, dt)
 		-- FALL DOWN
 		if entity_getVelLen(me) <= 1 then
 			entity_scale(me, 1.1, 0.8, 4.73, 0, 0, 1)
-			moveState = MOVE_STATE_DOWN
+			v.moveState = MOVE_STATE_DOWN
 			--entity_addVel(me, 0, 42)
-			moveTimer = mT + (math.random(256) * 0.01)
+			v.moveTimer = v.mT + (math.random(256) * 0.01)
 		end
 	end
 	
 	-- GRAVITY
-	if moveState == MOVE_STATE_DOWN then
+	if v.moveState == MOVE_STATE_DOWN then
 		entity_addVel(me, 0, 4)
 		entity_rotateTo(me, 0, 1.4)
 		entity_exertHairForce(me, 0, 200, dt*0.6, -1) -- Hair gravity
@@ -180,7 +182,7 @@ function damage(me, attacker, bone, damageType, dmg, x, y)
 		entity_changeHealth(me, -dmg)
 	else
 		-- PUSH WHEN HIT	
-		entity_moveTowards(me, x, y, 1, -(bumpStrength*0.69))
+		entity_moveTowards(me, x, y, 1, -(v.bumpStrength*0.69))
 	end
 
 	return true
