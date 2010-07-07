@@ -59,7 +59,7 @@ function commonInit(me, id)
 		v.myNote = 1
 	end		
 	
-	myID = id
+	v.myID = id
 	
 	bone_setColor(v.core, getNoteColor(v.myNote))
 	bone_setColor(v.shell1, getNoteColor(v.myNote))
