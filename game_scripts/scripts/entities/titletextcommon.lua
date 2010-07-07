@@ -17,19 +17,21 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-delay = 0.2
-b1 = 0
-b2 = 0
+v.delay = 0.2
+v.b1 = 0
+v.b2 = 0
 function commonInit(me, file)
 	setupEntity(me)
 	entity_initSkeletal(me, file)
 	
-	b1 = entity_getBoneByIdx(me, 0)
-	b2 = entity_getBoneByIdx(me, 1)
+	v.b1 = entity_getBoneByIdx(me, 0)
+	v.b2 = entity_getBoneByIdx(me, 1)
 	
-	bone_alpha(b2, 0)
+	bone_alpha(v.b2, 0)
 
 	entity_setState(me, STATE_IDLE)
 	esetv(me, EV_LOOKAT, false)
@@ -39,12 +41,12 @@ function postInit(me)
 end
 
 function update(me, dt)
-	if delay > -1 then
-		delay = delay - dt
-		if delay < 0 then
-			delay = -1
-			bone_alpha(b2, 1, 6)
-			bone_alpha(b1, 0, 6)
+	if v.delay > -1 then
+		v.delay = v.delay - dt
+		if v.delay < 0 then
+			v.delay = -1
+			bone_alpha(v.b2, 1, 6)
+			bone_alpha(v.b1, 0, 6)
 		end
 	end
 end

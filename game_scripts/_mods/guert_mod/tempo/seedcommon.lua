@@ -17,30 +17,32 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- SPORE SEED
 
 dofile("scripts/entities/entityinclude.lua")
 
-growEmitter = 0
-done = false
-weight = 400
+v.growEmitter = 0
+v.done = false
+v.weight = 400
 
 SEED_FLOWER			= 0
 SEED_VINE			= 1
 SEED_UBERVINE		= 2
 
-seedType = 0
+v.seedType = 0
 
 function commonInit(me, st)
 	setupEntity(me)
 	entity_setTexture(me, "Naija/Seedling")
 	entity_setEntityLayer(me, 1)
 	
-	entity_initEmitter(me, growEmitter, "SporeSeedGrow")
+	entity_initEmitter(me, v.growEmitter, "SporeSeedGrow")
 	
 	entity_setHealth(me, 1)
 	entity_setCollideRadius(me, 2)
-	entity_setWeight(me, weight)
+	entity_setWeight(me, v.weight)
 	entity_setState(me, STATE_IDLE)
 	entity_setMaxSpeed(me, 800)
 	
@@ -65,12 +67,12 @@ function postInit(me)
 end
 
 function terminate(me)
-	if not done then
+	if not v.done then
 		
-		if seedType == SEED_VINE then
+		if v.seedType == SEED_VINE then
 			registerSporeDrop(entity_x(me), entity_y(me),1)
 			createEntity("Vine", "", entity_getPosition(me))			
-		elseif seedType == SEED_UBERVINE then
+		elseif v.seedType == SEED_UBERVINE then
 			registerSporeDrop(entity_x(me), entity_y(me),2)
 			createEntity("UberVine", "", entity_getPosition(me))			
 		else
@@ -80,7 +82,7 @@ function terminate(me)
 		
 		entity_delete(me)
 		
-		done = true
+		v.done = true
 	end
 end
 
@@ -88,14 +90,14 @@ function songNote(me, note)
 end
 
 function update(me, dt)
-	if not done then
+	if not v.done then
 		if entity_updateCurrents(me, dt) then
 			entity_setWeight(me, 1)
 		else
 			if entity_isUnderWater(me) then
-				entity_setWeight(me, weight)
+				entity_setWeight(me, v.weight)
 			else
-				entity_setWeight(me, weight*2)
+				entity_setWeight(me, v.weight*2)
 			end
 		end
 		entity_updateMovement(me, dt)

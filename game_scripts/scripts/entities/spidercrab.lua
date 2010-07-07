@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- NEWT BLASTER
 -- ================================================================================================
@@ -31,20 +33,18 @@ dofile("scripts/entities/entityinclude.lua")
 STATE_HIDE 		= 1000
 STATE_MOVING	= 1001
 
-hits = 0
-delay = 1
-moveDelay = 0
-rangeNode = 0
-target = 0
-lastWeb = 0
+v.delay = 1
+v.moveDelay = 0
+v.rangeNode = 0
+v.lastWeb = 0
 
-fireDelayTime = 0.5
-fireDelay = fireDelayTime
-orient = ORIENT_UP
+v.fireDelayTime = 0.5
+v.fireDelay = v.fireDelayTime
+v.orient = ORIENT_UP
 
-myWeb = 0
-curPoint = -1
-webPoint = 0
+v.myWeb = 0
+v.curPoint = -1
+v.webPoint = 0
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -78,9 +78,9 @@ function init(me)
 	entity_scale(me, 1.4, 1.4)
 	--entity_setDropChance(me, 75)
 	
-	orient = math.random(4)	
-	webPoint = entity_getBoneByName(me, "WebPoint")
-	bone_alpha(webPoint, 0)
+	v.orient = math.random(4)	
+	v.webPoint = entity_getBoneByName(me, "WebPoint")
+	bone_alpha(v.webPoint, 0)
 	
 	entity_setDamageTarget(me, DT_ENEMY_WEB, false)
 	entity_setCullRadius(me, 1024)
@@ -93,97 +93,97 @@ function init(me)
 end
 
 function postInit(me)
-	rangeNode = entity_getNearestNode(me, "BOUND")
-	myWeb = createWeb()
-	curPoint = web_addPoint(myWeb)
+	v.rangeNode = entity_getNearestNode(me, "BOUND")
+	v.myWeb = createWeb()
+	v.curPoint = web_addPoint(v.myWeb)
 end
 
 function songNote(me, note)
 end
 
-block = 6
+v.block = 6
 function isBlocked(x, y)	
-	if rangeNode ~= 0 then
-		return (isObstructedBlock(x, y, block)) or (not node_isPositionIn(rangeNode, x, y))
+	if v.rangeNode ~= 0 then
+		return (isObstructedBlock(x, y, v.block)) or (not node_isPositionIn(v.rangeNode, x, y))
 	end
-	return (isObstructedBlock(x, y, block))
+	return (isObstructedBlock(x, y, v.block))
 end
 
 function update(me, dt)
 	--[[
-	if lastWeb ~= 0 then
-		web_delete(lastWeb, 4)
-		lastWeb = 0
+	if v.lastWeb ~= 0 then
+		web_delete(v.lastWeb, 4)
+		v.lastWeb = 0
 	end
 	]]--
-	speed = 600
+	local speed = 600
 	if entity_isState(me, STATE_IDLE) then
-		wx,wy = bone_getWorldPosition(webPoint)
-		if myWeb~=0 and curPoint ~= -1 then					
-			web_setPoint(myWeb, curPoint, wx, wy)
+		local wx, wy = bone_getWorldPosition(v.webPoint)
+		if v.myWeb ~= 0 and v.curPoint ~= -1 then
+			web_setPoint(v.myWeb, v.curPoint, wx, wy)
 		end
-		if delay > 0 then
+		if v.delay > 0 then
 			entity_rotate(me, entity_getRotation(me)+180*dt)
-			delay = delay - dt
-			if delay < 0 then
-				delay = 0
-				moveDelay = 3 + math.random(4)
+			v.delay = v.delay - dt
+			if v.delay < 0 then
+				v.delay = 0
+				v.moveDelay = 3 + math.random(4)
 				entity_animate(me, "move", -1)
-				orient = math.random(4)
+				v.orient = math.random(4)
 			end
 		else
-			moveDelay = moveDelay - dt
-			if moveDelay < 0 then
-				moveDelay = 0
-				delay = math.random(50)/100.0 + 0.5
+			v.moveDelay = v.moveDelay - dt
+			if v.moveDelay < 0 then
+				v.moveDelay = 0
+				v.delay = math.random(50)/100.0 + 0.5
 				entity_animate(me, "idle", -1)
-				if myWeb~=0 then
-					if curPoint > 8 then
-						web_delete(myWeb, 2)
-						myWeb = createWeb()
+				if v.myWeb~=0 then
+					if v.curPoint > 8 then
+						web_delete(v.myWeb, 2)
+						v.myWeb = createWeb()
 					end
-					curPoint = web_addPoint(myWeb, wx, wy)
+					v.curPoint = web_addPoint(v.myWeb, wx, wy)
 				else
-					myWeb = createWeb()
+					v.myWeb = createWeb()
 				end
 			else
-				check = 128
-				vx, vy = entity_getNormal(me)
+				local vx, vy = entity_getNormal(me)
 				vx, vy = vector_setLength(vx, vy, 128)
 				if not isBlocked(entity_x(me)+vx, entity_y(me)+vy) then
 					vx, vy = vector_setLength(vx, vy, speed*dt)
 					entity_setPosition(me, entity_x(me) + vx, entity_y(me) + vy)
 				else
-					moveDelay = 0
+					v.moveDelay = 0
 				end
 			end
 			--[[
-			if orient == ORIENT_LEFT then			
+			local check = 128
+			if v.orient == ORIENT_LEFT then			
 				if not isBlocked(entity_x(me)-check, entity_y(me)) then
 					entity_setPosition(me, entity_x(me)-speed*dt, entity_y(me))
 				else
-					orient = orient + 1
+					v.orient = v.orient + 1
 				end
-			elseif orient == ORIENT_RIGHT then
+			elseif v.orient == ORIENT_RIGHT then
 				if not isBlocked(entity_x(me)+check, entity_y(me)) then
 					entity_setPosition(me, entity_x(me)+speed*dt, entity_y(me))
 				else
-					orient = orient + 1
+					v.orient = v.orient + 1
 				end
-			elseif orient == ORIENT_DOWN then
+			elseif v.orient == ORIENT_DOWN then
 				if not isBlocked(entity_x(me), entity_y(me)+check) then
 					entity_setPosition(me, entity_x(me), entity_y(me)+speed*dt)
 				else
-					orient = orient + 1
+					v.orient = v.orient + 1
 				end
-			elseif orient == ORIENT_UP then
+			elseif v.orient == ORIENT_UP then
 				if not isBlocked(entity_x(me), entity_y(me)-check) then
 					entity_setPosition(me, entity_x(me), entity_y(me)-speed*dt)
 				else
-					orient = orient + 1
+					v.orient = v.orient + 1
 				end			
 			else
-				orient = 0
+				v.orient = 0
 			end
 			]]--
 		end
@@ -191,7 +191,7 @@ function update(me, dt)
 	
 	entity_clearTargetPoints(me)
 	if not entity_isState(me, STATE_DEATHSCENE) then
-		entity_addTargetPoint(me, bone_getWorldPosition(webPoint))
+		entity_addTargetPoint(me, bone_getWorldPosition(v.webPoint))
 	end
 	entity_handleShotCollisionsSkeletal(me)
 	
@@ -211,12 +211,12 @@ function enterState(me)
 	elseif entity_isState(me, STATE_DEAD) then
 		shakeCamera(5, 1.5)
 		playSfx("RockHit-Big")	
-		web_delete(myWeb, 3)
-		myWeb = 0
+		web_delete(v.myWeb, 3)
+		v.myWeb = 0
 	elseif entity_isState(me, STATE_DEATHSCENE) then
 		cam_toEntity(me)
-		ox = entity_x(me)
-		oy = entity_y(me)
+		local ox = entity_x(me)
+		local oy = entity_y(me)
 
 		--entity_rotate(me, 180, 1, 0, 0, 1)
 		entity_setPosition(me, entity_x(me), entity_y(me)+1600, 1.5, 0, 0, 1)
@@ -237,18 +237,18 @@ end
 
 function damage(me, attacker, bone, damageType, dmg)
 	if damageType == DT_AVATAR_ENERGYBLAST or damageType == DT_AVATAR_SHOCK or damageType == DT_AVATAR_BITE then	
-		nx, ny = entity_getNormal(me)
-		cx, cy = getLastCollidePosition()
-		dx = cx-entity_x(me)
-		dy = cy-entity_y(me)
-		dot = vector_dot(nx, ny, dx, dy)
+		local nx, ny = entity_getNormal(me)
+		local cx, cy = getLastCollidePosition()
+		local dx = cx-entity_x(me)
+		local dy = cy-entity_y(me)
+		local dot = vector_dot(nx, ny, dx, dy)
 
 		if dot < 0.9 then
 			--[[		
 			if damageType == DT_AVATAR_BITE then
-				if myWeb ~= 0 then
-					lastWeb = myWeb					
-					myWeb = 0
+				if v.myWeb ~= 0 then
+					v.lastWeb = v.myWeb
+					v.myWeb = 0
 				end
 			end
 			]]--

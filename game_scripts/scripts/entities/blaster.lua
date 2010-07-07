@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- B L A S T E R
 -- ================================================================================================
@@ -26,9 +28,9 @@ dofile("scripts/entities/entityinclude.lua")
 -- entity specific
 STATE_FIRE				= 1000
 STATE_PULLBACK			= 1001
-fireDelay = 0
-motherChance = 10
-soundDelay = 0
+v.fireDelay = 0
+v.motherChance = 10
+v.soundDelay = 0
  
 -- ================================================================================================
 -- FUNCTIONS
@@ -58,7 +60,7 @@ function init(me)
 	
 	entity_scale(me, 0.8, 0.8)
 	
-	soundDelay = math.random(3)+1
+	v.soundDelay = math.random(3)+1
 	
 	entity_setEatType(me, EAT_FILE, "Blaster")
 	
@@ -79,10 +81,10 @@ function update(me, dt)
 			end
 		end
 		
-		if fireDelay > 0 then
-			fireDelay = fireDelay - dt
-			if fireDelay < 0 then
-				fireDelay = 0
+		if v.fireDelay > 0 then
+			v.fireDelay = v.fireDelay - dt
+			if v.fireDelay < 0 then
+				v.fireDelay = 0
 			end
 		end
 		
@@ -92,16 +94,16 @@ function update(me, dt)
 			else
 				if entity_isTargetInRange(me, 1600) then				
 					entity_moveTowardsTarget(me, dt, 400)		-- move in if we're too far away
-					if entity_isTargetInRange(me, 350) and fireDelay==0 then
+					if entity_isTargetInRange(me, 350) and v.fireDelay==0 then
 						entity_setState(me, STATE_FIRE, 0.5)
 					end
 				end
 							
 			end
-			soundDelay = soundDelay - dt 
-			if soundDelay < 0 then
+			v.soundDelay = v.soundDelay - dt 
+			if v.soundDelay < 0 then
 				entity_playSfx(me, "BlasterIdle")
-				soundDelay = math.random(3)+1
+				v.soundDelay = math.random(3)+1
 			end
 		end
 		if entity_getState(me)==STATE_FIRE then
@@ -129,11 +131,11 @@ end
 
 function enterState(me)
 	if entity_getState(me)==STATE_IDLE then
-		fireDelay = 2
+		v.fireDelay = 2
 		entity_setMaxSpeed(me, 500)
 	elseif entity_getState(me)==STATE_FIRE then
 		entity_setMaxSpeed(me, 600)
-		s = createShot("BlasterFire", me, entity_getTarget(me))
+		local s = createShot("BlasterFire", me, entity_getTarget(me))
 		shot_setOut(s, 32)
 	elseif entity_getState(me)==STATE_PULLBACK then
 		if chance(50) then
@@ -155,7 +157,7 @@ function hitSurface(me)
 end
 
 function activate(me)
-	msg1("Naija: Pet!")
+	--msg1("Naija: Pet!")
 	entity_setBehaviorType(me, BT_ACTIVEPET)
 end
 

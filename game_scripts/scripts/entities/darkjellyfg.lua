@@ -17,36 +17,38 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- DARK JELLY
 
 dofile("scripts/entities/entityinclude.lua")
 
-blupTimer = 0
-dirTimer = 0
-blupTime = 3.0
+v.blupTimer = 0
+v.dirTimer = 0
+v.blupTime = 3.0
 
-sz = 1.0
-dir = 0
+v.sz = 1.0
+v.dir = 0
 
 MOVE_STATE_UP = 0
 MOVE_STATE_DOWN = 1
 MOVE_STATE_AWAY = 2
 
-moveState = 0
-moveTimer = 0
-velx = 0
-waveDir = 1
-waveTimer = 0
-soundDelay = 0
-glows = {}
+v.moveState = 0
+v.moveTimer = 0
+v.velx = 0
+v.waveDir = 1
+v.waveTimer = 0
+v.soundDelay = 0
+v.glows = {}
 
-n = 0
+v.n = 0
 
-seen = false
+v.seen = false
 
 function doIdleScale(me)
-	entity_scale(me, 1*sz, 1.05*sz)
-	entity_scale(me, 1.1*sz, 0.95*sz, blupTime, -1, 1, 1)
+	entity_scale(me, 1*v.sz, 1.05*v.sz)
+	entity_scale(me, 1.1*v.sz, 0.95*v.sz, v.blupTime, -1, 1, 1)
 end
 
 function init(me)
@@ -70,7 +72,6 @@ function init(me)
 	entity_initSkeletal(me, "DarkJelly", "DarkJellyFG")
 	
 	entity_setEntityType(me, ET_NEUTRAL)
-	entity_setDamageTarget(me, false)
 	
 	entity_setEntityLayer(me, 0)
 		
@@ -89,10 +90,10 @@ function init(me)
 	
 	--[[
 	for i=1,4 do
-		glows[i] = entity_getBoneByName(me, string.format("Glow%d", i))
-		bone_alpha(glows[i], 0.5)
-		bone_alpha(glows[i], 1, 1, -1, 1, 1)
-		bone_update(glows[i], i*0.25)
+		v.glows[i] = entity_getBoneByName(me, string.format("Glow%d", i))
+		bone_alpha(v.glows[i], 0.5)
+		bone_alpha(v.glows[i], 1, 1, -1, 1, 1)
+		bone_update(v.glows[i], i*0.25)
 	end
 	]]--
 	
@@ -105,56 +106,56 @@ function init(me)
 end
 
 function postInit(me)
+	v.n = getNaija()
 	entity_update(me, math.random(100)/100.0)
-	n = getNaija()
 end
 
 function update(me, dt)
 	--dt = dt * 1.5
-	sx,sy = entity_getScale(me)
+	local sx,sy = entity_getScale(me)
 		
-	moveTimer = moveTimer - dt
-	if moveTimer < 0 then
-		if moveState == MOVE_STATE_DOWN then		
-			moveState = MOVE_STATE_UP
+	v.moveTimer = v.moveTimer - dt
+	if v.moveTimer < 0 then
+		if v.moveState == MOVE_STATE_DOWN then		
+			v.moveState = MOVE_STATE_UP
 			entity_setMaxSpeedLerp(me, 1.5, 0.2)
 			--entity_scale(me, 0.75, 1, 1, 1, 1)
-			moveTimer = 3 + math.random(200)/100.0
+			v.moveTimer = 3 + math.random(200)/100.0
 			--entity_sound(me, "JellyBlup")
-		elseif moveState == MOVE_STATE_UP then
-			velx = math.random(400)+100
+		elseif v.moveState == MOVE_STATE_UP then
+			v.velx = math.random(400)+100
 			if math.random(2) == 1 then
-				velx = -velx
+				v.velx = -v.velx
 			end
-			moveState = MOVE_STATE_DOWN
+			v.moveState = MOVE_STATE_DOWN
 			entity_setMaxSpeedLerp(me, 1, 1)
-			moveTimer = 5 + math.random(200)/100.0 + math.random(3)
+			v.moveTimer = 5 + math.random(200)/100.0 + math.random(3)
 		else
-			moveState = MOVE_STATE_DOWN
+			v.moveState = MOVE_STATE_DOWN
 		end
 	end
 	
-	waveTimer = waveTimer + dt
-	if waveTimer > 2 then
-		waveTimer = 0
-		if waveDir == 1 then
-			waveDir = -1
+	v.waveTimer = v.waveTimer + dt
+	if v.waveTimer > 2 then
+		v.waveTimer = 0
+		if v.waveDir == 1 then
+			v.waveDir = -1
 		else
-			waveDir = 1
+			v.waveDir = 1
 		end
 	end
 
-	if moveState == MOVE_STATE_UP then
-		entity_addVel(me, velx*dt, -600*dt)
+	if v.moveState == MOVE_STATE_UP then
+		entity_addVel(me, v.velx*dt, -600*dt)
 		entity_rotateToVel(me, 8)
 		
-	elseif moveState == MOVE_STATE_DOWN then
+	elseif v.moveState == MOVE_STATE_DOWN then
 		entity_addVel(me, 0, 50*dt)
 		entity_rotateTo(me, 0, 8)
 		entity_exertHairForce(me, 0, 200, dt*0.6, -1)
 		entity_doCollisionAvoidance(me, dt, 15, 1)
 		--entity_doCollisionAvoidance(me, dt, 10, 0.5)
-	elseif moveState == MOVE_STATE_AWAY then
+	elseif v.moveState == MOVE_STATE_AWAY then
 		entity_rotateTo(me, 0, 8)
 	end
 
@@ -169,22 +170,22 @@ function update(me, dt)
 	entity_handleShotCollisions(me)
 	
 	if entity_touchAvatarDamage(me, entity_getCollideRadius(me), 0) then
-		if avatar_isBursting() and entity_setBoneLock(n, me) then
+		if avatar_isBursting() and entity_setBoneLock(v.n, me) then
 			-- yay!
 		else
-			x, y = entity_getVectorToEntity(me, n, 1000)
-			entity_addVel(n, x, y)
+			local x, y = entity_getVectorToEntity(me, v.n, 1000)
+			entity_addVel(v.n, x, y)
 		end
 	end
 	
-	if not seen and entity_isEntityInRange(me, n, 512) then
+	if not v.seen and entity_isEntityInRange(me, v.n, 512) then
 		emote(EMOTE_NAIJAWOW)
-		seen = true
+		v.seen = true
 	end
 	
 	
 	--[[
-	bx, by = bone_getWorldPosition(entity_getBonyByIdx(me, 0))
+	local bx, by = bone_getWorldPosition(entity_getBoneByIdx(me, 0))
 	entity_setHairHeadPosition(me, bx, by)
 	entity_updateHair(me, dt*5)
 	]]--
@@ -201,7 +202,7 @@ function enterState(me)
 end
 
 function damage(me, attacker, bone, damageType, dmg, hx, hy)
-	if entity_getBoneLockEntity(n) == me then
+	if entity_getBoneLockEntity(v.n) == me then
 		if chance(25) then
 			if chance(50) then
 				emote(EMOTE_NAIJALAUGH)
@@ -214,9 +215,9 @@ function damage(me, attacker, bone, damageType, dmg, hx, hy)
 	entity_setMaxSpeedLerp(me, 10)
 	entity_setMaxSpeedLerp(me, 1, 10)
 	
-	moveState = MOVE_STATE_AWAY
-	vx = entity_x(me) - hx
-	vy = entity_y(me) - hy
+	v.moveState = MOVE_STATE_AWAY
+	local vx = entity_x(me) - hx
+	local vy = entity_y(me) - hy
 	vx, vy = vector_setLength(vx, vy, 400)
 	entity_addVel(me, vx, vy)
 	

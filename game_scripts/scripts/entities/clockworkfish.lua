@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- M A U L
 -- ================================================================================================
@@ -26,9 +28,9 @@ dofile("scripts/entities/entityinclude.lua")
 -- entity specific
 STATE_FIRE				= 1000
 STATE_PULLBACK			= 1001
-fireDelay = 0
+v.fireDelay = 0
 
-dir = 0
+v.dir = 0
  
 -- ================================================================================================
 -- FUNCTIONS
@@ -68,7 +70,7 @@ function update(me, dt)
 	entity_handleShotCollisions(me)	
 	entity_touchAvatarDamage(me, 32, 1, 1200)
 	
-	if dir==0 then
+	if v.dir==0 then
 		entity_addVel(me, -1000, 0)
 	else
 		entity_addVel(me, 1000, 0)
@@ -89,10 +91,10 @@ end
 
 function hitSurface(me)
 	entity_flipHorizontal(me)
-	if dir == 0 then
-		dir = 1
-	elseif dir == 1 then 
-		dir = 0
+	if v.dir == 0 then
+		v.dir = 1
+	elseif v.dir == 1 then 
+		v.dir = 0
 	end
 end
 

@@ -17,22 +17,24 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-done = false
+v.n = 0
+v.done = false
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 	
 function activate(me)
 end
 
 function update(me, dt)
-	if isFlag(FLAG_MINIBOSS_KINGJELLY, 0) and not done then
-		if node_isEntityIn(me, n) then
-			done = true
-			kingJelly = node_getNearestEntity(me, "KingJelly")
+	if isFlag(FLAG_MINIBOSS_KINGJELLY, 0) and not v.done then
+		if node_isEntityIn(me, v.n) then
+			v.done = true
+			local kingJelly = node_getNearestEntity(me, "KingJelly")
 			if kingJelly ~=0 then
 				debugLog("has king jelly")
 				playMusic("inevitable")
@@ -40,7 +42,7 @@ function update(me, dt)
 				watch(2)
 				entity_setState(kingJelly, STATE_DESCEND)
 				watch(3)
-				cam_toEntity(n)
+				cam_toEntity(v.n)
 			else
 				debugLog("Could not find king jelly")
 			end

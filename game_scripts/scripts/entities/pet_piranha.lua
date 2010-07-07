@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- P E T  N A U T I L U S
 
 dofile("scripts/entities/entityinclude.lua")
@@ -24,12 +26,12 @@ dofile("scripts/entities/entityinclude.lua")
 STATE_ATTACKPREP		= 1000
 STATE_ATTACK			= 1001
 
-lungeDelay = 0
+v.lungeDelay = 0
 
-spinDir = -1
+v.spinDir = -1
 
-rot = 0
-shotDrop = 0
+v.rot = 0
+v.shotDrop = 0
 
 function init(me)
 	setupBasicEntity(
@@ -52,11 +54,11 @@ function init(me)
 	entity_setDeathParticleEffect(me, "TinyBlueExplode")
 	
 	--entity_rotate(me, 360, 1, LOOP_INF)
-	lungeDelay = 1.0
+	v.lungeDelay = 1.0
 	
 	entity_scale(me, 0.6, 0.6)
 	
-	rot = 0
+	v.rot = 0
 	
 	esetv(me, EV_LOOKAT, 0)
 	esetv(me, EV_ENTITYDIED, 1)
@@ -68,11 +70,11 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
-distTimer = 0
-tpoint = 0
+v.distTimer = 0
+v.tpoint = 0
 
 function update(me, dt)
 	if getPetPower()==1 then
@@ -81,53 +83,53 @@ function update(me, dt)
 		entity_setColor(me, 1, 1, 1, 1)
 	end
 	
-	if not isInputEnabled() or not entity_isUnderWater(n) then
-		entity_setPosition(me, entity_x(n), entity_y(n), 0.3)
+	if not isInputEnabled() or not entity_isUnderWater(v.n) then
+		entity_setPosition(me, entity_x(v.n), entity_y(v.n), 0.3)
 		entity_alpha(me, 0, 0.1)
 		return
 	else
 		entity_alpha(me, 1, 0.1)
 	end
 	
-	naijaUnder = entity_y(n) > getWaterLevel()
+	local naijaUnder = entity_y(v.n) > getWaterLevel()
 	if naijaUnder then
 		if entity_y(me)-32 < getWaterLevel() then
 			entity_setPosition(me, entity_x(me), getWaterLevel()+32)
 		end
 	else
 		if entity_isState(me, STATE_FOLLOW) then
-			entity_setPosition(me, entity_x(n), entity_y(n), 0.1)
+			entity_setPosition(me, entity_x(v.n), entity_y(v.n), 0.1)
 		end
 	end
 	
 	if entity_isState(me, STATE_FOLLOW) then
-		target = n
+		local target = v.n
 		
-		rot = rot + dt*0.2
-		if rot > 1 then
-			rot = rot - 1
+		v.rot = v.rot + dt*0.2
+		if v.rot > 1 then
+			v.rot = v.rot - 1
 		end
-		dist = 100
-		t = 0
-		x = 0
-		y = 0
+		local dist = 100
+		local t = 0
+		local x = 0
+		local y = 0
 		if avatar_isRolling() then
 			dist = 90
-			spinDir = -avatar_getRollDirection()
-			t = rot * 6.28
+			v.spinDir = -avatar_getRollDirection()
+			t = v.rot * 6.28
 		else
-			t = rot * 6.28
+			t = v.rot * 6.28
 		end
 		
-		if not entity_isEntityInRange(me, n, 1024) then
+		if not entity_isEntityInRange(me, v.n, 1024) then
 			entity_setTarget(me, 0)
-			entity_setPosition(me, entity_getPosition(n))
+			entity_setPosition(me, entity_getPosition(v.n))
 		end
 		
-		cx = entity_x(n)
-		cy = entity_y(n)
+		local cx = entity_x(v.n)
+		local cy = entity_y(v.n)
 		
-		spd = 0.6
+		local spd = 0.6
 		
 		if entity_hasTarget(me) then
 			target = entity_getTarget(me)
@@ -136,24 +138,24 @@ function update(me, dt)
 			cx = entity_x(target) + ox + entity_velx(target)
 			cy = entity_y(target) + oy + entity_vely(target)
 			]]--
-			cx, cy = entity_getTargetPoint(target, tpoint)
+			cx, cy = entity_getTargetPoint(target, v.tpoint)
 			cx = cx + entity_velx(target)
 			cy = cy + entity_vely(target)
 			dist = 40
 			
-			--debugLog(string.format("distTimer: %f", distTimer))
-			distTimer = distTimer + dt * 0.5
-			if distTimer > 1 then
-				distTimer = 0
+			--debugLog(string.format("distTimer: %f", v.distTimer))
+			v.distTimer = v.distTimer + dt * 0.5
+			if v.distTimer > 1 then
+				v.distTimer = 0
 			end
 			
-			dist = dist - distTimer * 40
+			dist = dist - v.distTimer * 40
 			
 			if dist < 16 then
-				shotDrop = shotDrop - dt
-				if shotDrop < 0 then
+				v.shotDrop = v.shotDrop - dt
+				if v.shotDrop < 0 then
 					createShot("PetPiranha", me, 0, entity_x(me), entity_y(me))
-					shotDrop = 0.3
+					v.shotDrop = 0.3
 					spd = 0.4
 				end
 			end
@@ -162,25 +164,25 @@ function update(me, dt)
 		entity_flipToEntity(me, target)
 		entity_rotateToEntity(me, target)
 		
-		a = t
+		local a = t
 		x = x + math.sin(a)*dist
 		y = y + math.cos(a)*dist
 		entity_setPosition(me, cx+x, cy+y, spd)
 		
 		--entity_handleShotCollisions(me)
 		
-		entity_rotateToEntity(me, n, 0.1)
-		lungeDelay = lungeDelay - (dt * getPetPower()+1)
-		if lungeDelay < 0 then
-			lungeDelay = 2.5
-			ent = entity_getNearestEntity(me, "", 512, ET_ENEMY, DT_AVATAR_PET)
+		entity_rotateToEntity(me, v.n, 0.1)
+		v.lungeDelay = v.lungeDelay - (dt * getPetPower()+1)
+		if v.lungeDelay < 0 then
+			v.lungeDelay = 2.5
+			local ent = entity_getNearestEntity(me, "", 512, ET_ENEMY, DT_AVATAR_PET)
 			if ent ~= 0 and entity_isDamageTarget(ent, DT_AVATAR_PETBITE) then
 				--[[
 				entity_setTarget(me, ent)
 				entity_setState(me, STATE_ATTACKPREP, 0.5)
 				]]--
 				entity_setTarget(me, ent)
-				tpoint = entity_getRandomTargetPoint(ent)
+				v.tpoint = entity_getRandomTargetPoint(ent)
 				--entity_moveTowardsTarget(me, 1, 400)
 			end
 		end
@@ -194,7 +196,7 @@ end
 
 function entityDied(me, ent)
 	debugLog("Pet_Nautilus: entity died")
-	t = entity_getTarget(me)
+	local t = entity_getTarget(me)
 	if t ~= 0 then
 		debugLog(string.format("target name: %s", entity_getName(t)))
 	end
@@ -212,7 +214,7 @@ function enterState(me)
 		entity_setMaxSpeed(me, 0)
 		entity_doGlint(me, "Glint", BLEND_ADD)
 	elseif entity_isState(me, STATE_ATTACK) then
-		shotDrop = 0
+		v.shotDrop = 0
 		entity_enableMotionBlur(me)
 		entity_setMaxSpeed(me, 1000)
 		entity_moveTowardsTarget(me, 1, 10000)

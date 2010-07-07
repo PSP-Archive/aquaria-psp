@@ -17,16 +17,18 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
 
-n = 0
-done = false
+
+v.n = 0
+v.done = false
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
-	if not done and node_isEntityIn(me, n) then
+	if not v.done and node_isEntityIn(me, v.n) then
 		pickupGem("IceCave")
 		pickupGem("SunkenCity")
 		pickupGem("SongCave")
@@ -46,7 +48,7 @@ function update(me, dt)
 		pickupGem("PyramidPurple")
 		pickupGem("Statue")
 		pickupGem("PyramidYellow")
-		done = true
+		v.done = true
 	end
 end
 

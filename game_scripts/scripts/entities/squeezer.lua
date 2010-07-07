@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- S Q U E E Z E R
 -- ================================================================================================
@@ -32,7 +34,7 @@ STATE_GRABBED			= 1003
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-clampDelay = 0
+v.clampDelay = 0
  
 -- ================================================================================================
 -- FUNCTIONS
@@ -87,10 +89,10 @@ function update(me, dt)
 	if not entity_hasTarget(me) then
 		entity_findTarget(me, 1000)
 	else
-		if clampDelay > 0 then
-			clampDelay = clampDelay - dt
-			if clampDelay < 0 then
-				clampDelay = 0
+		if v.clampDelay > 0 then
+			v.clampDelay = v.clampDelay - dt
+			if v.clampDelay < 0 then
+				v.clampDelay = 0
 			end
 		end
 		if entity_hasTarget(me) then
@@ -100,7 +102,7 @@ function update(me, dt)
 				else
 					entity_doFriction(me,dt, 1000)
 				end
-				if entity_getState(me)==STATE_IDLE and entity_isTargetInRange(me,64) and clampDelay==0 then
+				if entity_getState(me)==STATE_IDLE and entity_isTargetInRange(me,64) and v.clampDelay==0 then
 					entity_setState(me,STATE_CLAMP, 0.25)
 				end
 				if entity_getState(me)==STATE_CLAMPED then

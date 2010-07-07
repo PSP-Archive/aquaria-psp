@@ -17,26 +17,28 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- TURTLE
 -- ================================================================================================
 
 dofile("scripts/entities/entityinclude.lua")
-hasShell = true
-pullTime = 1
-escapeTimer = 0
-escaping = false
-isShell = false
-dir = -1
-bone_shell = 0
-bone_body = 0
-goDelay = 10
+v.hasShell = true
+v.pullTime = 1
+v.escapeTimer = 0
+v.escaping = false
+v.isShell = false
+v.dir = -1
+v.bone_shell = 0
+v.bone_body = 0
+v.goDelay = 10
 
  
 function commonInit(me, shell)
-	hasShell = shell
+	v.hasShell = shell
 	
-	layer = 1
+	local layer = 1
 	if not shell then
 		layer = 0
 	end
@@ -66,15 +68,15 @@ function commonInit(me, shell)
 	
 	entity_setDropChance(me, 100, 5)
 	
-	bone_shell = entity_getBoneByName(me, "Shell")
-	bone_body = entity_getBoneByName(me, "Body")
+	v.bone_shell = entity_getBoneByName(me, "Shell")
+	v.bone_body = entity_getBoneByName(me, "Body")
 	
 	
-	if hasShell then
+	if v.hasShell then
 		--entity_setColor(me, 0, 1, 0)
 		entity_setProperty(me, EP_MOVABLE, true)
 	else
-		bone_alpha(bone_shell, 0, 0.1)
+		bone_alpha(v.bone_shell, 0, 0.1)
 		entity_setMaxSpeed(me, 600)
 		--entity_setColor(me, 1, 1, 1)
 	end	
@@ -87,47 +89,47 @@ function update(me, dt)
 	entity_handleShotCollisions(me)
 	
 	
-	if isShell then
+	if v.isShell then
 		entity_setDamageTarget(me, DT_AVATAR_LIZAP, false)
 		entity_setDamageTarget(me, DT_AVATAR_PET, false)
 	end
 
 	--[[
-	if hasShell or isShell then
+	if v.hasShell or v.isShell then
 		entity_touchAvatarDamage(me, 32, 1, 1200)
 	else
 		entity_touchAvatarDamage(me, 32, 0, 1200)
 	end
 	]]--
-	if not isShell then
+	if not v.isShell then
 		
 		entity_rotateToVel(me, 0.1)
 		
-		if goDelay > 0 and not entity_isBeingPulled(me) then
-			goDelay = goDelay - dt
-			if goDelay < 0 then
+		if v.goDelay > 0 and not entity_isBeingPulled(me) then
+			v.goDelay = v.goDelay - dt
+			if v.goDelay < 0 then
 				entity_addRandomVel(me, 1000)
-				goDelay = 2 + math.random(5)
+				v.goDelay = 2 + math.random(5)
 			end
 		end
 	else
 		entity_setDamageTarget(me, DT_AVATAR_ENERGYBLAST, false)
 		entity_setDamageTarget(me, DT_AVATAR_SHOCK, false)
 	end
-	if hasShell then
+	if v.hasShell then
 		entity_touchAvatarDamage(me, 32, 1, 1200)
 		if entity_isBeingPulled(me) then
 			entity_setMaxSpeedLerp(me, 0.2, 0.5)
-			pullTime = pullTime - dt
-			x, y = entity_getVectorToEntity(getNaija(), me)
-			if pullTime < 0 then
-				hasShell = false
-				isShell = true
+			v.pullTime = v.pullTime - dt
+			local x, y = entity_getVectorToEntity(getNaija(), me)
+			if v.pullTime < 0 then
+				v.hasShell = false
+				v.isShell = true
 				
 				avatar_setPullTarget(0)
 				--entity_setProperty(me, EP_MOVABLE, false)
 				
-				bone_alpha(bone_body, 0, 0.1)
+				bone_alpha(v.bone_body, 0, 0.1)
 				entity_setWeight(me, 300)
 				--debugLog("**** PULLED off SHELL!")
 				entity_createEntity(me, "TurtleNoShell")
@@ -143,11 +145,11 @@ function update(me, dt)
 				playSfx("popshell")
 				
 			end
-			if not vector_isLength2DIn(x, y, 300) and not escaping then
+			if not vector_isLength2DIn(x, y, 300) and not v.escaping then
 				
 
 			end
-			if hasShell then				
+			if v.hasShell then				
 				if x ~= 0 or y ~= 0 then
 					--[[
 					x, y = vector_setLength(x, y, 1000*dt)
@@ -159,24 +161,24 @@ function update(me, dt)
 					entity_clearVel(me)
 					entity_addVel(me, ex, ey)
 					]]--
-					escapeTimer = escapeTimer + dt
-					if escapeTimer < 3 then
-						entity_addVel(me, dir*5000*dt, 0)
+					v.escapeTimer = v.escapeTimer + dt
+					if v.escapeTimer < 3 then
+						entity_addVel(me, v.dir*5000*dt, 0)
 					--[[
 						if x ~= 0 then						
 							ex,ey = vector_setLength(x, 0, -5000*dt)
-							escaping = true
+							v.escaping = true
 							entity_addVel(me, ex, ey)
 							--entity_addVel(getNaija(), x, y)
 						end
 						]]--
-					elseif escapeTimer > 6 then
-						escaping = false
-						escapeTimer = 0
-						if dir < 0 then
-							dir = 1
+					elseif v.escapeTimer > 6 then
+						v.escaping = false
+						v.escapeTimer = 0
+						if v.dir < 0 then
+							v.dir = 1
 						else
-							dir = -1
+							v.dir = -1
 						end
 					end
 				end
@@ -186,7 +188,7 @@ function update(me, dt)
 		end
 	end
 	
-	if not isShell then
+	if not v.isShell then
 		entity_doEntityAvoidance(me, dt, 32, 1.0)
 		entity_doCollisionAvoidance(me, dt, 6, 1.0)
 	end
@@ -204,7 +206,7 @@ function hitSurface(me)
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if hasShell or isShell then
+	if v.hasShell or v.isShell then
 		playSfx("noeffect")
 		return false
 	end
@@ -216,7 +218,7 @@ end
 
 
 function dieNormal(me)
-	if not isShell and not hasShell then
+	if not v.isShell and not v.hasShell then
 		spawnIngredient("TurtleMeat", entity_x(me), entity_y(me))
 	end
 end

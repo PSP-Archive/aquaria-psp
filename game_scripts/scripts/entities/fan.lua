@@ -17,9 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-flag = 0
+v.flag = 0
 STATE_BUSTED	= 1001
 
 function init(me)
@@ -32,7 +34,7 @@ function init(me)
 		entity_setState(me, STATE_IDLE)
 	end
 	--[[
-	flag = f
+	v.flag = f
 	if isFlag(f, 1) then
 		entity_setState(me, STATE_BUSTED)
 	else
@@ -45,7 +47,7 @@ function enterState(me, state)
 	if entity_isState(me, STATE_BUSTED) then
 		debugLog("SETTING BUSTED")
 		entity_setFlag(me, 1)
-		node = entity_getNearestNode(me)
+		local node = entity_getNearestNode(me)
 		node_setActive(node, false)
 	end	
 end

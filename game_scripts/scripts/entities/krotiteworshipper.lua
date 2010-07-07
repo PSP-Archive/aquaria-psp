@@ -17,9 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
 function init(me)
 	setupEntity(me)
@@ -28,22 +30,22 @@ function init(me)
 	entity_scale(me, 0.7, 0.7)
 	
 	
-	noteBone = entity_getBoneByName(me, "Note")
-	glow = entity_getBoneByName(me, "Glow")
+	v.noteBone = entity_getBoneByName(me, "Note")
+	v.glow = entity_getBoneByName(me, "Glow")
 	
-	bone_setVisible(noteBone, false)
-	bone_setVisible(glow, false)
+	bone_setVisible(v.noteBone, false)
+	bone_setVisible(v.glow, false)
 	
 	entity_setState(me, STATE_IDLE)
 end
 
 function postInit(me)
 	debugLog("KROTITE POST INIT!")
-	n = getNaija()
+	v.n = getNaija()
 
-	entity_setTarget(me, n)
+	entity_setTarget(me, v.n)
 	
-	node = entity_getNearestNode(me, "WORSHIP2")
+	local node = entity_getNearestNode(me, "WORSHIP2")
 	if node ~= 0 and node_isEntityIn(node, me) then
 		entity_animate(me, "worship2", -1)
 	else
@@ -56,12 +58,12 @@ function postInit(me)
 	--entity_updateSkeletal(me, randAngle360()/180)
 end
 
-done = false
+v.done = false
 
 function update(me, dt)
-	if entity_isAnimating(me) and not done then
+	if entity_isAnimating(me) and not v.done then
 		entity_updateSkeletal(me, math.random(4))
-		done = true
+		v.done = true
 	end
 end
 

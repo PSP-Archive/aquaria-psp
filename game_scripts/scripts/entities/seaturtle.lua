@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- S E A   T U R T L E   (beta)
 -- ================================================================================================
@@ -36,11 +38,11 @@ STATE_TO_GLIDE = 1004
 -- L O C A L   V A R I A B L E S 
 -- ================================================================================================
 
-sz = 1.56 + (math.random(234)*0.001)
-maxSpeed = 890
+v.sz = 1.56 + (math.random(234)*0.001)
+v.maxSpeed = 890
 
-swimTime = 0.34 + (math.random(42)*0.01)
-angle = 90
+v.swimTime = 0.34 + (math.random(42)*0.01)
+v.angle = 90
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -68,20 +70,20 @@ function init(me)
 	
 	entity_initSkeletal(me, "SeaTurtle")
 	entity_generateCollisionMask(me)
-	shell = entity_getBoneByName(me, "Shell")
+	v.shell = entity_getBoneByName(me, "Shell")
 	
-	entity_scale(me, sz, sz)
+	entity_scale(me, v.sz, v.sz)
 	
 	entity_setEntityType(me, ET_NEUTRAL)
 	
 	entity_setState(me, STATE_GLIDING)
 	entity_rotateTo(me, 360, 0.1)
-	entity_setMaxSpeed(me, maxSpeed)
+	entity_setMaxSpeed(me, v.maxSpeed)
 end
 
 function postInit(me)
 	-- FLIP HORIZONTALLY IF THERE'S A FLIP NODE
-	node = entity_getNearestNode(me, "FLIP")
+	local node = entity_getNearestNode(me, "FLIP")
 	if node ~=0 then
 		if node_isEntityIn(node, me) then 
 			entity_fh(me)
@@ -93,17 +95,17 @@ function update(me, dt)
 		
 	-- SWIM ANGLE
 	if entity_getState(me) == STATE_GLIDING then
-		swimTime = swimTime - dt
-		if swimTime < 0 then
-			swimTime = 1.23 + (math.random(234)*0.01)
+		v.swimTime = v.swimTime - dt
+		if v.swimTime < 0 then
+			v.swimTime = 1.23 + (math.random(234)*0.01)
 			
 			-- Point based on Flip
 			if not entity_isfh(me) then
-				angle = 58 + math.random(64)
-				entity_rotateTo(me, angle + 270, 2)
+				v.angle = 58 + math.random(64)
+				entity_rotateTo(me, v.angle + 270, 2)
 			else
-				angle = 238 + math.random(64)
-				entity_rotateTo(me, angle + 90, 2)
+				v.angle = 238 + math.random(64)
+				entity_rotateTo(me, v.angle + 90, 2)
 			end		
 			
 			entity_setState(me, STATE_TO_THRUST)
@@ -120,22 +122,22 @@ function update(me, dt)
 	end
 	
 	-- FLIP L/R
-	flipThresh = 50	
+	local flipThresh = 50	
 	if entity_velx(me) < -flipThresh and not entity_isfh(me) then
 		entity_fh(me)
-		angle = angle + 180
+		v.angle = v.angle + 180
 	elseif entity_velx(me) > flipThresh and entity_isfh(me) then
 		entity_fh(me)
-		angle = angle - 180
+		v.angle = v.angle - 180
 	end
 	
 	-- NAIJA ATTACHING TO SHELL
-	rideBone = entity_collideSkeletalVsCircle(me, getNaija())
-	if rideBone == shell and avatar_isBursting() and entity_setBoneLock(getNaija(), me, rideBone) then
+	local rideBone = entity_collideSkeletalVsCircle(me, getNaija())
+	if rideBone == v.shell and avatar_isBursting() and entity_setBoneLock(getNaija(), me, rideBone) then
 	
 	elseif rideBone ~=0 then
-		nX, nY = entity_getPosition(getNaija())
-		bX, bY = bone_getWorldPosition(rideBone)
+		local nX, nY = entity_getPosition(getNaija())
+		local bX, bY = bone_getWorldPosition(rideBone)
 		nX = nX - bX
 		nY = nY - bY
 		nX, nY = vector_setLength(nX, nY, 600)
@@ -176,7 +178,7 @@ function exitState(me)
 		
 	elseif entity_getState(me) == STATE_THRUSTING then
 		-- THRUST
-		entity_moveTowardsAngle(me, angle, 1, 124 + math.random(124))
+		entity_moveTowardsAngle(me, v.angle, 1, 124 + math.random(124))
 		entity_setState(me, STATE_TO_GLIDE)
 		
 	elseif entity_getState(me) == STATE_TO_GLIDE then

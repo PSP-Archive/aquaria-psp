@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 function init()
@@ -24,24 +26,24 @@ function init()
 		entity_warpToNode(getNaija(), getNode("NAIJASTART"))
 	end
 
-	doTrailerIntro = false
+	local doTrailerIntro = false
 	-- turn into watchFadeIn?
 
 
-	n = getNaija()
+	local n = getNaija()
 	
 	if isFlag(FLAG_ENDING, ENDING_SECRETCAVE) then
 		
-		li = getLi()
+		local li = getLi()
 		if li ~= 0 then
 			entity_setPosition(li, 0, 0)
 			entity_alpha(li, 0)
 		end
-		camNode = getNode("CAM1")
-		camNode2 = getNode("CAM2")
-		camNode3 = getNode("CAM3")
-		camNode4 = getNode("NAIJASTART")
-		camDummy = createEntity("Empty")
+		local camNode = getNode("CAM1")
+		local camNode2 = getNode("CAM2")
+		local camNode3 = getNode("CAM3")
+		local camNode4 = getNode("NAIJASTART")
+		local camDummy = createEntity("Empty")
 		entity_warpToNode(camDummy, camNode)
 		
 		setCameraLerpDelay(0)
@@ -71,7 +73,7 @@ function init()
 			watch(FRAME_TIME)
 		end	
 		
-		bits = 6.0/FRAME_TIME
+		local bits = 6.0/FRAME_TIME
 		for i=1,bits do
 		
 			overrideZoom(1, 6)
@@ -111,11 +113,11 @@ function init()
 
 		setStory(1)
 		
-		camNode = getNode("CAM1")
-		camNode2 = getNode("CAM2")
-		camNode3 = getNode("CAM3")
-		camNode4 = getNode("NAIJASTART")
-		camDummy = createEntity("Empty")
+		local camNode = getNode("CAM1")
+		local camNode2 = getNode("CAM2")
+		local camNode3 = getNode("CAM3")
+		local camNode4 = getNode("NAIJASTART")
+		local camDummy = createEntity("Empty")
 		entity_warpToNode(camDummy, camNode)
 		
 		setCameraLerpDelay(0)
@@ -165,7 +167,7 @@ function init()
 			watch(FRAME_TIME)
 		end	
 		
-		bits = 6.0/FRAME_TIME
+		local bits = 6.0/FRAME_TIME
 		for i=1,bits do
 		
 			overrideZoom(1, 6)

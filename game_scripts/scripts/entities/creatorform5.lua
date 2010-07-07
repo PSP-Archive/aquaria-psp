@@ -17,9 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
 -- intro animation sequence:
 STATE_INTRO				= 1000
@@ -36,30 +38,30 @@ STATE_WRONG				= 1006
 
 STATE_SPAWNSPHERES		= 1007
 
-delay = 0
+v.delay = 0
 
-songNotes 				= {}
+v.songNotes 				= {}
 
-songSize 				= 0
-curNote 				= 1
-noteDelay 				= 0
-songLevel 				= 3
-waitTime				= 5
-userNote				= 1
-maxHits					= 5
-hits 					= maxHits
+v.songSize 				= 0
+v.curNote 				= 1
+v.noteDelay 				= 0
+v.songLevel 				= 3
+v.waitTime				= 5
+v.userNote				= 1
+v.maxHits				= 5
+v.hits 					= v.maxHits
 -- counts # of successful songs between song levels
-songsDone				= 0
+v.songsDone				= 0
 
 
-setSongSize				= 3
+v.setSongSize			= 3
 
-bone_head				= 0
+v.bone_head				= 0
 
-died					= 0
+v.died					= 0
 
 function getHitPerc()
-	return hits/maxHits
+	return v.hits/v.maxHits
 end
 
 function init(me)
@@ -76,7 +78,7 @@ function init(me)
 	entity_scale(me, 0.5, 0.5)
 	entity_setCullRadius(me, 1024)
 	
-	bone_head = entity_getBoneByName(me, "Head")
+	v.bone_head = entity_getBoneByName(me, "Head")
 	
 	esetv(me, EV_ENTITYDIED, 1)
 	
@@ -93,14 +95,14 @@ function entityDied(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	node = getNode("NAIJA5")
-	entity_setPosition(n, node_x(node), node_y(node), 2, 0, 0, 1)
-	entity_flipToEntity(n, me)
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	local node = getNode("NAIJA5")
+	entity_setPosition(v.n, node_x(node), node_y(node), 2, 0, 0, 1)
+	entity_flipToEntity(v.n, me)
+	entity_setTarget(me, v.n)
 	
-	node = getNode("LIDOOR2")
-	door = node_getNearestEntity(node, "FinalDoor")
+	local node = getNode("LIDOOR2")
+	local door = node_getNearestEntity(node, "FinalDoor")
 	entity_setState(door, STATE_CLOSED)
 	
 	musicVolume(1, 1)
@@ -110,88 +112,88 @@ end
 
 function generateSong(size)
 	debugLog("generating song")
-	songSize = size
+	v.songSize = size
 	for i=1,size do
-		songNotes[i] = math.random(8)-1
+		v.songNotes[i] = math.random(8)-1
     end
 end
 
 function update(me, dt)
 	if entity_isState(me, STATE_IDLE) then
-		delay = delay + dt
-		if delay > 2 then
-			delay = 0
+		v.delay = v.delay + dt
+		if v.delay > 2 then
+			v.delay = 0
 			entity_setState(me, STATE_SING) 
 		end
 	elseif entity_isState(me, STATE_WAIT) then
-		shots = 0
-		e = getFirstEntity()
+		v.shots = 0
+		local e = getFirstEntity()
 		while e ~= 0 do
 			if eisv(e, EV_TYPEID, EVT_DARKLISHOT) then
-				shots = shots + 1
+				v.shots = v.shots + 1
 			end
 			e = getNextEntity()
 		end
-		if shots == 0 then
+		if v.shots == 0 then
 			entity_setState(me, STATE_IDLE)
 		end
 	elseif entity_isState(me, STATE_PLAYSEG) then
-		noteDelay = noteDelay + dt
-		if noteDelay > 0.5 - (songLevel*0.02) then
-			debugLog(string.format("singing note: %d", songNotes[curNote]))
-			noteDelay = 0
+		v.noteDelay = v.noteDelay + dt
+		if v.noteDelay > 0.5 - (v.songLevel*0.02) then
+			debugLog(string.format("singing note: %d", v.songNotes[v.curNote]))
+			v.noteDelay = 0
 			
-			sfx = playSfx(getNoteName(songNotes[curNote], "low-"))
+			local sfx = playSfx(getNoteName(v.songNotes[v.curNote], "low-"))
 			fadeSfx(sfx, 2)
 			
 			playSfx("")
 			
-			x, y = entity_getPosition(me)
-			dx, dy = getNoteVector(songNotes[curNote], 256)
+			local x, y = entity_getPosition(me)
+			local dx, dy = getNoteVector(v.songNotes[v.curNote], 256)
 			x = x + dx
 			y = y + dy
 			
-			t = 1
+			local t = 1
 			
-			noteQuad = createQuad(string.format("Song/NoteSymbol%d", songNotes[curNote]), 6)
+			local noteQuad = createQuad(string.format("Song/NoteSymbol%d", v.songNotes[v.curNote]), 6)
 			quad_alpha(noteQuad, 0)
 			quad_alpha(noteQuad, 1, 0.1)
 			quad_scale(noteQuad, 3, 3)
 			quad_scale(noteQuad, 6, 6, t, 0, 0, 1)
-			quad_color(noteQuad, getNoteColor(songNotes[curNote]))
-			node = getNode(string.format("SN%d", songNotes[curNote]))
+			quad_color(noteQuad, getNoteColor(v.songNotes[v.curNote]))
+			local node = getNode(string.format("SN%d", v.songNotes[v.curNote]))
 			quad_setPosition(noteQuad, node_x(node), node_y(node))
 			quad_delete(noteQuad, t)
 			
-			if curNote >= songSize then
+			if v.curNote >= v.songSize then
 				entity_setState(me, STATE_SPAWNSPHERES, -1)
 			else
-				curNote = curNote + 1
+				v.curNote = v.curNote + 1
 			end
 		end
 	end
 	overrideZoom(0.5)
 end
 
-function msg(me, msg, v)
+function msg(me, msg)
 	if entity_isState(me, STATE_WAIT) then
 		if msg == "died" then
-			died = died + 1
-			if died == 3 then
+			v.died = v.died + 1
+			if v.died == 3 then
 				entity_setState(me, STATE_PAIN)
 			end
 		end
 	end
 end
 
-incut = false
+v.incut = false
 
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
-		died = 0
+		v.died = 0
 		entity_animate(me, "idle", -1)
 		
-		e = getFirstEntity()
+		local e = getFirstEntity()
 		while e ~=0 do
 			if eisv(e, EV_TYPEID, EVT_DARKLISHOT) then
 				
@@ -200,7 +202,7 @@ function enterState(me)
 		end
 		
 	elseif entity_isState(me, STATE_INTRO) then
-		entity_idle(n)
+		entity_idle(v.n)
 		disableInput()
 		cam_toEntity(me)
 		
@@ -215,10 +217,10 @@ function enterState(me)
 		-- animate?
 		entity_setStateTime(me, 0.1)
 	elseif entity_isState(me, STATE_PLAYSEG) then
-		curNote = 1
-		generateSong(setSongSize)
+		v.curNote = 1
+		generateSong(v.setSongSize)
 	elseif entity_isState(me, STATE_WAIT) then
-		userNote = 1
+		v.userNote = 1
 	elseif entity_isState(me, STATE_PAIN) then
 		--bone_damageFlash(me, entity_getBoneByIdx(me, 0))
 		
@@ -232,36 +234,36 @@ function enterState(me)
 	elseif entity_isState(me, STATE_ATTACK) then
 		entity_setStateTime(me, entity_animate(me, "attack"))
 		for i=1,3 do
-			sn = math.random(8)-1
-			node = getNode(string.format("SN%d", sn))
-			ent = createEntity("Mutilus", "", node_x(node), node_y(node))
+			local sn = math.random(8)-1
+			local node = getNode(string.format("SN%d", sn))
+			createEntity("Mutilus", "", node_x(node), node_y(node))
 		end
 	elseif entity_isState(me, STATE_TRANSITION) then
-		if not incut then
+		if not v.incut then
 			entity_setStateTime(me, 99)
-			incut = true
-			entity_idle(n)
+			v.incut = true
+			entity_idle(v.n)
 			cam_toEntity(me)
 			overrideZoom(0.9)
 			watch(entity_animate(me, "die"))
 			watch(3)
 			overrideZoom(0.8)
 			shakeCamera(2, 4)
-			loop = playSfx("quakeloop1")
+			local loop = playSfx("quakeloop1")
 			watch(4)
 			overrideZoom(0.7)
 			shakeCamera(20, 4)
 			fadeSfx(loop, 0.5)
-			loop = playSfx("quakeloop2")
+			local loop = playSfx("quakeloop2")
 			watch(4)
 			overrideZoom(0.6)
 			fade2(1, 4, 1, 1, 1)
 			shakeCamera(100, 4)
 			fadeSfx(loop, 0.5)
-			loop = playSfx("quakeloop3")
+			local loop = playSfx("quakeloop3")
 			watch(4)
 			entity_setStateTime(me, 0.1)
-			incut = false
+			v.incut = false
 			fadeSfx(loop, 4)
 		end
 	elseif entity_isState(me, STATE_DELAY) then
@@ -271,29 +273,29 @@ function enterState(me)
 	end
 end
 
-ic = false
+v.ic = false
 
 function exitState(me)
 	if entity_isState(me, STATE_INTRO) then
 		entity_setState(me, STATE_INTRO2)
 	elseif entity_isState(me, STATE_SPAWNSPHERES) then
-		if not ic then
-			ic = true
+		if not v.ic then
+			v.ic = true
 			
-			for n=1,songSize do
-				x, y = entity_getPosition(me)
-				dx, dy = getNoteVector(songNotes[n], 440)
+			for n=1,v.songSize do
+				local x, y = entity_getPosition(me)
+				local dx, dy = getNoteVector(v.songNotes[n], 440)
 				x = x + dx
 				y = y + dy
 				
-				e = createEntity("dark-li-shot", "", x, y)
-				entity_msg(e, "note", songNotes[n])
+				local e = createEntity("dark-li-shot", "", x, y)
+				entity_msg(e, "note", v.songNotes[n])
 				entity_msg(e, "sd", n*(1.0-((1.0-getHitPerc())*0.1)))
 				
 				entity_setMaxSpeedLerp(e, 1.0+((1.0-getHitPerc())*0.5))
 				
 				--[[
-				t = 3- (3-songLevel)*0.5
+				local t = 3- (3-songLevel)*0.5
 				if t <= 0 then
 					t = 0.5
 				end
@@ -303,14 +305,14 @@ function exitState(me)
 			
 			entity_setState(me, STATE_WAIT)
 			
-			ic = false
+			v.ic = false
 		end
 	elseif entity_isState(me, STATE_INTRO2) then
 		entity_setState(me, STATE_INTRO3)
 	elseif entity_isState(me, STATE_INTRO3) then
-		entity_idle(n)
+		entity_idle(v.n)
 		enableInput()
-		cam_toEntity(n)
+		cam_toEntity(v.n)
 		
 		entity_setState(me, STATE_IDLE)
 		--[[
@@ -323,10 +325,10 @@ function exitState(me)
 	elseif entity_isState(me, STATE_SING) then
 		entity_setState(me, STATE_PLAYSEG)
 	elseif entity_isState(me, STATE_PAIN) then
-		songLevel = songLevel + 1
-		hits = hits - 1
+		v.songLevel = v.songLevel + 1
+		v.hits = v.hits - 1
 		debugLog("test")
-		if hits <= 0 then
+		if v.hits <= 0 then
 			entity_setState(me, STATE_TRANSITION)
 		else
 			entity_setState(me, STATE_IDLE)
@@ -334,7 +336,7 @@ function exitState(me)
 	elseif entity_isState(me, STATE_WRONG) then
 		entity_setState(me, STATE_ATTACK)
 	elseif entity_isState(me, STATE_ATTACK) then
-		bx, by = bone_getWorldPosition(bone_head)
+		local bx, by = bone_getWorldPosition(v.bone_head)
 		for i=1,3,1 do
 			createEntity("Mutilus", "", bx, by)
 		end
@@ -358,13 +360,13 @@ function songNote(me, note)
 	-- song spheres handle the work now
 --[[
 	if entity_isState(me, STATE_WAIT) then
-		if note == songNotes[userNote] then
-			userNote = userNote + 1
-			if userNote > songSize then
-				songsDone = songsDone + 1
-				if songsDone >= 3 then
-					songLevel = songLevel + 1
-					songsDone = 0
+		if note == v.songNotes[v.userNote] then
+			v.userNote = v.userNote + 1
+			if v.userNote > v.songSize then
+				v.songsDone = v.songsDone + 1
+				if v.songsDone >= 3 then
+					v.songLevel = v.songLevel + 1
+					v.songsDone = 0
 				end
 				entity_setState(me, STATE_PAIN)
 			end

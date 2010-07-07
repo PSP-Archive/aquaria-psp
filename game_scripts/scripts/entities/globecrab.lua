@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- G L O B E  C R A B
 -- ================================================================================================
@@ -27,9 +29,9 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-speed = 150
-delay = 0.5
-moveaway = 0
+v.speed = 150
+v.delay = 0.5
+v.moveaway = 0
 
 STATE_ROTATE = 1000
 STATE_WALK = 1001
@@ -59,84 +61,84 @@ function init(me)
 	entity_setDeathParticleEffect(me, "TinyRedExplode")
 	entity_setUpdateCull(me, 4000)
 
-	scale_random = math.random(40) * 0.01
+	local scale_random = math.random(40) * 0.01
 	entity_scale(me, 0.6 + scale_random, 0.6 + scale_random)
 end
 
 function postInit(me)
-	n = getNaija()
-	--entity_setTarget(me, n)
+	v.n = getNaija()
+	--entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 
 	if entity_isState(me, STATE_IDLE) then
-		if delay > 0 then
-			delay = delay - dt
-			--debugLog(string.format("globecrab delay: %d", delay))
+		if v.delay > 0 then
+			v.delay = v.delay - dt
+			--debugLog(string.format("globecrab delay: %d", v.delay))
 		elseif math.random(100) == 1 then
 			entity_setState(me, STATE_ROTATE)
-			delay = 0.5
+			v.delay = 0.5
 		end
 	elseif entity_isState(me, STATE_ROTATE) then
 		entity_rotate(me, entity_getRotation(me)+90*dt)
-		if delay > 0 then
-			delay = delay - dt
+		if v.delay > 0 then
+			v.delay = v.delay - dt
 		elseif math.random(100) == 1 then
-			if moveaway == 1 then
+			if v.moveaway == 1 then
 				entity_setState(me, STATE_MOVEAWAY)
-				delay = 0.5
+				v.delay = 0.5
 			else
 				entity_setState(me, STATE_WALK)
-				delay = 1
+				v.delay = 1
 			end
 		end
 	elseif entity_isState(me, STATE_MOVEAWAY) then
-		vx, vy = vector_setLength(vx, vy, speed*dt)
-		entity_setPosition(me, entity_x(me) + vx, entity_y(me) + vy)
+		v.vx, v.vy = vector_setLength(v.vx, v.vy, v.speed*dt)
+		entity_setPosition(me, entity_x(me) + v.vx, entity_y(me) + v.vy)
 
-		if delay > 0 then
-			delay = delay - dt
+		if v.delay > 0 then
+			v.delay = v.delay - dt
 		else
 			entity_setState(me, STATE_IDLE)
-			moveaway = 0
-			delay = 0.5
+			v.moveaway = 0
+			v.delay = 0.5
 		end
 	elseif entity_isState(me, STATE_WALK) then
 
-		coll = 0
+		local coll = 0
 
 		-- CRAB COLLISION CHECK
-		e = getFirstEntity()
+		local e = getFirstEntity()
 		while e ~= 0 do
 			if e ~= me and eisv(e, EV_TYPEID, EVT_GLOBEJELLY) and entity_isEntityInRange(me, e, 64) then
 				entity_setState(me, STATE_IDLE)
-				delay = 0.5
+				v.delay = 0.5
 				coll = 1
-				moveaway = 1 -- so they don't get stuck
+				v.moveaway = 1 -- so they don't get stuck
 			end
 			e = getNextEntity()
 		end
 
 		-- WALL COLLISION CHECK
-		vx, vy = entity_getNormal(me)
-		vx, vy = vector_setLength(vx, vy, speed*dt)
+		v.vx, v.vy = entity_getNormal(me)
+		v.vx, v.vy = vector_setLength(v.vx, v.vy, v.speed*dt)
 
-		if isObstructedBlock(entity_x(me) + vx, entity_y(me) + vy, 2) then
+		if isObstructedBlock(entity_x(me) + v.vx, entity_y(me) + v.vy, 2) then
 			entity_setState(me, STATE_IDLE)
-			delay = 0.5
+			v.delay = 0.5
 			coll = 1
 		end
 
 		if coll == 0 then
-			vx, vy = vector_setLength(vx, vy, speed*dt)
-			entity_setPosition(me, entity_x(me) + vx, entity_y(me) + vy)
+			v.vx, v.vy = vector_setLength(v.vx, v.vy, v.speed*dt)
+			entity_setPosition(me, entity_x(me) + v.vx, entity_y(me) + v.vy)
 
-			if delay > 0 then
-				delay = delay - dt
+			if v.delay > 0 then
+				v.delay = v.delay - dt
 			elseif math.random(100) == 1 then
 				entity_setState(me, STATE_IDLE)
-				delay = 0.5
+				v.delay = 0.5
 			end
 		end
 	else

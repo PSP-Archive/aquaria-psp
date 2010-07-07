@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- R A S P B E R R Y
 -- ================================================================================================
@@ -27,8 +29,8 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-fireDelay = 2
-moveTimer = 0
+v.fireDelay = 2
+v.moveTimer = 0
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -69,24 +71,24 @@ function update(me, dt)
 		entity_moveAlongSurface(me, dt, 80, 6)
 		entity_rotateToSurfaceNormal(me, 0.1)
 		-- entity_rotateToSurfaceNormal(0.1)
-		moveTimer = moveTimer + dt
-		if moveTimer > 10 then
+		v.moveTimer = v.moveTimer + dt
+		if v.moveTimer > 10 then
 			entity_switchSurfaceDirection(me)
-			moveTimer = 0
+			v.moveTimer = 0
 		end
 		if not(entity_hasTarget(me)) then
 			entity_findTarget(me, 1200)
 		else
-			if fireDelay > 0 then
-				fireDelay = fireDelay - dt
-				if fireDelay < 0 then
+			if v.fireDelay > 0 then
+				v.fireDelay = v.fireDelay - dt
+				if v.fireDelay < 0 then
 					-- dmg, mxspd, homing, numsegs, out
 					entity_doGlint(me, "Particles/PurpleFlare")
 					--entity_fireAtTarget(me, "Purple", 1, 400, 200, 3, 64)
-					nx, ny = entity_getNormal(me)
+					local nx, ny = entity_getNormal(me)
 					nx, ny = vector_setLength(nx, ny, 48)
 				
-					s = createShot("Poison", me, entity_getTarget(me), entity_x(me)+nx, entity_y(me)+ny)
+					local s = createShot("Poison", me, entity_getTarget(me), entity_x(me)+nx, entity_y(me)+ny)
 					
 					--shot_setAimVector(s, )
 					--[[
@@ -97,7 +99,7 @@ function update(me, dt)
 					shot_setAimVector(s, 
 					]]--
 					
-					fireDelay = 3
+					v.fireDelay = 3
 				end
 			end
 		end

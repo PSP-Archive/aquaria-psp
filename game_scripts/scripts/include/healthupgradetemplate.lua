@@ -17,18 +17,21 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-myNote = 0
-timingNote = false
-noteTimer = 0
 NOTE_TIME = 2.5
-core = 0
-shell1 = 0
-shell2 = 0
-glow = 0
 
-myID = 0
+v.myNote = 0
+v.timingNote = false
+v.noteTimer = 0
+v.core = 0
+v.shell1 = 0
+v.shell2 = 0
+v.glow = 0
+
+v.myID = 0
 
 STATE_SHAKE		= 1000
 
@@ -39,31 +42,31 @@ function commonInit(me, id)
 	entity_initSkeletal(me, "HealthUpgrade")
 	
 	
-	core = entity_getBoneByName(me, "Core")
-	shell1 = entity_getBoneByName(me, "Shell1")
-	shell2 = entity_getBoneByName(me, "Shell2")
-	glow = entity_getBoneByName(me, "Glow")
+	v.core = entity_getBoneByName(me, "Core")
+	v.shell1 = entity_getBoneByName(me, "Shell1")
+	v.shell2 = entity_getBoneByName(me, "Shell2")
+	v.glow = entity_getBoneByName(me, "Glow")
 	
 	if id == 0 then
-		myNote = 0
+		v.myNote = 0
 	elseif id == 1 then
-		myNote = 2
+		v.myNote = 2
 	elseif id == 2 then
-		myNote = 4
+		v.myNote = 4
 	elseif id == 3 then
-		myNote = 6
+		v.myNote = 6
 	elseif id == 4 then
-		myNote = 1
+		v.myNote = 1
 	end		
 	
-	myID = id
+	v.myID = id
 	
-	bone_setColor(core, getNoteColor(myNote))
-	bone_setColor(shell1, getNoteColor(myNote))
-	bone_setColor(shell2, getNoteColor(myNote))
+	bone_setColor(v.core, getNoteColor(v.myNote))
+	bone_setColor(v.shell1, getNoteColor(v.myNote))
+	bone_setColor(v.shell2, getNoteColor(v.myNote))
 	
-	bone_setBlendType(glow, BLEND_ADD)
-	bone_setColor(glow, getNoteColor(myNote))
+	bone_setBlendType(v.glow, BLEND_ADD)
+	bone_setColor(v.glow, getNoteColor(v.myNote))
 
 	glowNormal(me)
 	
@@ -77,38 +80,38 @@ end
 
 function postInit(me)
 	--if entity_isFlag(me, 1) then
-	if isFlag(FLAG_HEALTHUPGRADES + myID, 1) then
+	if isFlag(FLAG_HEALTHUPGRADES + v.myID, 1) then
 		entity_delete(me)
 	end
 	--end
 end
 
 function glowNormal(me)
-	bone_alpha(glow, 0.3)
-	bone_alpha(glow, 0.4, 1, -1, 1, 1)
-	bone_scale(glow, 6, 6)
-	bone_scale(glow, 8, 8, 1, -1, 1, 1)
+	bone_alpha(v.glow, 0.3)
+	bone_alpha(v.glow, 0.4, 1, -1, 1, 1)
+	bone_scale(v.glow, 6, 6)
+	bone_scale(v.glow, 8, 8, 1, -1, 1, 1)
 end
 
 function glowSinging(me)
-	bone_alpha(glow, 0.5)
-	bone_alpha(glow, 0.7, 0.2, -1, 1, 1)
+	bone_alpha(v.glow, 0.5)
+	bone_alpha(v.glow, 0.7, 0.2, -1, 1, 1)
 
-	bone_scale(glow, 6, 6)
-	bone_scale(glow, 24, 24, 0.2, -1, 1, 1)
+	bone_scale(v.glow, 6, 6)
+	bone_scale(v.glow, 24, 24, 0.2, -1, 1, 1)
 end
 
-incut = false
+v.incut = false
 
 function update(me, dt)
-	if incut then return end
+	if v.incut then return end
 	
 	if entity_isState(me, STATE_OPENED) then
 		if entity_isEntityInRange(me, getNaija(), 64) then
-			incut = true
+			v.incut = true
 			playSfx("HealthUpgrade-Collect")
 			spawnParticleEffect("HealthUpgradeReceived", entity_getPosition(me))
-			setFlag(FLAG_HEALTHUPGRADES + myID, 1)
+			setFlag(FLAG_HEALTHUPGRADES + v.myID, 1)
 			upgradeHealth()
 			setSceneColor(1, 1, 1, 4)
 			entity_idle(getNaija())
@@ -125,11 +128,11 @@ function update(me, dt)
 	elseif entity_isState(me, STATE_OPEN) and not entity_isAnimating(me) then
 		entity_setState(me, STATE_OPENED)
 	else
-		if timingNote then
-			noteTimer = noteTimer + dt
-			if noteTimer > NOTE_TIME then
-				noteTimer = 0
-				timingNote = false
+		if v.timingNote then
+			v.noteTimer = v.noteTimer + dt
+			if v.noteTimer > NOTE_TIME then
+				v.noteTimer = 0
+				v.timingNote = false
 				entity_setState(me, STATE_OPEN)
 			end
 		end
@@ -139,19 +142,19 @@ end
 function songNote(me, note)
 	if entity_getAlpha(me) < 1 then return end
 	if entity_isState(me, STATE_OPEN) or entity_isState(me, STATE_OPENED) then return end
-	if note == myNote then
+	if note == v.myNote then
 		entity_setState(me, STATE_SHAKE)
-		timingNote = true
-		noteTimer = 0
+		v.timingNote = true
+		v.noteTimer = 0
 	else
-		timingNote = false
+		v.timingNote = false
 	end
-	timer = 0
+	v.timer = 0
 end
 
 function songNoteDone(me, note, len)
 	if entity_isState(me, STATE_OPEN) or entity_isState(me, STATE_OPENED) then return end
-	if timingNote and note == myNote then		
+	if v.timingNote and note == v.myNote then		
 		if not entity_isState(me, STATE_OPEN) then
 			entity_setState(me, STATE_IDLE)
 		end
@@ -161,12 +164,12 @@ end
 function enterState(me, state)
 	--debugLog("HU enterState!")
 	if entity_isState(me, STATE_IDLE) then
-		if shell1~=0 and shell2 ~= 0 then
-			bone_alpha(shell1, 0)
-			bone_alpha(shell2, 0)
+		if v.shell1 ~= 0 and v.shell2 ~= 0 then
+			bone_alpha(v.shell1, 0)
+			bone_alpha(v.shell2, 0)
 		end
-		timingNote = false
-		noteTimer = 0
+		v.timingNote = false
+		v.noteTimer = 0
 		entity_animate(me, "idle", LOOP_INF)
 		
 		glowNormal(me)
@@ -174,15 +177,15 @@ function enterState(me, state)
 		glowSinging(me)
 		entity_animate(me, "shake", LOOP_INF)
 	elseif entity_isState(me, STATE_OPEN) then
-		bone_alpha(core, 0.01, 0.5)
-		bone_alpha(shell1, 1, 0.1)
-		bone_alpha(shell2, 1, 0.1)
+		bone_alpha(v.core, 0.01, 0.5)
+		bone_alpha(v.shell1, 1, 0.1)
+		bone_alpha(v.shell2, 1, 0.1)
 		entity_animate(me, "open")
 		
-		r, g, b = getNoteColor(myNote)
+		local r, g, b = getNoteColor(v.myNote)
 		setSceneColor(r, g, b, 2)
 		
-		playSfx(getNoteName(myNote, "low-"))
+		playSfx(getNoteName(v.myNote, "low-"))
 	end
 end
 

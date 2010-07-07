@@ -17,7 +17,9 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-done = 0
+v = getVars()
+
+v.done = 0
 
 function init(me)
 
@@ -25,11 +27,11 @@ end
 
 function update(me, dt)
 	--return
-	if done==1 then
+	if v.done==1 then
 		quitNestedMain()
 	end
-	if done == 0 and (isLeftMouse() or isRightMouse() or isEscapeKey()) then
-		done = 1
+	if v.done == 0 and (isLeftMouse() or isRightMouse() or isEscapeKey()) then
+		v.done = 1
 		debugLog("jumpstate title")
 		quitNestedMain()
 		fade2(1, 0, 1, 1, 1)

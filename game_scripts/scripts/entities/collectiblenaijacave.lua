@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- song cave collectible
 
 dofile("scripts/include/collectibletemplate.lua")
@@ -33,10 +35,11 @@ function enterState(me, state)
 	commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		-- spawn a bunch o' plants
-		node = getNodeByName("PLANT1")
+		local node, ent
+		node = getNode("PLANT1")
 		ent = createEntity("SongStalk", "", node_x(node), node_y(node))
 		entity_rotate(ent, -45)
-		node = getNodeByName("PLANT2")
+		node = getNode("PLANT2")
 		ent = createEntity("Phonograph", "", node_x(node), node_y(node))		
 		entity_rotate(ent, -45)
 		setElementLayerVisible(7, true)

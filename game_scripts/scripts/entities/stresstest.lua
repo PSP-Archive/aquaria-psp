@@ -17,16 +17,18 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 --DEFINE
 --health 10
 --dropChance 50 1
 
 dofile("scripts/entities/entityinclude.lua")
 
-angle = 0
-n = 0
-beam = 0
-delay = 0
+v.angle = 0
+v.n = 0
+v.beam = 0
+v.delay = 0
 function init(me)
 	setupEntity(me)
 	entity_setTexture(me, "missingImage")
@@ -37,20 +39,20 @@ function init(me)
 	--entity_generateCollisionMask(me)	
 	
 	entity_setState(me, STATE_IDLE)
-	--delay = -math.random(100)/100.0
-	delay = 200
-	angle = randAngle360()
+	--v.delay = -math.random(100)/100.0
+	v.delay = 200
+	v.angle = randAngle360()
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 --[[
 	entity_handleShotCollisionsSkeletal(me)
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	]]--
 	if isForm(FORM_BEAST) then
 		entity_setActivationType(me, AT_CLICK)
@@ -58,34 +60,34 @@ function update(me, dt)
 		entity_setActivationType(me, AT_NONE)
 	end
 	
-	delay = delay + dt
-	if delay > 10 then	
+	v.delay = v.delay + dt
+	if v.delay > 10 then	
 		entity_say(me, "Where are you going?", SAY_QUEUE)
 		entity_say(me, "Hellooo?", SAY_QUEUE)
 		entity_say(me, "Are you listening to me?!?", SAY_QUEUE)
 		entity_say(me, "...", SAY_QUEUE)
 		entity_say(me, "Fine, then.", SAY_QUEUE)
-		delay = 0
+		v.delay = 0
 	end
 	--[[
-	delay = delay + dt
-	if delay > 0.2 then
-		delay = delay - 0.2
-		if beam then
-			beam_delete(beam)
-			beam = 0
+	v.delay = v.delay + dt
+	if v.delay > 0.2 then
+		v.delay = v.delay - 0.2
+		if v.beam then
+			beam_delete(v.beam)
+			v.beam = 0
 		end
-		if beam == 0 then
-			beam = createBeam("RotCore/Beam")
+		if v.beam == 0 then
+			v.beam = createBeam("RotCore/Beam")
 		end
-		delay = 0
+		v.delay = 0
 	end
-	if beam ~= 0 then
-		beam_setPosition(beam, entity_getPosition(me))
+	if v.beam ~= 0 then
+		beam_setPosition(v.beam, entity_getPosition(me))
 	end
 	]]--
 
-	--entity_moveTowardsAngle(me, angle, dt, 500)
+	--entity_moveTowardsAngle(me, v.angle, dt, 500)
 	entity_updateMovement(me, dt)
 end
 

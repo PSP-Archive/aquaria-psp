@@ -17,17 +17,19 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- COLLECTIBLE ITEM
 
 dofile("scripts/entities/entityinclude.lua")
 
-myFlag = 0
-back = false
+v.myFlag = 0
+v.back = false
 
-isCostume = false
+v.isCostume = false
 
 function commonInit(me, gfx, flag, cst)
-	myFlag = flag
+	v.myFlag = flag
 	setupEntity(me, gfx)
 	debugLog("in common init")
 	if isFlag(flag, 1) then
@@ -36,19 +38,19 @@ function commonInit(me, gfx, flag, cst)
 		entity_alpha(me, 0, 0)
 	end	
 	
-	nd = entity_getNearestNode(me, "layerback")
+	local nd = entity_getNearestNode(me, "layerback")
 	if nd ~= 0 and node_isEntityIn(nd, me) then
 		entity_setEntityLayer(me, -1)
-		back = true
+		v.back = true
 	end
 	
-	isCostume = cst
+	v.isCostume = cst
 end
 
 function commonUpdate(me, dt)
 	if entity_isState(me, STATE_IDLE) then
-		if back then
-			e = getFirstEntity()
+		if v.back then
+			local e = getFirstEntity()
 			while e ~= 0 do
 				if eisv(e, EV_TYPEID, EVT_ROCK) then
 					if entity_isEntityInRange(me, e, 64) then
@@ -64,13 +66,13 @@ function commonUpdate(me, dt)
 	end
 end
 
-incut = false
+v.incut = false
 
 function commonEnterState(me, state)
-	if incut then return end
+	if v.incut then return end
 	
 	if entity_isState(me, STATE_COLLECT) then
-		incut = true
+		v.incut = true
 		entity_idle(getNaija())
 		entity_flipToEntity(getNaija(), me)
 		cam_toEntity(me)
@@ -86,7 +88,7 @@ function commonEnterState(me, state)
 		playSfx("low-note5", 0, 0.4)
 		watch(3)
 		
-		setFlag(myFlag, 1)
+		setFlag(v.myFlag, 1)
 		entity_setPosition(me, entity_x(me), entity_y(me)-100, 3, 0, 0, 1)
 		entity_scale(me, 1.2, 1.2, 3)
 		--playSfx("secret")
@@ -104,7 +106,7 @@ function commonEnterState(me, state)
 		
 		overrideZoom(0)
 		
-		if isCostume then
+		if v.isCostume then
 			setControlHint(getStringBank(224), 0, 0, 0, 8, "gui/icon-treasures")
 		else
 			if isFlag(FLAG_HINT_COLLECTIBLE, 0) then
@@ -114,7 +116,7 @@ function commonEnterState(me, state)
 				setControlHint(getStringBank(223), 0, 0, 0, 8, "gui/icon-treasures")
 			end
 		end
-		incut = false
+		v.incut = false
 	elseif entity_isState(me, STATE_COLLECTED) then	
 		debugLog("COLLECTED, fading OUT alpha")
 		entity_alpha(me, 0, 1)

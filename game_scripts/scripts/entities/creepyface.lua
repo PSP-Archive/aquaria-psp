@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- C R E E P Y   F A C E
 -- ================================================================================================
@@ -27,7 +29,7 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L   V A R I A B L E S
 -- ================================================================================================
 
-faceTimer = 1.23 + (math.random(123) * 0.1)
+v.faceTimer = 1.23 + (math.random(123) * 0.1)
  
 -- ================================================================================================
 -- F U N C T I O N S
@@ -60,9 +62,9 @@ function postInit(me)
 end
 
 function update(me, dt)
-	if faceTimer > 0 then faceTimer = faceTimer - dt
-	elseif faceTimer <= 0 then
-		faceTimer = 1.23 + (math.random(123) * 0.1)
+	if v.faceTimer > 0 then v.faceTimer = v.faceTimer - dt
+	elseif v.faceTimer <= 0 then
+		v.faceTimer = 1.23 + (math.random(123) * 0.1)
 		
 		spawnParticleEffect("CreepyFace", entity_x(me), entity_y(me))
 	end

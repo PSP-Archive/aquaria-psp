@@ -17,18 +17,20 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-spawnTimer = 0
+v.spawnTimer = 0
 
 function init(me)
-	spawnTimer = 8 + math.random(4)
+	v.spawnTimer = 8 + math.random(4)
 end
 
 function update(me, dt)
-	spawnTimer = spawnTimer + dt
-	if spawnTimer > 12 then
+	v.spawnTimer = v.spawnTimer + dt
+	if v.spawnTimer > 12 then
 		createEntity("SongSpore", "", node_x(me) + math.random(300)-150, node_y(me))
-		spawnTimer = 0 + math.random(600)/200.0
+		v.spawnTimer = 0 + math.random(600)/200.0
 	end
 end

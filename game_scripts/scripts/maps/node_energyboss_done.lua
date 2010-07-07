@@ -17,17 +17,19 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-naija = 0
+v.naija = 0
 
 function init(me)
 	node_setCursorActivation(me, false)
-	naija = getNaija()	
+	v.naija = getNaija()
 	-- kill the boss if he shouldn't be there anymore
 	if getStory() > 8 then
 		debugLog("killing boss?")
-		energyBoss = getEntity("EnergyBoss")
+		local energyBoss = getEntity("EnergyBoss")
 		if energyBoss ~= 0 then
 			entity_delete(energyBoss)
 		end
@@ -39,7 +41,7 @@ end
 
 function update(me, dt)
 	if getStory() <= 8 then
-		if node_isEntityIn(me, naija) then
+		if node_isEntityIn(me, v.naija) then
 			setStory(9)
 		end
 	end

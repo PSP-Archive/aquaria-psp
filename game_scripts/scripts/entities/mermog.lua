@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- AGGRO HOPPER
 -- ================================================================================================
@@ -32,22 +34,20 @@ STATE_WALK				= 1003
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-jumpDelay = 0
-moveTimer = 0
-rotateOffset = 0
-angry = false
-enraged = false
-moving = 1
-n = 0
+v.jumpDelay = 0
+v.moveTimer = 0
+v.rotateOffset = 0
+v.angry = false
+v.enraged = false
+v.moving = 1
+v.n = 0
 
-fireDelay = 0
+v.fireDelay = 0
 
-lx = 0
-ly = 0
+v.lx = 0
+v.ly = 0
 
-angle = 0.0
-
-bubbleRelease = 0
+v.bubbleRelease = 0
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -103,13 +103,13 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
-	lx,ly = entity_getPosition(me)
+	v.lx, v.ly = entity_getPosition(me)
 	
-	if enraged then
+	if v.enraged then
 		dt = dt * 1.25
 	end	
 	--[[
@@ -129,10 +129,10 @@ function update(me, dt)
 			entity_findTarget(me, 1200)
 		else
 			if entity_isTargetInRange(me, 900) then
-				jumpDelay = jumpDelay - dt
-				if jumpDelay < 0 then
-					angry = true
-					jumpDelay = 0.2
+				v.jumpDelay = v.jumpDelay - dt
+				if v.jumpDelay < 0 then
+					v.angry = true
+					v.jumpDelay = 0.2
 					entity_setState(me, STATE_JUMPPREP)
 				end
 			end
@@ -143,7 +143,7 @@ function update(me, dt)
 		else
 			entity_switchSurfaceDirection(me, 1)
 		end
-		entity_moveAlongSurface(me, dt, 1000*moving, 6)
+		entity_moveAlongSurface(me, dt, 1000*v.moving, 6)
 		entity_rotateToSurfaceNormal(me, 0.1)
 	elseif entity_getState(me)==STATE_JUMPPREP then
 		if not entity_isAnimating(me) then
@@ -154,17 +154,17 @@ function update(me, dt)
 		entity_updateCurrents(me, dt)
 		entity_updateMovement(me, dt)
 		
-		bubbleRelease = bubbleRelease - dt
-		if bubbleRelease < 0 then
-			bubbleRelease = 0.4
+		v.bubbleRelease = v.bubbleRelease - dt
+		if v.bubbleRelease < 0 then
+			v.bubbleRelease = 0.4
 			spawnParticleEffect("bubble-release-short", entity_x(me), entity_y(me))
 		end
 		
 		--[[
-		fireDelay = fireDelay - dt
-		if fireDelay < 0 then
-			fireDelay = 0.4
-			s = createShot("mermog-shot", me, n, entity_x(me), entity_y(me))
+		v.fireDelay = v.fireDelay - dt
+		if v.fireDelay < 0 then
+			v.fireDelay = 0.4
+			s = createShot("mermog-shot", me, v.n, entity_x(me), entity_y(me))
 		end
 		]]--
 	elseif not(entity_getState(me)==STATE_TRANSITION or entity_isState(me, STATE_WALK)) then
@@ -174,7 +174,7 @@ function update(me, dt)
 
 	--[[
 	if isObstructed(entity_x(me), entity_y(me)) then
-		entity_setPosition(me, lx, ly)
+		entity_setPosition(me, v.lx, v.ly)
 		entity_clampToSurface(me)
 	end
 	]]--
@@ -194,10 +194,10 @@ function damage(me, attacker, bone, damageType, dmg)
 	return true
 end
 
-bounces = 0
+v.bounces = 0
 function hitSurface(me)
 	if entity_getState(me)==STATE_JUMP then
-		t = egetvf(me, EV_CLAMPTRANSF)
+		local t = egetvf(me, EV_CLAMPTRANSF)
 		if entity_checkSurface(me, 6, STATE_TRANSITION, t) then
 			entity_rotateToSurfaceNormal(me, 0)
 			entity_scale(me, 1, 0.5)
@@ -207,8 +207,8 @@ function hitSurface(me)
 			entity_setInternalOffset(me, 0, 0, t)
 			]]--
 		else
-			nx,ny = getWallNormal(entity_getPosition(me))
-			nx,ny = vector_setLength(nx, ny, 400)
+			local nx, ny = getWallNormal(entity_getPosition(me))
+			nx, ny = vector_setLength(nx, ny, 400)
 			entity_addVel(me, nx, ny)
 		end
 		--[[
@@ -220,13 +220,13 @@ function hitSurface(me)
 	end
 	--[[
 	if entity_getState(me)==STATE_JUMP then
-		nx, ny = getWallNormal(cx, cy)
+		local nx, ny = getWallNormal(cx, cy)
 		if ny < 0 then
 			land(me)
 			entity_setState(me, STATE_TRANSITION)
 		else
-			bounces = bounces + 1
-			if bounces > 8 then
+			v.bounces = v.bounces + 1
+			if v.bounces > 8 then
 				land(me)
 				entity_setState(me, STATE_TRANSITION)
 			end
@@ -241,12 +241,12 @@ function enterState(me)
 		entity_setMaxSpeed(me, 1200)
 	elseif entity_getState(me)==STATE_JUMPPREP then
 
-		nx,ny = entity_getNormal(me)
+		local nx, ny = entity_getNormal(me)
 		for i=20,400,20 do
 			
-			nx1,ny1 = vector_setLength(nx, ny, i)
-			tx = entity_x(me) + nx1
-			ty = entity_y(me) + ny1
+			local nx1, ny1 = vector_setLength(nx, ny, i)
+			local tx = entity_x(me) + nx1
+			local ty = entity_y(me) + ny1
 			--debugLog(string.format("t(%d, %d)", tx, ty))
 			if isObstructed(tx, ty) then
 				--debugLog("idle!")
@@ -262,11 +262,11 @@ function enterState(me)
 	elseif entity_isState(me, STATE_WALK) then
 		entity_animate(me, "walk", -1)
 	elseif entity_getState(me)==STATE_JUMP then
-		bounces = 0
+		v.bounces = 0
 		entity_flipToEntity(me, entity_getTarget(me))
 		entity_animate(me, "jump")
 		
-		rotateOffset = 0
+		v.rotateOffset = 0
 		entity_applySurfaceNormalForce(me, 1000)
 		if entity_isfh(me) then
 			entity_addVel(me, 400, 0)
@@ -281,11 +281,6 @@ function enterState(me)
 end
 
 function animationKey(me, key)
-	if entity_isState(me, STATE_RUNAWAY) and ((key > 3 and key < 5) or (key == 1)) then
-		moving = 1
-	else
-		moving = 0.2
-	end
 end
 
 function exitState(me)
@@ -301,8 +296,8 @@ end
 
 function dieNormal(me)
 	if chance(20) then
-		x,y = entity_getNormal(me)
-		x,y = vector_setLength(x, y, 64)
+		local x, y = entity_getNormal(me)
+		x, y = vector_setLength(x, y, 64)
 		spawnIngredient("PlantLeaf", entity_x(me)+x, entity_y(me)+y)
 	end
 end

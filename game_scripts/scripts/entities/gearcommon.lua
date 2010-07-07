@@ -17,32 +17,34 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-rotSpd = 0.0
-n=0
-gear = 0
-gearBack = 0
-actDelay = 0
-t = 15
-soundTimer =0
+v.rotSpd = 0.0
+v.n = 0
+v.gear = 0
+v.gearBack = 0
+v.actDelay = 0
+v.t = 15
+v.soundTimer =0
 
-useSetRotSpd = 0
+v.useSetRotSpd = 0
 
 function commonInit(me, usrs)
-	useSetRotSpd = usrs
+	v.useSetRotSpd = usrs
 	entity_setEntityType(me, ET_NEUTRAL)
 	--entity_setTexture(me, "")
 	entity_initSkeletal(me, "Gear")
 	--entity_setWidth(me, 64)
 	--entity_setHeight(me, 64)
 	entity_setUpdateCull(me, -1)
-	n = getNaija()
+	v.n = getNaija()
 	
 	entity_setCollideRadius(me, 160)
 	
-	gear = entity_getBoneByName(me, "Gear")
-	gearBack = entity_getBoneByName(me, "GearBack")
+	v.gear = entity_getBoneByName(me, "Gear")
+	v.gearBack = entity_getBoneByName(me, "GearBack")
 	
 	entity_scale(me, 1.5, 1.5)
 	
@@ -54,10 +56,10 @@ function commonInit(me, usrs)
 end
 
 function postInit(me)
-	mult = 1
-	node = entity_getNearestNode(me, "FLIP")
+	v.mult = 1
+	local node = entity_getNearestNode(me, "FLIP")
 	if node ~= 0 and node_isEntityIn(node, me) then
-		useSetRotSpd = -useSetRotSpd
+		v.useSetRotSpd = -v.useSetRotSpd
 	end
 end
 
@@ -78,9 +80,9 @@ function damage(me)
 end
 
 function doFunction(me)
-	if actDelay == 0 then
-		actDelay = t
-		node = entity_getNearestNode(me)
+	if v.actDelay == 0 then
+		v.actDelay = v.t
+		local node = entity_getNearestNode(me)
 		if node ~= 0 and node_isEntityIn(node, me) then
 			node_activate(node)
 		end
@@ -89,82 +91,82 @@ function doFunction(me)
 end
 
 function update(me, dt)
-	spinning = false
-	if actDelay > 0 then
-		actDelay = actDelay - dt
-		if actDelay < 0 then
-			actDelay = 0
+	local spinning = false
+	if v.actDelay > 0 then
+		v.actDelay = v.actDelay - dt
+		if v.actDelay < 0 then
+			v.actDelay = 0
 		end
 	end
 	
 	
-	if useSetRotSpd==0 then
-		if entity_isEntityInRange(me, n, 600) then
-			if entity_isUnderWater(n) and avatar_isRolling() then
-				rotSpd = rotSpd + 90*dt*avatar_getRollDirection()
-				if rotSpd > 360 then
-					rotSpd = 360
-				elseif rotSpd < -360 then
-					rotSpd = -360
+	if v.useSetRotSpd == 0 then
+		if entity_isEntityInRange(me, v.n, 600) then
+			if entity_isUnderWater(v.n) and avatar_isRolling() then
+				v.rotSpd = v.rotSpd + 90*dt*avatar_getRollDirection()
+				if v.rotSpd > 360 then
+					v.rotSpd = 360
+				elseif v.rotSpd < -360 then
+					v.rotSpd = -360
 				end
-				spinning = true
+				v.spinning = true
 				
 			end
 		end
 	else
-		spinning = true
-		rotSpd = useSetRotSpd
+		v.spinning = true
+		v.rotSpd = v.useSetRotSpd
 	end
-	--debugLog(string.format("rotspd:%d", rotSpd))
-	if rotSpd ~= 0 then
+	--debugLog(string.format("rotspd:%d", v.rotSpd))
+	if v.rotSpd ~= 0 then
 		
-		entity_rotate(me, entity_getRotation(me)+rotSpd*dt)
-		--bone_rotate(gear, bone_getRotation(gear)+rotSpd*dt)
-		bone_rotate(gearBack, bone_getRotation(gearBack)-rotSpd*2*dt)
+		entity_rotate(me, entity_getRotation(me)+v.rotSpd*dt)
+		--bone_rotate(gear, bone_getRotation(gear)+v.rotSpd*dt)
+		bone_rotate(v.gearBack, bone_getRotation(v.gearBack)-v.rotSpd*2*dt)
 		
-		if bone_getRotation(gear) > 360 then
-			bone_rotate(gear, bone_getRotation(gear)-360)
+		if bone_getRotation(v.gear) > 360 then
+			bone_rotate(v.gear, bone_getRotation(v.gear)-360)
 			--entity_sound(me, "GearTurn")
-		elseif bone_getRotation(gear) < -360 then
-			bone_rotate(gear, bone_getRotation(gear)+360)
+		elseif bone_getRotation(v.gear) < -360 then
+			bone_rotate(v.gear, bone_getRotation(v.gear)+360)
 			--entity_sound(me, "GearTurn")			
 		end
-		soundTimer = soundTimer + rotSpd*dt
-		--debugLog(string.format("soundTimer: %f", soundTimer))
-		intv = 90
-		if soundTimer > intv then
-			soundTimer = 0
+		v.soundTimer = v.soundTimer + v.rotSpd*dt
+		--debugLog(string.format("soundTimer: %f", v.soundTimer))
+		local intv = 90
+		if v.soundTimer > intv then
+			v.soundTimer = 0
 			entity_sound(me, "GearTurn")
 		end
-		if soundTimer < -intv then
-			soundTimer = 0
+		if v.soundTimer < -intv then
+			v.soundTimer = 0
 			entity_sound(me, "GearTurn")
 		end
 
 		if not spinning then
-			dir = 1
-			if rotSpd > 0 then
+			local dir = 1
+			if v.rotSpd > 0 then
 				dir = -1
 			end
-			rotSpd = rotSpd + (30.0*dt*dir)
-			if dir == 1 and rotSpd > 0 then
-				rotSpd = 0
-			elseif dir == -1 and rotSpd < 0 then
-				rotSpd = 0
+			v.rotSpd = v.rotSpd + (30.0*dt*dir)
+			if dir == 1 and v.rotSpd > 0 then
+				v.rotSpd = 0
+			elseif dir == -1 and v.rotSpd < 0 then
+				v.rotSpd = 0
 			end
 		end
 	end
 
-	minSpd = 300
-	if rotSpd > minSpd or rotSpd < -minSpd then
+	local minSpd = 300
+	if v.rotSpd > minSpd or v.rotSpd < -minSpd then
 		doFunction(me)
 	end
 	
 	if entity_touchAvatarDamage(me, entity_getCollideRadius(me), 0) then
-		if avatar_isLockable() and entity_setBoneLock(n, me) then
+		if avatar_isLockable() and entity_setBoneLock(v.n, me) then
 		else
-			x, y = entity_getVectorToEntity(me, n, 8000)
-			entity_addVel(n, x, y)
+			local x, y = entity_getVectorToEntity(me, v.n, 8000)
+			entity_addVel(v.n, x, y)
 		end
 	end
 	entity_handleShotCollisions(me)

@@ -17,9 +17,9 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/cavefishcommon.lua")
+v = getVars()
 
-noteDown = -1
+dofile("scripts/entities/cavefishcommon.lua")
 
 function init(me)
 	commonInit(me, 1)

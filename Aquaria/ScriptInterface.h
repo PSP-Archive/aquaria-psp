@@ -37,6 +37,11 @@ struct ParticleEffectScript
 	int idx;
 };
 
+struct Script
+{
+	lua_State *L;
+	std::string file;
+};
 
 class ScriptInterface
 {
@@ -52,10 +57,11 @@ public:
 
 
 	ParticleData *getCurrentParticleData() { return currentParticleData; }
-	void initLuaVM(lua_State **L);
-	void closeLuaVM(lua_State *L);
-	bool runScript(const std::string &script, const std::string &func);
-	bool runScriptNum(const std::string &script, const std::string &func, int num);
+	Script *openScript(const std::string &file);
+	void pushScriptFunc(Script *script, const char *name);
+	void closeScript(Script *script);
+	bool runScript(const std::string &file, const std::string &func);
+	bool runScriptNum(const std::string &file, const std::string &func, int num);
 	typedef std::map<std::string, ParticleEffectScript> ParticleEffectScripts;
 	ParticleEffectScripts particleEffectScripts;
 	ParticleEffectScript *getParticleEffectScriptByIdx(int idx);
@@ -68,10 +74,13 @@ public:
 	//Entity *getCurrentEntity() { return currentEntity; }
 protected:
 
-	void createBaseLuaVM();
-	void destroyBaseLuaVM();
+	lua_State *createLuaVM();
+	void destroyLuaVM(lua_State *state);
+	lua_State *createLuaThread(lua_State *baseState);
+	void destroyLuaThread(lua_State *baseState, lua_State *thread);
 
-	lua_State *baseState;
+	typedef std::map<std::string, lua_State*> ScriptFileMap;
+	ScriptFileMap loadedScripts;
 
 	ParticleData* currentParticleData;
 	ScriptedParticleEffect* currentParticleEffect;

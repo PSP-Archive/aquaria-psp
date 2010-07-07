@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-head = 0
+v.n = 0
+v.head = 0
 
 function init(me)
 	setupEntity(me)
@@ -31,16 +33,16 @@ function init(me)
 	
 	entity_setState(me, STATE_IDLE)
 	
-	head = entity_getBoneByName(me, "Head")
+	v.head = entity_getBoneByName(me, "Head")
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
-	entity_setLookAtPoint(me, bone_getWorldPosition(head))
+	entity_setLookAtPoint(me, bone_getWorldPosition(v.head))
 end
 
 function enterState(me)

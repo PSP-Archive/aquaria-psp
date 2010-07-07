@@ -17,23 +17,25 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-energyGod = 0
-naija = 0
-noteSung1 = 0
-noteSung2 = 0
-noteSung3 = 0
-foundSong = false
-songDelay = 0
-singDelay = 8
-maxSingDelay = 10
-running = false
+v.energyGod = 0
+v.naija = 0
+v.noteSung1 = 0
+v.noteSung2 = 0
+v.noteSung3 = 0
+v.foundSong = false
+v.songDelay = 0
+v.singDelay = 8
+v.maxSingDelay = 10
+v.running = false
 
 -- SEE ENERGYTEMPLE_FIRSTSLOT
 
 function singSong(me)
-	node = getNodeByName("SONGMOUTH")				
+	local node = getNode("SONGMOUTH")				
 	spawnParticleEffect("EnergyGodSong", node_x(node), node_y(node))
 	playSfx("EnergyGodSong")
 end
@@ -41,21 +43,21 @@ end
 function init(me)
 	loadSound("EnergyGodSong")
 	
-	naija = getNaija()
+	v.naija = getNaija()
 	
 	if isFlag(FLAG_ENERGYGODENCOUNTER, 3) then
-		templeStatue = getEntityByName("TempleStatue")
+		local templeStatue = getEntity("TempleStatue")
 		entity_setState(templeStatue, STATE_BROKEN)
 		
-		door = node_getNearestEntity(getNode("STATUEEXITDOOR"), "energydoor")
+		local door = node_getNearestEntity(getNode("STATUEEXITDOOR"), "energydoor")
 		entity_setState(door, STATE_OPENED)
 	end
 	
 	loadSound("CrumbleFall")
 	
 	if isFlag(FLAG_ENERGYGODENCOUNTER, 1) then		
-		pn = getNodeByName("SONGMOUTH")	
-		ent = createEntity("EnergyGodSpirit", "", node_x(pn), node_y(pn))
+		local pn = getNode("SONGMOUTH")	
+		local ent = createEntity("EnergyGodSpirit", "", node_x(pn), node_y(pn))
 		fadeOutMusic(1)
 	end
 	--debugLog(string.format("%d flag is %d", FLAG_ENERGYGODENCOUNTER, getFlag(FLAG_ENERGYGODENCOUNTER)))
@@ -80,11 +82,11 @@ function init(me)
 	end
 	]]--
 	--[[
-	energyGod = getEntity("EnergyGod")
+	v.energyGod = getEntity("EnergyGod")
 	FLAG_ENERGYGODENCOUNTER
 	if getStory() >= 5.1 then
-		entity_delete(energyGod)
-		energyGod = 0
+		entity_delete(v.energyGod)
+		v.energyGod = 0
 	end	
 	]]--
 end
@@ -92,33 +94,33 @@ end
 function transformScene(me)
 	setCutscene(1,1)
 	setFlag(FLAG_ENERGYGODENCOUNTER, 3)
-	camNode = getNode("ENERGYGODCAM")
-	particleNode = getNode("ENERGYGODPARTICLES")
-	particleNode2 = getNode("ENERGYGODPARTICLES2")
-	entity_swimToNode(naija, me)
-	entity_watchForPath(naija)
-	entity_flipToNode(naija, camNode)
-	entity_idle(naija)
-	entity_clearVel(naija)
+	local camNode = getNode("ENERGYGODCAM")
+	local particleNode = getNode("ENERGYGODPARTICLES")
+	local particleNode2 = getNode("ENERGYGODPARTICLES2")
+	entity_swimToNode(v.naija, me)
+	entity_watchForPath(v.naija)
+	entity_flipToNode(v.naija, camNode)
+	entity_idle(v.naija)
+	entity_clearVel(v.naija)
 	watch(0.5)
 	cam_toNode(camNode)
 	
-	templeStatue = getEntityByName("TempleStatue")
+	local templeStatue = getEntity("TempleStatue")
 	entity_setState(templeStatue, STATE_BREAK)
 	playSfx("CrumbleFall")
-	crumbleNode = getNodeByName("CRUMBLEPARTICLES")	
+	local crumbleNode = getNode("CRUMBLEPARTICLES")	
 	spawnParticleEffect("EnergyGodStatueCrumble", node_x(crumbleNode), node_y(crumbleNode))
 	
 	watch(2.3)
 	
-	esetv(naija, EV_LOOKAT, 0)
+	esetv(v.naija, EV_LOOKAT, 0)
 	
 	playSfx("RockHit-Big")
 	
 	shakeCamera(8, 2)
 	spawnParticleEffect("EnergyGodStatueDust", node_x(particleNode), node_y(particleNode))
 	
-	entity_animate(naija, "look-45", LOOP_INF, LAYER_HEAD)
+	entity_animate(v.naija, "look-45", LOOP_INF, LAYER_HEAD)
 	
 	cam_toNode(getNode("ENERGYGODPARTICLESCAM"))
 
@@ -137,99 +139,99 @@ function transformScene(me)
 	spawnParticleEffect("EnergyGodSend", node_x(particleNode2), node_y(particleNode2))
 	watch(0.5)
 	voice("EnergyGodTransfer")
-	entity_animate(naija, "checkoutEnergy")
+	entity_animate(v.naija, "checkoutEnergy")
 	watch(1.5)
 	
 	
 	
 	watch(0.5)
-	cam_toEntity(naija)
+	cam_toEntity(v.naija)
 	
 	setNaijaHeadTexture("Pain")
-	entity_idle(naija)
+	entity_idle(v.naija)
 	playSfx("NaijaZapped")
 	setSceneColor(1, 0.5, 0.5, 1)
-	entity_animate(naija, "energyStruggle", LOOP_INF)
+	entity_animate(v.naija, "energyStruggle", LOOP_INF)
 	
-	spawnParticleEffect("EnergyGodTransfer", entity_x(naija), entity_y(naija))
+	spawnParticleEffect("EnergyGodTransfer", entity_x(v.naija), entity_y(v.naija))
 	watch(3.5)
-	entity_animate(naija, "energyStruggle2", LOOP_INF)
+	entity_animate(v.naija, "energyStruggle2", LOOP_INF)
 	watch(1.0)
 	
 	learnSong(SONG_ENERGYFORM)
 	changeForm(FORM_ENERGY)
 	setSceneColor(1, 1, 1, 10)
-	entity_idle(naija)
+	entity_idle(v.naija)
 	playMusic("archaic")
 	voice("NAIJA_ENERGYFORM")
 	watch(2)
-	entity_animate(naija, "checkoutEnergy")
-	while entity_isAnimating(naija) do
+	entity_animate(v.naija, "checkoutEnergy")
+	while entity_isAnimating(v.naija) do
 		watch(FRAME_TIME)
 	end
 	watch(0.5)
 	
 	setCutscene(0)
 	
-	esetv(naija, EV_LOOKAT, 1)
+	esetv(v.naija, EV_LOOKAT, 1)
 	setControlHint(getStringBank(37), 0, 0, 0, 10, "", SONG_ENERGYFORM)
 	
-	door = node_getNearestEntity(getNode("STATUEEXITDOOR"), "EnergyDoor")
+	local door = node_getNearestEntity(getNode("STATUEEXITDOOR"), "EnergyDoor")
 	entity_setState(door, STATE_OPEN)
 end
 
 function songNote(me, songNote)
 	if isFlag(FLAG_ENERGYGODENCOUNTER, 2) then
-		noteSung1 = noteSung2
-		noteSung2 = noteSung3
-		noteSung3 = songNote
-		songDelay = 0
+		v.noteSung1 = v.noteSung2
+		v.noteSung2 = v.noteSung3
+		v.noteSung3 = songNote
+		v.songDelay = 0
 		
-		if noteSung1 == 7 and noteSung2 == 6 and noteSung3 == 5 then
-			foundSong = true
-			songDelay = 1.2
+		if v.noteSung1 == 7 and v.noteSung2 == 6 and v.noteSung3 == 5 then
+			v.foundSong = true
+			v.songDelay = 1.2
 		end
 	end
 end
 
 function update(me, dt)
-	if running then return end
-	running = true
+	if v.running then return end
+	v.running = true
 	if isFlag(FLAG_ENERGYGODENCOUNTER, 0) then
-		if node_isEntityIn(me, naija) then
-			dc = getNode("ENERGYDOORCAM")
-			energyDoor = node_getNearestEntity(dc, "EnergyDoor")
+		if node_isEntityIn(me, v.naija) then
+			local dc = getNode("ENERGYDOORCAM")
+			local energyDoor = node_getNearestEntity(dc, "EnergyDoor")
 			if energyDoor ~= 0 then
 				entity_setState(energyDoor, STATE_CLOSE)
 			end
 			
 			
-			entity_idle(naija)
-			entity_clearVel(naija)
+			entity_idle(v.naija)
+			entity_clearVel(v.naija)
 			cam_toNode(getNode("ENERGYDOORCAM"))
 			watch(1)
 			emote(EMOTE_NAIJAUGH)
 			watch(2.1)			
 			
 			cam_toNode(getNode("ENERGYGODCAM"))
-			entity_flipToNode(naija, getNode("ENERGYGODCAM"))
+			entity_flipToNode(v.naija, getNode("ENERGYGODCAM"))
 			
 			fadeOutMusic(5)
 			
 			watch(2)
 			
 			--[[
-			sn = getNode("ENERGYSPIRIT")
+			local sn = getNode("ENERGYSPIRIT")
 			spawnParticleEffect("EnergySpirit", node_x(sn), node_y(sn))
 			]]--
-			--entity_sound(naija, "EnergyGodSong")
+			--entity_sound(v.naija, "EnergyGodSong")
 			--singSong(me)
 			
 			
 			
 			
-			pn = getNodeByName("SONGMOUTH")	
-			ent = createEntity("EnergyGodSpirit", "", node_x(pn), node_y(pn))
+			local pn = getNode("SONGMOUTH")	
+			local ent = createEntity("EnergyGodSpirit", "", node_x(pn), node_y(pn))
 			
 			emote(EMOTE_NAIJAWOW)
 			watch(1)
@@ -239,49 +241,49 @@ function update(me, dt)
 		
 			
 			--[[
-			singDelay = maxSingDelay
+			v.singDelay = v.maxSingDelay
 			]]--
 			
-			cam_toEntity(naija)
+			cam_toEntity(v.naija)
 			
 			setFlag(FLAG_ENERGYGODENCOUNTER, 1)
 		end
 	elseif isFlag(FLAG_ENERGYGODENCOUNTER, 2) then
 		
-		if node_isEntityInRange(me, naija, 1000) then
-			if singDelay > 0 then
-				singDelay = singDelay - dt
-				if singDelay < 0 then					
-					singDelay = maxSingDelay
+		if node_isEntityInRange(me, v.naija, 1000) then
+			if v.singDelay > 0 then
+				v.singDelay = v.singDelay - dt
+				if v.singDelay < 0 then
+					v.singDelay = v.maxSingDelay
 					singSong(me)
 				end
 			end
 		end
-		if songDelay > 0 then
-			songDelay = songDelay - dt
-			if songDelay < 0 then
-				songDelay = 0
+		if v.songDelay > 0 then
+			v.songDelay = v.songDelay - dt
+			if v.songDelay < 0 then
+				v.songDelay = 0
 				transformScene(me)
 			end
 		end
 	end
-	running = false
+	v.running = false
 end
 
 function activate(me)
-	entity_idle(naija)
-	entity_clearVel(naija)
+	entity_idle(v.naija)
+	entity_clearVel(v.naija)
 	
 	cam_toNode(getNode("ENERGYGODCAM"))
-	entity_flipToNode(naija, getNode("ENERGYGODCAM"))
+	entity_flipToNode(v.naija, getNode("ENERGYGODCAM"))
 	
-	singDelay = maxSingDelay
+	v.singDelay = v.maxSingDelay
 	watch(2)
 	
 	singSong(me)
-	singDelay = maxSingDelay
+	v.singDelay = v.maxSingDelay
 	
 	watch(3)
 	
-	cam_toEntity(naija)
+	cam_toEntity(v.naija)
 end

@@ -17,13 +17,15 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-orb = 0
+v.orb = 0
 
 function init(me)
 	if isFlag(FLAG_DEEPWHALE, 2) then
-		orb = getEntity("EnergyOrb")
+		v.orb = getEntity("EnergyOrb")
 	end
 end
 

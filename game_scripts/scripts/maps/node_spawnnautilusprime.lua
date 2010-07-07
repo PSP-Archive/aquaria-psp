@@ -17,29 +17,31 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-nauty = 0
+v.nauty = 0
 
 function spawnEgg(me)
-	node = getNodeByName("COLLECTIBLENAUTILUSPRIMELOCATION")
+	local node = getNode("COLLECTIBLENAUTILUSPRIMELOCATION")
 	createEntity("CollectibleNautilusPrime", "", node_x(node), node_y(node))
 end
 
 function init(me)
 	if isFlag(FLAG_MINIBOSS_NAUTILUSPRIME, 0) then
-		nauty = createEntity("NautilusPrime", "", node_x(me), node_y(me))
+		v.nauty = createEntity("NautilusPrime", "", node_x(me), node_y(me))
 	else
 		spawnEgg(me)
 	end
 end
 
 function update(me, dt)
-	if nauty ~= 0 then
-		if entity_isState(nauty, STATE_DEAD) then
+	if v.nauty ~= 0 then
+		if entity_isState(v.nauty, STATE_DEAD) then
 			setFlag(FLAG_MINIBOSS_NAUTILUSPRIME, 1)
 			spawnEgg(me)
-			nauty = 0
+			v.nauty = 0
 		end
 	end
 end

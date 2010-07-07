@@ -17,22 +17,21 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- LESSER WURM
 -- ================================================================================================
 
 dofile("scripts/entities/entityinclude.lua")
 
--- entity specific
-STATE_SOMETHING			= 1000
-
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
  
-chaseDelay = 0
-pushDelay = 0
+v.chaseDelay = 0
+v.pushDelay = 0
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -83,10 +82,10 @@ end
 
 function update(me, dt)
 	entity_handleShotCollisions(me)
-	pushDelay = pushDelay - dt
-	if pushDelay <= 0 then
+	v.pushDelay = v.pushDelay - dt
+	if v.pushDelay <= 0 then
 		entity_addRandomVel(me, 1000)
-		pushDelay = 1 + math.random(2)
+		v.pushDelay = 1 + math.random(2)
 	end
 	--[[
 	if entity_hasTarget(me) then
@@ -96,17 +95,17 @@ function update(me, dt)
 		end
 	end
 	]]--
-	if chaseDelay > 0 then
-		chaseDelay = chaseDelay - dt
-		if chaseDelay < 0 then
-			chaseDelay = 0
+	if v.chaseDelay > 0 then
+		v.chaseDelay = v.chaseDelay - dt
+		if v.chaseDelay < 0 then
+			v.chaseDelay = 0
 		end
 	end
 	if entity_getState(me)==STATE_IDLE then
 		if not entity_hasTarget(me) then
 			entity_findTarget(me, 800)
 		else
-			if chaseDelay==0 then
+			if v.chaseDelay == 0 then
 				if entity_isTargetInRange(me, 1000) then
 					if entity_getHealth(me) < 4 then
 						entity_setMaxSpeed(me, 600)

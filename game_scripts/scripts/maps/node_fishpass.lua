@@ -17,25 +17,27 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
 function init(me)
 end
 
 function update(me, dt)
-	n = getNaija()
-	if not isForm(FORM_FISH) and node_isEntityIn(me, n) then
-		x = entity_x(n) - node_x(me)
-		y = entity_y(n) - node_y(me)
+	v.n = getNaija()
+	if not isForm(FORM_FISH) and node_isEntityIn(me, v.n) then
+		local x = entity_x(v.n) - node_x(me)
+		local y = entity_y(v.n) - node_y(me)
 		avatar_fallOffWall()
 		vector_setLength(x, y, 20000*dt)
-		entity_clearVel(n)
-		entity_addVel(n, x, y)
-		entity_addVel2(n, x, y)
+		entity_clearVel(v.n)
+		entity_addVel(v.n, x, y)
+		entity_addVel2(v.n, x, y)
 		
-		entity_warpLastPosition(n)
+		entity_warpLastPosition(v.n)
 	end
 end
 

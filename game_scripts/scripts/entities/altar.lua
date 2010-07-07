@@ -17,13 +17,15 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-containedEntity = 0
-naija = 0
-button = 0
-door = 0
-sacrificed = false
+v.containedEntity = 0
+v.naija = 0
+v.button = 0
+v.door = 0
+v.sacrificed = false
 
 function init(me)	
 	entity_setEntityType(me, ET_NEUTRAL)
@@ -35,19 +37,19 @@ function init(me)
 	--entity_generateCollisionMask(me)
 	--entity_setPasses(me, 2)
 	
-	naija = getNaija()	
+	v.naija = getNaija()	
 end
 
 function postInit(me)
-	door = entity_getNearestEntity(me, "EnergyDoor")
+	v.door = entity_getNearestEntity(me, "EnergyDoor")
 	if entity_isFlag(me, 1) then
-		entity_setState(door, STATE_OPENED)
+		entity_setState(v.door, STATE_OPENED)
 	end
 end
 
 function update(me, dt)
-	if button == 0 then
-		button = entity_getNearestEntity(me, "SacrificeButton")
+	if v.button == 0 then
+		v.button = entity_getNearestEntity(me, "SacrificeButton")
 	end
 	
 	if entity_isState(me, STATE_OPEN) and not entity_isAnimating(me) then
@@ -61,17 +63,17 @@ function update(me, dt)
 	end
 	if entity_isState(me, STATE_ON) then
 	end
-	if containedEntity ~= 0 then
-		entity_setPosition(containedEntity, entity_x(me), entity_y(me))
+	if v.containedEntity ~= 0 then
+		entity_setPosition(v.containedEntity, entity_x(me), entity_y(me))
 	end
 	if entity_isState(me, STATE_OPENED) then
-		if containedEntity == 0 then
-			victim = entity_getNearestEntity(me, "SacrificeVictim")
+		if v.containedEntity == 0 then
+			local victim = entity_getNearestEntity(me, "SacrificeVictim")
 			if victim ~=0 then
 				--debugLog("victim!")
 				if entity_isEntityInRange(me, victim, 128) then					
-					containedEntity = victim
-					entity_stopPull(containedEntity)
+					v.containedEntity = victim
+					entity_stopPull(v.containedEntity)
 				end
 			end
 		end
@@ -80,27 +82,27 @@ end
 
 function enterState(me, state)
 	if entity_isState(me, STATE_OPEN) then
-		entity_setState(button, STATE_OPEN)
+		entity_setState(v.button, STATE_OPEN)
 		entity_animate(me, "open")
-		if sacrificed then
-			if door ~= 0 then
-				cam_toEntity(door)
-				entity_setState(door, STATE_OPEN)
+		if v.sacrificed then
+			if v.door ~= 0 then
+				cam_toEntity(v.door)
+				entity_setState(v.door, STATE_OPEN)
 				watch(1.5)
 				cam_toEntity(getNaija())
 			end
-			sacrificed = false
+			v.sacrificed = false
 		end
 	elseif entity_isState(me, STATE_CLOSE) then
 		entity_animate(me, "close")
-		entity_setState(button, STATE_CLOSE)
+		entity_setState(v.button, STATE_CLOSE)
 	elseif entity_isState(me, STATE_CLOSED) then
 	elseif entity_isState(me, STATE_ON) then
 		-- uncomment to catch naija
 		--[[
-		if containedEntity == 0 then
-			if entity_isEntityInRange(me, naija, 128) then
-				containedEntity = naija
+		if v.containedEntity == 0 then
+			if entity_isEntityInRange(me, v.naija, 128) then
+				v.containedEntity = v.naija
 			end
 		end
 		]]--
@@ -115,8 +117,8 @@ function exitState(me, state)
 	if entity_isState(me, STATE_CLOSE) then
 		--entity_setState(me, STATE_ON, 5)
 	elseif entity_isState(me, STATE_ON) then
-		if containedEntity ~= 0 and entity_isName(containedEntity, "SacrificeVictim") then
-			sacrificed = true
+		if v.containedEntity ~= 0 and entity_isName(v.containedEntity, "SacrificeVictim") then
+			v.sacrificed = true
 			playSfx("HellBeast-Roar")
 			shakeCamera(5, 3)
 			entity_setFlag(me, 1)
@@ -124,10 +126,10 @@ function exitState(me, state)
 		else
 			entity_setState(me, STATE_DELAY, 2)
 		end
-		if entity_getEntityType(containedEntity) ~= ET_AVATAR then
-			entity_setFlag(containedEntity, 1)
+		if entity_getEntityType(v.containedEntity) ~= ET_AVATAR then
+			entity_setFlag(v.containedEntity, 1)
 		end
-		containedEntity = 0
+		v.containedEntity = 0
 	elseif entity_isState(me, STATE_DELAY) then
 		entity_setState(me, STATE_OFF)
 	elseif entity_isState(me, STATE_OFF) then

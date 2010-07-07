@@ -17,26 +17,28 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 STATE_RUNOFF			= 1000
 
-n = 0
+v.n = 0
 
-following = false
-seen = false
-spinning = false
-followMia = false
-fade = false
+v.following = false
+v.seen = false
+v.spinning = false
+v.followMia = false
+v.fade = false
 
-singTimer = 0
+v.singTimer = 0
 
-rot = 0
+v.rot = 0
 
-glowBody = 0
-body = 0
+v.glowBody = 0
+v.body = 0
 
-runNode = 0
+v.runNode = 0
 
 function normalSegs(me)
 	bone_setSegs(entity_getBoneByIdx(me, 0), 2, 8, 0.7, 0.7, -0.02, 0, 6, 1)
@@ -62,12 +64,12 @@ function init(me)
 	normalSegs(me)
 	
 	
-	glowBody = entity_getBoneByIdx(me,2)
-	body = entity_getBoneByIdx(me, 0)
+	v.glowBody = entity_getBoneByIdx(me,2)
+	v.body = entity_getBoneByIdx(me, 0)
 	
 	entity_alpha(me, 1)
-	bone_alpha(glowBody, 0)
-	bone_setBlendType(glowBody, BLEND_ADD)
+	bone_alpha(v.glowBody, 0)
+	bone_setBlendType(v.glowBody, BLEND_ADD)
 	
 	entity_scale(me, 0.6, 0.6)
 	
@@ -75,22 +77,22 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
-	runNode = getNode("OMPORUNOFF")
+	v.runNode = getNode("OMPORUNOFF")
 end
 
 function update(me, dt)
 	if entity_isState(me, STATE_IDLE) then
-		if not following then
+		if not v.following then
 			entity_doCollisionAvoidance(me, dt, 2, 1)
 			
-			if following then 
+			if v.following then 
 				entity_moveTowardsTarget(me, dt, 800)
 			else
-				if entity_isEntityInRange(me, n, 512) then
-					following = true
+				if entity_isEntityInRange(me, v.n, 512) then
+					v.following = true
 					entity_moveTowardsTarget(me, dt, 800)
 					if isFlag(FLAG_OMPO, 2) then
 						setFlag(FLAG_OMPO, 3)
@@ -103,43 +105,43 @@ function update(me, dt)
 		
 			entity_updateMovement(me, dt)
 		else
-			if followMia then
+			local tar
+			if v.followMia then
 				tar = getEntity("13_MainArea")
 				esetv(me, EV_LOOKAT, 0)
 			else
 				tar = entity_getNearestEntity(me, "13_MainArea", 1024)
 				if tar == 0 then
-					tar = n
+					tar = v.n
 				end
 			end
-			rot = rot + dt*0.2
+			v.rot = v.rot + dt*0.2
 			if avatar_isSinging() then
-				rot = rot + dt*0.2
+				v.rot = v.rot + dt*0.2
 			end
-			if rot > 1 then
-				rot = rot - 1
+			if v.rot > 1 then
+				v.rot = v.rot - 1
 			end
-			dist = 100
-			if tar == n then
+			local dist = 100
+			if tar == v.n then
 				if avatar_isSinging() then
 					dist = 150
 				end
 			else
-				if fade then
+				if v.fade then
 					dist = 32
 				else
 					dist = 200
 				end
 			end
-			t = 0
-			x = 0
-			y = 0
+			local t = 0
+			local x = 0
+			local y = 0
 			if avatar_isRolling() then
 				dist = 90
-				spinDir = -avatar_getRollDirection()
-				t = rot * 6.28
+				t = v.rot * 6.28
 			else
-				t = rot * 6.28
+				t = v.rot * 6.28
 			end
 			
 
@@ -148,12 +150,12 @@ function update(me, dt)
 				entity_setPosition(me, entity_x(tar)+x, entity_y(tar)+y)
 			end
 			
-			a = t
+			local a = t
 			x = x + math.sin(a)*dist
 			y = y + math.cos(a)*dist
 			
-			if tar ~= n then
-				if fade then
+			if tar ~= v.n then
+				if v.fade then
 					entity_setPosition(me, entity_x(tar)+x, entity_y(tar)+y, 0.2)
 				else
 					entity_setPosition(me, entity_x(tar)+x, entity_y(tar)+y, 2)
@@ -164,15 +166,15 @@ function update(me, dt)
 				entity_setPosition(me, entity_x(tar)+x, entity_y(tar)+y, 0.6)
 			end
 			
-			if tar == n then
+			if tar == v.n then
 				if not avatar_isSinging() then
-					entity_flipToEntity(me, n)
+					entity_flipToEntity(me, v.n)
 				end
 				
 				if avatar_isSinging() then
-					singTimer = singTimer + dt
-					if singTimer > 4 then
-						singTimer = 0 - math.random(4)
+					v.singTimer = v.singTimer + dt
+					if v.singTimer > 4 then
+						v.singTimer = 0 - math.random(4)
 						if chance(50) then
 							emote(EMOTE_NAIJAGIGGLE)
 						end
@@ -183,9 +185,9 @@ function update(me, dt)
 						entity_rotate(me, -360, 1, 0, 0, 1)
 					end
 				else
-					singTimer = singTimer - dt *2
-					if singTimer < 0 then
-						singTimer = 0
+					v.singTimer = v.singTimer - dt *2
+					if v.singTimer < 0 then
+						v.singTimer = 0
 					end
 				end
 			else
@@ -197,31 +199,31 @@ function update(me, dt)
 	
 	entity_handleShotCollisions(me)
 
-	if isFlag(FLAG_OMPO, 0) and not seen and entity_isEntityInRange(me, n, 300) then
+	if isFlag(FLAG_OMPO, 0) and not v.seen and entity_isEntityInRange(me, v.n, 300) then
 		playSfx("Ompo")
 		emote(EMOTE_NAIJAGIGGLE)
-		seen = true
+		v.seen = true
 	end
 	
-	if runNode ~= 0 and node_isEntityIn(runNode, me) then
+	if v.runNode ~= 0 and node_isEntityIn(v.runNode, me) then
 		entity_setState(me, STATE_OFF)
 	end
 end
 
-cut = false
+v.cut = false
 
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_OFF) then
 		--- flee
-		if cut then return end
-		cut = true
+		if v.cut then return end
+		v.cut = true
 		debugLog("setting off")
-		following = false
-		crack = getNode("CRACK")
-		entity_idle(n)
-		if entity_isfh(n) then entity_fh(n) end
+		v.following = false
+		local crack = getNode("CRACK")
+		entity_idle(v.n)
+		if entity_isfh(v.n) then entity_fh(v.n) end
 		musicVolume(0.5, 1)
 		watch(1)
 		playSfx("Ompo")
@@ -240,12 +242,12 @@ function enterState(me)
 		
 		entity_alpha(me, 0, 0.5)
 		watch(0.5)
-		cam_toEntity(n)
+		cam_toEntity(v.n)
 		watch(1)
 		emote(EMOTE_NAIJASADSIGH)
 		setFlag(FLAG_OMPO, 4)
 		entity_delete(me)
-		cut = false
+		v.cut = false
 		watch(1)
 		musicVolume(1, 1)
 	end
@@ -266,34 +268,34 @@ end
 
 function msg(me, msg)
 	if msg=="fmia" then
-		followMia = true
+		v.followMia = true
 		
 		esetv(me, EV_LOOKAT, 0)
 	elseif msg=="fade" then
 		setFlag(FLAG_OMPO, 2)
 		entity_delete(me, 2)
-		fade = true
+		v.fade = true
 	end
 end
 
 
 function songNote(me, note)
-	r,g,b = getNoteColor(note)
+	local r,g,b = getNoteColor(note)
 	--[[
 	r = 0.5 + r*0.5
 	g = 0.5 + g*0.5
 	b = 0.5 + b*0.5
 	entity_color(me, r, g, b, 0.1)
 	]]--
-	bone_color(glowBody, r, g, b, 0.2)
-	bone_alpha(glowBody, 0.5)
+	bone_setColor(v.glowBody, r, g, b, 0.2)
+	bone_alpha(v.glowBody, 0.5)
 	
-	bone_scale(glowBody, 2, 2)
-	bone_scale(glowBody, 5, 5, 0.5, -1, 1)
-	--bone_scale(glowBody, 
+	bone_scale(v.glowBody, 2, 2)
+	bone_scale(v.glowBody, 5, 5, 0.5, -1, 1)
+	--bone_scale(v.glowBody, 
 	--[[
-	if not spinning then
-		spinning = true
+	if not v.spinning then
+		v.spinning = true
 		entity_rotate(me, 360+entity_getRotation(me), 1, -1)
 	end
 	]]--
@@ -301,11 +303,11 @@ function songNote(me, note)
 end
 
 function songNoteDone(me, note)
-	--bone_setColor(glowBody, 1, 1, 1, 1)
-	bone_alpha(glowBody, 0, 4)
+	--bone_setColor(v.glowBody, 1, 1, 1, 1)
+	bone_alpha(v.glowBody, 0, 4)
 	--[[
-	if spinning then
-		spinning = false
+	if v.spinning then
+		v.spinning = false
 		entity_rotate(me, 0, 1, 0, 0, 1)
 	end
 	]]--

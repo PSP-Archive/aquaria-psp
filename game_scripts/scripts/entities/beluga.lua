@@ -17,14 +17,16 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
-bubbleSpawnDelay = 2.5
-bubbleSpawnTimer = bubbleSpawnDelay
+v.bubbleSpawnDelay = 2.5
+v.bubbleSpawnTimer = v.bubbleSpawnDelay
 
-bone = 0
+v.mouth = 0
 
 function init(me)
 	setupEntity(me)
@@ -36,7 +38,7 @@ function init(me)
 	
 	entity_setState(me, STATE_IDLE)
 	
-	mouth = entity_getBoneByName(me, "mouth")
+	v.mouth = entity_getBoneByName(me, "mouth")
 	
 	entity_addVel(me, randVector(300))
 	
@@ -49,8 +51,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -62,13 +64,13 @@ function update(me, dt)
 	
 	entity_flipToVel(me)
 	
-	bubbleSpawnTimer = bubbleSpawnTimer - dt
+	v.bubbleSpawnTimer = v.bubbleSpawnTimer - dt
 	
-	if bubbleSpawnTimer < 0 then
-		bx,by = bone_getWorldPosition(mouth)
-		bb = createEntity("beluga-bubble", "", bx, by)
+	if v.bubbleSpawnTimer < 0 then
+		local bx,by = bone_getWorldPosition(v.mouth)
+		local bb = createEntity("beluga-bubble", "", bx, by)
 		entity_animate(me, "blowbubble", 0, 1)
-		bubbleSpawnTimer = bubbleSpawnDelay
+		v.bubbleSpawnTimer = v.bubbleSpawnDelay
 		entity_addVel(bb, entity_velx(me)*0.5, entity_vely(me)*0.5)
 		entity_scale(bb, 0, 0)
 		entity_scale(bb, 1, 1, 1)

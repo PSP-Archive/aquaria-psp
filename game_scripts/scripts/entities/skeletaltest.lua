@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- skeletal test
 
 dofile("scripts/entities/entityinclude.lua")
@@ -27,8 +29,8 @@ dofile("scripts/entities/entityinclude.lua")
 -- ================================================================================================
 
 
-swimTime = 0.75
-swimTimer = swimTime - swimTime/4
+v.swimTime = 0.75
+v.swimTimer = v.swimTime - v.swimTime/4
  
 -- ================================================================================================
 -- FUNCTIONS
@@ -67,13 +69,13 @@ function update(dt)
 		end
 		
 		--[[
-		swimTimer = swimTimer + dt
-		if swimTimer > swimTime then			
+		v.swimTimer = v.swimTimer + dt
+		if v.swimTimer > v.swimTime then			
 			entity_moveTowardsTarget(1, 400)
 			entity_doCollisionAvoidance(1, 6, 0.5);
 			entity_doEntityAvoidance(1, 256, 0.2);
 			entity_rotateToVel(0.2)
-			swimTimer = swimTimer - swimTime
+			v.swimTimer = v.swimTimer - v.swimTime
 		else
 			entity_moveTowardsTarget(dt, 100)
 			entity_doEntityAvoidance(dt, 64, 0.1);

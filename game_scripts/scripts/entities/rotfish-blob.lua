@@ -17,12 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- rotfish-blob
 
 dofile("scripts/entities/entityinclude.lua")
 
-fireDelay = 1
-moveTimer = 0
+v.fireDelay = 1
+v.moveTimer = 0
 
 function init(me)
 	setupBasicEntity(
@@ -53,20 +55,20 @@ function update(me, dt)
 	
 	entity_moveAlongSurface(me, dt, 40, 6, 50)
 	entity_rotateToSurfaceNormal(me, 0.1)
-	moveTimer = moveTimer + dt
-	if moveTimer > 8 then
+	v.moveTimer = v.moveTimer + dt
+	if v.moveTimer > 8 then
 		entity_switchSurfaceDirection(me)
-		moveTimer = 0
+		v.moveTimer = 0
 	end
 	
 	if not(entity_hasTarget(me)) then
 		entity_findTarget(me, 1200)
 	else
-		if fireDelay > 0 then
-			fireDelay = fireDelay - dt
-			if fireDelay < 0 then
+		if v.fireDelay > 0 then
+			v.fireDelay = v.fireDelay - dt
+			if v.fireDelay < 0 then
 				entity_fireAtTarget(me, "Purple", 1, 400, 10, 3, 64)
-				fireDelay = 0.5
+				v.fireDelay = 0.5
 			end
 		end
 	end

@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- JELLY SMALL
 -- ================================================================================================
@@ -28,28 +30,28 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-glow = 0
-bulb = 0
-revertTimer = 0
-baseSpeed = 300
-excitedSpeed = 700
-runSpeed = 800
-useMaxSpeed = 0
-pushed = false
-shell = 0
-soundDelay = 0
-sx = 0
-sy = 0
-sz = 0.8
-transition = false
+v.glow = 0
+v.bulb = 0
+v.revertTimer = 0
+v.baseSpeed = 300
+v.excitedSpeed = 700
+v.runSpeed = 800
+v.useMaxSpeed = 0
+v.pushed = false
+v.shell = 0
+v.soundDelay = 0
+v.sx = 0
+v.sy = 0
+v.sz = 0.8
+v.transition = false
 
 -- ================================================================================================
 -- FUNCTIONS
 -- ================================================================================================
 
 function doIdleScale(me)
-	entity_scale(me, 0.75*sz, 1*sz)
-	entity_scale(me, 1*sz, 0.75*sz, 1.5, -1, 1, 1)
+	entity_scale(me, 0.75*v.sz, 1*v.sz)
+	entity_scale(me, 1*v.sz, 0.75*v.sz, 1.5, -1, 1, 1)
 end
 
 function init(me)
@@ -72,13 +74,13 @@ function init(me)
 	
 	
 	entity_setDeathParticleEffect(me, "TinyGreenExplode")
-	useMaxSpeed = baseSpeed
+	v.useMaxSpeed = v.baseSpeed
 	entity_setEntityType(me, ET_ENEMY)
 	
 	entity_initSkeletal(me, "DeepJelly")
 	
-	l = createQuad("Naija/LightFormGlow", 13)
-	quad_scale(l, 2, 2)
+	v.l = createQuad("Naija/LightFormGlow", 13)
+	quad_scale(v.l, 2, 2)
 	
 	
 	--entity_scale(me, 0.6, 0.6)
@@ -88,13 +90,13 @@ function init(me)
 	
 	entity_initStrands(me, 5, 60, 8, 5, 0.8, 0.8, 1)
 	
-	glow = entity_getBoneByName(me, "Glow")
-	bulb = entity_getBoneByName(me, "Bulb")
-	shell = entity_getBoneByName(me, "Shell")
+	v.glow = entity_getBoneByName(me, "Glow")
+	v.bulb = entity_getBoneByName(me, "Bulb")
+	v.shell = entity_getBoneByName(me, "Shell")
 	
 	doIdleScale(me)
-	soundDelay = math.random(3)
-	sx, sy = entity_getScale(me)
+	v.soundDelay = math.random(3)
+	v.sx, v.sy = entity_getScale(me)
 	
 	entity_setDamageTarget(me, DT_AVATAR_LIZAP, false)
 	entity_setDamageTarget(me, DT_AVATAR_PET, false)
@@ -106,17 +108,17 @@ function songNote(me, note)
 	end
 	
 	--[[
-	sx, sy = entity_getScale(me)
-	entity_scale(me, sx, sy)
-	sx = sx*1.1
-	sy = sy*1.1
-	if sx > 1.0 then
-		sx = 1.0
+	v.sx, v.sy = entity_getScale(me)
+	entity_scale(me, v.sx, v.sy)
+	v.sx = v.sx*1.1
+	v.sy = v.sy*1.1
+	if v.sx > 1.0 then
+		v.sx = 1.0
 	end
-	if sy > 1.0 then
-		sy = 1.0
+	if v.sy > 1.0 then
+		v.sy = 1.0
 	end
-	entity_scale(me, sx, sy, 0.2, 1, -1)
+	entity_scale(me, v.sx, v.sy, 0.2, 1, -1)
 	]]--
 
 	--[[
@@ -126,29 +128,29 @@ function songNote(me, note)
 	entity_setHeight(me, 512, 0.5, 1, -1)
 	]]--
 	
-	bone_scale(shell, 1,1)
-	bone_scale(shell, 1.1, 1.1, 0.1, 1, -1)
+	bone_scale(v.shell, 1,1)
+	bone_scale(v.shell, 1.1, 1.1, 0.1, 1, -1)
 	
-	entity_setMaxSpeed(me, excitedSpeed)
-	revertTimer = 3
-	transTime = 0.5
-	r,g,b = getNoteColor(note)
-	bone_setColor(bulb, r,g,b, transTime)
+	entity_setMaxSpeed(me, v.excitedSpeed)
+	v.revertTimer = 3
+	v.transTime = 0.5
+	local r,g,b = getNoteColor(note)
+	bone_setColor(v.bulb, r,g,b, v.transTime)
 	r = (r+1.0)/2.0
 	g = (g+1.0)/2.0
 	b = (b+1.0)/2.0
-	bone_setColor(shell, r,g,b, transTime)
+	bone_setColor(v.shell, r,g,b, v.transTime)
 end
 
 function update(me, dt)
-	if entity_isState(me, STATE_IDLE) and not transition and not entity_isScaling(me) then
-		entity_scale(me, 0.75*sz, 1*sz, 0.2)
-		transition = true
+	if entity_isState(me, STATE_IDLE) and not v.transition and not entity_isScaling(me) then
+		entity_scale(me, 0.75*v.sz, 1*v.sz, 0.2)
+		v.transition = true
 	end
-	if transition then
+	if v.transition then
 		if not entity_isScaling(me) then
 			doIdleScale(me)
-			transition = false
+			v.transition = false
 		end
 	end
 
@@ -157,17 +159,17 @@ function update(me, dt)
 		--entity_doCollisionAvoidance(me, dt, 4, 0.1)		
 	end
 	
-	if revertTimer > 0 then
-		soundDelay = soundDelay - dt
-		if soundDelay < 0 then
+	if v.revertTimer > 0 then
+		v.soundDelay = v.soundDelay - dt
+		if v.soundDelay < 0 then
 			entity_sound(me, "JellyBlup", 1400+math.random(200))
-			soundDelay = 4 + math.random(2000)/1000.0
+			v.soundDelay = 4 + math.random(2000)/1000.0
 		end
-		revertTimer = revertTimer - dt
-		if revertTimer < 0 then
-			useMaxSpeed = baseSpeed
-			entity_setMaxSpeed(me, baseSpeed)
-			bone_setColor(shell, 1, 1, 1, 1)
+		v.revertTimer = v.revertTimer - dt
+		if v.revertTimer < 0 then
+			v.useMaxSpeed = v.baseSpeed
+			entity_setMaxSpeed(me, v.baseSpeed)
+			bone_setColor(v.shell, 1, 1, 1, 1)
 		end
 	end
 	if entity_hasTarget(me) then
@@ -182,9 +184,9 @@ function update(me, dt)
 			else
 				if entity_isTargetInRange(me, 512) then		
 					--entity_setMaxSpeed(me, 600)
-					entity_setMaxSpeed(me, runSpeed)
-					useMaxSpeed = runSpeed
-					revertTimer = 0.1
+					entity_setMaxSpeed(me, v.runSpeed)
+					v.useMaxSpeed = v.runSpeed
+					v.revertTimer = 0.1
 					entity_moveTowardsTarget(me, dt, -250)
 				end
 			end		
@@ -206,7 +208,7 @@ function update(me, dt)
 	
 	entity_handleShotCollisions(me)
 	
-	quad_setPosition(l, entity_getPosition(me))
+	quad_setPosition(v.l, entity_getPosition(me))
 end
 
 function hitSurface(me)
@@ -214,15 +216,15 @@ end
 
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
-		useMaxSpeed = baseSpeed
-		entity_setMaxSpeed(me, baseSpeed)
+		v.useMaxSpeed = v.baseSpeed
+		entity_setMaxSpeed(me, v.baseSpeed)
 		entity_animate(me, "idle", LOOP_INF)
 		
-		x = math.random(2000)-1000
-		y = math.random(2000)-1000
+		local x = math.random(2000)-1000
+		local y = math.random(2000)-1000
 		entity_addVel(me,x,y)
 	elseif entity_isState(me, STATE_DEAD) then
-		quad_delete(l, 2)
+		quad_delete(v.l, 2)
 	end
 end
 

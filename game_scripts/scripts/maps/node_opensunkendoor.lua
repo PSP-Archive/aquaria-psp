@@ -17,11 +17,16 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-linode = 0
+v.door = 0
+v.linode = 0
+v.doflip = false
+
 function init(me)
-	door = node_getNearestEntity(me, "sunkendoor")
+	v.door = node_getNearestEntity(me, "sunkendoor")
 	
 	if hasLi() then
 		node_setCursorActivation(me, true)
@@ -30,26 +35,26 @@ function init(me)
 	loadSound("sunkendoor-unlock")
 	loadSound("sunkendoor-open")
 	
-	linode = getNode("liopendoor")
+	v.linode = getNode("liopendoor")
 end
 
 function update(me, dt)
-	if doflip then
-		li = getLi()
+	if v.doflip then
+		local li = getLi()
 		if entity_isfh(li) then entity_fh(li) end
 		--bone_setAnimated(entity_getBoneByName(li, "head"), ANIM_ALL)
 	end
 end
 
 function activate(me)
-	li = getLi()
-	n = getNaija()
+	local li = getLi()
+	local n = getNaija()
 	
-	doflip = true
+	v.doflip = true
 	
-	fadet = 0.5
+	local fadet = 0.5
 	
-	wrench = entity_getBoneByName(li, "wrench")
+	local wrench = entity_getBoneByName(li, "wrench")
 	
 	entity_setState(li, STATE_OPEN)
 	
@@ -62,11 +67,11 @@ function activate(me)
 	fade2(1, fadet) watch(fadet)
 	
 	
-	entity_setPosition(li, node_x(linode), node_y(linode))
+	entity_setPosition(li, node_x(v.linode), node_y(v.linode))
 	
 	cam_toEntity(li)
 	
-	entity_setPosition(n, node_x(linode)+64, node_y(linode)-15)
+	entity_setPosition(n, node_x(v.linode)+64, node_y(v.linode)-15)
 	bone_setVisible(wrench, 1)
 	entity_animate(li, "work", 0, 4)
 	
@@ -79,14 +84,14 @@ function activate(me)
 	--- click
 	playSfx("sunkendoor-unlock")
 	
-	entity_msg(li, "expression", 5)
+	entity_msg(li, "expression", EXPRESSION_SURPRISE)
 	
 	watch(0.8)
 	
-	entity_msg(li, "expression", 2)
+	entity_msg(li, "expression", EXPRESSION_HAPPY)
 	
 	playSfx("sunkendoor-open")
-	entity_setState(door, STATE_OPEN)
+	entity_setState(v.door, STATE_OPEN)
 	
 	overrideZoom(0.7, 4)
 	
@@ -100,7 +105,7 @@ function activate(me)
 	cam_toEntity(n)
 	
 	node_setCursorActivation(me, false)
-	doflip = false
+	v.doflip = false
 	
 	overrideZoom(0)
 end

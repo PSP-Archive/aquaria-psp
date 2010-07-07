@@ -17,27 +17,29 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-ompo = 0
-n = 0
-doSetFlag = false
+v.ompo = 0
+v.n = 0
+v.doSetFlag = false
 
 function spawnOnNaija(me)
-	ompo = createEntity("Ompo", "", entity_x(n)+10, entity_y(n)-16)
+	v.ompo = createEntity("Ompo", "", entity_x(v.n)+10, entity_y(v.n)-16)
 end
 
 function spawnOnNode(me)
 	debugLog("spawning on nodeee")
-	ompo = createEntity("Ompo", "", node_x(me), node_y(me))
+	v.ompo = createEntity("Ompo", "", node_x(me), node_y(me))
 end
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 	
 	if isMapName("TRAININGCAVE") then
 		if isFlag(FLAG_OMPO, 0) then
-			doSetFlag = true
+			v.doSetFlag = true
 			spawnOnNode(me)
 		elseif isFlag(FLAG_OMPO, 1) or isFlag(FLAG_OMPO, 3) then
 			spawnOnNaija(me)
@@ -68,7 +70,7 @@ function init(me)
 end
 
 function update(me, dt)
-	if doSetFlag and node_isEntityIn(me, n) then
+	if v.doSetFlag and node_isEntityIn(me, v.n) then
 		if isFlag(FLAG_OMPO, 0) then
 			setFlag(FLAG_OMPO, 1)
 		end

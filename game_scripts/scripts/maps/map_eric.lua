@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 function init()
@@ -24,20 +26,18 @@ function init()
 	--return
 	
 	
-	n = getNaija()
-	
 	setCameraLerpDelay(0.00001)
 	
-	black = getNode("black")
-	floatingcity = getNode("floating-city")
-	mia = getNode("mia")
-	nprime = getNode("nprime")
-	energyboss = getNode("energyboss")
-	forestgoddess = getNode("forestgoddess")
-	mithala = getNode("mithala")
-	ericmom = getNode("ericmom")
-	mutantnaija = getNode("mutantnaija")
-	ghostmom = getNode("ghostmom")
+	local black = getNode("black")
+	local floatingcity = getNode("floating-city")
+	local mia = getNode("mia")
+	local nprime = getNode("nprime")
+	local energyboss = getNode("energyboss")
+	local forestgoddess = getNode("forestgoddess")
+	local mithala = getNode("mithala")
+	local ericmom = getNode("ericmom")
+	local mutantnaija = getNode("mutantnaija")
+	local ghostmom = getNode("ghostmom")
 	
 	
 	cam_toNode(black)
@@ -52,7 +52,7 @@ function init()
 	fade2(0, 1, 1, 1, 1)
 	watch(1)
 	
-	playVoice("eric")
+	voice("eric")
 	
 	watch(12) -- 12
 	

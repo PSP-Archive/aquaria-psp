@@ -17,37 +17,40 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
-	if not isForm(FORM_ENERGY) and node_isEntityIn(me, n) then
+	if not isForm(FORM_ENERGY) and node_isEntityIn(me, v.n) then
 			playSfx("shield-hit")
-		spawnParticleEffect("barrier-hit", entity_x(n), entity_y(n))
+		spawnParticleEffect("barrier-hit", entity_x(v.n), entity_y(v.n))
 		
-		w, h = node_getSize(me)
-		entity_clearVel(n)
+		local w, h = node_getSize(me)
+		local x, y = 0, 0
+		entity_clearVel(v.n)
 		if w > h then
-			y = entity_y(n) - node_y(me)
-			if entity_y(n) < node_y(me) then
-				entity_setPosition(n, entity_x(n), node_y(me) - (h/2) - 10)
+			y = entity_y(v.n) - node_y(me)
+			if entity_y(v.n) < node_y(me) then
+				entity_setPosition(v.n, entity_x(v.n), node_y(me) - (h/2) - 10)
 			else
-				entity_setPosition(n, entity_x(n), node_y(me) + (h+10)/2 + 10)
+				entity_setPosition(v.n, entity_x(v.n), node_y(me) + (h+10)/2 + 10)
 			end
 		else
-			x = entity_x(n) - node_x(me)
+			x = entity_x(v.n) - node_x(me)
 		end
 		
 		
 		x, y = vector_setLength(x, y, 10000)
-		entity_setMaxSpeedLerp(n, 4)
-		entity_setMaxSpeedLerp(n, 1, 4)
-		entity_addVel(n, x, y)
+		entity_setMaxSpeedLerp(v.n, 4)
+		entity_setMaxSpeedLerp(v.n, 1, 4)
+		entity_addVel(v.n, x, y)
 
 		if chance(50) then
 			emote(EMOTE_NAIJAUGH)

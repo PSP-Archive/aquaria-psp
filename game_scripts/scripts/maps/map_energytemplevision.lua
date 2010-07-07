@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/maps/finalcommon.lua")
 
 function hasQuit()
@@ -38,17 +40,17 @@ function init()
 	entity_setPosition(getNaija(), 0, 0)
 
 	
-	camDummy = createEntity("Empty")
-	cam1 = getNode("CAM1")
-	cam2 = getNode("CAM2")
-	cam3 = getNode("CAM3")
+	local camDummy = createEntity("Empty")
+	local cam1 = getNode("CAM1")
+	local cam2 = getNode("CAM2")
+	local cam3 = getNode("CAM3")
 	
-	camKrotiteBattle1 = getNode("CAMKROTITEBATTLE1")
+	local camKrotiteBattle1 = getNode("CAMKROTITEBATTLE1")
 	
-	camMarch = getNode("CAMMARCH")
+	local camMarch = getNode("CAMMARCH")
 	
-	camBattle1 = getNode("CAMBATTLE1")
-	camBattle2 = getNode("CAMBATTLE2")
+	local camBattle1 = getNode("CAMBATTLE1")
+	local camBattle2 = getNode("CAMBATTLE2")
 	
 	
 		
@@ -65,7 +67,7 @@ function init()
 	fadeIn(1)
 	watch(1)
 	
-	n = getNaija()
+	local n = getNaija()
 	entity_setPosition(n, 0, 0)
 	playMusicOnce("MarchOfTheKrotites")
 	
@@ -105,7 +107,7 @@ function init()
 	entity_setPosition(camDummy, node_x(camKrotiteBattle1), node_y(camKrotiteBattle1))
 	watch(0.5)
 	
-	ent = node_getNearestEntity(camKrotiteBattle1, "KrotiteVsKrotite")
+	local ent = node_getNearestEntity(camKrotiteBattle1, "KrotiteVsKrotite")
 	entity_setState(ent, STATE_ON)
 	fade2(0, 0.4)
 	watch(0.4)
@@ -125,7 +127,7 @@ function init()
 	cam_toEntity(node_getNearestEntity(camMarch))
 	watch(0.5)
 	
-	e = getFirstEntity()
+	local e = getFirstEntity()
 	while e ~= 0 do
 		if entity_isName(e, "krotiteontheway") then
 			entity_setState(e, STATE_ON)
@@ -143,7 +145,7 @@ function init()
 	fade2(1, 0.5)
 	watch(0.5)
 	
-	e = getFirstEntity()
+	local e = getFirstEntity()
 	while e ~= 0 do
 		if entity_isName(e, "KrotiteOnTheWay") then
 			entity_delete(e)
@@ -158,7 +160,7 @@ function init()
 	entity_setPosition(camDummy, node_x(camBattle1), node_y(camBattle1))
 	watch(0.5)
 	
-	ent = node_getNearestEntity(camBattle1, "KrotiteErulianBattle01")
+	local ent = node_getNearestEntity(camBattle1, "KrotiteErulianBattle01")
 	entity_setState(ent, STATE_ON)
 	fade2(0, 0.4)
 	watch(0.4)

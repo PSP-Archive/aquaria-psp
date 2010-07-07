@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- C E L L   G E N E R A T O R
 -- ================================================================================================
@@ -27,7 +29,7 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-delay = 1.0
+v.delay = 1.0
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -58,17 +60,18 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	--entity_setTarget(me, n)
+	v.n = getNaija()
+	--entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 
-	if delay > 0 then
-		delay = delay - dt
+	if v.delay > 0 then
+		v.delay = v.delay - dt
 	else
 		if not entity_hasTarget(me) then
 			entity_findTarget(me, 400)
+			local ent
 			if entity_hasTarget(me) then
 				if chance(80) then
 					ent = createEntity("bloodcell-red", "", entity_x(me), entity_y(me))
@@ -76,9 +79,10 @@ function update(me, dt)
 					ent = createEntity("bloodcell-white", "", entity_x(me), entity_y(me))
 				end
 				entity_rotate(ent, entity_getRotation(me))
-				delay = math.random(3.0) + 3.0
+				v.delay = math.random(3.0) + 3.0
 			end
 		else
+			local ent
 			if chance(80) then
 				ent = createEntity("bloodcell-red", "", entity_x(me), entity_y(me))
 			else
@@ -88,7 +92,7 @@ function update(me, dt)
 			entity_scale(ent, 1, 1, 0.3)
 			
 			entity_rotate(ent, entity_getRotation(me))
-			delay = math.random(3.0) + 3.0
+			v.delay = math.random(3.0) + 3.0
 		end
 	end
 end
@@ -96,10 +100,6 @@ end
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_animate(me, "idle", -1)
-	elseif entity_isState(me, STATE_ROTATE) then
-		entity_animate(me, "idle", -1)
-	elseif entity_isState(me, STATE_WALK) then
-		entity_animate(me, "idle", -1)		
 	end
 		
 end

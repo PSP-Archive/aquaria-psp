@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-myWeight = 0
+v.n = 0
+v.myWeight = 0
 function commonInit(me, gfx, r)
 	-- note: if you want to add different weight to each rock, then
 	-- send it through here
@@ -30,7 +32,7 @@ function commonInit(me, gfx, r)
 	setupEntity(me, gfx, -1)
 	entity_setProperty(me, EP_MOVABLE, true)
 	entity_setProperty(me, EP_BLOCKER, true)
-	myWeight = 400
+	v.myWeight = 400
 	entity_setCollideRadius(me, r)
 	entity_setAffectedBySpells(me, 1)
 	entity_setBounce(me, 0.2)	
@@ -42,7 +44,7 @@ function commonInit(me, gfx, r)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function commonUpdate(me, dt)
@@ -54,28 +56,28 @@ function commonUpdate(me, dt)
 	end
 	if not entity_isUnderWater(me) then
 		if not entity_isBeingPulled(me) then
-			entity_setWeight(me, myWeight*2)
+			entity_setWeight(me, v.myWeight*2)
 			entity_setMaxSpeedLerp(me, 5, 0.1)
 		end
 	else
 		entity_setMaxSpeedLerp(me, 1, 0.1)
-		entity_setWeight(me, myWeight)
+		entity_setWeight(me, v.myWeight)
 	end
 	
 	
 	if not entity_isBeingPulled(me) then
 		if entity_touchAvatarDamage(me, entity_getCollideRadius(me), 0) then
-			if avatar_isBursting() and entity_setBoneLock(n, me) then
+			if avatar_isBursting() and entity_setBoneLock(v.n, me) then
 				-- yay!
 			else
 				--[[
-				x, y = entity_getVectorToEntity(me, n, 1000)
+				x, y = entity_getVectorToEntity(me, v.n, 1000)
 				entity_addVel(n, x, y)
 				]]--
 			end
 		end
 	else
-		if entity_getBoneLockEntity(n) == me then
+		if entity_getBoneLockEntity(v.n) == me then
 			avatar_fallOffWall()
 		end
 	end

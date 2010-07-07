@@ -17,22 +17,24 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-naija = 0
+v.naija = 0
 function init(me)
-	naija = getNaija()
+	v.naija = getNaija()
 	node_setCursorActivation(me, false)
 	
 	if isStory(9) then
 		-- spawn energy god chase
-		boss = createEntity("EnergyBossClimb")
+		local boss = createEntity("EnergyBossClimb")
 		entity_warpToNode(boss, getNode("ENERGYBOSS_SPAWN"))
 	end
 end
 
 function update(me, dt)
-	if entity_y(naija) < node_y(me) then
+	if entity_y(v.naija) < node_y(me) then
 		if getStory() < 10 then
 			setStory(10)
 			setCanWarp(1)

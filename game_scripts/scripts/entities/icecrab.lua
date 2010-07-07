@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- I C E   C R A B
 -- ================================================================================================
@@ -27,7 +29,7 @@ dofile("scripts/entities/entityinclude.lua")
 -- L O C A L   V A R I A B L E S 
 -- ================================================================================================
 
-moveTimer = 0
+v.moveTimer = 0
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -62,7 +64,7 @@ function postInit(me)
 	entity_setState(me, STATE_IDLE)
 	
 	-- FLIP WITH A FLIP NODE
-	node = entity_getNearestNode(me, "FLIP")
+	local node = entity_getNearestNode(me, "FLIP")
 	if node ~=0 then
 		if node_isEntityIn(node, me) then 
 			entity_fh(me)
@@ -73,11 +75,11 @@ end
 
 function update(me, dt)
 	-- FLIP AFTER A WHILE
-	moveTimer = moveTimer + dt
-	if moveTimer > 42 then
+	v.moveTimer = v.moveTimer + dt
+	if v.moveTimer > 42 then
 		entity_switchSurfaceDirection(me)
 		entity_fh(me)
-		moveTimer = 0
+		v.moveTimer = 0
 	end
 
 	-- MOVEMENT

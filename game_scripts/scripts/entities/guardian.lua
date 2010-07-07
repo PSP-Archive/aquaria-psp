@@ -17,15 +17,17 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-attackDelay = 2
+v.n = 0
+v.attackDelay = 2
 
 STATE_GETREADY				= 1000
 STATE_FIRING				= 1001
 
-body = 0
+v.body = 0
 
 function init(me)
 	setupEntity(me)
@@ -41,7 +43,7 @@ function init(me)
 	entity_scale(me, 2, 2)
 	entity_setDeathScene(me, true)
 	
-	body = entity_getBoneByName(me, "Body")
+	v.body = entity_getBoneByName(me, "Body")
 	
 	entity_setTargetRange(me, 2024)
 	
@@ -52,10 +54,10 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
-	node = entity_getNearestNode(me, "FLIP")
+	local node = entity_getNearestNode(me, "FLIP")
 	if node ~= 0 and node_isEntityIn(node, me) then
 		entity_fh(me)
 	end
@@ -65,15 +67,15 @@ function update(me, dt)
 	--entity_updateMovement(me, dt)
 	
 	if entity_isState(me, STATE_WAIT) then
-		if entity_isEntityInRange(me, n, 600) then
+		if entity_isEntityInRange(me, v.n, 600) then
 			entity_setState(me, STATE_GETREADY)
 		end
 	end
 	
 	if entity_isState(me, STATE_IDLE) then
-		attackDelay = attackDelay - dt
-		if attackDelay <= 0 then
-			if not entity_isEntityInRange(me, n, 1024) or chance(10) then
+		v.attackDelay = v.attackDelay - dt
+		if v.attackDelay <= 0 then
+			if not entity_isEntityInRange(me, v.n, 1024) or chance(10) then
 				entity_setState(me, STATE_FIRING)
 			else
 				entity_setState(me, STATE_ATTACK)
@@ -87,27 +89,27 @@ function update(me, dt)
 	end
 	
 	entity_handleShotCollisionsSkeletal(me)
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if bone ~= 0 then
 		if entity_isfh(me) then
-			entity_addVel(n, 2000, 0)
+			entity_addVel(v.n, 2000, 0)
 		else
-			entity_addVel(n, -2000, 0)
+			entity_addVel(v.n, -2000, 0)
 		end
-		entity_damage(n, me, 1)
+		entity_damage(v.n, me, 1)
 	end
 	
 	if entity_isfh(me) then
-		if entity_x(n) > entity_x(me) then
-			entity_addVel(n, 1000, 0)
+		if entity_x(v.n) > entity_x(me) then
+			entity_addVel(v.n, 1000, 0)
 		end
 	else
-		if entity_x(n) > entity_x(me) then
-			entity_addVel(n, -1000, 0)
+		if entity_x(v.n) > entity_x(me) then
+			entity_addVel(v.n, -1000, 0)
 		end
 	end
 	entity_clearTargetPoints(me)
-	entity_addTargetPoint(me, bone_getWorldPosition(body))
+	entity_addTargetPoint(me, bone_getWorldPosition(v.body))
 end
 
 function enterState(me)
@@ -119,7 +121,7 @@ function enterState(me)
 		entity_setStateTime(me, entity_animate(me, "getReady"))
 	elseif entity_isState(me, STATE_ATTACK) then
 		playSfx("Guardian-Attack")
-		if entity_y(n) < entity_y(me) then
+		if entity_y(v.n) < entity_y(me) then
 			entity_setStateTime(me, entity_animate(me, "attack"))
 		else
 			entity_setStateTime(me, entity_animate(me, "attack2"))
@@ -130,13 +132,13 @@ function enterState(me)
 		overrideZoom(0.5, 0.5)
 		entity_setStateTime(me, 99)
 		cam_toEntity(me)
-		entity_setInvincible(n, true)
+		entity_setInvincible(v.n, true)
 		watch(entity_animate(me, "die"))
 		entity_color(me, 0, 0, 0, 1)
 		watch(1)
 		entity_setStateTime(me, 0.01)
-		entity_setInvincible(n, false)
-		cam_toEntity(n)
+		entity_setInvincible(v.n, false)
+		cam_toEntity(v.n)
 	elseif entity_isState(me, STATE_FIRING) then
 		entity_setStateTime(me, entity_animate(me, "firing"))
 	end
@@ -144,7 +146,7 @@ end
 
 function exitState(me)
 	if entity_isState(me, STATE_ATTACK) then
-		attackDelay = 3
+		v.attackDelay = 3
 		entity_setState(me, STATE_IDLE)
 	elseif entity_isState(me, STATE_GETREADY) then
 		entity_setState(me, STATE_IDLE)
@@ -160,7 +162,7 @@ function damage(me, attacker, bone, damageType, dmg)
 		entity_setState(me, STATE_GETREADY)
 		return false
 	end
-	if bone == body then
+	if bone == v.body then
 		return true
 	end
 
@@ -170,7 +172,7 @@ end
 function animationKey(me, key)
 	if entity_isState(me, STATE_FIRING) then
 		if key == 2 or key == 4 or key == 6 then
-			s = createShot("Guardian", me, n, entity_getPosition(me))
+			local s = createShot("Guardian", me, v.n, entity_getPosition(me))
 			if key == 2 then
 				shot_setAimVector(s, -400, -100)
 			elseif key == 4 then

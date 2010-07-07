@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/maps/finalcommon.lua")
 
 function hasQuit()
@@ -36,7 +38,7 @@ function quickFlash(t)
 end
 
 function init()
-	test = false
+	local test = false
 	
 	if test then return end
 	
@@ -52,43 +54,43 @@ function init()
 	entity_setPosition(getNaija(), 0, 0)
 
 	
-	camDummy = createEntity("Empty")
+	local camDummy = createEntity("Empty")
 	
-	city1 = getNode("City1")
-	city2 = getNode("City2")
-	city3 = getNode("City3")
+	local city1 = getNode("City1")
+	local city2 = getNode("City2")
+	local city3 = getNode("City3")
 	
-	family1 = getNode("Family1")
+	local family1 = getNode("Family1")
 	
-	statue1 = getNode("Statue1")
-	statue2 = getNode("Statue2")
+	local statue1 = getNode("Statue1")
+	local statue2 = getNode("Statue2")
 	
-	priests1 = getNode("Priests1")
-	priests2 = getNode("Priests2")
+	local priests1 = getNode("Priests1")
+	local priests2 = getNode("Priests2")
 	
-	creator1 = getNode("Creator1")
+	local creator1 = getNode("Creator1")
 	
-	execution1 = getNode("Execution1")
-	execution2 = getNode("Execution2")
+	local execution1 = getNode("Execution1")
+	local execution2 = getNode("Execution2")
 	
-	mithala1 = getNode("Mithala1")
+	local mithala1 = getNode("Mithala1")
 	
-	black1 = getNode("Black1")
+	local black1 = getNode("Black1")
 	
-	rot1 = getNode("Rot1")
-	rot2 = getNode("Rot2")
+	local rot1 = getNode("Rot1")
+	local rot2 = getNode("Rot2")
 	
-	drask1 = getNode("Drask1")
-	drask2 = getNode("Drask2")
+	local drask1 = getNode("Drask1")
+	local drask2 = getNode("Drask2")
 	
-	priestCenter = getNode("PriestCenter")
-	p1 = getNode("P1")
-	p2 = getNode("P2")
+	local priestCenter = getNode("PriestCenter")
+	local p1 = getNode("P1")
+	local p2 = getNode("P2")
 	
-	priest1 = 0
-	priest2 = 0
+	local priest1 = 0
+	local priest2 = 0
 	
-	e = getFirstEntity()
+	local e = getFirstEntity()
 	while e ~= 0 do
 		if entity_isName(e, "priestnormal") then
 			if priest1 == 0 then
@@ -102,7 +104,7 @@ function init()
 	end
 	
 	
-	syncTime = 0.9
+	local syncTime = 0.9
 	
 		
 	-- 1
@@ -112,7 +114,7 @@ function init()
 	cam_toEntity(camDummy)
 	watch(syncTime)
 
-	n = getNaija()
+	local n = getNaija()
 	entity_setPosition(n, 0, 0)
 	
 	playMusicOnce("fallofmithalas")

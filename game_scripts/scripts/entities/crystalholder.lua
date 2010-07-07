@@ -17,16 +17,18 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- CrystalHolder
 
 dofile("scripts/entities/entityinclude.lua")
-charge = 0
-delay = 1
-glow = 0
-crystal = 0
-lx = 0
-ly = 0
-setWaterLevel = false
+v.charge = 0
+v.delay = 1
+v.glow = 0
+v.crystal = 0
+v.lx = 0
+v.ly = 0
+v.setWaterLevel = false
 
 
 STATE_DROPPED 	= 1000
@@ -47,9 +49,9 @@ function init(me)
 	entity_initSkeletal(me, "CrystalHolder")
 	entity_animate(me, "idle")
 	
-	glow = entity_getBoneByName(me, "Glow")
-	crystal = entity_getBoneByName(me, "Crystal")
-	bone_alpha(glow, 0)
+	v.glow = entity_getBoneByName(me, "Glow")
+	v.crystal = entity_getBoneByName(me, "Crystal")
+	bone_alpha(v.glow, 0)
 	
 	entity_setCanLeaveWater(me, 1)
 	
@@ -59,15 +61,15 @@ end
 
 function postInit(me)
 
-	--lx,ly = entity_getPosition(me)
+	--v.lx,v.ly = entity_getPosition(me)
 end
 
 function update(me, dt)
-	if not setWaterLevel then
-		lx,ly = entity_getPosition(me)
+	if not v.setWaterLevel then
+		v.lx,v.ly = entity_getPosition(me)
 		entity_setPosition(me, entity_x(me), getWaterLevel())
 		if not entity_isNearObstruction(me, 1) then
-			ly = getWaterLevel(me)
+			v.ly = getWaterLevel(me)
 		end
 	end
 	--if not entity_isState(me, STATE_CHARGED) then
@@ -87,19 +89,19 @@ function update(me, dt)
 	end
 	
 	if entity_isState(me, STATE_IDLE) then
-		node = entity_getNearestNode(me, "LIGHT")
+		local node = entity_getNearestNode(me, "LIGHT")
 		if node ~= 0 and node_isEntityIn(node, me) then
 			-- charging
 			--debugLog(string.format("charge:%f", charge))
-			charge = charge + dt
-			if charge > 2 then
+			v.charge = v.charge + dt
+			if v.charge > 2 then
 				entity_setState(me, STATE_CHARGED, 2)
 			end
 		else
-			if charge > 0 then
-				charge = charge - dt
-				if charge < 0 then
-					charge = 0
+			if v.charge > 0 then
+				v.charge = v.charge - dt
+				if v.charge < 0 then
+					v.charge = 0
 				end
 			end
 		end
@@ -110,7 +112,7 @@ function update(me, dt)
 		end
 	end
 
-	levelDiff = math.abs(entity_y(me)-getWaterLevel())
+	local levelDiff = math.abs(entity_y(me)-getWaterLevel())
 	if entity_isState(me, STATE_IDLE) then
 		--debugLog(string.format("diff: %f", levelDiff))
 		if levelDiff > 50 then
@@ -125,23 +127,23 @@ function update(me, dt)
 		entity_setPosition(me, entity_x(me), getWaterLevel())
 	end
 	if entity_isNearObstruction(me, 1) then
-		entity_setPosition(me, lx, ly)
+		entity_setPosition(me, v.lx, v.ly)
 	end
-	lx,ly = entity_getPosition(me)
+	v.lx, v.ly = entity_getPosition(me)
 end
 
 function enterState(me)
 	if entity_isState(me, STATE_CHARGED) then
 		entity_setProperty(me, EP_MOVABLE, false)
-		bone_alpha(glow, 1, 1)		
+		bone_alpha(v.glow, 1, 1)
 	elseif entity_isState(me, STATE_ROTATE) then
 		entity_animate(me, "rotate")
 	elseif entity_isState(me, STATE_DROPPED) then
 		entity_setProperty(me, EP_MOVABLE, false)
-		bone_alpha(crystal, 0)
-		bone_alpha(glow, 0)
-		x,y = bone_getWorldPosition(crystal)
-		ent = createEntity("LightCrystalCharged", "", x, y)
+		bone_alpha(v.crystal, 0)
+		bone_alpha(v.glow, 0)
+		local x, y = bone_getWorldPosition(v.crystal)
+		local ent = createEntity("LightCrystalCharged", "", x, y)
 		entity_rotate(ent, 180)
 	end
 end

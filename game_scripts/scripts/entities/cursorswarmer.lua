@@ -17,15 +17,17 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
-add = math.random(50)
+v.add = math.random(50)
 
-minCap = 400
-maxCap = 700
-cap = minCap
+v.minCap = 400
+v.maxCap = 700
+v.cap = v.minCap
 
 function init(me)
 	setupEntity(me)
@@ -42,28 +44,29 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)	
-	cap = cap - dt*400
-	if cap < minCap then
-		cap = minCap
+	v.cap = v.cap - dt*400
+	if v.cap < v.minCap then
+		v.cap = v.minCap
 	end
+	local add = v.add
 	if isLeftMouse() then
-		cap = maxCap
+		v.cap = v.maxCap
 		add = 600
 	end
 	--entity_doCollisionAvoidance(me, dt, 4, 0.5)
 	entity_doEntityAvoidance(me, dt, 16, 0.5)
-	x, y = getMouseWorldPos()
+	local x, y = getMouseWorldPos()
 	entity_moveTowards(me, x, y, dt, 800+add)
 	
-	vx = entity_velx(me)
-	vy = entity_vely(me)
+	local vx = entity_velx(me)
+	local vy = entity_vely(me)
 	
-	vx, vy = vector_cap(vx, vy, cap)
+	vx, vy = vector_cap(vx, vy, v.cap)
 	entity_clearVel(me)
 	entity_addVel(me, vx, vy)
 	
@@ -72,7 +75,7 @@ function update(me, dt)
 	--entity_updateMovement(me, dt)
 	entity_rotateToVel(me)
 	
-	len = vector_getLength(vx, vy)
+	local len = vector_getLength(vx, vy)
 	addInfluence(entity_x(me), entity_y(me), 16, len)
 end
 

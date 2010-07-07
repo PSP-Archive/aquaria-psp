@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-chargeTimer = 0
+v.n = 0
+v.chargeTimer = 0
 
 STATE_CHARGEPREP 	= 1001
 STATE_CHARGE 		= 1002
@@ -47,8 +49,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -58,19 +60,19 @@ function update(me, dt)
 		entity_touchAvatarDamage(me, entity_getCollideRadius(me), 0.5)
 	end
 	entity_handleShotCollisions(me)
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if entity_isState(me, STATE_IDLE) then
-		if entity_isEntityInRange(me, n, 2048) then
+		if entity_isEntityInRange(me, v.n, 2048) then
 			entity_moveTowardsTarget(me, dt, 500)
 			entity_doCollisionAvoidance(me, dt, 4, 1)
 			entity_doEntityAvoidance(me, dt, 256, 0.5)
 			entity_doSpellAvoidance(me, dt, 512, 5)
-			if math.abs(entity_x(me)-entity_x(n)) > 100 then
-				entity_flipToEntity(me, n)
+			if math.abs(entity_x(me)-entity_x(v.n)) > 100 then
+				entity_flipToEntity(me, v.n)
 			end
-			chargeTimer = chargeTimer + dt
-			if chargeTimer > 4 then
-				chargeTimer = 0
+			v.chargeTimer = v.chargeTimer + dt
+			if v.chargeTimer > 4 then
+				v.chargeTimer = 0
 				entity_setState(me, STATE_CHARGEPREP)
 			end
 			entity_rotate(me, 0, 0.5)
@@ -102,14 +104,14 @@ function enterState(me)
 		entity_setMaxSpeedLerp(me, 4.0)
 		entity_setStateTime(me, 2.5)
 		entity_moveTowardsTarget(me, 1, 4000)
-		entity_flipToEntity(me, n)
+		entity_flipToEntity(me, v.n)
 	elseif entity_isState(me, STATE_DEATHSCENE) then
 		entity_rotate(me, 0, 0.5)
 		entity_color(me, 0.5, 0.5, 0.5, 3)
 		entity_sound(me, "Scavenger-Die")
-		t = entity_animate(me, "death")
+		local t = entity_animate(me, "death")
 		entity_setStateTime(me, t)
-		x,y = entity_getPosition(me)
+		local x, y = entity_getPosition(me)
 		while (isObstructed(x,y+16) == false) do
 			y = y + 20
 		end

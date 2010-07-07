@@ -17,23 +17,25 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-flag = 0
-node = 0
-gfx = ""
+v.flag = 0
+v.node = 0
+v.gfx = ""
 function commonInit(me, g, f)
-	gfx = g
-	flag = f
-	setupEntity(me, gfx)
+	v.gfx = g
+	v.flag = f
+	setupEntity(me, v.gfx)
 	entity_setEntityType(me, ET_NEUTRAL)
 	--[[
-	if not isFlag(flag, 0) then
+	if not isFlag(v.flag, 0) then
 		entity_alpha(me, 0)
 	end
 	]]--
 	entity_setWeight(me, 200)
-	if isFlag(flag, 0) then
+	if isFlag(v.flag, 0) then
 		debugLog("SETTING MOVABLE to TRUE")
 		entity_setProperty(me, EP_MOVABLE, true)
 	else
@@ -46,31 +48,31 @@ function hitSurface(me)
 end
 
 function update(me, dt)
-	if node == 0 then
-		node = entity_getNearestNode(me, gfx)
+	if v.node == 0 then
+		v.node = entity_getNearestNode(me, v.gfx)
 	end
-	if isFlag(flag, 0) then
+	if isFlag(v.flag, 0) then
 		entity_updateMovement(me, dt)
-		x = node_x(node)
-		y = node_y(node)
+		local x = node_x(v.node)
+		local y = node_y(v.node)
 		--debugLog(string.format("node(%d, %d)", x, y))
 		if entity_isPositionInRange(me, x, y, 64) then
 			--debugLog("IN RANGE!")
 			entity_stopPull(me)
 			entity_setProperty(me, EP_MOVABLE, false)
-			setFlag(flag, 1)			
+			setFlag(v.flag, 1)
 		end
 	else
-		entity_setPosition(me, node_x(node), node_y(node))
+		entity_setPosition(me, node_x(v.node), node_y(v.node))
 	end
 end
 
 function activate(me)
 --[[
-	if isFlag(flag, 0) then
+	if isFlag(v.flag, 0) then
 		entity_alpha(me, 0, 1)
 		spawnParticleEffect("Collect", entity_x(me), entity_y(me))
-		setFlag(flag, 1)
+		setFlag(v.flag, 1)
 		entity_setActivation(me, AT_NONE)
 	end
 	]]--

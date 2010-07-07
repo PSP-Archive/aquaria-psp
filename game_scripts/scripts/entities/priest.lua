@@ -17,21 +17,21 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- Merman / Thin
 -- ================================================================================================
 
 dofile("scripts/entities/entityinclude.lua")
 
-swimTime = 0
-swimTimer = swimTime - swimTime/4
-dirTimer = 0
-dir = 0
-spiritLoop = 0
-spiritDir = 1
+v.swimTime = 0
+v.swimTimer = v.swimTime - v.swimTime/4
+v.spiritLoop = 0
+v.spiritDir = 1
 
-leftHand = 0
-rightHand = 0
+v.leftHand = 0
+v.rightHand = 0
 
 STATE_HANG 	= 1000
 STATE_SWIM 	= 1001
@@ -42,10 +42,10 @@ STATE_FIRING = 1005
 STATE_DYING	= 1006
 STATE_WAIT = 1007
 
-fireDelay = 0
-burstDelay = 0
-spiritDelay = 0
-shotDelay = 0
+v.fireDelay = 0
+v.burstDelay = 0
+v.spiritDelay = 0
+v.shotDelay = 0
 
 function init(me)
 	-- 20 hp
@@ -71,8 +71,8 @@ function init(me)
 	
 	entity_scale(me, 0.6, 0.6)
 
-	leftHand = entity_getBoneByName(me, "LeftHand")
-	rightHand = entity_getBoneByName(me, "RightHand")
+	v.leftHand = entity_getBoneByName(me, "LeftHand")
+	v.rightHand = entity_getBoneByName(me, "RightHand")
 	
 	entity_setState(me, STATE_WAIT)
 	entity_setBeautyFlip(me, false)
@@ -90,25 +90,25 @@ function update(me, dt)
 		entity_doFriction(me, dt, 200)
 	end
 	if entity_hasTarget(me) then
-		amt = 800
+		local amt = 800
 		
-		if burstDelay > 0 then
-			burstDelay = burstDelay - dt
+		if v.burstDelay > 0 then
+			v.burstDelay = v.burstDelay - dt
 		end
 		
 		if entity_isState(me, STATE_SPIRIT) then
 			--entity_doSpellAvoidance(me, dt, 128, 0.5)
-			if spiritLoop > 0 then
-				spiritLoop = spiritLoop - dt
+			if v.spiritLoop > 0 then
+				v.spiritLoop = v.spiritLoop - dt
 				entity_moveTowardsTarget(me, dt, 1000)
-				entity_moveAroundTarget(me, dt, 1000, spiritDir)
-				if spiritLoop < 0 then
-					spiritLoop = 0
+				entity_moveAroundTarget(me, dt, 1000, v.spiritDir)
+				if v.spiritLoop < 0 then
+					v.spiritLoop = 0
 					entity_setMaxSpeedLerp(me, 2, 0.2)
 					--entity_moveTowardsTarget(me, 1, 800)
 				end
 				entity_doCollisionAvoidance(me, dt, 12, 0.5)
-				if spiritLoop == 0 then
+				if v.spiritLoop == 0 then
 					entity_sound(me, "Merman-Cry", 1800+math.random(100))
 					entity_setMaxSpeedLerp(me, 1.5)
 					entity_moveTowardsTarget(me, 1, 5000)
@@ -130,14 +130,14 @@ function update(me, dt)
 		end
 		
 		if entity_isState(me, STATE_FIRING) then
-			shotDelay = shotDelay - dt
-			if shotDelay < 0 then
-				vx, vy = bone_getNormal(leftHand)
-				px, py = bone_getPosition(rightHand)
+			v.shotDelay = v.shotDelay - dt
+			if v.shotDelay < 0 then
+				local vx, vy = bone_getNormal(v.leftHand)
+				local px, py = bone_getPosition(v.rightHand)
 				--entity_fireAtTarget(me, "", 1, 800, 1000, 3, 32, px-entity_x(me), py-entity_y(me), vx, vy)
-				s = createShot("Priest", me, entity_getTarget(me), px, py)
+				local s = createShot("Priest", me, entity_getTarget(me), px, py)
 				shot_setAimVector(s, vx, vy)
-				shotDelay = 0.2
+				v.shotDelay = 0.2
 			end
 			entity_doFriction(me, dt, 400)
 		end
@@ -147,8 +147,8 @@ function update(me, dt)
 		end
 		
 		if entity_isState(me, STATE_IDLE) then
-			timer = timer + dt
-			if timer > 5 then
+			v.timer = v.timer + dt
+			if v.timer > 5 then
 				-- attack
 			end
 			if entity_hasTarget(me) then
@@ -164,16 +164,16 @@ function update(me, dt)
 		end
 		
 		if entity_isState(me, STATE_IDLE) then
-			fireDelay = fireDelay - dt
-			if fireDelay < 0 then
+			v.fireDelay = v.fireDelay - dt
+			if v.fireDelay < 0 then
 				entity_setState(me, STATE_FIRING, 2)
-				fireDelay = 4
+				v.fireDelay = 4
 			end
 			
-			spiritDelay = spiritDelay - dt
-			if spiritDelay < 0 then
+			v.spiritDelay = v.spiritDelay - dt
+			if v.spiritDelay < 0 then
 				entity_setState(me, STATE_SPIRITCHARGE)
-				spiritDelay = 2 + math.random(3)
+				v.spiritDelay = 2 + math.random(3)
 			end
 		end
 		
@@ -187,7 +187,7 @@ function update(me, dt)
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if entity_IsState(me, STATE_WAIT) then
+	if entity_isState(me, STATE_WAIT) then
 		return false
 	end
 	if entity_isState(me, STATE_SPIRIT) or entity_isState(me, STATE_DYING) then
@@ -202,7 +202,7 @@ function damage(me, attacker, bone, damageType, dmg)
 end
 
 function enterState(me)
-	timer = 0
+	v.timer = 0
 	if entity_getState(me)==STATE_IDLE then
 		entity_setMaxSpeedLerp(me, 1, 0.5)
 		entity_setAllDamageTargets(me, true)
@@ -225,14 +225,14 @@ function enterState(me)
 		entity_setDamageTarget(me, DT_AVATAR_ENERGYBLAST, false)
 		entity_setDamageTarget(me, DT_AVATAR_SHOCK, false)
 		if math.random(100) > 50 then
-			spiritDir = 0
+			v.spiritDir = 0
 		else
-			spiritDir = 1
+			v.spiritDir = 1
 		end
 		entity_animate(me, "spirit", LOOP_INF)
 		entity_setMaxSpeed(me, 800)
 		entity_alpha(me, 0.5, 0.5)
-		spiritLoop = 3.5
+		v.spiritLoop = 3.5
 	elseif entity_isState(me, STATE_SPIRITCHARGE) then
 		entity_flipToEntity(me, getNaija())
 		entity_setColor(me, 0.6, 0.6, 1, 2)
@@ -241,7 +241,7 @@ function enterState(me)
 		entity_flipToEntity(me, getNaija())
 		entity_animate(me, "firing")
 	elseif entity_getState(me)==STATE_BURST then
-		burstDelay = 6
+		v.burstDelay = 6
 		entity_animate(me, "burst")
 		entity_doSpellAvoidance(me, 1, 256, 1.0)
 		entity_doEntityAvoidance(me, 1, 256, 1.0)

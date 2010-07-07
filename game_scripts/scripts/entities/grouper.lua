@@ -17,27 +17,29 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
-dir = -1
+v.dir = -1
 
-ing = 0
+v.ing = 0
 
-mouthState = 0
+v.mouthState = 0
 
-MOUT_IDLE		= 0
+MOUTH_IDLE		= 0
 MOUTH_OPEN	 	= 1
 MOUTH_CLOSED	= 2
 
 STATE_SPIT		= 1000
 
-holding = 0
+v.holding = 0
 
-bite = 0
+v.bite = 0
 
-eyeglow = 0
+v.eyeglow = 0
 
 function init(me)
 	setupEntity(me)
@@ -56,12 +58,12 @@ function init(me)
 	
 	entity_setState(me, STATE_IDLE)
 	
-	eyeglow = entity_getBoneByName(me, "glow")
-	bone_setBlendType(eyeglow, BLEND_ADD)
-	bone_alpha(eyeglow, 0)
+	v.eyeglow = entity_getBoneByName(me, "glow")
+	bone_setBlendType(v.eyeglow, BLEND_ADD)
+	bone_alpha(v.eyeglow, 0)
 	
-	bite = entity_getBoneByName(me, "bite")
-	bone_alpha(bite)
+	v.bite = entity_getBoneByName(me, "bite")
+	bone_alpha(v.bite, 0)
 	
 	esetv(me, EV_ENTITYDIED, 1)
 	
@@ -88,37 +90,37 @@ function closeMouth(me)
 	entity_stopAllAnimations(me)
 	entity_animate(me, "idle", -1)
 	entity_animate(me, "close", 0, 1)
-	mouthState = MOUTH_IDLE
+	v.mouthState = MOUTH_IDLE
 	
 	debugLog("set render pass 0")
 	doSetRenderPass(me, 0)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function entityDied(me, theIng)
-	if theIng == ing then
+	if theIng == v.ing then
 		entity_stopAllAnimations(me)
 		entity_animate(me, "idle", -1)
 		entity_animate(me, "close", 0, 1)
-		ing = 0
+		v.ing = 0
 	end
 end
 
 function checkMouth(me)
-	bx,by = bone_getWorldPosition(bite)
-	if mouthState == MOUTH_OPEN then
-		if entity_isPositionInRange(n, bx, by, 96) then
-			holding = n
+	local bx, by = bone_getWorldPosition(v.bite)
+	if v.mouthState == MOUTH_OPEN then
+		if entity_isPositionInRange(v.n, bx, by, 96) then
+			v.holding = v.n
 			
 			closeMouth(me)
 			
 						
 			entity_setState(me, STATE_WAIT, 2, 1)
-			ing = 0
+			v.ing = 0
 			
 			debugLog("set render pass 3")
 			doSetRenderPass(me, 3)
@@ -130,7 +132,7 @@ function update(me, dt)
 	entity_updateMovement(me, dt)
 	
 	--[[
-	--entity_addVel(me, dir*100*dt, 0)
+	--entity_addVel(me, v.dir*100*dt, 0)
 	entity_doCollisionAvoidance(me, dt, 32, 0.1)
 	entity_doCollisionAvoidance(me, dt, 16, 0.1)
 	
@@ -141,20 +143,20 @@ function update(me, dt)
 	entity_flipToVel(me)
 	]]--
 	
-	bx,by = bone_getWorldPosition(bite)
+	local bx, by = bone_getWorldPosition(v.bite)
 	
 	if entity_isState(me, STATE_IDLE) then
-		if ing == 0 then
-			ing = entity_getNearestEntity(me, "", 1024, ET_INGREDIENT, 0)
+		if v.ing == 0 then
+			v.ing = entity_getNearestEntity(me, "", 1024, ET_INGREDIENT, 0)
 			entity_setMaxSpeedLerp(me, 0.01, 0.2)
-			mouthState = MOUTH_IDLE
+			v.mouthState = MOUTH_IDLE
 		else
 			entity_doCollisionAvoidance(me, dt, 16, 0.5)
-			--debugLog(string.format("ing: %s", entity_getName(ing)))
-			if mouthState ~= MOUTH_OPEN then
+			--debugLog(string.format("ing: %s", entity_getName(v.ing)))
+			if v.mouthState ~= MOUTH_OPEN then
 				spawnParticleEffect("bubble-release", bx, by)
 				entity_animate(me, "open", 0, 1)
-				mouthState = MOUTH_OPEN
+				v.mouthState = MOUTH_OPEN
 				
 				debugLog("set render pass 3")
 				doSetRenderPass(me, 3)
@@ -162,11 +164,11 @@ function update(me, dt)
 				entity_sound(me, "grouper")
 			end
 			
-			entity_moveTowards(me, entity_x(ing)-64, entity_y(ing), dt, 2000)
-			if entity_isPositionInRange(me, entity_x(ing), entity_y(ing), 128) then
+			entity_moveTowards(me, entity_x(v.ing)-64, entity_y(v.ing), dt, 2000)
+			if entity_isPositionInRange(me, entity_x(v.ing), entity_y(v.ing), 128) then
 				entity_sound(me, "gulp")
-				entity_delete(ing)
-				ing = 0
+				entity_delete(v.ing)
+				v.ing = 0
 				entity_stopAllAnimations(me)
 				entity_animate(me, "idle", -1)
 				entity_animate(me, "close", 0, 1)
@@ -178,8 +180,8 @@ function update(me, dt)
 		checkMouth(me)
 	end
 	
-	if ing == 0 then
-		if mouthState == MOUTH_OPEN then
+	if v.ing == 0 then
+		if v.mouthState == MOUTH_OPEN then
 			closeMouth(me)
 			entity_setState(me, STATE_IDLE)
 		end
@@ -187,15 +189,15 @@ function update(me, dt)
 	
 
 	
-	if holding~=0 then
-		entity_setPosition(holding, bx, by)
+	if v.holding ~= 0 then
+		entity_setPosition(v.holding, bx, by)
 	end
 	
-	if holding~=0 and not (entity_isState(me, STATE_WAIT) or entity_isState(me, STATE_SPIT)) then
+	if v.holding ~= 0 and not (entity_isState(me, STATE_WAIT) or entity_isState(me, STATE_SPIT)) then
 		entity_setState(me, STATE_SPIT, 1)
 	end
 	
-	if holding == 0 and ing == 0 and mouthState ~= MOUTH_OPEN then
+	if v.holding == 0 and v.ing == 0 and v.mouthState ~= MOUTH_OPEN then
 		doSetRenderPass(me, 0)
 	end
 	
@@ -204,11 +206,11 @@ function update(me, dt)
 	
 	if entity_isState(me, STATE_IDLE) then
 		if entity_touchAvatarDamage(me, entity_getCollideRadius(me), 0) then
-			if mouthState ~= MOUTH_OPEN and avatar_isBursting() and entity_setBoneLock(n, me) then
+			if v.mouthState ~= MOUTH_OPEN and avatar_isBursting() and entity_setBoneLock(v.n, me) then
 				-- yay!
 			else
-				x, y = entity_getVectorToEntity(me, n, 1000)
-				entity_addVel(n, x, y)
+				local x, y = entity_getVectorToEntity(me, v.n, 1000)
+				entity_addVel(v.n, x, y)
 			end
 		end
 	end
@@ -220,31 +222,31 @@ function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_SPIT) then
-		bx,by = bone_getWorldPosition(bite)
+		local bx, by = bone_getWorldPosition(v.bite)
 		spawnParticleEffect("bubble-release", bx, by)
 		entity_animate(me, "open2", 0, 1)
-		if holding ~= 0 then
-			entity_clearVel(holding)
+		if v.holding ~= 0 then
+			entity_clearVel(v.holding)
 			if entity_isfh(me) then
-				entity_push(holding, 5000, 0, 2, 5000, 0.5)
-				entity_addVel(holding, 5000, 0)
+				entity_push(v.holding, 5000, 0, 2, 5000, 0.5)
+				entity_addVel(v.holding, 5000, 0)
 			else
-				entity_push(holding, -5000, 0, 2, 5000, 0.5)
-				entity_addVel(holding, -5000, 0)
+				entity_push(v.holding, -5000, 0, 2, 5000, 0.5)
+				entity_addVel(v.holding, -5000, 0)
 			end
 		end
-		holding = 0
+		v.holding = 0
 	elseif entity_isState(me, STATE_WAIT) then
 		entity_setMaxSpeedLerp(me, 0, 2)
 	elseif entity_isState(me, STATE_OPEN) then
 		if entity_getBoneLockEntity(getNaija()) == me then
 			avatar_fallOffWall()
 		end
-		if mouthState ~= MOUTH_OPEN then
-			bx,by = bone_getWorldPosition(bite)
+		if v.mouthState ~= MOUTH_OPEN then
+			local bx, by = bone_getWorldPosition(v.bite)
 			spawnParticleEffect("bubble-release", bx, by)
 			entity_animate(me, "open", 0, 1)
-			mouthState = MOUTH_OPEN
+			v.mouthState = MOUTH_OPEN
 			
 			debugLog("set render pass 3")
 			doSetRenderPass(me, 3)
@@ -263,17 +265,17 @@ function exitState(me)
 		entity_setState(me, STATE_IDLE)
 	elseif entity_isState(me, STATE_OPEN) then
 		closeMouth(me)
-		mouthState = MOUTH_IDLE
+		v.mouthState = MOUTH_IDLE
 		entity_setState(me, STATE_IDLE)
 	end
 end
 
 function damage(me, attacker, bone, damageType, dmg)
 	entity_sound(me, "grouper-hurt")
-	n = getNaija()
+	v.n = getNaija()
 	entity_setMaxSpeedLerp(me, 2, 0)
 	entity_setMaxSpeedLerp(me, 0, 2)
-	entity_moveTowards(me, entity_x(n), entity_y(n), 1, -3000)
+	entity_moveTowards(me, entity_x(v.n), entity_y(v.n), 1, -3000)
 	return true
 end
 
@@ -284,15 +286,15 @@ function hitSurface(me)
 end
 
 function songNote(me, note)
-	bone_alpha(eyeglow, 0.5, 1)
-	bone_color(eyeglow, getNoteColor(note))
+	bone_alpha(v.eyeglow, 0.5, 1)
+	bone_setColor(v.eyeglow, getNoteColor(note))
 end
 
 function songNoteDone(me, note, timer)
 	if timer > 1 then
 		entity_setState(me, STATE_OPEN, 2)
 	end
-	bone_alpha(eyeglow, 0, 1)
+	bone_alpha(v.eyeglow, 0, 1)
 end
 
 function song(me, song)

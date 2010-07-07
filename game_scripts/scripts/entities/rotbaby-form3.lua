@@ -17,12 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
-lungeDelay = 3
-fireDelay = 2
-shots = 3
+v.n = 0
+v.lungeDelay = 3
+v.fireDelay = 2
+v.shots = 3
 function init(me)
 	setupEntity(me)
 	entity_setEntityType(me, ET_ENEMY)
@@ -46,7 +48,7 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
@@ -73,26 +75,26 @@ function update(me, dt)
 	entity_touchAvatarDamage(me, entity_getCollideRadius(me), 1, 800)
 	
 	--[[
-	if lungeDelay > 0 then
-		lungeDelay = lungeDelay - dt
-		if lungeDelay <= 0 then
+	if v.lungeDelay > 0 then
+		v.lungeDelay = v.lungeDelay - dt
+		if v.lungeDelay <= 0 then
 			entity_setMaxSpeedLerp(me, 1.2)
 			entity_setMaxSpeedLerp(me, 1, 1)
 			entity_moveTowardsTarget(me, 1, 1200)
-			lungeDelay = math.random(3) + 1
+			v.lungeDelay = math.random(3) + 1
 		end
 	end
 	]]--
 	
-	fireDelay = fireDelay - dt
-	if fireDelay < 0 then
-		shots = shots - 1
-		if shots < 0 then
-			fireDelay = math.random(2)+2
-			shots = 3
+	v.fireDelay = v.fireDelay - dt
+	if v.fireDelay < 0 then
+		v.shots = v.shots - 1
+		if v.shots < 0 then
+			v.fireDelay = math.random(2)+2
+			v.shots = 3
 		else
-			fireDelay = 0.3
-			s = createShot("BlasterFire", me, entity_getTarget(me))
+			v.fireDelay = 0.3
+			local s = createShot("BlasterFire", me, entity_getTarget(me))
 			shot_setOut(s, 32)
 			entity_moveTowardsTarget(me, 1, -500)
 		end

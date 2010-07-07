@@ -17,12 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
 --crying in house
-n = 0
-curNote = 1
-notes = { 1, 3, 4, 5, 1, 3, 4, 2, 1, 3, 4, 0 }
+v.n = 0
+v.curNote = 1
+v.notes = { 1, 3, 4, 5, 1, 3, 4, 2, 1, 3, 4, 0 }
 
 function init(me)
 	setupEntity(me)
@@ -34,35 +36,35 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 
 	if isFlag(FLAG_SUNKENCITY_BOSS, 1) then
 		entity_delete(me)
 	elseif getFlag(FLAG_SUNKENCITY_PUZZLE) > 1 then
-		gfNode = getNode("GFGARDEN")
-		gf = createEntity("CC_GF", "", node_x(gfNode), node_y(gfNode))
+		local gfNode = getNode("GFGARDEN")
+		local gf = createEntity("CC_GF", "", node_x(gfNode), node_y(gfNode))
 		entity_delete(me)
 	else
 		entity_setState(me, STATE_IDLE)
 	end	
 end
 
-done = false
-inScene = false
+v.done = false
+v.inScene = false
 function cutScene(me)
-	if inScene then return end
-	done = true
-	inScene = true
+	if v.inScene then return end
+	v.done = true
+	v.inScene = true
 	-- mother arrives, sings song in loop
 	msg("You sang the song!")
-	entity_idle(n)
+	entity_idle(v.n)
 	cam_toEntity(me)
 	watch(1)
 	-- girlfriend shows up
 	
-	gfNode = getNode("GFAPPEAR")
-	gf = createEntity("CC_GF", "", node_x(gfNode), node_y(gfNode))
+	local gfNode = getNode("GFAPPEAR")
+	local gf = createEntity("CC_GF", "", node_x(gfNode), node_y(gfNode))
 	cam_toEntity(gf)
 	entity_alpha(gf, 0)
 	entity_alpha(gf, 1, 2)
@@ -72,14 +74,14 @@ function cutScene(me)
 	entity_watchForPath(gf)
 	entity_animate(gf, "idle", -1)
 	watch(1)
-	cam_toEntity(n)
+	cam_toEntity(v.n)
 	
 	setFlag(FLAG_SUNKENCITY_PUZZLE, 2)
-	cam_toEntity(n)
+	cam_toEntity(v.n)
 	
 	entity_delete(me)
 	
-	inScene = false
+	v.inScene = false
 end
 
 function update(me, dt)
@@ -109,15 +111,15 @@ end
 
 function songNoteDone(me, note)
 	if isFlag(FLAG_SUNKENCITY_PUZZLE, 1) then
-		if notes[curNote] == note then
+		if v.notes[v.curNote] == note then
 			debugLog("note match")
-			curNote = curNote + 1
-			if curNote >= 13 then
+			v.curNote = v.curNote + 1
+			if v.curNote >= 13 then
 				cutScene(me)
 			end
 		else
 			debugLog("note fail")
-			curNote = 1
+			v.curNote = 1
 		end
 	end
 end

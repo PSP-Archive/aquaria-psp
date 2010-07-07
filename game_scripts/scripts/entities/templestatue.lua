@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- TEMPLE STATUE
 -- ================================================================================================
@@ -32,7 +34,7 @@ dofile("scripts/entities/entityinclude.lua")
 -- FUNCTIONS
 -- ================================================================================================
 
-bone_head = 0
+v.bone_head = 0
 
 function init(me)
 	setupBasicEntity(
@@ -55,7 +57,7 @@ function init(me)
 	entity_setEntityType(me, ET_NEUTRAL)
 	entity_initSkeletal(me, "TempleStatue")
 	
-	bone_head = entity_getBoneByName(me, "Head")
+	v.bone_head = entity_getBoneByName(me, "Head")
 	
 	entity_setName(me, "TempleStatue")
 	entity_setState(me, STATE_IDLE)
@@ -63,7 +65,7 @@ end
 
 function update(me, dt)
 	if entity_isState(me, STATE_IDLE) or entity_isState(me, STATE_BREAK) then
-		entity_setLookAtPoint(me, bone_getWorldPosition(bone_head))
+		entity_setLookAtPoint(me, bone_getWorldPosition(v.bone_head))
 	end
 end
 

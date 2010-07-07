@@ -17,12 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
-fireDelayTime = 3
-fireDelay = 0
+v.fireDelayTime = 3
+v.fireDelay = 0
 
 
 function init(me)
@@ -53,8 +55,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -67,10 +69,11 @@ function update(me, dt)
 	entity_doCollisionAvoidance(me, dt, 8, 0.1)
 	entity_doEntityAvoidance(me, dt, 64, 1)
 	
-	fireDelay = fireDelay - dt
-	if fireDelay < 0 then
+	v.fireDelay = v.fireDelay - dt
+	if v.fireDelay < 0 then
 		entity_addVel(me, randVector(500))
 		
+		local s
 		s = createShot("viruspoison", me, 0, entity_x(me)-20, entity_y(me)-20)
 		shot_setAimVector(s, -1, -1)
 		s = createShot("viruspoison", me, 0, entity_x(me)+20, entity_y(me)-20)
@@ -80,7 +83,7 @@ function update(me, dt)
 		s = createShot("viruspoison", me, 0, entity_x(me)-20, entity_y(me)+20)
 		shot_setAimVector(s, -1, 1)
 		
-		fireDelay = fireDelayTime
+		v.fireDelay = v.fireDelayTime
 		
 		entity_rotate(me, entity_getRotation(me)+90, 1, 0, 0, 1)
 	end

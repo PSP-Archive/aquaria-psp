@@ -17,12 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- blazer
 
 dofile("scripts/entities/entityinclude.lua")
 
-dir = 0
-dropTimer = 0
+v.dir = 0
+v.dropTimer = 0
 
 function init(me)
 	setupBasicEntity(
@@ -49,29 +51,29 @@ function update(me, dt)
 	entity_handleShotCollisions(me)
 	entity_touchAvatarDamage(me, 32, 0.5, 1000)
 	
-	dropTimer = dropTimer + dt
-	t = 0.2
-	if dropTimer > t then
+	v.dropTimer = v.dropTimer + dt
+	local t = 0.2
+	if v.dropTimer > t then
 		--shot = entity_fireShot(me, 0, 0, 0, 0, 0, 0, "")
 		--shot_setLifeTime(shot, 1.5)
 		
-		sx,sy = entity_getPosition(me)
-		nx,ny = entity_getNormal(me)
-		l = 32
+		local sx,sy = entity_getPosition(me)
+		local nx,ny = entity_getNormal(me)
+		local l = 32
 		sx = sx - nx*l
 		sy = sy - ny*l
 		createShot("DropShot", me, 0, sx, sy)
 		
-		dropTimer = dropTimer - t
+		v.dropTimer = v.dropTimer - t
 	end
-	amt = 2500*dt
-	if dir == 0 then
+	local amt = 2500*dt
+	if v.dir == 0 then
 		entity_addVel(me, -amt, amt)
-	elseif dir == 1 then
+	elseif v.dir == 1 then
 		entity_addVel(me, -amt, -amt)
-	elseif dir == 2 then
+	elseif v.dir == 2 then
 		entity_addVel(me, amt, amt)
-	elseif dir == 3 then
+	elseif v.dir == 3 then
 		entity_addVel(me, amt, -amt)
 	end
 	--entity_doEntityAvoidance(me, dt, 256, 0.2)
@@ -91,9 +93,9 @@ function exitState(me)
 end
 
 function hitSurface(me)
-	dir = dir + 1
-	if dir > 3 then
-		dir = 0
+	v.dir = v.dir + 1
+	if v.dir > 3 then
+		v.dir = 0
 	end
 end
 
