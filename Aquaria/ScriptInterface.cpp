@@ -61,8 +61,7 @@ static void luaErrorMsg(lua_State *L, const char *msg)
 	}
 }
 
-// Also called from Path.cpp
-void luaPushPointer(lua_State *L, void *ptr)
+static inline void luaPushPointer(lua_State *L, void *ptr)
 {
 	// All the scripts do this:
 	//    x = getFirstEntity()
@@ -9328,34 +9327,21 @@ Script *ScriptInterface::openScript(const std::string &file)
 		return NULL;
 	}
 
-	Script *script = new Script;
-	script->L = thread;
-	script->file = realFile;
-
-	return script;
-}
-
-void ScriptInterface::pushScriptFunc(Script *script, const char *name)
-{
-	// FIXME: Temporary HACK to load thread-scope variable table.
-	l_getVars(script->L);
-	lua_setglobal(script->L, "v");
-
-	lua_getglobal(script->L, name);
+	return new Script(thread, realFile);
 }
 
 void ScriptInterface::closeScript(Script *script)
 {
-	lua_State *baseState = loadedScripts[script->file];
+	lua_State *baseState = loadedScripts[script->getFile()];
 	if (!baseState)
 	{
-		debugLog("Lost base state for script [" + script->file + "]");
+		debugLog("Lost base state for script [" + script->getFile() + "]");
 		delete script;
-		loadedScripts.erase(script->file);  // HACK: see above
+		loadedScripts.erase(script->getFile());  // HACK: see above
 		return;
 	}
 
-	destroyLuaThread(baseState, script->L);
+	destroyLuaThread(baseState, script->getLuaState());
 
 	// If this was the last instance of this script, unload the script itself.
 	lua_getglobal(baseState, "_threadtable");
@@ -9364,7 +9350,7 @@ void ScriptInterface::closeScript(Script *script)
 	if (empty)
 	{
 		destroyLuaVM(baseState);
-		loadedScripts.erase(script->file);
+		loadedScripts.erase(script->getFile());
 	}
 	else
 	{
@@ -9384,12 +9370,9 @@ bool ScriptInterface::runScriptNum(const std::string &file, const std::string &f
 	if (!script)
 		return false;
 
-	lua_getfield(script->L, LUA_GLOBALSINDEX, func.c_str());
-	lua_pushnumber(script->L, num);
-	int result = lua_pcall(script->L, 1, 0, 0);
-	if (result != 0)
+	if (!script->call(func.c_str(), num))
 	{
-		debugLog(lua_tostring(script->L, -1));
+		debugLog(script->getLastError());
 		debugLog("(error calling func: " + func + " in script: " + file + ")");
 		closeScript(script);
 		return false;
@@ -9409,20 +9392,145 @@ bool ScriptInterface::runScript(const std::string &file, const std::string &func
 	if (!script)
 		return false;
 
-	if (!func.empty())
+	if (!func.empty() && !script->call(func.c_str()))
 	{
-		lua_getfield(script->L, LUA_GLOBALSINDEX, func.c_str());
-		int result = lua_pcall(script->L, 0, 0, 0);
-		if (result != 0)
-		{
-			debugLog(lua_tostring(script->L, -1));
-			debugLog("(error calling func: " + func + " in script: " + file + ")");
-			closeScript(script);
-			return false;
-		}
+		debugLog(script->getLastError());
+		debugLog("(error calling func: " + func + " in script: " + file + ")");
+		closeScript(script);
+		return false;
 	}
 
 	closeScript(script);
 	return true;
 }
 
+//-------------------------------------------------------------------------
+
+bool Script::doCall(int nparams, int nrets)
+{
+	l_getVars(L);
+	lua_setglobal(L, "v");
+	if (lua_pcall(L, nparams, nrets, 0) == 0)
+	{
+		return true;
+	}
+	else
+	{
+		lastError = lua_tostring(L, -1);
+		lua_pop(L, 1);
+	}
+}
+
+bool Script::call(const char *name)
+{
+	lua_getglobal(L, name);
+	return doCall(0);
+}
+
+bool Script::call(const char *name, float param1)
+{
+	lua_getglobal(L, name);
+	lua_pushnumber(L, param1);
+	return doCall(1);
+}
+
+bool Script::call(const char *name, void *param1)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	return doCall(1);
+}
+
+bool Script::call(const char *name, void *param1, float param2)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	lua_pushnumber(L, param2);
+	return doCall(2);
+}
+
+bool Script::call(const char *name, void *param1, void *param2)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	luaPushPointer(L, param2);
+	return doCall(2);
+}
+
+bool Script::call(const char *name, void *param1, float param2, float param3)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	lua_pushnumber(L, param2);
+	lua_pushnumber(L, param3);
+	return doCall(3);
+}
+
+bool Script::call(const char *name, void *param1, float param2, float param3, bool *ret1)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	lua_pushnumber(L, param2);
+	lua_pushnumber(L, param3);
+	if (!doCall(3, 1))
+		return false;
+	*ret1 = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+	return true;
+}
+
+bool Script::call(const char *name, void *param1, const char *param2, float param3)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	lua_pushstring(L, param2);
+	lua_pushnumber(L, param3);
+	return doCall(3);
+}
+
+bool Script::call(const char *name, void *param1, void *param2, void *param3)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	luaPushPointer(L, param2);
+	luaPushPointer(L, param3);
+	return doCall(3);
+}
+
+bool Script::call(const char *name, void *param1, float param2, float param3, float param4)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	lua_pushnumber(L, param2);
+	lua_pushnumber(L, param3);
+	lua_pushnumber(L, param4);
+	return doCall(4);
+}
+
+bool Script::call(const char *name, void *param1, void *param2, void *param3, void *param4)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	luaPushPointer(L, param2);
+	luaPushPointer(L, param3);
+	luaPushPointer(L, param4);
+	return doCall(4);
+}
+
+bool Script::call(const char *name, void *param1, void *param2, void *param3, float param4, float param5, float param6, float param7, void *param8, bool *ret1)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	luaPushPointer(L, param2);
+	luaPushPointer(L, param3);
+	lua_pushnumber(L, param4);
+	lua_pushnumber(L, param5);
+	lua_pushnumber(L, param6);
+	lua_pushnumber(L, param7);
+	luaPushPointer(L, param8);
+	if (!doCall(8, 1))
+		return false;
+	*ret1 = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+	return true;
+}
