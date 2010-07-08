@@ -107,7 +107,7 @@ end
 function update(me, dt)
 	if entity_isState(me, STATE_PREP) then
 		if entity_isEntityInRange(me, v.n, 1024) then
-			emote(NAIJA_EMOTEGIGGLE)
+			emote(EMOTE_NAIJAGIGGLE)
 			playMusic("Miniboss")
 			entity_setState(me, STATE_IDLE)
 		end
