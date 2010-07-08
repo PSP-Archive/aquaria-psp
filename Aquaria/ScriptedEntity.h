@@ -24,8 +24,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Hair.h"
 struct lua_State;
 
-#define CR_DEFAULT 40	// Default collide radius
-
 class ScriptedEntity : public CollideEntity, public Segmented
 {
 public:
@@ -38,7 +36,6 @@ public:
 	void setEntityLayer(int layer);
 	void setupEntity(const std::string &tex, int layer=0);
 	void setupBasicEntity(std::string texture, int health, int manaBall, int exp, int money, int collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer);
-	void setupConversationEntity(std::string name, std::string texture);
 	void initHair(int numSegments, int segmentLength, int width, const std::string &tex);
 	void initSegments(int numSegments, int minDist, int maxDist, std::string bodyTex, std::string tailTex, int w, int h, float taper, bool reverseSegments);
 	void registerNewPart(RenderObject *r, const std::string &name);

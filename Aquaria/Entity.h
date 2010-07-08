@@ -260,8 +260,7 @@ public:
 	std::string name;
 	Vector vel;
 	InterpolatedVector vel2;
-	int convoRadius;
-	//int convoAvatarRadius;
+	int activationRadius;
 	void render();
 	void update(float dt);
 
@@ -451,8 +450,6 @@ public:
 	bool isInvincible();
 
 	InterpolatedVector maxSpeedLerp;
-	void setPauseInConversation(bool v);
-	bool isPauseInConversation();
 	Hair *hair;
 	void setGroupID(int gid);
 	int getGroupID();
@@ -621,7 +618,6 @@ protected:
 	virtual void onIdle() {}
 	int groupID;
 	virtual void onHeal(int type){}
-	bool pauseInConversation;
 	virtual void onDamage(DamageData &d){}
 	virtual void onHealthChange(float change){}
 	bool inCurrent;

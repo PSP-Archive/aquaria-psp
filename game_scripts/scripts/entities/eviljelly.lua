@@ -74,8 +74,6 @@ function init(me)
 	v.useMaxSpeed = v.baseSpeed
 	entity_setEntityType(me, ET_ENEMY)
 	
-	entity_setPauseInConversation(me, false)
-
 	entity_setState(me, STATE_IDLE)
 	entity_setDropChance(me, 10, 1)
 	

@@ -155,17 +155,14 @@ public:
 	//void damage(int amount);
 	bool isCharging();
 	void slowToRest();
-	//Entity *convoEntity;
 	void debugMsg(const std::string &msg);
 	DFSprite *burstBar;
 	void setBlind(float time);
 	void onBlindTest();
 
-	bool disableConversationStart;
 	void revive();
 
 	bool canWarp;
-	void startConversation();
 	void entityDied(Entity *e);
 	void onCollide(Entity *e);
 	bool zoomOverriden;
@@ -174,7 +171,6 @@ public:
 	bool isMiniMapCursorOkay();
 
 	void splash(bool down);
-	bool isInConvArea();
 	InterpolatedVector myZoom;
 
 	Entity *entityToActivate;
@@ -479,7 +475,6 @@ protected:
 	float spellCastDelay;
 	float spellChargeMin;
 	bool checkWarpAreas();
-	void checkConvAreas();
 	void checkSpecial();
 	void toggleZoom();
 

@@ -75,8 +75,6 @@ function init(me)
 	v.useMaxSpeed = v.baseSpeed
 	entity_setEntityType(me, ET_ENEMY)
 	
-	entity_setPauseInConversation(me, false)
-	
 	entity_initSkeletal(me, "JellySmall")
 	
 	--entity_scale(me, 0.6, 0.6)

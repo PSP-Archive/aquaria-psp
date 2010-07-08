@@ -77,7 +77,6 @@ public:
 	void init();
 	void collectGarbage();
 	void shutdown();
-	bool setCurrentEntity (Entity *e);
 
 	Script *openScript(const std::string &file);
 	void closeScript(Script *script);
@@ -85,15 +84,7 @@ public:
 	bool runScript(const std::string &file, const std::string &func);
 	bool runScriptNum(const std::string &file, const std::string &func, int num);
 
-	//bool simpleConversation(const std::string &file);
-	bool noMoreConversationsThisRun;
-
-	//ScriptedEntity *se;
-	//CollideEntity *collideEntity;
-	//int currentEntityTarget;
-	//Entity *getCurrentEntity() { return currentEntity; }
 protected:
-
 	lua_State *createLuaVM();
 	void destroyLuaVM(lua_State *state);
 	lua_State *createLuaThread(lua_State *baseState);
@@ -101,7 +92,4 @@ protected:
 
 	typedef std::map<std::string, lua_State*> ScriptFileMap;
 	ScriptFileMap loadedScripts;
-
-	Entity *currentEntity;
 };
-extern ScriptInterface *si;

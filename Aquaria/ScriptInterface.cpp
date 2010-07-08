@@ -36,7 +36,6 @@ extern "C"
 
 #include "../BBGE/MathFunctions.h"
 
-ScriptInterface *si = 0;
 const bool throwLuaErrors = false;
 
 // Set this to true to complain loudly (via errorLog()) whenever a script
@@ -2407,7 +2406,6 @@ luaFunc(entity_initStrands)
 
 luaFunc(entity_initSkeletal)
 {
-	//ScriptedEntity *e = (ScriptedEntity*)(si->getCurrentEntity());
 	ScriptedEntity *e = scriptedEntity(L);
 	e->renderQuad = false;
 	e->setWidthHeight(128, 128);
@@ -2494,7 +2492,6 @@ luaFunc(entity_moveToBack)
 
 luaFunc(entity_move)
 {
-	//Entity *e = si->getCurrentEntity();
 	Entity *e = entity(L);
 	bool ease = lua_tointeger(L, 5);
 	Vector p(lua_tointeger(L, 2), lua_tointeger(L, 3));
@@ -2711,13 +2708,6 @@ luaFunc(savePoint)
 	}
 
 	dsq->doSavePoint(position);
-	/*
-	Entity *e=0;
-	if (e=si->getCurrentEntity())
-	{
-		dsq->doSavePoint(e);
-	}
-	*/
 	luaReturnNum(0);
 }
 
@@ -3568,7 +3558,6 @@ luaFunc(entity_updateMovement)
 
 luaFunc(entity_applySurfaceNormalForce)
 {
-	//Entity *e = si->getCurrentEntity();
 	Entity *e = entity(L);
 	if (e)
 	{
@@ -3929,17 +3918,6 @@ luaFunc(quad_setPosition)
 	luaReturnNum(0);
 }
 
-luaFunc(setupConversationEntity)
-{
-	std::string name, gfx;
-	if (lua_isstring(L, 2))
-		name = lua_tostring(L, 2);
-	if (lua_isstring(L, 3))
-		gfx = lua_tostring(L, 3);
-	scriptedEntity(L)->setupConversationEntity(name, gfx);
-	luaReturnNum(0);
-}
-
 luaFunc(setupEntity)
 {
 	ScriptedEntity *se = scriptedEntity(L);
@@ -3957,7 +3935,6 @@ luaFunc(setupEntity)
 
 luaFunc(setupBasicEntity)
 {
-	//ScriptedEntity *se = dynamic_cast<ScriptedEntity*>(si->getCurrentEntity());
 	ScriptedEntity *se = scriptedEntity(L);
 	//-- texture, health, manaballamount, exp, money, collideRadius, initState
 	if (se)
@@ -4800,16 +4777,6 @@ luaFunc(entity_setDeathScene)
 	luaReturnNum(0);
 }
 
-luaFunc(entity_setPauseInConversation)
-{
-	Entity *e = entity(L);
-	if (e)
-	{
-		e->setPauseInConversation(lua_toboolean(L, 2));
-	}
-	luaReturnNum(0);
-}
-
 luaFunc(entity_setCollideWithAvatar)
 {
 	Entity *e = entity(L);
@@ -5174,7 +5141,6 @@ luaFunc(entity_checkSurface)
 
 luaFunc(entity_switchSurfaceDirection)
 {
-	//ScriptedEntity *e = (ScriptedEntity*)si->getCurrentEntity();
 	ScriptedEntity *e = scriptedEntity(L);
 	int n = -1;
 	if (lua_isnumber(L, 2))
@@ -5219,7 +5185,7 @@ luaFunc(entity_switchSurfaceDirection)
 
 luaFunc(entity_adjustPositionBySurfaceNormal)
 {
-	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	ScriptedEntity *e = scriptedEntity(L);
 	if (!e->ridingOnEntity)
 	{
 		Vector v = dsq->game->getWallNormal(e->position);
@@ -5237,7 +5203,7 @@ luaFunc(entity_adjustPositionBySurfaceNormal)
 // HACK: move functionality inside entity class
 luaFunc(entity_moveAlongSurface)
 {
-	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	ScriptedEntity *e = scriptedEntity(L);
 
 	if (e->isv(EV_CLAMPING,0))
 	{
@@ -5386,7 +5352,7 @@ luaFunc(entity_flipHToAvatar)
 
 luaFunc(entity_rotateToSurfaceNormal)
 {
-	//ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	//ScriptedEntity *e = scriptedEntity(L);
 	Entity *e = entity(L);
 	float t = lua_tonumber(L, 2);
 	int n = lua_tonumber(L, 3);
@@ -5402,7 +5368,7 @@ luaFunc(entity_rotateToSurfaceNormal)
 
 luaFunc(entity_releaseTarget)
 {
-	Entity *e = entity(L);//si->getCurrentEntity();
+	Entity *e = entity(L);
 	e->detachEntity(e->getTargetEntity());
 	luaReturnNum(0);
 }
@@ -5544,7 +5510,6 @@ luaFunc(entity_push)
 
 luaFunc(entity_pushTarget)
 {
-	//Entity *e = si->getCurrentEntity();
 	Entity *e = entity(L);
 	if (e)
 	{
@@ -5743,11 +5708,11 @@ luaFunc(entity_setActivation)
 	//if (!e) return;
 	int type = lua_tonumber(L, 2);
 	// cursor radius
-	int convoRadius = lua_tonumber(L, 3);
+	int activationRadius = lua_tonumber(L, 3);
 	int range = lua_tonumber(L, 4);
 	e->activationType = (Entity::ActivationType)type;
 	e->activationRange = range;
-	e->convoRadius = convoRadius;
+	e->activationRadius = activationRadius;
 
 	luaReturnNum(0);
 }
@@ -5794,7 +5759,7 @@ luaFunc(entity_setCullRadius)
 
 luaFunc(entity_setActivationType)
 {
-	Entity *e = entity(L);//si->getCurrentEntity();
+	Entity *e = entity(L);
 	int type = lua_tonumber(L, 2);
 	e->activationType = (Entity::ActivationType)type;
 
@@ -6010,7 +5975,7 @@ partOffsetInterpolateTo, partOffsetInterpolateTime
 
 luaFunc(entity_partWidthHeight)
 {
-	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	ScriptedEntity *e = scriptedEntity(L);
 	Quad *r = (Quad*)e->partMap[lua_tostring(L, 2)];
 	if (r)
 	{
@@ -6462,7 +6427,7 @@ luaFunc(entity_alpha)
 
 luaFunc(entity_partAlpha)
 {
-	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	ScriptedEntity *e = scriptedEntity(L);
 	RenderObject *r = e->partMap[lua_tostring(L, 2)];
 	if (r)
 	{
@@ -6478,14 +6443,14 @@ luaFunc(entity_partAlpha)
 
 luaFunc(entity_partBlendType)
 {
-	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	ScriptedEntity *e = scriptedEntity(L);
 	e->partMap[lua_tostring(L, 2)]->setBlendType(lua_tointeger(L, 3));
 	luaReturnInt(0);
 }
 
 luaFunc(entity_partRotate)
 {
-	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	ScriptedEntity *e = scriptedEntity(L);
 	RenderObject *r = e->partMap[lua_tostring(L, 2)];
 	if (r)
 	{
@@ -6497,7 +6462,7 @@ luaFunc(entity_partRotate)
 
 luaFunc(entity_getStateTime)
 {
-	Entity *e = entity(L);//si->getCurrentEntity();
+	Entity *e = entity(L);
 	float t = 0;
 	if (e)
 		t = e->getStateTime();
@@ -6506,7 +6471,7 @@ luaFunc(entity_getStateTime)
 
 luaFunc(entity_setStateTime)
 {
-	Entity *e = entity(L);//si->getCurrentEntity();
+	Entity *e = entity(L);
 	float t = lua_tonumber(L, 2);
 	if (e)
 		e->setStateTime(t);
@@ -6515,7 +6480,7 @@ luaFunc(entity_setStateTime)
 
 luaFunc(entity_offsetUpdate)
 {
-	Entity *e = entity(L);//si->getCurrentEntity();
+	Entity *e = entity(L);
 	if (e)
 	{
 		int uc = e->updateCull;
@@ -6655,7 +6620,7 @@ luaFunc(entity_initPart)
 	float offsetInterpolateTime = lua_tonumber(L, 11);
 
 
-	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	ScriptedEntity *e = scriptedEntity(L);
 
 	Quad *q = new Quad;
 	q->setTexture(partTex);
@@ -6888,7 +6853,7 @@ luaFunc(mapNameContains)
 
 luaFunc(entity_fireGas)
 {
-	Entity *e = entity(L);//si->getCurrentEntity();
+	Entity *e = entity(L);
 	if (e)
 	{
 		int radius = lua_tointeger(L, 2);
@@ -7599,7 +7564,6 @@ static const struct {
 
 
 	luaRegister(entity_setCollideWithAvatar),
-	luaRegister(entity_setPauseInConversation),
 
 
 	luaRegister(bone_setRenderPass),
@@ -7682,8 +7646,6 @@ static const struct {
 	luaRegister(fade),
 	luaRegister(fade2),
 	luaRegister(fade3),
-
-	luaRegister(setupConversationEntity),
 
 	luaRegister(getMapName),
 	luaRegister(isMapName),
@@ -9052,9 +9014,6 @@ static const struct {
 	luaConstant(DT_STEAM),
 
 
-	// collide radius
-	luaConstant(CR_DEFAULT),
-
 	luaConstant(FRAME_TIME),
 
 	luaConstant(FORMUPGRADE_ENERGY1),
@@ -9071,21 +9030,6 @@ static const struct {
 
 void ScriptInterface::init()
 {
-//	choice = -1;
-	si = this;
-	currentEntity = 0;
-	//collideEntity = 0;
-}
-
-bool ScriptInterface::setCurrentEntity(Entity *e)
-{
-	//if (se && se->runningActivation) return false;
-	//currentEntityTarget = 0;
-	noMoreConversationsThisRun = false;
-	currentEntity = e;
-	//collideEntity = dynamic_cast<CollideEntity*>(e);
-	//se = dynamic_cast<ScriptedEntity*>(e);
-	return true;
 }
 
 lua_State *ScriptInterface::createLuaVM()
@@ -9292,7 +9236,6 @@ void ScriptInterface::closeScript(Script *script)
 
 bool ScriptInterface::runScriptNum(const std::string &file, const std::string &func, int num)
 {
-	noMoreConversationsThisRun = false;
 	std::string realFile = file;
 	if (file.find('/')==std::string::npos)
 		realFile = "scripts/" + file + ".lua";
@@ -9314,7 +9257,6 @@ bool ScriptInterface::runScriptNum(const std::string &file, const std::string &f
 
 bool ScriptInterface::runScript(const std::string &file, const std::string &func)
 {
-	noMoreConversationsThisRun = false;
 	std::string realFile = file;
 	if (file.find('/')==std::string::npos)
 		realFile = "scripts/" + file + ".lua";

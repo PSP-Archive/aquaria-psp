@@ -247,30 +247,6 @@ void ScriptedEntity::setupEntity(const std::string &tex, int lcode)
 	this->layer = dsq->getEntityLayerToLayer(lcode);
 }
 
-void ScriptedEntity::setupConversationEntity(std::string name, std::string texture)
-{
-	this->collideWithAvatar = true;
-	this->name = name;
-	setEntityType(ET_NEUTRAL);
-	if (texture.empty())
-	{
-		renderQuad = false;
-		width = 128;
-		height = 128;
-	}
-	else
-		setTexture(texture);
-	
-	this->canBeTargetedByAvatar = 1;
-	this->canStickInStream = 0;
-	this->canTalkWhileMoving = 1;
-	this->updateCull = -1;
-	manaBallAmount = moneyAmount = 0;
-	expType = -1;
-	perform(STATE_IDLE);
-	collideRadius = CR_DEFAULT;
-}
-
 void ScriptedEntity::setupBasicEntity(std::string texture, int health, int manaBall, int exp, int money, int collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer)
 {
 	//this->updateCull = updateCull;
@@ -686,7 +662,6 @@ void ScriptedEntity::onUpdate(float dt)
 
 
 	if (life != 1 || isEntityDead()) return;
-	//if (!dsq->scriptInterface.setCurrentEntity(this))	return;
 
 
 	if (myTimer > 0)
@@ -924,7 +899,6 @@ void ScriptedEntity::onHitWall()
 
 void ScriptedEntity::activate()
 {	
-	if (dsq->conversationDelay > 0) return;
 	if (runningActivation) return;
 	Entity::activate();
 	/*
@@ -947,8 +921,6 @@ void ScriptedEntity::activate()
 	*/
 	
 	runningActivation = true;
-	dsq->conversationDelay = 1.5;
-	if (!dsq->scriptInterface.setCurrentEntity(this)) return;
 	if (script)
 	{
 		if (!script->call("activate", this))
@@ -1004,7 +976,6 @@ void ScriptedEntity::onEnterState(int action)
 {
 	CollideEntity::onEnterState(action);
 	
-	//if (!dsq->scriptInterface.setCurrentEntity(this)) return;
 	if (script)
 	{
 		if (!script->call("enterState", this))
@@ -1051,7 +1022,6 @@ void ScriptedEntity::onEnterState(int action)
 void ScriptedEntity::onExitState(int action)
 {
 	
-	if (!dsq->scriptInterface.setCurrentEntity(this)) return;
 	if (script)
 	{
 		if (!script->call("exitState", this))
