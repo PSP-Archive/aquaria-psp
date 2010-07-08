@@ -311,9 +311,6 @@ function update(me, dt)
 			entity_addVel(me, vx, vy)
 			
 			entity_setWeight(me, 800)
-			v.dirx = 0
-			v.diry = 0
-			v.noteDown = -1			
 			--entity_sound(me, "splash-outof")
 		else
 			setRideSpeed(me)
@@ -386,7 +383,7 @@ function update(me, dt)
 				entity_doCollisionAvoidance(me, dt, 4, 1.0)
 			end
 		else
-			if v.noteDown ~= -1 then
+			if v.noteDown ~= -1 and entity_isUnderWater(me) then
 				local amt
 				if getCostume() == "seahorse" then
 					amt = 8000*dt
@@ -522,49 +519,29 @@ function songNote(me, note)
 	if v.riding then
 		--debugLog("noteUp!")
 		v.noteDown = note
-		local amt = 1
-		local amt2 = 0.5
-		v.dirx = 0
-		v.diry = 0
+		local amt = 0.6
 		if note == 0 then
-			--entity_addVel(me, 0, amt)
-			v.dirx = 0
-			v.diry = amt
+			v.dirx, v.diry =  0, 1
 		elseif note == 1 then
-			--entity_addVel(me, amt2, amt2)
-			v.dirx = amt2
-			v.diry = amt2
+			v.dirx, v.diry =  1, 1
 		elseif note == 2 then
-			--entity_addVel(me, amt, 0)
-			v.dirx = amt
-			v.diry = 0
+			v.dirx, v.diry =  1, 0
 		elseif note == 3 then
-			--entity_addVel(me, amt2, -amt2)
-			v.dirx = amt2
-			v.diry = -amt2
+			v.dirx, v.diry =  1,-1
 		elseif note == 4 then
-			--entity_addVel(me, 0, -amt2)
-			v.dirx = 0
-			v.diry = -amt2
+			v.dirx, v.diry =  0,-1
 		elseif note == 5 then
-			--entity_addVel(me, -amt2, -amt2)
-			v.dirx = -amt2
-			v.diry = -amt2
+			v.dirx, v.diry = -1,-1
 		elseif note == 6 then
-			--entity_addVel(me, -amt2, 0)
-			v.dirx = -amt2
-			v.diry = 0
+			v.dirx, v.diry = -1, 0
 		elseif note == 7 then
-			--entity_addVel(me, -amt2, amt2)
-			v.dirx = -amt2
-			v.diry = amt2
+			v.dirx, v.diry = -1, 1
+		else
+			debugLog("Sour note! (impossible)")
+			v.dirx, v.diry =  0, 0
+			return
 		end
-		if not entity_isUnderWater(me) then
-			if v.diry < 0 then
-				v.diry = 0
-			end
-			v.diry = v.diry + amt2*0.5
-		end
+		v.dirx, v.diry = vector_setLength(v.dirx, v.diry, amt)
 	end
 end
 
