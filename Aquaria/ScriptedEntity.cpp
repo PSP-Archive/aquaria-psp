@@ -286,7 +286,7 @@ void ScriptedEntity::setupConversationEntity(std::string name, std::string textu
 	manaBallAmount = moneyAmount = 0;
 	expType = -1;
 	perform(STATE_IDLE);
-	collideRadius = 40;
+	collideRadius = CR_DEFAULT;
 }
 
 void ScriptedEntity::setupBasicEntity(std::string texture, int health, int manaBall, int exp, int money, int collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer)

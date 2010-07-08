@@ -24,6 +24,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Hair.h"
 struct lua_State;
 
+#define CR_DEFAULT 40	// Default collide radius
+
 class ScriptedEntity : public CollideEntity, public Segmented
 {
 public:
