@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 function hitWatch(tlen)
 	local h = entity_getHealth(getNaija())
 	

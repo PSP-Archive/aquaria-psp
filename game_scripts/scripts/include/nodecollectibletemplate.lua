@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 function commonInit(me, object, flag)
 	if isFlag(flag, 1) then
 		debugLog("CollectibleNode: Creating object")

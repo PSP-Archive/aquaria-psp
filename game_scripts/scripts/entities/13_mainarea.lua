@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 --- THINK THIS FILE ISN'T USED ANYMORE!!!!
 --- NOT UUUUUSED!
 

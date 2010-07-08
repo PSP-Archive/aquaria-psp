@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init(me)
 	setupEntity(me, "EnergyOrb")
 	entity_setEntityType(me, ET_NEUTRAL)

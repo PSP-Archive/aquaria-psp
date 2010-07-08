@@ -23,8 +23,6 @@ v = getVars()
 -- MENGRIL
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 running = false
 
 function init(me)

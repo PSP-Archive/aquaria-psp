@@ -23,7 +23,6 @@ v = getVars()
 -- Z U N N A
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
 -- entity specific
 STATE_WAIT				= 1000
 STATE_WEAK				= 1001

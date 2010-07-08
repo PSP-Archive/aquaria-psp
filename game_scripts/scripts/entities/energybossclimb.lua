@@ -23,8 +23,6 @@ v = getVars()
 -- Energy Boss CLIMB
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.node = 0
 
 v.speed = 550

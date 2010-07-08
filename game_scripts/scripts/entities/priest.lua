@@ -23,8 +23,6 @@ v = getVars()
 -- Merman / Thin
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.swimTime = 0
 v.swimTimer = v.swimTime - v.swimTime/4
 v.spiritLoop = 0

@@ -21,8 +21,6 @@ v = getVars()
 
 -- kairam
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init()
 	setupConversationEntity("")
 	entity_initSkeletal("Mer", "Kairam")

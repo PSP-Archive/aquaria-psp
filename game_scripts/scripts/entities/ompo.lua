@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 STATE_RUNOFF			= 1000
 
 v.n = 0

@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.bone_tongue = 0
 v.bone_hand = 0
 v.bone_head = 0

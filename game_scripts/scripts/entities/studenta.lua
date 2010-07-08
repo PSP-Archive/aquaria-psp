@@ -20,8 +20,6 @@
 v = getVars()
 
 -- studentA
-dofile("scripts/entities/entityinclude.lua")
-
 function init()
 	setupConversationEntity("")
 	entity_initSkeletal("mer", "StudentA")

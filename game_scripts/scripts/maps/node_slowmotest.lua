@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.slow = false
 function init(me)
 	--node_setCursorActivation(me, true)

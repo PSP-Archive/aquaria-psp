@@ -23,8 +23,6 @@ v = getVars()
 -- SPORE CHILD
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.growth = 0
 v.growTime = 5
 v.growEmitter = 0

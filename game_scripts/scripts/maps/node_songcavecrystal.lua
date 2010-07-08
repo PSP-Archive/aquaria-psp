@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init(me)
 --[[
 	if isFlag(FLAG_SONGCAVECRYSTAL, 1) then

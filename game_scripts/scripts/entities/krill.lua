@@ -23,7 +23,6 @@ v = getVars()
 -- Krill
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
 -- specific
 STATE_JUMP				= 1000
 STATE_TRANSITION		= 1001

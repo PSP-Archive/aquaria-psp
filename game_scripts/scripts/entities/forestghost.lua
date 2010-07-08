@@ -21,8 +21,6 @@ v = getVars()
 
 -- forest ghost
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init()
 	setupConversationEntity("Vedha")
 	entity_setActivation(0, 80, 256)

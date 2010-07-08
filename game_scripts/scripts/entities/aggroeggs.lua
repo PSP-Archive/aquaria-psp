@@ -23,8 +23,6 @@ v = getVars()
 -- M O N E Y E
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 
 v.spawnTime = 5
 v.spawnTimer = 1

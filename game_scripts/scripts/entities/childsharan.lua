@@ -23,8 +23,6 @@ v = getVars()
 -- CHILD SHARAN
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 
 function init(me)
 	setupConversationEntity(me, "Sharan")

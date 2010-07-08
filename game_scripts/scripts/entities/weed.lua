@@ -21,8 +21,6 @@ v = getVars()
 
 -- SPRING PLANT
 
-dofile("scripts/entities/entityinclude.lua")
-
 
 -- ================================================================================================
 -- FUNCTIONS

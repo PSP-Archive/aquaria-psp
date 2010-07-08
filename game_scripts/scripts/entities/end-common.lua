@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.spirit = 0
 v.n1 = 0
 v.n2 = 0

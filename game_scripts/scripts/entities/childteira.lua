@@ -23,8 +23,6 @@ v = getVars()
 -- CHILD TEIRA
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init(me)
 	setupConversationEntity(me, "Teira")
 	entity_initSkeletal(me, "child", "childteira")

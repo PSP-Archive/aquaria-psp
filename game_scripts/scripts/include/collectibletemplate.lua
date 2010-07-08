@@ -21,8 +21,6 @@ v = getVars()
 
 -- COLLECTIBLE ITEM
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.myFlag = 0
 v.back = false
 

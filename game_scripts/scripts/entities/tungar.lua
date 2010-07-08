@@ -21,8 +21,6 @@ v = getVars()
 
 -- tungar 
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init()
 	setupConversationEntity("Tungar")
 	-- click/range, cursorRadius, playerRange

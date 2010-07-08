@@ -21,8 +21,6 @@ v = getVars()
 
 -- skeletal test
 
-dofile("scripts/entities/entityinclude.lua")
-
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 

@@ -23,8 +23,6 @@ v = getVars()
 -- Merman / Thin
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.honeyPower = 0
 
 v.swimTime = 0

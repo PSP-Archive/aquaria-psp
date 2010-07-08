@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.naija = 0
 function init(me)
 	v.naija = getNaija()

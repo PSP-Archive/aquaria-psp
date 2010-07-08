@@ -23,8 +23,6 @@ v = getVars()
 -- BIG MAUL
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.shotDelay = 2
 v.shotDelay2 = 0
 v.shots = 3

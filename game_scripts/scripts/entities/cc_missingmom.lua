@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 --crying in house
 v.n = 0
 v.curNote = 1

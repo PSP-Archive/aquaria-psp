@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init(me)
 	entity_alpha(me, 0)
 	esetv(me, EV_LOOKAT, 0)

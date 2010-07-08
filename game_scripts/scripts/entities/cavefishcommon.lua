@@ -23,8 +23,6 @@ v = getVars()
 -- M A U L
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 -- entity specific
 v.dir = 0
 v.myNote = 0

@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.dir = 0
 v.dirTimer = 0
 v.attackDelay = 2

@@ -21,8 +21,6 @@ v = getVars()
 
 -- SPORE SEED
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.growEmitter = 0
 v.done = false
 v.weight = 400

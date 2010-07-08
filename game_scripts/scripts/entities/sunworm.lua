@@ -20,8 +20,6 @@
 v = getVars()
 
 
-dofile("scripts/entities/entityinclude.lua")
-
 -- entity specific
 STATE_SUCK				= 1001
 STATE_BLOW				= 1002

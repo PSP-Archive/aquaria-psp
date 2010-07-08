@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.ompo = 0
 v.n = 0
 v.doSetFlag = false

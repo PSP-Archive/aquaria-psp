@@ -21,8 +21,6 @@ v = getVars()
 
 -- activate a temp barrier with a faulty orb
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init(me)
 	node_setCursorActivation(me, false)
 end

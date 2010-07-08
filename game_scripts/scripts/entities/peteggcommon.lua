@@ -21,8 +21,6 @@ v = getVars()
 
 -- song cave collectible
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.n = 0
 
 v.hatchMax = 5
