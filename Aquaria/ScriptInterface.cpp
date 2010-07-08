@@ -7135,8 +7135,6 @@ luaFunc(getBeacon)
 	luaReturnBool(v);
 }
 
-// particle effect
-
 luaFunc(getCostume)
 {
 	luaReturnStr(dsq->continuity.costume.c_str());
@@ -9076,53 +9074,7 @@ void ScriptInterface::init()
 //	choice = -1;
 	si = this;
 	currentEntity = 0;
-	currentParticleEffect = 0;
 	//collideEntity = 0;
-
-//	particleEffectScripts
-	//loadParticleEffectScripts();
-}
-
-ParticleEffectScript *ScriptInterface::getParticleEffectScriptByIdx(int idx)
-{
-	for (ParticleEffectScripts::iterator i = particleEffectScripts.begin();
-		i != particleEffectScripts.end(); i++)
-	{
-		ParticleEffectScript *p = &((*i).second);
-		if (p->idx == idx)
-			return p;
-	}
-	return 0;
-}
-
-void ScriptInterface::loadParticleEffectScripts()
-{
-#if 0  // FIXME: not used
-	//particleEffectScripts
-	std::ifstream in("scripts/particleEffects/ParticleEffects.txt");
-	std::string line;
-	while (std::getline(in, line))
-	{
-		int v;
-		std::string n;
-		std::istringstream is(line);
-		is >> v >> n;
-		//ggggerrorLog (n);
-
-		lua_State *L = dsq->scriptInterface.createLuaThread(baseState);
-		std::string file = "scripts/particleEffects/" + n + ".lua";
-		file = core->adjustFilenameCase(file);
-		int fail = (luaL_loadfile(L, file.c_str()));
-		if (fail)	errorLog(lua_tostring(L, -1));
-		//this->name = script;
-		fail = lua_pcall(L, 0, 0, 0);
-		if (fail)	errorLog(lua_tostring(L, -1));
-
-		particleEffectScripts[n].lua = L;
-		particleEffectScripts[n].name = n;
-		particleEffectScripts[n].idx = v;
-	}
-#endif
 }
 
 bool ScriptInterface::setCurrentEntity(Entity *e)
@@ -9238,18 +9190,6 @@ void ScriptInterface::collectGarbage()
 
 void ScriptInterface::shutdown()
 {
-#if 0  // FIXME: not used
-	for (ParticleEffectScripts::iterator i = particleEffectScripts.begin(); i != particleEffectScripts.end(); i++)
-	{
-		ParticleEffectScript *p = &(*i).second;
-		if (p->lua)
-		{
-			destroyLuaThread(p->lua);
-			p->lua = 0;
-		}
-	}
-#endif
-
 	if (loadedScripts.begin() != loadedScripts.end())
 	{
 		for (ScriptFileMap::iterator i = loadedScripts.begin(); i != loadedScripts.end(); i++)
@@ -9257,16 +9197,6 @@ void ScriptInterface::shutdown()
 			debugLog("Script still in use at shutdown: " + (*i).first);
 		}
 	}
-}
-
-void ScriptInterface::setCurrentParticleData(ParticleData *p)
-{
-	currentParticleData = p;
-}
-
-void ScriptInterface::setCurrentParticleEffect(ScriptedParticleEffect *p)
-{
-	currentParticleEffect = p;
 }
 
 Script *ScriptInterface::openScript(const std::string &file)
