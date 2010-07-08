@@ -474,7 +474,7 @@ function update(me, dt)
 		else
 			if not entity_isEntityInRange(me, v.n, 128) then
 				local vx, vy = entity_getVectorToEntity(me, v.n)
-				vector_setLength(vx, vy, 200*dt)
+				vx, vy = vector_setLength(vx, vy, 200*dt)
 				entity_addVel(me, vx, vy)
 				entity_doCollisionAvoidance(me, dt, 2, 1)
 				

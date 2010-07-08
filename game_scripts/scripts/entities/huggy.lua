@@ -44,6 +44,8 @@ v.rollTime = 0
 v.maxRollTime = math.random(12)/30.0 + 0.45
 
 v.healDelay = 0
+v.healInterval = 0.5
+v.healAmount = 1/60.0
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -147,9 +149,9 @@ function update(me, dt)
 	
 		v.healDelay = v.healDelay - dt
 		if v.healDelay < 0 then
-			v.healDelay = 0.5
+			v.healDelay = v.healDelay + v.healInterval
 			spawnParticleEffect("HuggyHeal", entity_x(me), entity_y(me))
-			entity_heal(getNaija(), 1*dt)
+			entity_heal(getNaija(), v.healAmount)
 		end
 		
 		entity_exertHairForce(me, 0, 4, 1)				--tail gravity
