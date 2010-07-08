@@ -21,7 +21,6 @@ v = getVars()
 
 -- N A U T I L U S
 
-dofile("scripts/entities/entityinclude.lua")
 -- entity specific
 STATE_ATTACKPREP		= 1000
 STATE_ATTACK			= 1001

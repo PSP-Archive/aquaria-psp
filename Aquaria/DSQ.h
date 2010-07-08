@@ -1338,8 +1338,6 @@ public:
 	Entity *getEntityByName(std::string name);
 	Entity *getEntityByNameNoCase(std::string name);
 
-	float conversationDelay;
-
 	void doSavePoint(const Vector &position);
 	std::string getEntityFlagName(Entity *e);
 	std::string getUserInputString(std::string label, std::string t="", bool allowNonLowerCase=false);

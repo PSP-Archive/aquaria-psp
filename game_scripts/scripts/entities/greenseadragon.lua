@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.dir = 0
 v.dirTimer = 0
 v.attackDelay = 2
@@ -228,8 +226,7 @@ function hitSurface(me)
 end
 
 function enterState(me, state)
-	if entity_isState(me, STATE_DEAD) then
-	elseif entity_isState(me, STATE_IDLE) then
+	if entity_isState(me, STATE_IDLE) then
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_ATTACK) then
 		entity_setStateTime(me, entity_animate(me, "attack"))
@@ -240,7 +237,7 @@ function enterState(me, state)
 		if v.throwOffTimer < 0 then
 			v.throwOffTimer = 0
 		end
-	elseif entity_isState(me, STATE_DIE) then
+	elseif entity_isState(me, STATE_DEAD) then
 		shakeCamera(10, 3)
 	end
 end

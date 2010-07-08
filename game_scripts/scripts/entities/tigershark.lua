@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.attackDelay = 0
 v.dir = 1
 v.n = getNaija()

@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.openTimer = 8
 
 function commonInit(me, gfx)

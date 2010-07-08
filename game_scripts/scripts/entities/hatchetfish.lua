@@ -21,8 +21,6 @@ v = getVars()
 
 -- H A T C H E T F I S H
 
-dofile("scripts/entities/entityinclude.lua")
-
 
 
 STATE_CIRCLE			= 1000

@@ -23,8 +23,6 @@ v = getVars()
 -- SPIKEBALL
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 -- entity specific
 v.dir = 0
  

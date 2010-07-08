@@ -23,7 +23,6 @@ v = getVars()
 -- ENERGY ORB CRACKED
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
 v.charge = 0
 v.delay = 1
 v.chargeTimer = 0

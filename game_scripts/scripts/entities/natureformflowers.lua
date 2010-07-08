@@ -21,8 +21,6 @@ v = getVars()
 
 -- SPORE SEED
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.done = false
 v.lifeTime = 0
 

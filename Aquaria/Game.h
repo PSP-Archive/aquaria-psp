@@ -134,7 +134,6 @@ enum EditTypes
 	ET_ELEMENTS		=0,
 	ET_ENTITIES		=1,
 	ET_PATHS		=2,
-	ET_CONVAREAS	=3,
 	ET_SELECTENTITY =4,
 	ET_MAX
 };
@@ -296,14 +295,6 @@ protected:
 	Quad *lid;
 
 	int slot;
-};
-
-class ConvArea
-{
-public:
-	Vector position;
-	int radius;
-	std::string conv, flag;
 };
 
 class ElementTemplate
@@ -696,11 +687,6 @@ public:
 	void postInitEntities();
 	Entity *getEntityInGroup(int gid, int iter);
 	EntityClass *getEntityClassForEntityType(const std::string &type);
-
-	/*
-	typedef std::vector<ConvArea> ConvAreas;
-	ConvAreas convAreas;
-	*/
 
 	void warpToArea(WarpArea *area);
 

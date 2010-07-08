@@ -247,7 +247,6 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	
 	//Emitter::particleLayer = LR_PARTICLES;
 	sortEnabled = false;
-	conversationDelay = 0;
 	shakeCameraTimer = shakeCameraMag = 0;
 	avgFPS.resize(dsq->user.video.fpsSmoothing);
 
@@ -4332,13 +4331,6 @@ void DSQ::onUpdate(float dt)
 
 	subtitlePlayer.update(dt);
 
-	
-	if (conversationDelay > 0)
-	{
-		conversationDelay -= dt;
-		if (conversationDelay <= 0)
-			conversationDelay = 0;
-	}
 	
 #ifdef BBGE_BUILD_PSP
 	if (isInCutscene())

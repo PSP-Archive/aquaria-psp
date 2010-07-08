@@ -19,7 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
 v.charge = 0
 v.delay = 1
 

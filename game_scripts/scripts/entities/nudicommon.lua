@@ -23,7 +23,6 @@ v = getVars()
 -- NUDI
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
 v.hasShell = true
 v.pullTime = 0.4
 v.escapeTimer = 0

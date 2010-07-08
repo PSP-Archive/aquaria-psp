@@ -21,7 +21,6 @@ v = getVars()
 
 -- S E A H O R S E  B A B Y
 
-dofile("scripts/entities/entityinclude.lua")
 -- entity specific
 STATE_CIRCLE			= 1000
 STATE_WANDER			= 1001		--Assumes bevy has no target

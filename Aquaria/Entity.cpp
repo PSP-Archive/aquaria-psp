@@ -294,7 +294,6 @@ Entity::Entity() : StateMachine(), DFSprite()
 	entityID = 0;
 	//assignUniqueID();
 	hair = 0;
-	pauseInConversation = true;
 	maxSpeedLerp = 1;
 	fillGridFromQuad = false;
 	dropChance = 0;
@@ -355,7 +354,7 @@ Entity::Entity() : StateMachine(), DFSprite()
 	takeDamage = true;
 	health = maxHealth = 5;
 	invincibleBreak = false;
-	convoRadius = 40;
+	activationRadius = 40;
 	activationRange = 600;
 	//affectedBySpells = true;
 //	followAvatar = false;
@@ -711,17 +710,6 @@ void Entity::setNodeGroupActive(int group, bool v)
 		}
 	}
 }
-
-void Entity::setPauseInConversation(bool v)
-{
-	pauseInConversation = v;
-}
-
-bool Entity::isPauseInConversation()
-{
-	return pauseInConversation;
-}
-
 
 void Entity::stopFollowingPath()
 {

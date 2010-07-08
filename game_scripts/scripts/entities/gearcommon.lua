@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.rotSpd = 0.0
 v.n = 0
 v.gear = 0

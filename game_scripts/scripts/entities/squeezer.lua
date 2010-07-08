@@ -23,7 +23,6 @@ v = getVars()
 -- S Q U E E Z E R
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
 STATE_CLAMP				= 1000
 STATE_CLAMPED			= 1001
 STATE_UNCLAMP			= 1002

@@ -23,7 +23,6 @@ v = getVars()
 -- TURTLE
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
 v.hasShell = true
 v.pullTime = 1
 v.escapeTimer = 0

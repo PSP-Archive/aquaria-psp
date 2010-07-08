@@ -20,8 +20,6 @@
 v = getVars()
 
 -- DOOR COMMON
-dofile("scripts/entities/entityinclude.lua")
-
 v.init_x = 0
 v.init_y = 0
 

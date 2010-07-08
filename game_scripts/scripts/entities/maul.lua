@@ -23,8 +23,6 @@ v = getVars()
 -- M A U L
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 -- entity specific
 STATE_MAULATTACK 		= 1000
 STATE_PULLBACK 			= 1001

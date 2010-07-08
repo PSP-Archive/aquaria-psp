@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.attackTimer = 0
 v.n = 0
 v.mom = 0
@@ -517,7 +515,7 @@ function enterState(me)
 end
 
 function exitState(me)
-	if entity_getEnqueuedState(me) == STATE_DEATHSCENE or entity_getEnqueuedState(me) == STATE_ENRAGED then
+	if entity_getEnqueuedState(me) == STATE_DEATHSCENE or entity_getEnqueuedState(me) == STATE_RAGE then
 		return
 	end
 	

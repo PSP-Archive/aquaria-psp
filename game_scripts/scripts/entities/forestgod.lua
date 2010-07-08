@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 STATE_EYESOPEN 		= 1000
 STATE_DIE			= 1001
 STATE_TENTACLES 	= 1002

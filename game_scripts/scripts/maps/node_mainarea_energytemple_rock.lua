@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init(me)
 	if isFlag(FLAG_MAINAREA_ENERGYTEMPLE_ROCK, 1) then
 		local rock = node_getNearestEntity(me, "Rock0001")

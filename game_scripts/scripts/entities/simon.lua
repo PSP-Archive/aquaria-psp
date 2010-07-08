@@ -21,8 +21,6 @@ v = getVars()
 
 -- Simon Says: "Eight Eyed Monster!"
 -- BOROMAL
-dofile("scripts/entities/entityinclude.lua")
-
 -- idle : waiting for user to click
 -- playSeg : playing segment of song
 -- wait : wait for user input

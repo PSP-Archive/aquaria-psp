@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.bone_tongue = 0
 v.bone_hand = 0
 v.bone_head = 0
@@ -444,11 +442,11 @@ function update(me, dt)
 			else
 				if entity_y(v.n) < my_y+50 and entity_y(v.n) > my_y-200 and entity_x(v.n) < my_x+1024 then
 					entity_setState(me, STATE_ATTACK2)
-				elseif entity_y(v.n) >= my_y  and entity_x(v.n) < my_x + 750 then
-					if not node_isEntityIn(me, nostomp) then
+				elseif entity_y(v.n) >= my_y and entity_x(v.n) < my_x + 750 then
+					if not node_isEntityIn(v.node_nostomp, me) then
 						entity_setState(me, STATE_ATTACK3)
 					else
-						v.attackDelay = 2
+						entity_setState(me, STATE_ATTACK2)
 					end
 				elseif entity_y(v.n) < my_y-200 then
 					if entity_x(v.n) < entity_x(me)+ 300 then

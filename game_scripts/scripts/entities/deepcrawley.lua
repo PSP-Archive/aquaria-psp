@@ -23,8 +23,6 @@ v = getVars()
 -- D E E P   C R A W L E Y
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
@@ -182,9 +180,11 @@ function hitSurface(me)
 end
 
 function songNote(me, note)
+	v.note = note
 end
 
 function songNoteDone(me, note)
+	v.note = -1
 end
 
 function song(me, song)

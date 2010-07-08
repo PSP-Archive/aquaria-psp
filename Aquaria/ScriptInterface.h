@@ -26,54 +26,65 @@ struct lua_State;
 
 class Entity;
 class CollideEntity;
-class ScriptedParticleEffect;
-class ParticleData;
 class ScriptedEntity;
 
-struct ParticleEffectScript
+class Script
 {
-	lua_State* lua;
-	std::string name;
-	int idx;
-};
+public:
+	Script(lua_State *L, const std::string &file) : L(L), file(file) {}
 
-struct Script
-{
+	// function()
+	bool call(const char *name);
+	// function(number)
+	bool call(const char *name, float param1);
+	// function(pointer)
+	bool call(const char *name, void *param1);
+	// function(pointer, number)
+	bool call(const char *name, void *param1, float param2);
+	// function(pointer, pointer)
+	bool call(const char *name, void *param1, void *param2);
+	// function(pointer, number, number)
+	bool call(const char *name, void *param1, float param2, float param3);
+	// boolean = function(pointer, number, number)
+	bool call(const char *name, void *param1, float param2, float param3, bool *ret1);
+	// function(pointer, string, number)
+	bool call(const char *name, void *param1, const char *param2, float param3);
+	// function(pointer, pointer, pointer)
+	bool call(const char *name, void *param1, void *param2, void *param3);
+	// function(pointer, number, number, number)
+	bool call(const char *name, void *param1, float param2, float param3, float param4);
+	// function(pointer, pointer, pointer, pointer)
+	bool call(const char *name, void *param1, void *param2, void *param3, void *param4);
+	// boolean = function(pointer, pointer, pointer, number, number, number, number, pointer)
+	bool call(const char *name, void *param1, void *param2, void *param3, float param4, float param5, float param6, float param7, void *param8, bool *ret1);
+
+	lua_State *getLuaState() {return L;}
+	const std::string &getFile() {return file;}
+	const std::string &getLastError() {return lastError;}
+
+protected:
+	// Low-level helper
+	bool doCall(int nparams, int nrets = 0);
+
 	lua_State *L;
 	std::string file;
+	std::string lastError;
 };
 
 class ScriptInterface
 {
 public:
 	void init();
-	void loadParticleEffectScripts();
 	void collectGarbage();
 	void shutdown();
-	void setCurrentParticleEffect(ScriptedParticleEffect *e);
-	bool setCurrentEntity (Entity *e);
-	void setCurrentParticleData(ParticleData *p);
-	ScriptedParticleEffect *getCurrentParticleEffect() { return currentParticleEffect; }
 
-
-	ParticleData *getCurrentParticleData() { return currentParticleData; }
 	Script *openScript(const std::string &file);
-	void pushScriptFunc(Script *script, const char *name);
 	void closeScript(Script *script);
+
 	bool runScript(const std::string &file, const std::string &func);
 	bool runScriptNum(const std::string &file, const std::string &func, int num);
-	typedef std::map<std::string, ParticleEffectScript> ParticleEffectScripts;
-	ParticleEffectScripts particleEffectScripts;
-	ParticleEffectScript *getParticleEffectScriptByIdx(int idx);
-	//bool simpleConversation(const std::string &file);
-	bool noMoreConversationsThisRun;
 
-	//ScriptedEntity *se;
-	//CollideEntity *collideEntity;
-	//int currentEntityTarget;
-	//Entity *getCurrentEntity() { return currentEntity; }
 protected:
-
 	lua_State *createLuaVM();
 	void destroyLuaVM(lua_State *state);
 	lua_State *createLuaThread(lua_State *baseState);
@@ -81,13 +92,4 @@ protected:
 
 	typedef std::map<std::string, lua_State*> ScriptFileMap;
 	ScriptFileMap loadedScripts;
-
-	ParticleData* currentParticleData;
-	ScriptedParticleEffect* currentParticleEffect;
-	Entity *currentEntity;
 };
-extern ScriptInterface *si;
-
-void luaPushPointer(lua_State *L, void *ptr);
-
-

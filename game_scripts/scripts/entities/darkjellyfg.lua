@@ -21,8 +21,6 @@ v = getVars()
 
 -- DARK JELLY
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.blupTimer = 0
 v.dirTimer = 0
 v.blupTime = 3.0
