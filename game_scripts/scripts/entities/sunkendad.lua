@@ -515,7 +515,7 @@ function enterState(me)
 end
 
 function exitState(me)
-	if entity_getEnqueuedState(me) == STATE_DEATHSCENE or entity_getEnqueuedState(me) == STATE_ENRAGED then
+	if entity_getEnqueuedState(me) == STATE_DEATHSCENE or entity_getEnqueuedState(me) == STATE_RAGE then
 		return
 	end
 	
