@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 -- get beat up by CC_BeatCat
 v.n = 0
 

@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.timer			= 0
 v.growTime		= 0.1
 v.size			= 32

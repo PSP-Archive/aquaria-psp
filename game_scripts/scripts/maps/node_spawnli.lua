@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init(me)
 	if (isFlag(FLAG_LI, 0) and isMapName("VEIL01"))
 	or (isFlag(FLAG_LI, 1) and isMapName("LICAVE")) then

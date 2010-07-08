@@ -23,8 +23,6 @@ v = getVars()
 -- JELLY SMALL
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
@@ -76,8 +74,6 @@ function init(me)
 	v.useMaxSpeed = v.baseSpeed
 	entity_setEntityType(me, ET_ENEMY)
 	
-	entity_setPauseInConversation(me, false)
-
 	entity_setState(me, STATE_IDLE)
 	entity_setDropChance(me, 10, 1)
 	

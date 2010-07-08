@@ -20,8 +20,6 @@
 v = getVars()
 
 -- energy door
-dofile("scripts/entities/entityinclude.lua")
-
 v.glow = 0
 v.spiral = 0
 v.sceneName = ""

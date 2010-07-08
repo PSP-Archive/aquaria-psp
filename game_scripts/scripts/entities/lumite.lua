@@ -21,7 +21,6 @@ v = getVars()
 
 -- L U M I T E
 -- ================================================================================================
-dofile("scripts/entities/entityinclude.lua")
 -- entity specific
 STATE_STUNNED			= 1000
 STATE_GRABBED			= 1001

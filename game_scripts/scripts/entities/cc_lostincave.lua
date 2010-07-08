@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.n = 0
 v.ix,v.iy = 0,0
 v.escapeNode = 0

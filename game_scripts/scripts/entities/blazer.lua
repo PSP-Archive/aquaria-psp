@@ -21,8 +21,6 @@ v = getVars()
 
 -- blazer
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.dir = 0
 v.dropTimer = 0
 

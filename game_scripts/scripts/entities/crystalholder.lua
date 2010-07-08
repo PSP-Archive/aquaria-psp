@@ -21,7 +21,6 @@ v = getVars()
 
 -- CrystalHolder
 
-dofile("scripts/entities/entityinclude.lua")
 v.charge = 0
 v.delay = 1
 v.glow = 0

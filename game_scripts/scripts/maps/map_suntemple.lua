@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init()
 	if isFlag(FLAG_SUNTEMPLE_WATERLEVEL, 0) then
 		setWaterLevel(node_y(getNode("SUNTEMPLE_GEAR1")))

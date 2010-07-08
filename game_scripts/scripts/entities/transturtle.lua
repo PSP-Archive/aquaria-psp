@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 -- regular areas
 TURTLE_REGULAR		= 0
 -- energy upgrade secret, forest 05, openwater03

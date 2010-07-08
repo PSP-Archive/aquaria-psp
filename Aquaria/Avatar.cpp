@@ -4712,7 +4712,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	pathToActivate = 0;
 	zoomOverriden = false;
 	canWarp = true;
-	disableConversationStart = false;
 	blinder = 0;
 	zoomVel = 0;
 
@@ -9414,7 +9413,6 @@ void Avatar::onUpdate(float dt)
 			if (amount < 0) amount = 0;
 			burstBar->frame = (19-(amount*19));
 		}
-		//checkConvAreas();
 		//checkSpecial();
 	}
 
@@ -9523,61 +9521,6 @@ void Avatar::checkSpecial()
 		}
 	}
 	*/
-}
-
-void Avatar::checkConvAreas()
-{
-	if (core->getNestedMains() != 1) return;
-	if (game->avatar->disableConversationStart) return;
-	/*
-	for (int i = 0; i < dsq->game->convAreas.size(); i++)
-	{
-		ConvArea * a = &dsq->game->convAreas[i];
-		Vector diff = a->position - this->position;
-		if (diff.getSquaredLength2D() < sqr(a->radius))
-		{
-			if (dsq->continuity.getFlag(a->conv)==0)
-			{
-				dsq->runScript(a->conv);
-				return;
-			}
-		}
-	}
-	*/
-	Entity *entityRun = 0;
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-		if (e->activationType == Entity::ACT_RANGE)
-		{
-			Vector diff = e->position - this->position;
-
-			if (
-				(e->canTalkWhileMoving || !e->position.isInterpolating())
-				&& e->activationType == Entity::ACT_RANGE
-				&& diff.getSquaredLength2D() < sqr(e->activationRange)
-				)
-			{
-				entityRun = e;
-				if (lastEntityActivation != e)
-					e->activate();
-
-
-				//dsq->runScript(e->convo);
-				/*
-				Vector push = diff;
-				int range = e->activationRange + 40;
-				if (diff.getSquaredLength2D() < sqr(range))
-				{
-					push |= range - diff.getLength2D();
-					dsq->game->avatar->vel = -push*2;
-				}
-				*/
-				break;
-			}
-		}
-	}
-	lastEntityActivation = entityRun;
 }
 
 void Avatar::onWarp()
@@ -9717,16 +9660,3 @@ bool Avatar::checkWarpAreas()
 	}
 	return false;
 }
-
-void Avatar::startConversation()
-{
-	closeSingingInterface();
-
-	if (charging)
-	{
-		endCharge();
-	}
-
-	clearTargets();
-}
-

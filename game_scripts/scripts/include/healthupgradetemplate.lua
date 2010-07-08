@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 NOTE_TIME = 2.5
 
 v.myNote = 0

@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.n = 0
 v.attached = 0
 v.bone_attach = 0

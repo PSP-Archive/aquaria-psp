@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 
 --function bASDFASDF () ()A {}}A SDFASJDF end end end
 

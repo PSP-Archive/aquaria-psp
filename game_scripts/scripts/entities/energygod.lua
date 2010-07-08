@@ -23,8 +23,6 @@ v = getVars()
 -- Energy God
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.naija = getNaija()
 
 function init(me)	

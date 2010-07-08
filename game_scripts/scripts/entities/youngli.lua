@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 ANIMLAYER_LI = 0
 ANIMLAYER_BOAT = 1
 v.n = 0

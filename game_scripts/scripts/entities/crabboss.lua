@@ -23,8 +23,6 @@ v = getVars()
 -- BIG MAUL
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.leftArmHealth = 16
 v.rightArmHealth = 16
 

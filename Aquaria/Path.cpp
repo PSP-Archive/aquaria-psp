@@ -19,13 +19,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Game.h"
-extern "C"
-{
-	#include "lua.h"
-	#include "lauxlib.h"
-	#include "lualib.h"
-}
-
 #include "Avatar.h"
 
 Path::Path()
@@ -242,14 +235,10 @@ void Path::song(SongType songType)
 {
 	if (hasScript() && songFunc)
 	{
-		dsq->scriptInterface.pushScriptFunc(script, "song");
-		luaPushPointer(script->L, this);
-		lua_pushnumber(script->L, int(songType));
-		int fail = lua_pcall(script->L, 2, 0, 0);
-		if (fail)
+		if (!script->call("song", this, int(songType)))
 		{
 			songFunc = false;
-			debugLog("Path [" + name + "] " + lua_tostring(script->L, -1));
+			debugLog("Path [" + name + "] " + script->getLastError());
 		}
 	}
 }
@@ -258,14 +247,10 @@ void Path::songNote(int note)
 {
 	if (hasScript() && songNoteFunc)
 	{
-		dsq->scriptInterface.pushScriptFunc(script, "songNote");
-		luaPushPointer(script->L, this);
-		lua_pushnumber(script->L, note);
-		int fail = lua_pcall(script->L, 2, 0, 0);
-		if (fail)
+		if (!script->call("songNote", this, note))
 		{
 			songNoteFunc = false;
-			debugLog("Path [" + name + "] " + lua_tostring(script->L, -1) + " songNote");
+			debugLog("Path [" + name + "] " + script->getLastError() + " songNote");
 		}
 	}
 }
@@ -274,15 +259,10 @@ void Path::songNoteDone(int note, float len)
 {
 	if (hasScript() && songNoteDoneFunc)
 	{
-		dsq->scriptInterface.pushScriptFunc(script, "songNoteDone");
-		luaPushPointer(script->L, this);
-		lua_pushnumber(script->L, note);
-		lua_pushnumber(script->L, len);
-		int fail = lua_pcall(script->L, 3, 0, 0);
-		if (fail)
+		if (!script->call("songNoteDone", this, note, len))
 		{
 			songNoteDoneFunc = false;
-			debugLog("Path [" + name + "] " + lua_tostring(script->L, -1) + " songNoteDone");
+			debugLog("Path [" + name + "] " + script->getLastError() + " songNoteDone");
 		}
 	}
 }
@@ -528,12 +508,9 @@ void Path::init()
 {
 	if (hasScript())
 	{
-		dsq->scriptInterface.pushScriptFunc(script, "init");
-		luaPushPointer(script->L, this);
-		int fail = lua_pcall(script->L, 1, 0, 0);
-		if (fail)
+		if (!script->call("init", this))
 		{
-			debugLog(name + " : " + lua_tostring(script->L, -1) + " init");
+			debugLog(name + " : " + script->getLastError() + " init");
 		}
 	}
 }
@@ -554,13 +531,9 @@ void Path::update(float dt)
 		}
 		if (hasScript() && updateFunction)
 		{
-			dsq->scriptInterface.pushScriptFunc(script, "update");
-			luaPushPointer(script->L, this);
-			lua_pushnumber(script->L, dt);
-			int fail = lua_pcall(script->L, 2, 0, 0);
-			if (fail)
+			if (!script->call("update", this, dt))
 			{
-				debugLog(name + " : " + lua_tostring(script->L, -1) + " update");
+				debugLog(name + " : " + script->getLastError() + " update");
 				updateFunction = false;
 			}
 		}
@@ -705,17 +678,8 @@ bool Path::action(int id, int state)
 	if (hasScript())
 	{
 		bool dontRemove = true;
-		dsq->scriptInterface.pushScriptFunc(script, "action");
-		luaPushPointer(script->L, this);
-		lua_pushnumber(script->L, id);
-		lua_pushnumber(script->L, int(state));
-		int fail = lua_pcall(script->L, 3, 1, 0);
-		if (fail)
-			debugLog(name + " : " + lua_tostring(script->L, -1) + " action");
-		else
-		{
-			dontRemove = lua_toboolean(script->L, -1);
-		}
+		if (!script->call("action", this, id, state, &dontRemove))
+			debugLog(name + " : " + script->getLastError() + " action");
 		return dontRemove;
 	}
 	return true;
@@ -725,13 +689,9 @@ void Path::activate(Entity *e)
 {
 	if (hasScript() && activateFunction)
 	{
-		dsq->scriptInterface.pushScriptFunc(script, "activate");
-		luaPushPointer(script->L, this);
-		luaPushPointer(script->L, e);
-		int fail = lua_pcall(script->L, 2, 0, 0);
-		if (fail)
+		if (!script->call("activate", this, e))
 		{
-			debugLog(name + " : " + lua_tostring(script->L, -1) + " activate");
+			debugLog(name + " : " + script->getLastError() + " activate");
 			activateFunction = false;
 		}
 	}

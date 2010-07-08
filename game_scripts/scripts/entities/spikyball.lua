@@ -20,8 +20,6 @@
 v = getVars()
 
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.n = 0
 
 function init(me)

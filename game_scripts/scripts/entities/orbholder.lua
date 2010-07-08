@@ -20,8 +20,6 @@
 v = getVars()
 
 -- orb holder
-dofile("scripts/entities/entityinclude.lua")
-
 v.energyOrb = 0
 v.openedDoors = false
 v.savedOrb = false

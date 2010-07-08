@@ -6398,7 +6398,6 @@ void Game::applyState()
 	//dsq->getRenderObjectLayer(LR_ELEMENTS5)->update = false;
 
 	backgroundImageRepeat = 1;
-	dsq->conversationDelay = 0;
 	jetStreams.clear();
 	grad = 0;
 	maxZoom = -1;
@@ -10409,7 +10408,6 @@ void Game::update(float dt)
 #endif
 
 	dsq->emote.update(dt);
-	// update convo
 
 	if (!isPaused())
 	{
@@ -10467,7 +10465,7 @@ void Game::update(float dt)
 			{
 				Entity *e = *i;
 				int sqrLen = (dsq->getGameCursorPosition() - e->position).getSquaredLength2D();
-				if (sqrLen < sqr(e->convoRadius)
+				if (sqrLen < sqr(e->activationRadius)
 					&& (avatar->position-e->position).getSquaredLength2D() < sqr(e->activationRange)
 					&& e->activationType == Entity::ACT_CLICK
 					&& (e->canTalkWhileMoving || !e->position.isInterpolating())
@@ -10476,7 +10474,6 @@ void Game::update(float dt)
 					//if (trace(avatar->position, e->position))
 					{
 						avatar->entityToActivate = e;
-						//avatar->convoEntity = e;
 						dsq->cursorGlow->alpha.interpolateTo(1, 0.2);
 						dsq->cursorBlinker->alpha.interpolateTo(1.0,0.1);
 						if (!hadThingToActivate)

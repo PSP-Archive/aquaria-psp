@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init()
 --[[
 	if isFlag(FLAG_VISION_ENERGYTEMPLE, 0) then

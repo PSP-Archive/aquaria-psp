@@ -23,8 +23,6 @@ v = getVars()
 --health 10
 --dropChance 50 1
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.angle = 0
 v.n = 0
 v.beam = 0

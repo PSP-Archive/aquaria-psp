@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init()
 	setCutscene(1,1)
 	toggleDamageSprite(false)

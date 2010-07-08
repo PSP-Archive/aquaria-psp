@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init()
 	if isStory(0) then
 		entity_warpToNode(getNaija(), getNode("NAIJASTART"))

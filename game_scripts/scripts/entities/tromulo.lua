@@ -21,8 +21,6 @@ v = getVars()
 
 -- Tromulo
 
-dofile("scripts/entities/entityinclude.lua")
-
 
 -- ================================================================================================
 -- FUNCTIONS

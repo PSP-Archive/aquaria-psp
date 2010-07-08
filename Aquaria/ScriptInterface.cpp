@@ -36,7 +36,6 @@ extern "C"
 
 #include "../BBGE/MathFunctions.h"
 
-ScriptInterface *si = 0;
 const bool throwLuaErrors = false;
 
 // Set this to true to complain loudly (via errorLog()) whenever a script
@@ -61,8 +60,7 @@ static void luaErrorMsg(lua_State *L, const char *msg)
 	}
 }
 
-// Also called from Path.cpp
-void luaPushPointer(lua_State *L, void *ptr)
+static inline void luaPushPointer(lua_State *L, void *ptr)
 {
 	// All the scripts do this:
 	//    x = getFirstEntity()
@@ -263,8 +261,6 @@ static SkeletalSprite *getSkeletalSprite(Entity *e)
 #define luaReturnVec2(x,y)	do {lua_pushnumber(L, (x)); lua_pushnumber(L, (y)); return 2;} while(0)
 #define luaReturnVec3(x,y,z)	do {lua_pushnumber(L, (x)); lua_pushnumber(L, (y)); lua_pushnumber(L, (z)); return 3;} while(0)
 
-#define luaRegister(func)	lua_register(state, #func, l_##func);
-
 
 luaFunc(getVars)
 {
@@ -342,21 +338,17 @@ luaFunc(newindexWarnGlobal)
 			snprintf(ar.short_src, sizeof(ar.short_src), "???");
 			ar.currentline = 0;
 		}
-		// Don't warn on entityinclude.lua constants.
-		if (!strstr(ar.short_src, "entityinclude"))
+		lua_pushvalue(L, -2);
+		const char *varname = lua_tostring(L, -1);
+		// Don't warn on the "v" global.
+		if (strcmp(varname, "v") != 0)
 		{
-			lua_pushvalue(L, -2);
-			const char *varname = lua_tostring(L, -1);
-			// Don't warn on the "v" global.
-			if (strcmp(varname, "v") != 0)
-			{
-				std::ostringstream os;
-				os << "WARNING: " << ar.short_src << ":" << ar.currentline
-				   << ": script set global variable " << lua_tostring(L, -1);
-				errorLog(os.str());
-			}
-			lua_pop(L, 1);
+			std::ostringstream os;
+			os << "WARNING: " << ar.short_src << ":" << ar.currentline
+			   << ": script set global variable " << lua_tostring(L, -1);
+			errorLog(os.str());
 		}
+		lua_pop(L, 1);
 	}
 
 	lua_rawset(L, -3);
@@ -2414,7 +2406,6 @@ luaFunc(entity_initStrands)
 
 luaFunc(entity_initSkeletal)
 {
-	//ScriptedEntity *e = (ScriptedEntity*)(si->getCurrentEntity());
 	ScriptedEntity *e = scriptedEntity(L);
 	e->renderQuad = false;
 	e->setWidthHeight(128, 128);
@@ -2501,7 +2492,6 @@ luaFunc(entity_moveToBack)
 
 luaFunc(entity_move)
 {
-	//Entity *e = si->getCurrentEntity();
 	Entity *e = entity(L);
 	bool ease = lua_tointeger(L, 5);
 	Vector p(lua_tointeger(L, 2), lua_tointeger(L, 3));
@@ -2718,13 +2708,6 @@ luaFunc(savePoint)
 	}
 
 	dsq->doSavePoint(position);
-	/*
-	Entity *e=0;
-	if (e=si->getCurrentEntity())
-	{
-		dsq->doSavePoint(e);
-	}
-	*/
 	luaReturnNum(0);
 }
 
@@ -3575,7 +3558,6 @@ luaFunc(entity_updateMovement)
 
 luaFunc(entity_applySurfaceNormalForce)
 {
-	//Entity *e = si->getCurrentEntity();
 	Entity *e = entity(L);
 	if (e)
 	{
@@ -3936,17 +3918,6 @@ luaFunc(quad_setPosition)
 	luaReturnNum(0);
 }
 
-luaFunc(setupConversationEntity)
-{
-	std::string name, gfx;
-	if (lua_isstring(L, 2))
-		name = lua_tostring(L, 2);
-	if (lua_isstring(L, 3))
-		gfx = lua_tostring(L, 3);
-	scriptedEntity(L)->setupConversationEntity(name, gfx);
-	luaReturnNum(0);
-}
-
 luaFunc(setupEntity)
 {
 	ScriptedEntity *se = scriptedEntity(L);
@@ -3964,7 +3935,6 @@ luaFunc(setupEntity)
 
 luaFunc(setupBasicEntity)
 {
-	//ScriptedEntity *se = dynamic_cast<ScriptedEntity*>(si->getCurrentEntity());
 	ScriptedEntity *se = scriptedEntity(L);
 	//-- texture, health, manaballamount, exp, money, collideRadius, initState
 	if (se)
@@ -4807,16 +4777,6 @@ luaFunc(entity_setDeathScene)
 	luaReturnNum(0);
 }
 
-luaFunc(entity_setPauseInConversation)
-{
-	Entity *e = entity(L);
-	if (e)
-	{
-		e->setPauseInConversation(lua_toboolean(L, 2));
-	}
-	luaReturnNum(0);
-}
-
 luaFunc(entity_setCollideWithAvatar)
 {
 	Entity *e = entity(L);
@@ -5181,7 +5141,6 @@ luaFunc(entity_checkSurface)
 
 luaFunc(entity_switchSurfaceDirection)
 {
-	//ScriptedEntity *e = (ScriptedEntity*)si->getCurrentEntity();
 	ScriptedEntity *e = scriptedEntity(L);
 	int n = -1;
 	if (lua_isnumber(L, 2))
@@ -5226,7 +5185,7 @@ luaFunc(entity_switchSurfaceDirection)
 
 luaFunc(entity_adjustPositionBySurfaceNormal)
 {
-	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	ScriptedEntity *e = scriptedEntity(L);
 	if (!e->ridingOnEntity)
 	{
 		Vector v = dsq->game->getWallNormal(e->position);
@@ -5244,7 +5203,7 @@ luaFunc(entity_adjustPositionBySurfaceNormal)
 // HACK: move functionality inside entity class
 luaFunc(entity_moveAlongSurface)
 {
-	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	ScriptedEntity *e = scriptedEntity(L);
 
 	if (e->isv(EV_CLAMPING,0))
 	{
@@ -5393,7 +5352,7 @@ luaFunc(entity_flipHToAvatar)
 
 luaFunc(entity_rotateToSurfaceNormal)
 {
-	//ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	//ScriptedEntity *e = scriptedEntity(L);
 	Entity *e = entity(L);
 	float t = lua_tonumber(L, 2);
 	int n = lua_tonumber(L, 3);
@@ -5409,7 +5368,7 @@ luaFunc(entity_rotateToSurfaceNormal)
 
 luaFunc(entity_releaseTarget)
 {
-	Entity *e = entity(L);//si->getCurrentEntity();
+	Entity *e = entity(L);
 	e->detachEntity(e->getTargetEntity());
 	luaReturnNum(0);
 }
@@ -5551,7 +5510,6 @@ luaFunc(entity_push)
 
 luaFunc(entity_pushTarget)
 {
-	//Entity *e = si->getCurrentEntity();
 	Entity *e = entity(L);
 	if (e)
 	{
@@ -5750,11 +5708,11 @@ luaFunc(entity_setActivation)
 	//if (!e) return;
 	int type = lua_tonumber(L, 2);
 	// cursor radius
-	int convoRadius = lua_tonumber(L, 3);
+	int activationRadius = lua_tonumber(L, 3);
 	int range = lua_tonumber(L, 4);
 	e->activationType = (Entity::ActivationType)type;
 	e->activationRange = range;
-	e->convoRadius = convoRadius;
+	e->activationRadius = activationRadius;
 
 	luaReturnNum(0);
 }
@@ -5801,7 +5759,7 @@ luaFunc(entity_setCullRadius)
 
 luaFunc(entity_setActivationType)
 {
-	Entity *e = entity(L);//si->getCurrentEntity();
+	Entity *e = entity(L);
 	int type = lua_tonumber(L, 2);
 	e->activationType = (Entity::ActivationType)type;
 
@@ -6017,7 +5975,7 @@ partOffsetInterpolateTo, partOffsetInterpolateTime
 
 luaFunc(entity_partWidthHeight)
 {
-	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	ScriptedEntity *e = scriptedEntity(L);
 	Quad *r = (Quad*)e->partMap[lua_tostring(L, 2)];
 	if (r)
 	{
@@ -6469,7 +6427,7 @@ luaFunc(entity_alpha)
 
 luaFunc(entity_partAlpha)
 {
-	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	ScriptedEntity *e = scriptedEntity(L);
 	RenderObject *r = e->partMap[lua_tostring(L, 2)];
 	if (r)
 	{
@@ -6485,14 +6443,14 @@ luaFunc(entity_partAlpha)
 
 luaFunc(entity_partBlendType)
 {
-	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	ScriptedEntity *e = scriptedEntity(L);
 	e->partMap[lua_tostring(L, 2)]->setBlendType(lua_tointeger(L, 3));
 	luaReturnInt(0);
 }
 
 luaFunc(entity_partRotate)
 {
-	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	ScriptedEntity *e = scriptedEntity(L);
 	RenderObject *r = e->partMap[lua_tostring(L, 2)];
 	if (r)
 	{
@@ -6504,7 +6462,7 @@ luaFunc(entity_partRotate)
 
 luaFunc(entity_getStateTime)
 {
-	Entity *e = entity(L);//si->getCurrentEntity();
+	Entity *e = entity(L);
 	float t = 0;
 	if (e)
 		t = e->getStateTime();
@@ -6513,7 +6471,7 @@ luaFunc(entity_getStateTime)
 
 luaFunc(entity_setStateTime)
 {
-	Entity *e = entity(L);//si->getCurrentEntity();
+	Entity *e = entity(L);
 	float t = lua_tonumber(L, 2);
 	if (e)
 		e->setStateTime(t);
@@ -6522,7 +6480,7 @@ luaFunc(entity_setStateTime)
 
 luaFunc(entity_offsetUpdate)
 {
-	Entity *e = entity(L);//si->getCurrentEntity();
+	Entity *e = entity(L);
 	if (e)
 	{
 		int uc = e->updateCull;
@@ -6662,7 +6620,7 @@ luaFunc(entity_initPart)
 	float offsetInterpolateTime = lua_tonumber(L, 11);
 
 
-	ScriptedEntity *e = scriptedEntity(L);//(ScriptedEntity*)si->getCurrentEntity();
+	ScriptedEntity *e = scriptedEntity(L);
 
 	Quad *q = new Quad;
 	q->setTexture(partTex);
@@ -6895,7 +6853,7 @@ luaFunc(mapNameContains)
 
 luaFunc(entity_fireGas)
 {
-	Entity *e = entity(L);//si->getCurrentEntity();
+	Entity *e = entity(L);
 	if (e)
 	{
 		int radius = lua_tointeger(L, 2);
@@ -7141,8 +7099,6 @@ luaFunc(getBeacon)
 
 	luaReturnBool(v);
 }
-
-// particle effect
 
 luaFunc(getCostume)
 {
@@ -7409,6 +7365,1664 @@ luaFunc(appendUserDataPath)
 	luaReturnStr(path.c_str());
 }
 
+//--------------------------------------------------------------------------------------------
+
+#define luaRegister(func)	{#func, l_##func}
+
+static const struct {
+	const char *name;
+	lua_CFunction func;
+} luaFunctionTable[] = {
+	// override Lua's standard dofile(), so we can handle filename case issues.
+	{"dofile", l_dofile_caseinsensitive},
+
+	luaRegister(getVars),
+
+	luaRegister(shakeCamera),
+	luaRegister(upgradeHealth),
+
+	luaRegister(cureAllStatus),
+	luaRegister(setPoison),
+	luaRegister(setMusicToPlay),
+	luaRegister(confirm),
+
+	luaRegister(randRange),
+
+	luaRegister(flingMonkey),
+
+
+	luaRegister(setLiPower),
+	luaRegister(getLiPower),
+	luaRegister(getPetPower),
+	luaRegister(getTimer),
+	luaRegister(getHalfTimer),
+	luaRegister(setCostume),
+	luaRegister(getCostume),
+	luaRegister(getNoteName),
+
+
+	luaRegister(getWorldType),
+
+
+	luaRegister(getWaterLevel),
+	luaRegister(setWaterLevel),
+
+
+	luaRegister(getEntityInGroup),
+
+	luaRegister(createQuad),
+	luaRegister(quad_delete),
+	luaRegister(quad_scale),
+	luaRegister(quad_rotate),
+
+	luaRegister(quad_color),
+	luaRegister(quad_alpha),
+	luaRegister(quad_alphaMod),
+	luaRegister(quad_getAlpha),
+
+	luaRegister(quad_setPosition),
+	luaRegister(quad_setBlendType),
+
+
+	luaRegister(setupEntity),
+	luaRegister(setActivePet),
+
+
+	luaRegister(reconstructGrid),
+	luaRegister(reconstructEntityGrid),
+
+
+
+
+
+	luaRegister(ing_hasIET),
+
+
+	luaRegister(esetv),
+	luaRegister(esetvf),
+	luaRegister(egetv),
+	luaRegister(egetvf),
+	luaRegister(eisv),
+
+	luaRegister(entity_addIgnoreShotDamageType),
+	luaRegister(entity_ensureLimit),
+	luaRegister(entity_getBoneLockEntity),
+
+
+	luaRegister(entity_setRidingPosition),
+	luaRegister(entity_setRidingData),
+	luaRegister(entity_setBoneLock),
+	luaRegister(entity_setIngredient),
+	luaRegister(entity_setDeathScene),
+	luaRegister(entity_say),
+	luaRegister(entity_isSaying),
+	luaRegister(entity_setSayPosition),
+
+
+	luaRegister(entity_setClampOnSwitchDir),
+
+	luaRegister(entity_setBeautyFlip),
+	luaRegister(entity_setInvincible),
+
+	luaRegister(setInvincible),
+
+
+
+
+
+	luaRegister(entity_setLife),
+	luaRegister(entity_setLookAtPoint),
+	luaRegister(entity_getLookAtPoint),
+
+
+	luaRegister(entity_setDieTimer),
+	luaRegister(entity_setAutoSkeletalUpdate),
+	luaRegister(entity_updateSkeletal),
+	luaRegister(entity_setBounceType),
+
+	luaRegister(entity_getHealthPerc),
+	luaRegister(entity_getBounceType),
+	luaRegister(entity_setRiding),
+	luaRegister(entity_getRiding),
+
+	luaRegister(entity_setNodeGroupActive),
+
+	luaRegister(entity_setNaijaReaction),
+
+	luaRegister(entity_setEatType),
+
+	luaRegister(entity_setSpiritFreeze),
+
+	luaRegister(entity_setCanLeaveWater),
+
+	luaRegister(entity_pullEntities),
+
+	luaRegister(entity_setEntityLayer),
+	luaRegister(entity_setRenderPass),
+
+	luaRegister(entity_clearTargetPoints),
+	luaRegister(entity_addTargetPoint),
+
+
+	luaRegister(entity_setCullRadius),
+	luaRegister(entity_setUpdateCull),
+
+	luaRegister(entity_flipHToAvatar),
+
+	luaRegister(entity_switchLayer),
+
+	luaRegister(entity_debugText),
+
+
+	luaRegister(avatar_setCanDie),
+	luaRegister(avatar_toggleCape),
+	luaRegister(avatar_setPullTarget),
+
+
+	luaRegister(setGLNearest),
+
+
+	luaRegister(avatar_clampPosition),
+	luaRegister(avatar_updatePosition),
+
+	luaRegister(pause),
+	luaRegister(unpause),
+
+
+	luaRegister(vector_normalize),
+	luaRegister(vector_setLength),
+	luaRegister(vector_getLength),
+
+	luaRegister(vector_dot),
+
+	luaRegister(vector_isLength2DIn),
+	luaRegister(vector_cap),
+
+
+	luaRegister(entity_setDeathParticleEffect),
+	luaRegister(entity_setDeathSound),
+
+	luaRegister(entity_setDamageTarget),
+	luaRegister(entity_setAllDamageTargets),
+
+	luaRegister(entity_isDamageTarget),
+	luaRegister(entity_isVelIn),
+	luaRegister(entity_isValidTarget),
+
+
+	luaRegister(entity_isUnderWater),
+	luaRegister(entity_checkSplash),
+
+
+
+
+	luaRegister(entity_getRandomTargetPoint),
+	luaRegister(entity_getTargetPoint),
+
+
+	luaRegister(entity_setTargetRange),
+
+
+	luaRegister(entity_setCollideWithAvatar),
+
+
+	luaRegister(bone_setRenderPass),
+	luaRegister(bone_setVisible),
+	luaRegister(bone_isVisible),
+
+	luaRegister(bone_addSegment),
+	luaRegister(entity_setSegs),
+	luaRegister(bone_setSegs),
+	luaRegister(bone_update),
+
+
+	luaRegister(bone_setSegmentOffset),
+	luaRegister(bone_setSegmentProps),
+	luaRegister(bone_setSegmentChainHead),
+	luaRegister(bone_setAnimated),
+	luaRegister(bone_showFrame),
+
+	luaRegister(bone_lookAtEntity),
+
+	luaRegister(bone_setTexture),
+
+	luaRegister(bone_scale),
+	luaRegister(bone_setBlendType),
+
+
+	luaRegister(entity_partSetSegs),
+
+
+	luaRegister(entity_adjustPositionBySurfaceNormal),
+	luaRegister(entity_applySurfaceNormalForce),
+	luaRegister(entity_applyRandomForce),
+
+	luaRegister(createBeam),
+	luaRegister(beam_setAngle),
+	luaRegister(beam_setPosition),
+	luaRegister(beam_setTexture),
+	luaRegister(beam_setDamage),
+	luaRegister(beam_setBeamWidth),
+
+
+	luaRegister(beam_delete),
+
+	luaRegister(getStringBank),
+
+	luaRegister(isPlat),
+
+	luaRegister(getAngleBetweenEntities),
+	luaRegister(getAngleBetween),
+
+
+	luaRegister(createEntity),
+	luaRegister(entity_setWeight),
+	luaRegister(entity_setBlendType),
+
+	luaRegister(entity_setActivationType),
+	luaRegister(entity_setColor),
+	{"entity_color", l_entity_setColor},
+	luaRegister(entity_playSfx),
+
+	luaRegister(isQuitFlag),
+	luaRegister(isDeveloperKeys),
+	luaRegister(isDemo),
+
+	luaRegister(isInputEnabled),
+	luaRegister(disableInput),
+
+	luaRegister(setMousePos),
+	luaRegister(getMousePos),
+	luaRegister(getMouseWorldPos),
+
+	luaRegister(resetContinuity),
+
+	luaRegister(quit),
+	luaRegister(doModSelect),
+	luaRegister(doLoadMenu),
+
+
+	luaRegister(enableInput),
+	luaRegister(fade),
+	luaRegister(fade2),
+	luaRegister(fade3),
+
+	luaRegister(getMapName),
+	luaRegister(isMapName),
+	luaRegister(mapNameContains),
+
+	luaRegister(entity_getNormal),
+
+	luaRegister(entity_getAlpha),
+	luaRegister(entity_getAimVector),
+
+	luaRegister(entity_getVectorToEntity),
+
+	luaRegister(entity_getVelLen),
+
+	luaRegister(entity_getDistanceToTarget),
+	luaRegister(entity_delete),
+	luaRegister(entity_move),
+
+
+	luaRegister(entity_moveToFront),
+	luaRegister(entity_moveToBack),
+
+
+
+
+	luaRegister(entity_getID),
+	luaRegister(entity_getGroupID),
+
+	luaRegister(getEntityByID),
+
+	luaRegister(entity_setBounce),
+	luaRegister(entity_setPosition),
+	luaRegister(entity_setInternalOffset),
+	luaRegister(entity_setActivation),
+	luaRegister(entity_rotateToEntity),
+	luaRegister(entity_rotateTo),
+	luaRegister(entity_rotateOffset),
+
+	luaRegister(entity_fireGas),
+	luaRegister(entity_rotateToTarget),
+
+	luaRegister(entity_switchSurfaceDirection),
+
+	luaRegister(entity_offset),
+	luaRegister(entity_moveAlongSurface),
+	luaRegister(entity_rotateToSurfaceNormal),
+	luaRegister(entity_clampToSurface),
+	luaRegister(entity_checkSurface),
+	luaRegister(entity_clampToHit),
+
+
+	luaRegister(entity_grabTarget),
+	luaRegister(entity_releaseTarget),
+
+	luaRegister(entity_getStateTime),
+	luaRegister(entity_setStateTime),
+
+	luaRegister(entity_scale),
+	luaRegister(entity_getScale),
+
+	luaRegister(entity_doFriction),
+
+	luaRegister(entity_partWidthHeight),
+	luaRegister(entity_partBlendType),
+	luaRegister(entity_partRotate),
+	luaRegister(entity_partAlpha),
+
+	luaRegister(entity_getHealth),
+	luaRegister(entity_pushTarget),
+	luaRegister(entity_flipHorizontal),
+	luaRegister(entity_flipVertical),
+	{"entity_fh", l_entity_flipHorizontal},
+	luaRegister(entity_fhTo),
+	luaRegister(entity_update),
+	luaRegister(entity_msg),
+	luaRegister(entity_updateMovement),
+	luaRegister(entity_updateCurrents),
+	luaRegister(entity_updateLocalWarpAreas),
+
+	luaRegister(entity_setPositionX),
+	luaRegister(entity_setPositionY),
+	luaRegister(entity_getPosition),
+	luaRegister(entity_getOffset),
+	luaRegister(entity_getPositionX),
+	luaRegister(entity_getPositionY),
+
+	luaRegister(entity_getTargetPositionX),
+	luaRegister(entity_getTargetPositionY),
+
+	luaRegister(entity_incrTargetLeaches),
+	luaRegister(entity_decrTargetLeaches),
+	luaRegister(entity_rotateToVel),
+	luaRegister(entity_rotateToVec),
+
+	luaRegister(entity_setSegsMaxDist),
+
+
+
+	luaRegister(entity_offsetUpdate),
+
+	luaRegister(entity_createEntity),
+	luaRegister(entity_resetTimer),
+	luaRegister(entity_stopTimer),
+	luaRegister(entity_stopPull),
+	luaRegister(entity_setTargetPriority),
+
+
+	luaRegister(entity_setBehaviorType),
+	luaRegister(entity_getBehaviorType),
+	luaRegister(entity_setEntityType),
+	luaRegister(entity_getEntityType),
+
+	luaRegister(entity_setSegmentTexture),
+
+
+	luaRegister(entity_spawnParticlesFromCollisionMask),
+	luaRegister(entity_initEmitter),
+	luaRegister(entity_startEmitter),
+	luaRegister(entity_stopEmitter),
+
+	luaRegister(entity_initPart),
+	luaRegister(entity_initSegments),
+	luaRegister(entity_warpSegments),
+	luaRegister(entity_initSkeletal),
+	luaRegister(entity_initStrands),
+
+	luaRegister(entity_hurtTarget),
+	luaRegister(entity_doSpellAvoidance),
+	luaRegister(entity_doEntityAvoidance),
+	luaRegister(entity_rotate),
+	luaRegister(entity_doGlint),
+	luaRegister(entity_findTarget),
+	luaRegister(entity_hasTarget),
+	luaRegister(entity_isInRect),
+	luaRegister(entity_isInDarkness),
+	luaRegister(entity_isScaling),
+
+	luaRegister(entity_isRidingOnEntity),
+
+	luaRegister(entity_isBeingPulled),
+
+	luaRegister(entity_isNearObstruction),
+	luaRegister(entity_isDead),
+
+
+
+	luaRegister(entity_isTargetInRange),
+	luaRegister(entity_getDistanceToEntity),
+
+	luaRegister(entity_isInvincible),
+
+	luaRegister(entity_isNearGround),
+
+	luaRegister(entity_moveTowardsTarget),
+	luaRegister(entity_moveAroundTarget),
+
+	luaRegister(entity_moveTowardsAngle),
+	luaRegister(entity_moveAroundAngle),
+	luaRegister(entity_moveTowards),
+	luaRegister(entity_moveAround),
+
+	luaRegister(entity_moveTowardsGroupCenter),
+	luaRegister(entity_moveTowardsGroupHeading),
+	luaRegister(entity_avgVel),
+	luaRegister(entity_setVelLen),
+
+	luaRegister(entity_setMaxSpeed),
+	luaRegister(entity_getMaxSpeed),
+	luaRegister(entity_setMaxSpeedLerp),
+	luaRegister(entity_setState),
+	luaRegister(entity_getState),
+	luaRegister(entity_getEnqueuedState),
+
+	luaRegister(entity_getPrevState),
+	luaRegister(entity_doCollisionAvoidance),
+	luaRegister(entity_animate),
+	luaRegister(entity_setAnimLayerTimeMult),
+
+	luaRegister(entity_setCurrentTarget),
+	luaRegister(entity_warpToPathStart),
+	luaRegister(entity_stopInterpolating),
+
+	luaRegister(entity_followPath),
+	luaRegister(entity_isFollowingPath),
+	luaRegister(entity_followEntity),
+	luaRegister(entity_sound),
+	luaRegister(entity_soundFreq),
+
+
+	luaRegister(entity_enableMotionBlur),
+	luaRegister(entity_disableMotionBlur),
+
+
+	luaRegister(registerSporeChildData),
+	luaRegister(registerSporeDrop),
+
+
+	luaRegister(getIngredientGfx),
+
+	luaRegister(spawnIngredient),
+	luaRegister(spawnAllIngredients),
+	luaRegister(spawnParticleEffect),
+	luaRegister(spawnManaBall),
+
+
+	luaRegister(isEscapeKey),
+
+
+	luaRegister(resetTimer),
+
+	luaRegister(addInfluence),
+	luaRegister(setupBasicEntity),
+	luaRegister(playMusic),
+	luaRegister(playMusicStraight),
+	luaRegister(stopMusic),
+
+	luaRegister(user_set_demo_intro),
+	luaRegister(user_save),
+
+	luaRegister(playMusicOnce),
+
+	luaRegister(playSfx),
+	luaRegister(fadeSfx),
+
+	luaRegister(emote),
+
+	luaRegister(playVisualEffect),
+	luaRegister(playNoEffect),
+
+
+	luaRegister(setOverrideMusic),
+
+	luaRegister(setOverrideVoiceFader),
+	luaRegister(setGameSpeed),
+	luaRegister(sendEntityMessage),
+	luaRegister(healEntity),
+	luaRegister(warpAvatar),
+	luaRegister(warpNaijaToSceneNode),
+
+
+
+	luaRegister(toWindowFromWorld),
+
+	luaRegister(toggleTransitFishRide),
+
+	luaRegister(toggleDamageSprite),
+
+	luaRegister(toggleLiCombat),
+
+	luaRegister(toggleCursor),
+	luaRegister(toggleBlackBars),
+	luaRegister(setBlackBarsColor),
+
+
+	luaRegister(stopCursorGlow),
+
+	luaRegister(entityFollowEntity),
+
+	luaRegister(setMiniMapHint),
+	luaRegister(bedEffects),
+
+	luaRegister(killEntity),
+	luaRegister(warpNaijaToEntity),
+
+	luaRegister(setNaijaHeadTexture),
+
+	luaRegister(incrFlag),
+	luaRegister(decrFlag),
+	luaRegister(setFlag),
+	luaRegister(getFlag),
+	luaRegister(setStringFlag),
+	luaRegister(getStringFlag),
+	luaRegister(learnSpell),
+	luaRegister(learnSong),
+	luaRegister(unlearnSong),
+	luaRegister(hasSong),
+	luaRegister(hasLi),
+
+	luaRegister(setCanWarp),
+	luaRegister(setCanChangeForm),
+	luaRegister(setInvincibleOnNested),
+
+	luaRegister(setControlHint),
+	luaRegister(setCameraLerpDelay),
+	luaRegister(screenFadeGo),
+	luaRegister(screenFadeTransition),
+	luaRegister(screenFadeCapture),
+
+	luaRegister(clearControlHint),
+
+
+	luaRegister(savePoint),
+	luaRegister(wait),
+	luaRegister(watch),
+
+	luaRegister(quitNestedMain),
+	luaRegister(isNestedMain),
+
+
+	luaRegister(msg),
+	luaRegister(centerText),
+	luaRegister(watchForVoice),
+
+	luaRegister(setElementLayerVisible),
+	luaRegister(isElementLayerVisible),
+
+	luaRegister(isWithin),
+
+
+
+	luaRegister(pickupGem),
+	luaRegister(setBeacon),
+	luaRegister(getBeacon),
+	luaRegister(beaconEffect),
+
+	luaRegister(chance),
+
+	luaRegister(goToTitle),
+	luaRegister(jumpState),
+	luaRegister(getEnqueuedState),
+
+
+	luaRegister(fadeIn),
+	luaRegister(fadeOut),
+
+	luaRegister(vision),
+
+	luaRegister(musicVolume),
+
+	luaRegister(voice),
+	luaRegister(voiceOnce),
+	luaRegister(voiceInterupt),
+
+
+	luaRegister(stopVoice),
+	luaRegister(stopAllVoice),
+	luaRegister(stopAllSfx),
+
+
+
+	luaRegister(fadeOutMusic),
+
+
+	luaRegister(isStreamingVoice),
+
+	luaRegister(changeForm),
+	luaRegister(getForm),
+	luaRegister(isForm),
+	luaRegister(learnFormUpgrade),
+	luaRegister(hasFormUpgrade),
+
+
+	luaRegister(castSong),
+	luaRegister(isObstructed),
+	luaRegister(isObstructedBlock),
+
+	luaRegister(isFlag),
+
+	luaRegister(entity_isFlag),
+	luaRegister(entity_setFlag),
+
+	luaRegister(node_isFlag),
+	luaRegister(node_setFlag),
+	luaRegister(node_getFlag),
+
+	luaRegister(avatar_getStillTimer),
+	luaRegister(avatar_getSpellCharge),
+
+	luaRegister(avatar_isSinging),
+	luaRegister(avatar_isTouchHit),
+	luaRegister(avatar_isBursting),
+	luaRegister(avatar_isLockable),
+	luaRegister(avatar_isRolling),
+	luaRegister(avatar_isOnWall),
+	luaRegister(avatar_isShieldActive),
+	luaRegister(avatar_getRollDirection),
+
+	luaRegister(avatar_fallOffWall),
+	luaRegister(avatar_setBlockSinging),
+
+
+	luaRegister(avatar_toggleMovement),
+
+
+	luaRegister(showInGameMenu),
+	luaRegister(hideInGameMenu),
+
+
+	luaRegister(showImage),
+	luaRegister(hideImage),
+	luaRegister(showControls),
+	luaRegister(clearHelp),
+	luaRegister(clearShots),
+
+
+
+	luaRegister(getEntity),
+	luaRegister(getFirstEntity),
+	luaRegister(getNextEntity),
+
+	luaRegister(setStory),
+	luaRegister(getStory),
+	luaRegister(getNoteColor),
+	luaRegister(getNoteVector),
+	luaRegister(getRandNote),
+
+	luaRegister(foundLostMemory),
+
+
+
+	luaRegister(isStory),
+
+	luaRegister(entity_damage),
+	luaRegister(entity_heal),
+
+	luaRegister(getNearestIngredient),
+
+	luaRegister(getNearestNode),
+	luaRegister(getNearestNodeByType),
+
+	luaRegister(getNode),
+	luaRegister(getNodeToActivate),
+	luaRegister(setNodeToActivate),
+	luaRegister(setActivation),
+
+	luaRegister(entity_warpToNode),
+	luaRegister(entity_moveToNode),
+
+	luaRegister(setNaijaModel),
+
+	luaRegister(cam_toNode),
+	luaRegister(cam_snap),
+	luaRegister(cam_toEntity),
+	luaRegister(cam_setPosition),
+
+
+	luaRegister(entity_flipToEntity),
+	luaRegister(entity_flipToSame),
+
+	luaRegister(entity_flipToNode),
+	luaRegister(entity_flipToVel),
+
+	luaRegister(entity_swimToNode),
+	luaRegister(entity_swimToPosition),
+
+
+	luaRegister(createShot),
+	luaRegister(entity_fireShot),
+
+	luaRegister(entity_isHit),
+
+
+
+	luaRegister(createWeb),
+	luaRegister(web_addPoint),
+	luaRegister(web_setPoint),
+	luaRegister(web_getNumPoints),
+	luaRegister(web_delete),
+
+	luaRegister(createSpore),
+
+
+
+	luaRegister(shot_getPosition),
+	luaRegister(shot_setAimVector),
+	luaRegister(shot_setOut),
+	luaRegister(shot_setLifeTime),
+	luaRegister(shot_setVel),
+	luaRegister(shot_setBounceType),
+	luaRegister(entity_pathBurst),
+	luaRegister(entity_handleShotCollisions),
+	luaRegister(entity_handleShotCollisionsSkeletal),
+	luaRegister(entity_handleShotCollisionsHair),
+	luaRegister(entity_collideSkeletalVsCircle),
+	luaRegister(entity_collideSkeletalVsLine),
+	luaRegister(entity_collideSkeletalVsCircleForListByName),
+	luaRegister(entity_collideCircleVsLine),
+	luaRegister(entity_collideCircleVsLineAngle),
+
+
+	luaRegister(entity_collideHairVsCircle),
+
+	luaRegister(entity_setDropChance),
+
+	luaRegister(entity_waitForPath),
+	luaRegister(entity_watchForPath),
+
+	luaRegister(entity_addVel),
+	luaRegister(entity_addVel2),
+	luaRegister(entity_addRandomVel),
+
+	luaRegister(entity_addGroupVel),
+	luaRegister(entity_clearVel),
+	luaRegister(entity_clearVel2),
+
+
+	luaRegister(entity_revive),
+
+	luaRegister(entity_getTarget),
+	luaRegister(entity_isState),
+
+	luaRegister(entity_setProperty),
+	luaRegister(entity_isProperty),
+
+
+	luaRegister(entity_initHair),
+	luaRegister(entity_getHairPosition),
+
+	luaRegister(entity_setHairHeadPosition),
+	luaRegister(entity_updateHair),
+	luaRegister(entity_exertHairForce),
+
+	luaRegister(entity_setName),
+
+	luaRegister(getNumberOfEntitiesNamed),
+
+	luaRegister(isNested),
+
+	luaRegister(entity_idle),
+	luaRegister(entity_stopAllAnimations),
+
+	luaRegister(entity_getBoneByIdx),
+	luaRegister(entity_getBoneByName),
+
+
+
+	luaRegister(toggleInput),
+
+	luaRegister(entity_setTarget),
+	luaRegister(getNodeFromEntity),
+
+	luaRegister(getScreenCenter),
+
+
+
+	luaRegister(debugLog),
+	luaRegister(loadMap),
+
+	luaRegister(reloadTextures),
+
+	luaRegister(loadSound),
+
+	luaRegister(node_activate),
+	luaRegister(node_getName),
+	luaRegister(node_getPathPosition),
+	luaRegister(node_getPosition),
+	luaRegister(node_setPosition),
+	luaRegister(node_getContent),
+	luaRegister(node_getAmount),
+	luaRegister(node_getSize),
+	luaRegister(node_setEffectOn),
+
+	luaRegister(toggleSteam),
+	luaRegister(toggleVersionLabel),
+	luaRegister(setVersionLabelText),
+
+	luaRegister(appendUserDataPath),
+
+	luaRegister(setCutscene),
+	luaRegister(isInCutscene),
+
+
+
+	luaRegister(node_getNumEntitiesIn),
+
+
+	luaRegister(entity_getName),
+	luaRegister(entity_isName),
+
+
+	luaRegister(node_setCursorActivation),
+	luaRegister(node_setCatchActions),
+
+	luaRegister(node_setElementsInLayerActive),
+
+
+	luaRegister(entity_setHealth),
+	luaRegister(entity_changeHealth),
+
+	luaRegister(node_setActive),
+
+
+	luaRegister(setGameOver),
+	luaRegister(setSceneColor),
+
+
+	luaRegister(entity_watchEntity),
+
+	luaRegister(entity_setCollideRadius),
+	luaRegister(entity_getCollideRadius),
+	luaRegister(entity_setTouchPush),
+	luaRegister(entity_setTouchDamage),
+
+	luaRegister(entity_isEntityInRange),
+	luaRegister(entity_isPositionInRange),
+
+	luaRegister(entity_stopFollowingPath),
+	luaRegister(entity_slowToStopPath),
+	luaRegister(entity_isSlowingToStopPath),
+
+	luaRegister(entity_findNearestEntityOfType),
+	luaRegister(entity_isFollowingEntity),
+	luaRegister(entity_resumePath),
+
+	luaRegister(entity_generateCollisionMask),
+
+	luaRegister(entity_isAnimating),
+	luaRegister(entity_getAnimationName),
+	luaRegister(entity_getAnimationLength),
+
+	luaRegister(entity_setCull),
+
+	luaRegister(entity_setTexture),
+	luaRegister(entity_setFillGrid),
+
+	luaRegister(entity_interpolateTo),
+	luaRegister(entity_isInterpolating),
+	luaRegister(entity_isRotating),
+
+
+	luaRegister(entity_isFlippedHorizontal),
+	{"entity_isfh", l_entity_isFlippedHorizontal},
+	luaRegister(entity_isFlippedVertical),
+
+	luaRegister(entity_setWidth),
+	luaRegister(entity_setHeight),
+	luaRegister(entity_push),
+
+	luaRegister(entity_alpha),
+
+	luaRegister(findWall),
+
+
+	luaRegister(overrideZoom),
+	luaRegister(disableOverrideZoom),
+
+
+
+	luaRegister(spawnAroundEntity),
+
+	luaRegister(entity_toggleBone),
+
+	luaRegister(bone_damageFlash),
+	luaRegister(bone_setColor),
+	luaRegister(bone_setPosition),
+	luaRegister(bone_rotate),
+	luaRegister(bone_rotateOffset),
+	luaRegister(bone_getRotation),
+	luaRegister(bone_offset),
+
+	luaRegister(bone_alpha),
+
+	luaRegister(bone_setTouchDamage),
+	luaRegister(bone_getNormal),
+	luaRegister(bone_getPosition),
+	luaRegister(bone_getScale),
+	luaRegister(bone_getWorldPosition),
+	luaRegister(bone_getWorldRotation),
+
+
+
+	luaRegister(bone_getName),
+	luaRegister(bone_isName),
+	luaRegister(bone_getIndex),
+	luaRegister(node_x),
+	luaRegister(node_y),
+	luaRegister(node_isEntityPast),
+	luaRegister(node_isEntityInRange),
+	luaRegister(node_isPositionIn),
+
+
+
+	luaRegister(entity_warpLastPosition),
+	luaRegister(entity_x),
+	luaRegister(entity_y),
+	luaRegister(entity_velx),
+	luaRegister(entity_vely),
+	luaRegister(entity_velTowards),
+
+
+
+	luaRegister(updateMusic),
+
+	luaRegister(entity_touchAvatarDamage),
+	luaRegister(getNaija),
+	luaRegister(getLi),
+	luaRegister(setLi),
+
+	luaRegister(randAngle360),
+	luaRegister(randVector),
+
+	luaRegister(entity_getNearestEntity),
+	luaRegister(entity_getNearestBoneToPosition),
+
+	luaRegister(entity_getNearestNode),
+
+	luaRegister(node_getNearestEntity),
+	luaRegister(node_getNearestNode),
+
+
+	luaRegister(entity_getRotation),
+
+	luaRegister(node_isEntityIn),
+
+
+
+	luaRegister(isLeftMouse),
+	luaRegister(isRightMouse),
+
+
+	luaRegister(setTimerTextAlpha),
+	luaRegister(setTimerText),
+
+
+	luaRegister(getWallNormal),
+	luaRegister(getLastCollidePosition),
+
+
+	// ============== deprecated
+
+	luaRegister(entity_fireAtTarget),  // FIXME: still used by several scripts
+	luaRegister(entity_setAffectedBySpells),  // FIXME: still used by several scripts
+
+};
+
+//============================================================================================
+// S C R I P T  C O N S T A N T S
+//============================================================================================
+
+#define luaConstant(name)					{#name, name}
+#define luaConstantFromClass(name,class)	{#name, class::name}
+
+static const struct {
+	const char *name;
+	lua_Number value;
+} luaConstantTable[] = {
+	// emotes
+	luaConstant(EMOTE_NAIJAEVILLAUGH),
+	luaConstant(EMOTE_NAIJAGIGGLE),
+	luaConstant(EMOTE_NAIJALAUGH),
+	luaConstant(EMOTE_NAIJASADSIGH),
+	luaConstant(EMOTE_NAIJASIGH),
+	luaConstant(EMOTE_NAIJAWOW),
+	luaConstant(EMOTE_NAIJAUGH),
+	luaConstant(EMOTE_NAIJALOW),
+	luaConstant(EMOTE_NAIJALI),
+	{"EMOTE_NAIJAEW",			9},  // FIXME: unused
+
+	// Li expressions
+	{"EXPRESSION_NORMAL",		0},
+	{"EXPRESSION_ANGRY",		1},
+	{"EXPRESSION_HAPPY",		2},
+	{"EXPRESSION_HURT",			3},
+	{"EXPRESSION_LAUGH",		4},
+	{"EXPRESSION_SURPRISE",		5},
+
+	luaConstantFromClass(OVERRIDE_NONE,	RenderObject),
+
+	//actions
+	luaConstant(ACTION_MENULEFT),
+	luaConstant(ACTION_MENURIGHT),
+	luaConstant(ACTION_MENUUP),
+	luaConstant(ACTION_MENUDOWN),
+
+	{"WATCH_QUIT",				1},
+
+	{"BEACON_HOMECAVE",			1},
+	{"BEACON_ENERGYTEMPLE",		2},
+	{"BEACON_MITHALAS",			3},
+	{"BEACON_FOREST",			4},
+	{"BEACON_LI",				5},
+	{"BEACON_SUNTEMPLE",		6},
+	{"BEACON_SONGCAVE",			7},
+
+	{"PLAT_WIN",				0},
+	{"PLAT_MAC",				1},
+	{"PLAT_LNX",				2},
+
+	// ingredient effect types
+	luaConstant(IET_NONE),
+	luaConstant(IET_HP),
+	luaConstant(IET_DEFENSE),
+	luaConstant(IET_SPEED),
+	luaConstant(IET_RANDOM),
+	luaConstant(IET_MAXHP),
+	luaConstant(IET_INVINCIBLE),
+	luaConstant(IET_TRIP),
+	luaConstant(IET_REGEN),
+	luaConstant(IET_LI),
+	luaConstant(IET_FISHPOISON),
+	luaConstant(IET_BITE),
+	luaConstant(IET_EAT),
+	luaConstant(IET_LIGHT),
+	luaConstant(IET_YUM),
+	luaConstant(IET_PETPOWER),
+	luaConstant(IET_WEB),
+	luaConstant(IET_ENERGY),
+	luaConstant(IET_POISON),
+	luaConstant(IET_BLIND),
+	luaConstant(IET_ALLSTATUS),
+	luaConstant(IET_MAX),
+
+	// menu pages
+	luaConstant(MENUPAGE_NONE),
+	luaConstant(MENUPAGE_SONGS),
+	luaConstant(MENUPAGE_FOOD),
+	luaConstant(MENUPAGE_TREASURES),
+	luaConstant(MENUPAGE_PETS),
+
+	// Entity States
+	luaConstantFromClass(STATE_DEAD,		Entity),
+	luaConstantFromClass(STATE_IDLE,		Entity),
+	luaConstantFromClass(STATE_PUSH,		Entity),
+	luaConstantFromClass(STATE_PUSHDELAY,	Entity),
+	luaConstantFromClass(STATE_PLANTED,		Entity),
+	luaConstantFromClass(STATE_TRANSFORM,	Entity),
+	luaConstantFromClass(STATE_PULLED,		Entity),
+	luaConstantFromClass(STATE_FOLLOWNAIJA,	Entity),
+	luaConstantFromClass(STATE_DEATHSCENE,	Entity),
+	luaConstantFromClass(STATE_ATTACK,		Entity),
+	luaConstantFromClass(STATE_CHARGE0,		Entity),
+	luaConstantFromClass(STATE_CHARGE1,		Entity),
+	luaConstantFromClass(STATE_CHARGE2,		Entity),
+	luaConstantFromClass(STATE_CHARGE3,		Entity),
+	luaConstantFromClass(STATE_WAIT,		Entity),
+	luaConstantFromClass(STATE_HUG,			Entity),
+	luaConstantFromClass(STATE_EATING,		Entity),
+	luaConstantFromClass(STATE_FOLLOW,		Entity),
+	luaConstantFromClass(STATE_TITLE,		Entity),
+	// Remainder are script-specific, not used by C++ code
+	{"STATE_HATCH",			25},
+	{"STATE_CARRIED",		26},
+
+	{"STATE_HOSTILE",		100},
+
+	{"STATE_CLOSE",			200},
+	{"STATE_OPEN",			201},
+	{"STATE_CLOSED",		202},
+	{"STATE_OPENED",		203},
+	{"STATE_CHARGED",		300},
+	{"STATE_INHOLDER",		301},
+	{"STATE_DISABLED",		302},
+	{"STATE_FLICKER",		303},
+	{"STATE_ACTIVE",		304},
+	{"STATE_USED",			305},
+	{"STATE_BLOATED",		306},
+	{"STATE_DELAY",			307},
+	{"STATE_DONE",			309},
+	{"STATE_RAGE",			310},
+	{"STATE_CALM",			311},
+	{"STATE_DESCEND",		312},
+	{"STATE_SING",			313},
+	{"STATE_TRANSFORM",		314},
+	{"STATE_GROW",			315},
+	{"STATE_MATING",		316},
+	{"STATE_SHRINK",		317},
+	{"STATE_MOVE",			319},
+	{"STATE_TRANSITION",	320},
+	{"STATE_TRANSITION2",	321},
+	{"STATE_TRAPPEDINCREATOR",	322},
+	{"STATE_GRAB",			323},
+	{"STATE_FIGURE",		324},
+	{"STATE_CUTSCENE",		325},
+	{"STATE_WAITFORCUTSCENE",	326},
+	{"STATE_FIRE",			327},
+	{"STATE_FIRING",		328},
+	{"STATE_PREP",			329},
+	{"STATE_INTRO",			330},
+	{"STATE_PUPPET",		331},
+
+	{"STATE_COLLECT",				400},
+	{"STATE_COLLECTED",				401},
+	{"STATE_COLLECTEDINHOUSE",		402},
+
+
+	//{"STATE_ATTACK"},		500},
+	{"STATE_STEP",			501},
+	{"STATE_AWAKEN",		502},
+
+	{"STATE_WEAK",			600},
+	{"STATE_BREAK",			601},
+	{"STATE_BROKEN",		602},
+
+	{"STATE_PULSE",			700},
+	{"STATE_ON",			701},
+	{"STATE_OFF",			702},
+	{"STATE_SEED",			703},
+	{"STATE_PLANTED",		704},
+	{"STATE_SK_RED",		705},
+	{"STATE_SK_GREEN",		706},
+	{"STATE_SK_BLUE",		707},
+	{"STATE_SK_YELLOW",		708},
+	{"STATE_WAITFORKISS",	710},
+	{"STATE_KISS",			711},
+	{"STATE_START",			712},
+	{"STATE_RACE",			714},
+	{"STATE_RESTART",		715},
+	{"STATE_APPEAR",		716},
+
+	{"STATE_MOVETOWEED",	2000},
+	{"STATE_PULLWEED",		2001},
+	{"STATE_DONEWEED",		2002},
+
+	{"ORIENT_NONE",			-1},
+	{"ORIENT_LEFT",			0},
+	{"ORIENT_RIGHT",		1},
+	{"ORIENT_UP",			2},
+	{"ORIENT_DOWN",			3},
+	{"ORIENT_HORIZONTAL",	4},
+	{"ORIENT_VERTICAL",		5},
+
+	// for entity_isNearObstruction
+	luaConstant(OBSCHECK_RANGE),
+	luaConstant(OBSCHECK_4DIR),
+	luaConstant(OBSCHECK_DOWN),
+
+	luaConstant(EV_WALLOUT),
+	luaConstant(EV_WALLTRANS),
+	luaConstant(EV_CLAMPING),
+	luaConstant(EV_SWITCHCLAMP),
+	luaConstant(EV_CLAMPTRANSF),
+	luaConstant(EV_MOVEMENT),
+	luaConstant(EV_COLLIDE),
+	luaConstant(EV_TOUCHDMG),
+	luaConstant(EV_FRICTION),
+	luaConstant(EV_LOOKAT),
+	luaConstant(EV_CRAWLING),
+	luaConstant(EV_ENTITYDIED),
+	luaConstant(EV_TYPEID),
+	luaConstant(EV_COLLIDELEVEL),
+	luaConstant(EV_BONELOCKED),
+	luaConstant(EV_FLIPTOPATH),
+	luaConstant(EV_NOINPUTNOVEL),
+	luaConstant(EV_VINEPUSH),
+	luaConstant(EV_BEASTBURST),
+	luaConstant(EV_MINIMAP),
+	luaConstant(EV_SOULSCREAMRADIUS),
+	luaConstant(EV_WEBSLOW),
+	luaConstant(EV_MAX),
+
+	{"EVT_NONE",				0},
+	{"EVT_THERMALVENT",			1},
+	{"EVT_GLOBEJELLY",			2},
+	{"EVT_CELLWHITE",			3},
+	{"EVT_CELLRED",				4},
+	{"EVT_PET",					5},
+	{"EVT_DARKLISHOT",			6},
+	{"EVT_ROCK",				7},
+	{"EVT_FORESTGODVINE",		8},
+	{"EVT_CONTAINER",			9},
+	{"EVT_PISTOLSHRIMP",		10},
+	{"EVT_GATEWAYMUTANT",		11},
+
+
+	// PATH/node types
+	luaConstant(PATH_NONE),
+	luaConstant(PATH_CURRENT),
+	luaConstant(PATH_STEAM),
+	luaConstant(PATH_LI),
+	luaConstant(PATH_SAVEPOINT),
+	luaConstant(PATH_WARP),
+	luaConstant(PATH_SPIRITPORTAL),
+	luaConstant(PATH_BGSFXLOOP),
+	luaConstant(PATH_RADARHIDE),
+	luaConstant(PATH_COOK),
+	luaConstant(PATH_WATERBUBBLE),
+	luaConstant(PATH_GEM),
+	luaConstant(PATH_SETING),
+	luaConstant(PATH_SETENT),
+
+	// Entity Types
+	luaConstant(ET_AVATAR),
+	luaConstant(ET_ENEMY),
+	luaConstant(ET_PET),
+	luaConstant(ET_FLOCK),
+	luaConstant(ET_NEUTRAL),
+	luaConstant(ET_INGREDIENT),
+
+	luaConstant(EP_SOLID),
+	luaConstant(EP_MOVABLE),
+	luaConstant(EP_BATTERY),
+	luaConstant(EP_BLOCKER),
+
+	// Entity Behaviors
+	luaConstant(BT_NORMAL),
+	luaConstant(BT_MOTHER),
+	luaConstant(BT_ACTIVEPET),
+
+	// ACTIVATION TYPES
+	{"AT_NONE",				-1},
+	{"AT_NORMAL",			0},
+	{"AT_CLICK",			0},
+	{"AT_RANGE",			1},
+
+	luaConstant(WT_NORMAL),
+	luaConstant(WT_SPIRIT),
+
+	{"SPEED_NORMAL",		0},
+	{"SPEED_SLOW",			1},
+	{"SPEED_FAST",			2},
+	{"SPEED_VERYFAST",		3},
+	{"SPEED_MODSLOW",		4},
+	{"SPEED_VERYSLOW",		5},
+	{"SPEED_FAST2",			6},
+	{"SPEED_LITOCAVE",		7},
+
+	luaConstant(BOUNCE_NONE),
+	luaConstant(BOUNCE_SIMPLE),
+	luaConstant(BOUNCE_REAL),
+
+	{"LOOP_INFINITE",		-1},
+	{"LOOP_INF",			-1},
+
+	{"LAYER_BODY",			0},
+	{"LAYER_UPPERBODY",		1},
+	{"LAYER_HEAD",			2},
+	{"LAYER_OVERRIDE",		3},
+
+	luaConstant(SONG_NONE),
+	luaConstant(SONG_HEAL),
+	luaConstant(SONG_ENERGYFORM),
+	luaConstant(SONG_SONGDOOR1),
+	luaConstant(SONG_SPIRITFORM),
+	luaConstant(SONG_BIND),
+	{"SONG_PULL",				SONG_BIND},
+	luaConstant(SONG_NATUREFORM),
+	luaConstant(SONG_BEASTFORM),
+	luaConstant(SONG_SHIELDAURA),
+	{"SONG_SHIELD",				SONG_SHIELDAURA},
+	luaConstant(SONG_SONGDOOR2),
+	luaConstant(SONG_DUALFORM),
+	luaConstant(SONG_FISHFORM),
+	luaConstant(SONG_SUNFORM),
+	{"SONG_LIGHTFORM",			SONG_SUNFORM},
+	luaConstant(SONG_LI),
+	luaConstant(SONG_TIME),
+	luaConstant(SONG_LANCE),
+	luaConstant(SONG_MAP),
+	luaConstant(SONG_ANIMA),
+	luaConstant(SONG_MAX),
+
+	luaConstantFromClass(BLEND_DEFAULT,	RenderObject),
+	luaConstantFromClass(BLEND_ADD,		RenderObject),
+	{"BLEND_ADDITIVE",					RenderObject::BLEND_ADD},
+
+	luaConstant(SAY_NORMAL),
+	luaConstant(SAY_QUEUE),
+	luaConstant(SAY_INTERUPT),
+
+	{"ENDING_NAIJACAVE",				10},
+	{"ENDING_NAIJACAVEDONE",			11},
+	{"ENDING_SECRETCAVE",				12},
+	{"ENDING_MAINAREA",					13},
+	{"ENDING_DONE",						14},
+
+
+	{"FLAG_SONGCAVECRYSTAL",			20},
+	{"FLAG_TEIRA",						50},
+	{"FLAG_SHARAN",						51},
+	{"FLAG_DRASK",						52},
+	{"FLAG_VEDHA",						53},
+
+	{"FLAG_ENERGYTEMPLE01DOOR",			100},
+	{"FLAG_ENERGYDOOR02",				101},
+	{"FLAG_ENERGYSLOT01",				102},
+	{"FLAG_ENERGYSLOT02",				103},
+	{"FLAG_ENERGYSLOT_MAINAREA",		104},
+	{"FLAG_MAINAREA_ENERGYTEMPLE_ROCK",	105},
+	{"FLAG_ENERGYSLOT_FIRST",			106},
+	{"FLAG_ENERGYDOOR03",				107},
+	{"FLAG_ENERGYGODENCOUNTER",			108},
+	{"FLAG_ENERGYBOSSDEAD",				109},
+	{"FLAG_MAINAREA_ETENTER2",			110},
+	{"FLAG_SUNTEMPLE_WATERLEVEL",		111},
+	{"FLAG_SUNTEMPLE_LIGHTCRYSTAL",		112},
+	{"FLAG_SUNKENCITY_PUZZLE",			113},
+	{"FLAG_SUNKENCITY_BOSS",			114},
+	{"FLAG_MITHALAS_THRONEROOM",		115},
+	{"FLAG_BOSS_MITHALA",				116},
+	{"FLAG_BOSS_FOREST",				117},
+	{"FLAG_FISHCAVE",					118},
+	{"FLAG_VISION_VEIL",				119},
+	{"FLAG_MITHALAS_PRIESTS",			120},
+	{"FLAG_FIRSTTRANSTURTLE",			121},
+	{"FLAG_13PROGRESSION",				122},
+	{"FLAG_FINAL",						123},
+	{"FLAG_SPIRIT_ERULIAN",				124},
+	{"FLAG_SPIRIT_KROTITE",				125},
+	{"FLAG_SPIRIT_DRASK",				126},
+	{"FLAG_SPIRIT_DRUNIAD",				127},
+	{"FLAG_BOSS_SUNWORM",				128},
+	{"FLAG_WHALELAMPPUZZLE",			129},
+
+	{"FLAG_TRANSTURTLE_VEIL01",			130},
+	{"FLAG_TRANSTURTLE_OPENWATER06",	131},
+	{"FLAG_TRANSTURTLE_FOREST04",		132},
+	{"FLAG_TRANSTURTLE_OPENWATER03",	133},
+	{"FLAG_TRANSTURTLE_FOREST05",		134},
+	{"FLAG_TRANSTURTLE_MAINAREA",		135},
+	{"FLAG_TRANSTURTLE_SEAHORSE",		136},
+	{"FLAG_TRANSTURTLE_VEIL02",			137},
+	{"FLAG_TRANSTURTLE_ABYSS03",		138},
+	{"FLAG_TRANSTURTLE_FINALBOSS",		139},
+
+	{"FLAG_NAIJA_SWIM",					200},
+	{"FLAG_NAIJA_MINIMAP",				201},
+	{"FLAG_NAIJA_SPEEDBOOST",			202},
+	{"FLAG_NAIJA_MEMORYCRYSTAL",		203},
+	{"FLAG_NAIJA_SINGING",				204},
+	{"FLAG_NAIJA_LEAVESVEDHA",			205},
+	{"FLAG_NAIJA_SONGDOOR",				206},
+	{"FLAG_NAIJA_ENTERVEDHACAVE",		207},
+	{"FLAG_NAIJA_INTERACT",				208},
+	{"FLAG_NAIJA_ENTERSONGCAVE",		209},
+	{"FLAG_NAIJA_ENERGYFORMSHOT",		210},
+	{"FLAG_NAIJA_ENERGYFORMCHARGE",		211},
+	{"FLAG_NAIJA_RETURNTONORMALFORM",	212},
+	{"FLAG_NAIJA_ENERGYBARRIER",		213},
+	{"FLAG_NAIJA_SOLIDENERGYBARRIER",	214},
+	{"FLAG_NAIJA_ENTERENERGYTEMPLE",	215},
+	{"FLAG_NAIJA_OPENWATERS",			216},
+	{"FLAG_NAIJA_SINGING",				217},
+	{"FLAG_NAIJA_INGAMEMENU",			218},
+	{"FLAG_NAIJA_SINGINGHINT",			219},
+	{"FLAG_NAIJA_LOOK",					220},
+	{"FLAG_HINT_MINIMAP",				221},
+	{"FLAG_HINT_HEALTHPLANT",			222},
+	{"FLAG_HINT_SLEEP",					223},
+	{"FLAG_HINT_COLLECTIBLE",			224},
+	{"FLAG_HINT_IGFDEMO",				225},
+	{"FLAG_HINT_BEASTFORM1",			226},
+	{"FLAG_HINT_BEASTFORM2",			227},
+	{"FLAG_HINT_LISONG",				228},
+	{"FLAG_HINT_ENERGYTARGET",			229},
+	{"FLAG_HINT_NATUREFORMABILITY",		230},
+	{"FLAG_HINT_LICOMBAT",				231},
+	{"FLAG_HINT_COOKING",				232},
+	{"FLAG_NAIJA_FIRSTVINE",			233},
+	luaConstant(FLAG_SECRET01),
+	luaConstant(FLAG_SECRET02),
+	luaConstant(FLAG_SECRET03),
+	{"FLAG_DEEPWHALE",					237},
+	{"FLAG_OMPO",						238},
+	{"FLAG_HINT_SINGBULB",				239},
+	{"FLAG_ENDING",						240},
+	{"FLAG_NAIJA_BINDSHELL",			241},
+	{"FLAG_NAIJA_BINDROCK",				242},
+	{"FLAG_HINT_ROLLGEAR",				243},
+	{"FLAG_FIRSTHEALTHUPGRADE",			244},
+	{"FLAG_MAINAREA_TRANSTURTLE_ROCK",	245},
+	{"FLAG_SKIPSECRETCHECK",			246},
+	{"FLAG_SEAHORSEBESTTIME",			247},
+	{"FLAG_SEAHORSETIMETOBEAT",			248},
+	{"FLAG_HINT_BINDMERMEN",			249},
+
+
+	{"FLAG_CREATORVOICE",				250},
+
+	{"FLAG_HINT_DUALFORMCHANGE",		251},
+	{"FLAG_HINT_DUALFORMCHARGE",		252},
+	{"FLAG_HINT_HEALTHUPGRADE",			253},
+
+	{"FLAG_VISION_ENERGYTEMPLE",		300},
+
+	luaConstant(FLAG_COLLECTIBLE_START),
+	{"FLAG_COLLECTIBLE_SONGCAVE",			500},
+	{"FLAG_COLLECTIBLE_ENERGYTEMPLE",		501},
+	{"FLAG_COLLECTIBLE_ENERGYSTATUE",		502},
+	{"FLAG_COLLECTIBLE_ENERGYBOSS",			503},
+	{"FLAG_COLLECTIBLE_NAIJACAVE",			504},
+	{"FLAG_COLLECTIBLE_CRABCOSTUME",		505},
+	{"FLAG_COLLECTIBLE_JELLYPLANT",			506},
+	{"FLAG_COLLECTIBLE_MITHALASPOT",		507},
+	{"FLAG_COLLECTIBLE_SEAHORSECOSTUME",	508},
+	//{"FLAG_COLLECTIBLE_TURTLESHELL",		508},
+	{"FLAG_COLLECTIBLE_CHEST",				509},
+	{"FLAG_COLLECTIBLE_BANNER",				510},
+	{"FLAG_COLLECTIBLE_MITHALADOLL",		511},
+	{"FLAG_COLLECTIBLE_WALKERBABY",			512},
+	{"FLAG_COLLECTIBLE_SEEDBAG",			513},
+	{"FLAG_COLLECTIBLE_ARNASSISTATUE",		514},
+	{"FLAG_COLLECTIBLE_GEAR",				515},
+	{"FLAG_COLLECTIBLE_SUNKEY",				516},
+	{"FLAG_COLLECTIBLE_URCHINCOSTUME",		517},
+	{"FLAG_COLLECTIBLE_TEENCOSTUME",		518},
+	{"FLAG_COLLECTIBLE_MUTANTCOSTUME",		519},
+	{"FLAG_COLLECTIBLE_JELLYCOSTUME",		520},
+	{"FLAG_COLLECTIBLE_MITHALANCOSTUME",	521},
+	{"FLAG_COLLECTIBLE_ANEMONESEED",		522},
+	{"FLAG_COLLECTIBLE_BIOSEED",			523},
+	{"FLAG_COLLECTIBLE_TURTLEEGG",			524},
+	{"FLAG_COLLECTIBLE_SKULL",				525},
+	{"FLAG_COLLECTIBLE_TRIDENTHEAD",		526},
+	{"FLAG_COLLECTIBLE_SPORESEED",			527},
+	{"FLAG_COLLECTIBLE_UPSIDEDOWNSEED",		528},
+	{"FLAG_COLLECTIBLE_STONEHEAD",			529},
+	{"FLAG_COLLECTIBLE_STARFISH",			530},
+	{"FLAG_COLLECTIBLE_BLACKPEARL",			531},
+	//{"FLAG_COLLECTIBLE_BABYCRIB",			532},
+	luaConstant(FLAG_COLLECTIBLE_END),
+
+	luaConstant(FLAG_PET_ACTIVE),
+	luaConstant(FLAG_PET_NAMESTART),
+	{"FLAG_PET_NAUTILUS",					601},
+	{"FLAG_PET_DUMBO",						602},
+	{"FLAG_PET_BLASTER",					603},
+	{"FLAG_PET_PIRANHA",					604},
+
+	luaConstant(FLAG_UPGRADE_WOK),
+	// does the player have access to 3 slots all the time?
+
+	{"FLAG_COLLECTIBLE_NAUTILUSPRIME",	630},
+	{"FLAG_COLLECTIBLE_DUMBOEGG",		631},
+	{"FLAG_COLLECTIBLE_BLASTEREGG",		632},
+	{"FLAG_COLLECTIBLE_PIRANHAEGG",		633},
+
+	{"FLAG_ENTER_HOMEWATERS",			650},
+	{"FLAG_ENTER_SONGCAVE",				651},
+	{"FLAG_ENTER_ENERGYTEMPLE",			652},
+	{"FLAG_ENTER_OPENWATERS",			653},
+	{"FLAG_ENTER_HOMECAVE",				654},
+	{"FLAG_ENTER_FOREST",				655},
+	{"FLAG_ENTER_VEIL",					656},
+	{"FLAG_ENTER_MITHALAS",				657},
+	{"FLAG_ENTER_MERMOGCAVE",			658},
+	{"FLAG_ENTER_MITHALAS",				659},
+	{"FLAG_ENTER_SUNTEMPLE",			660},
+	{"FLAG_ENTER_ABYSS",				661},
+	{"FLAG_ENTER_SUNKENCITY",			662},
+	{"FLAG_ENTER_FORESTSPRITECAVE",		663},
+	{"FLAG_ENTER_FISHCAVE",				664},
+	{"FLAG_ENTER_MITHALASCATHEDRAL",	665},
+	{"FLAG_ENTER_TURTLECAVE",			666},
+	{"FLAG_ENTER_FROZENVEIL",			667},
+	{"FLAG_ENTER_ICECAVE",				668},
+	{"FLAG_ENTER_SEAHORSE",				669},
+
+
+	{"FLAG_MINIBOSS_START",				700},
+	{"FLAG_MINIBOSS_NAUTILUSPRIME",		700},
+	{"FLAG_MINIBOSS_KINGJELLY",			701},
+	{"FLAG_MINIBOSS_MERGOG",			702},
+	{"FLAG_MINIBOSS_CRAB",				703},
+	{"FLAG_MINIBOSS_OCTOMUN",			704},
+	{"FLAG_MINIBOSS_MANTISSHRIMP",		705},
+	{"FLAG_MINIBOSS_PRIESTS",			706},
+	{"FLAG_MINIBOSS_END",				720},
+
+	{"FLAG_MAMATURTLE_RESCUE1",			750},
+	{"FLAG_MAMATURTLE_RESCUE2",			751},
+	{"FLAG_MAMATURTLE_RESCUE3",			752},
+
+	{"FLAG_SONGDOOR1",					800},
+	luaConstant(FLAG_SEALOAFANNOYANCE),
+
+	{"FLAG_SEAL_KING",					900},
+	{"FLAG_SEAL_QUEEN",					901},
+	{"FLAG_SEAL_PRINCE",				902},
+
+	{"FLAG_HEALTHUPGRADES",				950},
+	{"FLAG_HEALTHUPGRADES_END",			960},
+
+	luaConstant(FLAG_LI),
+	luaConstant(FLAG_LICOMBAT),
+
+
+
+	luaConstant(MAX_FLAGS),
+
+	{"ALPHA_NEARZERO",					0.001},
+
+	{"SUNKENCITY_START",				0},
+	{"SUNKENCITY_CLIMBDOWN",			1},
+	{"SUNKENCITY_RUNAWAY",				2},
+	{"SUNKENCITY_INHOLE",				3},
+	{"SUNKENCITY_GF",					4},
+	{"SUNKENCITY_BULLIES",				5},
+	{"SUNKENCITY_ANIMA",				6},
+	{"SUNKENCITY_BOSSWAIT",				7},
+	{"SUNKENCITY_CLAY1",				8},
+	{"SUNKENCITY_CLAY2",				9},
+	{"SUNKENCITY_CLAY3",				10},
+	{"SUNKENCITY_CLAY4",				11},
+	{"SUNKENCITY_CLAY5",				12},
+	{"SUNKENCITY_CLAY6",				13},
+	{"SUNKENCITY_CLAYDONE",				14},
+	{"SUNKENCITY_BOSSFIGHT",			15},
+	{"SUNKENCITY_BOSSDONE",				16},
+	{"SUNKENCITY_FINALTONGUE",			17},
+
+	{"FINAL_START",						0},
+	{"FINAL_SOMETHING",					1},
+	{"FINAL_FREEDLI",					2},
+
+	luaConstantFromClass(ANIM_NONE,		Bone),
+	luaConstantFromClass(ANIM_POS,		Bone),
+	luaConstantFromClass(ANIM_ROT,		Bone),
+	luaConstantFromClass(ANIM_ALL,		Bone),
+
+	luaConstant(FORM_NORMAL),
+	luaConstant(FORM_ENERGY),
+	luaConstant(FORM_BEAST),
+	luaConstant(FORM_NATURE),
+	luaConstant(FORM_SPIRIT),
+	luaConstant(FORM_DUAL),
+	luaConstant(FORM_FISH),
+	luaConstant(FORM_SUN),
+	{"FORM_LIGHT",			FORM_SUN},
+	luaConstant(FORM_MAX),
+
+	luaConstant(VFX_SHOCK),
+	luaConstant(VFX_RIPPLE),
+
+	luaConstant(EAT_NONE),
+	luaConstant(EAT_DEFAULT),
+	luaConstant(EAT_FILE),
+	luaConstant(EAT_MAX),
+
+	luaConstant(DT_NONE),
+	luaConstant(DT_ENEMY),
+	luaConstant(DT_ENEMY_ENERGYBLAST),
+	luaConstant(DT_ENEMY_SHOCK),
+	luaConstant(DT_ENEMY_BITE),
+	luaConstant(DT_ENEMY_TRAP),
+	luaConstant(DT_ENEMY_WEB),
+	luaConstant(DT_ENEMY_BEAM),
+	luaConstant(DT_ENEMY_GAS),
+	luaConstant(DT_ENEMY_INK),
+	luaConstant(DT_ENEMY_POISON),
+	luaConstant(DT_ENEMY_ACTIVEPOISON),
+	luaConstant(DT_ENEMY_CREATOR),
+	luaConstant(DT_ENEMY_MANTISBOMB),
+	luaConstant(DT_ENEMY_MAX),
+	{"DT_ENEMY_END",			DT_ENEMY_MAX},
+
+	luaConstant(DT_AVATAR),
+	luaConstant(DT_AVATAR_ENERGYBLAST),
+	luaConstant(DT_AVATAR_SHOCK),
+	luaConstant(DT_AVATAR_BITE),
+	luaConstant(DT_AVATAR_VOMIT),
+	luaConstant(DT_AVATAR_ACID),
+	luaConstant(DT_AVATAR_SPORECHILD),
+	luaConstant(DT_AVATAR_LIZAP),
+	luaConstant(DT_AVATAR_NATURE),
+	luaConstant(DT_AVATAR_ENERGYROLL),
+	luaConstant(DT_AVATAR_VINE),
+	luaConstant(DT_AVATAR_EAT),
+	luaConstant(DT_AVATAR_EAT_BASICSHOT),
+	luaConstant(DT_AVATAR_EAT_MAX),
+	luaConstant(DT_AVATAR_LANCEATTACH),
+	luaConstant(DT_AVATAR_LANCE),
+	luaConstant(DT_AVATAR_CREATORSHOT),
+	luaConstant(DT_AVATAR_DUALFORMLI),
+	luaConstant(DT_AVATAR_DUALFORMNAIJA),
+	luaConstant(DT_AVATAR_BUBBLE),
+	luaConstant(DT_AVATAR_SEED),
+	luaConstant(DT_AVATAR_PET),
+	luaConstant(DT_AVATAR_PETNAUTILUS),
+	luaConstant(DT_AVATAR_PETBITE),
+	luaConstant(DT_AVATAR_MAX),
+	{"DT_AVATAR_END",			DT_AVATAR_MAX},
+
+	luaConstant(DT_TOUCH),
+	luaConstant(DT_CRUSH),
+	luaConstant(DT_SPIKES),
+	luaConstant(DT_STEAM),
+
+
+	luaConstant(FRAME_TIME),
+
+	luaConstant(FORMUPGRADE_ENERGY1),
+	luaConstant(FORMUPGRADE_ENERGY2),
+	luaConstant(FORMUPGRADE_BEAST),
+
+
+	luaConstant(TILE_SIZE),
+};
 
 //============================================================================================
 // F U N C T I O N S
@@ -7416,67 +9030,6 @@ luaFunc(appendUserDataPath)
 
 void ScriptInterface::init()
 {
-//	choice = -1;
-	si = this;
-	currentEntity = 0;
-	currentParticleEffect = 0;
-	//collideEntity = 0;
-
-//	particleEffectScripts
-	//loadParticleEffectScripts();
-}
-
-ParticleEffectScript *ScriptInterface::getParticleEffectScriptByIdx(int idx)
-{
-	for (ParticleEffectScripts::iterator i = particleEffectScripts.begin();
-		i != particleEffectScripts.end(); i++)
-	{
-		ParticleEffectScript *p = &((*i).second);
-		if (p->idx == idx)
-			return p;
-	}
-	return 0;
-}
-
-void ScriptInterface::loadParticleEffectScripts()
-{
-#if 0  // FIXME: not used
-	//particleEffectScripts
-	std::ifstream in("scripts/particleEffects/ParticleEffects.txt");
-	std::string line;
-	while (std::getline(in, line))
-	{
-		int v;
-		std::string n;
-		std::istringstream is(line);
-		is >> v >> n;
-		//ggggerrorLog (n);
-
-		lua_State *L = dsq->scriptInterface.createLuaThread(baseState);
-		std::string file = "scripts/particleEffects/" + n + ".lua";
-		file = core->adjustFilenameCase(file);
-		int fail = (luaL_loadfile(L, file.c_str()));
-		if (fail)	errorLog(lua_tostring(L, -1));
-		//this->name = script;
-		fail = lua_pcall(L, 0, 0, 0);
-		if (fail)	errorLog(lua_tostring(L, -1));
-
-		particleEffectScripts[n].lua = L;
-		particleEffectScripts[n].name = n;
-		particleEffectScripts[n].idx = v;
-	}
-#endif
-}
-
-bool ScriptInterface::setCurrentEntity(Entity *e)
-{
-	//if (se && se->runningActivation) return false;
-	//currentEntityTarget = 0;
-	noMoreConversationsThisRun = false;
-	currentEntity = e;
-	//collideEntity = dynamic_cast<CollideEntity*>(e);
-	//se = dynamic_cast<ScriptedEntity*>(e);
-	return true;
 }
 
 lua_State *ScriptInterface::createLuaVM()
@@ -7487,10 +9040,6 @@ lua_State *ScriptInterface::createLuaVM()
 	luaopen_string(state);			/* opens the string lib. */
 	luaopen_math(state);			/* opens the math lib. */
 	//luaopen_os(state);			/* opens the os lib */
-
-	// override Lua's standard dofile(), so we can handle filename case issues.
-	lua_register(state, "dofile", l_dofile_caseinsensitive);
-
 	//luaopen_io(state);			/* opens the I/O library */
 
 	// Keep a table of active threads (so they aren't garbage-collected).
@@ -7502,1009 +9051,18 @@ lua_State *ScriptInterface::createLuaVM()
 	lua_newtable(state);
 	lua_setglobal(state, "_threadvars");
 
-	// Register all custom functions.
-
-	luaRegister(getVars);
-
-	luaRegister(shakeCamera);
-	luaRegister(upgradeHealth);
-
-	luaRegister(cureAllStatus);
-	luaRegister(setPoison);
-	luaRegister(setMusicToPlay);
-	luaRegister(confirm);
-
-	luaRegister(randRange);
-
-	luaRegister(flingMonkey);
-
-
-	luaRegister(setLiPower);
-	luaRegister(getLiPower);
-	luaRegister(getPetPower);
-	luaRegister(getTimer);
-	luaRegister(getHalfTimer);
-	luaRegister(setCostume);
-	luaRegister(getCostume);
-	luaRegister(getNoteName);
-
-
-	luaRegister(getWorldType);
-
-
-	luaRegister(getWaterLevel);
-	luaRegister(setWaterLevel);
-
-
-	luaRegister(getEntityInGroup);
-
-	luaRegister(createQuad);
-	luaRegister(quad_delete);
-	luaRegister(quad_scale);
-	luaRegister(quad_rotate);
-
-	luaRegister(quad_color);
-	luaRegister(quad_alpha);
-	luaRegister(quad_alphaMod);
-	luaRegister(quad_getAlpha);
-
-	luaRegister(quad_setPosition);
-	luaRegister(quad_setBlendType);
-
-
-	luaRegister(setupEntity);
-	luaRegister(setActivePet);
-
-
-	luaRegister(reconstructGrid);
-	luaRegister(reconstructEntityGrid);
-
-
-
-
-
-	luaRegister(ing_hasIET);
-
-
-	luaRegister(esetv);
-	luaRegister(esetvf);
-	luaRegister(egetv);
-	luaRegister(egetvf);
-	luaRegister(eisv);
-
-	luaRegister(entity_addIgnoreShotDamageType);
-	luaRegister(entity_ensureLimit);
-	luaRegister(entity_getBoneLockEntity);
-
-
-	luaRegister(entity_setRidingPosition);
-	luaRegister(entity_setRidingData);
-	luaRegister(entity_setBoneLock);
-	luaRegister(entity_setIngredient);
-	luaRegister(entity_setDeathScene);
-	luaRegister(entity_say);
-	luaRegister(entity_isSaying);
-	luaRegister(entity_setSayPosition);
-
-
-	luaRegister(entity_setClampOnSwitchDir);
-
-	luaRegister(entity_setBeautyFlip);
-	luaRegister(entity_setInvincible);
-
-	luaRegister(setInvincible);
-
-
-
-
-
-	luaRegister(entity_setLife);
-	luaRegister(entity_setLookAtPoint);
-	luaRegister(entity_getLookAtPoint);
-
-
-	luaRegister(entity_setDieTimer);
-	luaRegister(entity_setAutoSkeletalUpdate);
-	luaRegister(entity_updateSkeletal);
-	luaRegister(entity_setBounceType);
-
-	luaRegister(entity_getHealthPerc);
-	luaRegister(entity_getBounceType);
-	luaRegister(entity_setRiding);
-	luaRegister(entity_getRiding);
-
-	luaRegister(entity_setNodeGroupActive);
-
-	luaRegister(entity_setNaijaReaction);
-
-	luaRegister(entity_setEatType);
-
-	luaRegister(entity_setSpiritFreeze);
-
-	luaRegister(entity_setCanLeaveWater);
-
-	luaRegister(entity_pullEntities);
-
-	luaRegister(entity_setEntityLayer);
-	luaRegister(entity_setRenderPass);
-
-	luaRegister(entity_clearTargetPoints);
-	luaRegister(entity_addTargetPoint);
-
-
-	luaRegister(entity_setCullRadius);
-	luaRegister(entity_setUpdateCull);
-
-	luaRegister(entity_flipHToAvatar);
-
-	luaRegister(entity_switchLayer);
-
-	luaRegister(entity_debugText);
-
-
-	luaRegister(avatar_setCanDie);
-	luaRegister(avatar_toggleCape);
-	luaRegister(avatar_setPullTarget);
-
-
-	luaRegister(setGLNearest);
-
-
-	luaRegister(avatar_clampPosition);
-	luaRegister(avatar_updatePosition);
-
-	luaRegister(pause);
-	luaRegister(unpause);
-
-
-	luaRegister(vector_normalize);
-	luaRegister(vector_setLength);
-	luaRegister(vector_getLength);
-
-	luaRegister(vector_dot);
-
-	luaRegister(vector_isLength2DIn);
-	luaRegister(vector_cap);
-
-
-	luaRegister(entity_setDeathParticleEffect);
-	luaRegister(entity_setDeathSound);
-
-	luaRegister(entity_setDamageTarget);
-	luaRegister(entity_setAllDamageTargets);
-
-	luaRegister(entity_isDamageTarget);
-	luaRegister(entity_isVelIn);
-	luaRegister(entity_isValidTarget);
-
-
-	luaRegister(entity_isUnderWater);
-	luaRegister(entity_checkSplash);
-
-
-
-
-	luaRegister(entity_getRandomTargetPoint);
-	luaRegister(entity_getTargetPoint);
-
-
-	luaRegister(entity_setTargetRange);
-
-
-	luaRegister(entity_setCollideWithAvatar);
-	luaRegister(entity_setPauseInConversation);
-
-
-	luaRegister(bone_setRenderPass);
-	luaRegister(bone_setVisible);
-	luaRegister(bone_isVisible);
-
-	luaRegister(bone_addSegment);
-	luaRegister(entity_setSegs);
-	luaRegister(bone_setSegs);
-	luaRegister(bone_update);
-
-
-	luaRegister(bone_setSegmentOffset);
-	luaRegister(bone_setSegmentProps);
-	luaRegister(bone_setSegmentChainHead);
-	luaRegister(bone_setAnimated);
-	luaRegister(bone_showFrame);
-
-	luaRegister(bone_lookAtEntity);
-
-	luaRegister(bone_setTexture);
-
-	luaRegister(bone_scale);
-	luaRegister(bone_setBlendType);
-
-
-	luaRegister(entity_partSetSegs);
-
-
-	luaRegister(entity_adjustPositionBySurfaceNormal);
-	luaRegister(entity_applySurfaceNormalForce);
-	luaRegister(entity_applyRandomForce);
-
-	luaRegister(createBeam);
-	luaRegister(beam_setAngle);
-	luaRegister(beam_setPosition);
-	luaRegister(beam_setTexture);
-	luaRegister(beam_setDamage);
-	luaRegister(beam_setBeamWidth);
-
-
-	luaRegister(beam_delete);
-
-	luaRegister(getStringBank);
-
-	luaRegister(isPlat);
-
-	luaRegister(getAngleBetweenEntities);
-	luaRegister(getAngleBetween);
-
-
-	luaRegister(createEntity);
-	luaRegister(entity_setWeight);
-	luaRegister(entity_setBlendType);
-
-	luaRegister(entity_setActivationType);
-	luaRegister(entity_setColor);
-	lua_register(state, "entity_color", l_entity_setColor);
-	luaRegister(entity_playSfx);
-
-	luaRegister(isQuitFlag);
-	luaRegister(isDeveloperKeys);
-	luaRegister(isDemo);
-
-	luaRegister(isInputEnabled);
-	luaRegister(disableInput);
-
-	luaRegister(setMousePos);
-	luaRegister(getMousePos);
-	luaRegister(getMouseWorldPos);
-
-	luaRegister(resetContinuity);
-
-	luaRegister(quit);
-	luaRegister(doModSelect);
-	luaRegister(doLoadMenu);
-
-
-	luaRegister(enableInput);
-	luaRegister(fade);
-	luaRegister(fade2);
-	luaRegister(fade3);
-
-	luaRegister(setupConversationEntity);
-
-	luaRegister(getMapName);
-	luaRegister(isMapName);
-	luaRegister(mapNameContains);
-
-	luaRegister(entity_getNormal);
-
-	luaRegister(entity_getAlpha);
-	luaRegister(entity_getAimVector);
-
-	luaRegister(entity_getVectorToEntity);
-
-	luaRegister(entity_getVelLen);
-
-	luaRegister(entity_getDistanceToTarget);
-	luaRegister(entity_delete);
-	luaRegister(entity_move);
-
-
-	luaRegister(entity_moveToFront);
-	luaRegister(entity_moveToBack);
-
-
-
-
-	luaRegister(entity_getID);
-	luaRegister(entity_getGroupID);
-
-	luaRegister(getEntityByID);
-
-	luaRegister(entity_setBounce);
-	luaRegister(entity_setPosition);
-	luaRegister(entity_setInternalOffset);
-	luaRegister(entity_setActivation);
-	luaRegister(entity_rotateToEntity);
-	luaRegister(entity_rotateTo);
-	luaRegister(entity_rotateOffset);
-
-	luaRegister(entity_fireGas);
-	luaRegister(entity_rotateToTarget);
-
-	luaRegister(entity_switchSurfaceDirection);
-
-	luaRegister(entity_offset);
-	luaRegister(entity_moveAlongSurface);
-	luaRegister(entity_rotateToSurfaceNormal);
-	luaRegister(entity_clampToSurface);
-	luaRegister(entity_checkSurface);
-	luaRegister(entity_clampToHit);
-
-
-	luaRegister(entity_grabTarget);
-	luaRegister(entity_releaseTarget);
-
-	luaRegister(entity_getStateTime);
-	luaRegister(entity_setStateTime);
-
-	luaRegister(entity_scale);
-	luaRegister(entity_getScale);
-
-	luaRegister(entity_doFriction);
-
-	luaRegister(entity_partWidthHeight);
-	luaRegister(entity_partBlendType);
-	luaRegister(entity_partRotate);
-	luaRegister(entity_partAlpha);
-
-	luaRegister(entity_getHealth);
-	luaRegister(entity_pushTarget);
-	luaRegister(entity_flipHorizontal);
-	luaRegister(entity_flipVertical);
-	lua_register(state, "entity_fh", l_entity_flipHorizontal);
-	luaRegister(entity_fhTo);
-	luaRegister(entity_update);
-	luaRegister(entity_msg);
-	luaRegister(entity_updateMovement);
-	luaRegister(entity_updateCurrents);
-	luaRegister(entity_updateLocalWarpAreas);
-
-	luaRegister(entity_setPositionX);
-	luaRegister(entity_setPositionY);
-	luaRegister(entity_getPosition);
-	luaRegister(entity_getOffset);
-	luaRegister(entity_getPositionX);
-	luaRegister(entity_getPositionY);
-
-	luaRegister(entity_getTargetPositionX);
-	luaRegister(entity_getTargetPositionY);
-
-	luaRegister(entity_incrTargetLeaches);
-	luaRegister(entity_decrTargetLeaches);
-	luaRegister(entity_rotateToVel);
-	luaRegister(entity_rotateToVec);
-
-	luaRegister(entity_setSegsMaxDist);
-
-
-
-	luaRegister(entity_offsetUpdate);
-
-	luaRegister(entity_createEntity);
-	luaRegister(entity_resetTimer);
-	luaRegister(entity_stopTimer);
-	luaRegister(entity_stopPull);
-	luaRegister(entity_setTargetPriority);
-
-
-	luaRegister(entity_setBehaviorType);
-	luaRegister(entity_getBehaviorType);
-	luaRegister(entity_setEntityType);
-	luaRegister(entity_getEntityType);
-
-	luaRegister(entity_setSegmentTexture);
-
-
-	luaRegister(entity_spawnParticlesFromCollisionMask);
-	luaRegister(entity_initEmitter);
-	luaRegister(entity_startEmitter);
-	luaRegister(entity_stopEmitter);
-
-	luaRegister(entity_initPart);
-	luaRegister(entity_initSegments);
-	luaRegister(entity_warpSegments);
-	luaRegister(entity_initSkeletal);
-	luaRegister(entity_initStrands);
-
-	luaRegister(entity_hurtTarget);
-	luaRegister(entity_doSpellAvoidance);
-	luaRegister(entity_doEntityAvoidance);
-	luaRegister(entity_rotate);
-	luaRegister(entity_doGlint);
-	luaRegister(entity_findTarget);
-	luaRegister(entity_hasTarget);
-	luaRegister(entity_isInRect);
-	luaRegister(entity_isInDarkness);
-	luaRegister(entity_isScaling);
-
-	luaRegister(entity_isRidingOnEntity);
-
-	luaRegister(entity_isBeingPulled);
-
-	luaRegister(entity_isNearObstruction);
-	luaRegister(entity_isDead);
-
-
-
-	luaRegister(entity_isTargetInRange);
-	luaRegister(entity_getDistanceToEntity);
-
-	luaRegister(entity_isInvincible);
-
-	luaRegister(entity_isNearGround);
-
-	luaRegister(entity_moveTowardsTarget);
-	luaRegister(entity_moveAroundTarget);
-
-	luaRegister(entity_moveTowardsAngle);
-	luaRegister(entity_moveAroundAngle);
-	luaRegister(entity_moveTowards);
-	luaRegister(entity_moveAround);
-
-	luaRegister(entity_moveTowardsGroupCenter);
-	luaRegister(entity_moveTowardsGroupHeading);
-	luaRegister(entity_avgVel);
-	luaRegister(entity_setVelLen);
-
-	luaRegister(entity_setMaxSpeed);
-	luaRegister(entity_getMaxSpeed);
-	luaRegister(entity_setMaxSpeedLerp);
-	luaRegister(entity_setState);
-	luaRegister(entity_getState);
-	luaRegister(entity_getEnqueuedState);
-
-	luaRegister(entity_getPrevState);
-	luaRegister(entity_doCollisionAvoidance);
-	luaRegister(entity_animate);
-	luaRegister(entity_setAnimLayerTimeMult);
-
-	luaRegister(entity_setCurrentTarget);
-	luaRegister(entity_warpToPathStart);
-	luaRegister(entity_stopInterpolating);
-
-	luaRegister(entity_followPath);
-	luaRegister(entity_isFollowingPath);
-	luaRegister(entity_followEntity);
-	luaRegister(entity_sound);
-	luaRegister(entity_soundFreq);
-
-
-	luaRegister(entity_enableMotionBlur);
-	luaRegister(entity_disableMotionBlur);
-
-
-	luaRegister(registerSporeChildData);
-	luaRegister(registerSporeDrop);
-
-
-	luaRegister(getIngredientGfx);
-
-	luaRegister(spawnIngredient);
-	luaRegister(spawnAllIngredients);
-	luaRegister(spawnParticleEffect);
-	luaRegister(spawnManaBall);
-
-
-	luaRegister(isEscapeKey);
-
-
-	luaRegister(resetTimer);
-
-	luaRegister(addInfluence);
-	luaRegister(setupBasicEntity);
-	luaRegister(playMusic);
-	luaRegister(playMusicStraight);
-	luaRegister(stopMusic);
-
-	luaRegister(user_set_demo_intro);
-	luaRegister(user_save);
-
-	luaRegister(playMusicOnce);
-
-	luaRegister(playSfx);
-	luaRegister(fadeSfx);
-
-	luaRegister(emote);
-
-	luaRegister(playVisualEffect);
-	luaRegister(playNoEffect);
-
-
-	luaRegister(setOverrideMusic);
-
-	luaRegister(setOverrideVoiceFader);
-	luaRegister(setGameSpeed);
-	luaRegister(sendEntityMessage);
-	luaRegister(healEntity);
-	luaRegister(warpAvatar);
-	luaRegister(warpNaijaToSceneNode);
-
-
-
-	luaRegister(toWindowFromWorld);
-
-	luaRegister(toggleTransitFishRide);
-
-	luaRegister(toggleDamageSprite);
-
-	luaRegister(toggleLiCombat);
-
-	luaRegister(toggleCursor);
-	luaRegister(toggleBlackBars);
-	luaRegister(setBlackBarsColor);
-
-
-	luaRegister(stopCursorGlow);
-
-	luaRegister(entityFollowEntity);
-
-	luaRegister(setMiniMapHint);
-	luaRegister(bedEffects);
-
-	luaRegister(killEntity);
-	luaRegister(warpNaijaToEntity);
-
-	luaRegister(setNaijaHeadTexture);
-
-	luaRegister(incrFlag);
-	luaRegister(decrFlag);
-	luaRegister(setFlag);
-	luaRegister(getFlag);
-	luaRegister(setStringFlag);
-	luaRegister(getStringFlag);
-	luaRegister(learnSpell);
-	luaRegister(learnSong);
-	luaRegister(unlearnSong);
-	luaRegister(hasSong);
-	luaRegister(hasLi);
-
-	luaRegister(setCanWarp);
-	luaRegister(setCanChangeForm);
-	luaRegister(setInvincibleOnNested);
-
-	luaRegister(setControlHint);
-	luaRegister(setCameraLerpDelay);
-	luaRegister(screenFadeGo);
-	luaRegister(screenFadeTransition);
-	luaRegister(screenFadeCapture);
-
-	luaRegister(clearControlHint);
-
-
-	luaRegister(savePoint);
-	luaRegister(wait);
-	luaRegister(watch);
-
-	luaRegister(quitNestedMain);
-	luaRegister(isNestedMain);
-
-
-	luaRegister(msg);
-	luaRegister(centerText);
-	luaRegister(watchForVoice);
-
-	luaRegister(setElementLayerVisible);
-	luaRegister(isElementLayerVisible);
-
-	luaRegister(isWithin);
-
-
-
-	luaRegister(pickupGem);
-	luaRegister(setBeacon);
-	luaRegister(getBeacon);
-	luaRegister(beaconEffect);
-
-	luaRegister(chance);
-
-	luaRegister(goToTitle);
-	luaRegister(jumpState);
-	luaRegister(getEnqueuedState);
-
-
-	luaRegister(fadeIn);
-	luaRegister(fadeOut);
-
-	luaRegister(vision);
-
-	luaRegister(musicVolume);
-
-	luaRegister(voice);
-	luaRegister(voiceOnce);
-	luaRegister(voiceInterupt);
-
-
-	luaRegister(stopVoice);
-	luaRegister(stopAllVoice);
-	luaRegister(stopAllSfx);
-
-
-
-	luaRegister(fadeOutMusic);
-
-
-	luaRegister(isStreamingVoice);
-
-	luaRegister(changeForm);
-	luaRegister(getForm);
-	luaRegister(isForm);
-	luaRegister(learnFormUpgrade);
-	luaRegister(hasFormUpgrade);
-
-
-	luaRegister(castSong);
-	luaRegister(isObstructed);
-	luaRegister(isObstructedBlock);
-
-	luaRegister(isFlag);
-
-	luaRegister(entity_isFlag);
-	luaRegister(entity_setFlag);
-
-	luaRegister(node_isFlag);
-	luaRegister(node_setFlag);
-	luaRegister(node_getFlag);
-
-	luaRegister(avatar_getStillTimer);
-	luaRegister(avatar_getSpellCharge);
-
-	luaRegister(avatar_isSinging);
-	luaRegister(avatar_isTouchHit);
-	luaRegister(avatar_isBursting);
-	luaRegister(avatar_isLockable);
-	luaRegister(avatar_isRolling);
-	luaRegister(avatar_isOnWall);
-	luaRegister(avatar_isShieldActive);
-	luaRegister(avatar_getRollDirection);
-
-	luaRegister(avatar_fallOffWall);
-	luaRegister(avatar_setBlockSinging);
-
-
-	luaRegister(avatar_toggleMovement);
-
-
-	luaRegister(showInGameMenu);
-	luaRegister(hideInGameMenu);
-
-
-	luaRegister(showImage);
-	luaRegister(hideImage);
-	luaRegister(showControls);
-	luaRegister(clearHelp);
-	luaRegister(clearShots);
-
-
-
-	luaRegister(getEntity);
-	luaRegister(getFirstEntity);
-	luaRegister(getNextEntity);
-
-	luaRegister(setStory);
-	luaRegister(getStory);
-	luaRegister(getNoteColor);
-	luaRegister(getNoteVector);
-	luaRegister(getRandNote);
-
-	luaRegister(foundLostMemory);
-
-
-
-	luaRegister(isStory);
-
-	luaRegister(entity_damage);
-	luaRegister(entity_heal);
-
-	luaRegister(getNearestIngredient);
-
-	luaRegister(getNearestNode);
-	luaRegister(getNearestNodeByType);
-
-	luaRegister(getNode);
-	luaRegister(getNodeToActivate);
-	luaRegister(setNodeToActivate);
-	luaRegister(setActivation);
-
-	luaRegister(entity_warpToNode);
-	luaRegister(entity_moveToNode);
-
-	luaRegister(setNaijaModel);
-
-	luaRegister(cam_toNode);
-	luaRegister(cam_snap);
-	luaRegister(cam_toEntity);
-	luaRegister(cam_setPosition);
-
-
-	luaRegister(entity_flipToEntity);
-	luaRegister(entity_flipToSame);
-
-	luaRegister(entity_flipToNode);
-	luaRegister(entity_flipToVel);
-
-	luaRegister(entity_swimToNode);
-	luaRegister(entity_swimToPosition);
-
-
-	luaRegister(createShot);
-	luaRegister(entity_fireShot);
-
-	luaRegister(entity_isHit);
-
-
-
-	luaRegister(createWeb);
-	luaRegister(web_addPoint);
-	luaRegister(web_setPoint);
-	luaRegister(web_getNumPoints);
-	luaRegister(web_delete);
-
-	luaRegister(createSpore);
-
-
-
-	luaRegister(shot_getPosition);
-	luaRegister(shot_setAimVector);
-	luaRegister(shot_setOut);
-	luaRegister(shot_setLifeTime);
-	luaRegister(shot_setVel);
-	luaRegister(shot_setBounceType);
-	luaRegister(entity_pathBurst);
-	luaRegister(entity_handleShotCollisions);
-	luaRegister(entity_handleShotCollisionsSkeletal);
-	luaRegister(entity_handleShotCollisionsHair);
-	luaRegister(entity_collideSkeletalVsCircle);
-	luaRegister(entity_collideSkeletalVsLine);
-	luaRegister(entity_collideSkeletalVsCircleForListByName);
-	luaRegister(entity_collideCircleVsLine);
-	luaRegister(entity_collideCircleVsLineAngle);
-
-
-	luaRegister(entity_collideHairVsCircle);
-
-	luaRegister(entity_setDropChance);
-
-	luaRegister(entity_waitForPath);
-	luaRegister(entity_watchForPath);
-
-	luaRegister(entity_addVel);
-	luaRegister(entity_addVel2);
-	luaRegister(entity_addRandomVel);
-
-	luaRegister(entity_addGroupVel);
-	luaRegister(entity_clearVel);
-	luaRegister(entity_clearVel2);
-
-
-	luaRegister(entity_revive);
-
-	luaRegister(entity_getTarget);
-	luaRegister(entity_isState);
-
-	luaRegister(entity_setProperty);
-	luaRegister(entity_isProperty);
-
-
-	luaRegister(entity_initHair);
-	luaRegister(entity_getHairPosition);
-
-	luaRegister(entity_setHairHeadPosition);
-	luaRegister(entity_updateHair);
-	luaRegister(entity_exertHairForce);
-
-	luaRegister(entity_setName);
-
-	luaRegister(getNumberOfEntitiesNamed);
-
-	luaRegister(isNested);
-
-	luaRegister(entity_idle);
-	luaRegister(entity_stopAllAnimations);
-
-	luaRegister(entity_getBoneByIdx);
-	luaRegister(entity_getBoneByName);
-
-
-
-	luaRegister(toggleInput);
-
-	luaRegister(entity_setTarget);
-	luaRegister(getNodeFromEntity);
-
-	luaRegister(getScreenCenter);
-
-
-
-	luaRegister(debugLog);
-	luaRegister(loadMap);
-
-	luaRegister(reloadTextures);
-
-	luaRegister(loadSound);
-
-	luaRegister(node_activate);
-	luaRegister(node_getName);
-	luaRegister(node_getPathPosition);
-	luaRegister(node_getPosition);
-	luaRegister(node_setPosition);
-	luaRegister(node_getContent);
-	luaRegister(node_getAmount);
-	luaRegister(node_getSize);
-	luaRegister(node_setEffectOn);
-
-	luaRegister(toggleSteam);
-	luaRegister(toggleVersionLabel);
-	luaRegister(setVersionLabelText);
-
-	luaRegister(appendUserDataPath);
-
-	luaRegister(setCutscene);
-	luaRegister(isInCutscene);
-
-
-
-	luaRegister(node_getNumEntitiesIn);
-
-
-	luaRegister(entity_getName);
-	luaRegister(entity_isName);
-
-
-	luaRegister(node_setCursorActivation);
-	luaRegister(node_setCatchActions);
-
-	luaRegister(node_setElementsInLayerActive);
-
-
-	luaRegister(entity_setHealth);
-	luaRegister(entity_changeHealth);
-
-	luaRegister(node_setActive);
-
-
-	luaRegister(setGameOver);
-	luaRegister(setSceneColor);
-
-
-	luaRegister(entity_watchEntity);
-
-	luaRegister(entity_setCollideRadius);
-	luaRegister(entity_getCollideRadius);
-	luaRegister(entity_setTouchPush);
-	luaRegister(entity_setTouchDamage);
-
-	luaRegister(entity_isEntityInRange);
-	luaRegister(entity_isPositionInRange);
-
-	luaRegister(entity_stopFollowingPath);
-	luaRegister(entity_slowToStopPath);
-	luaRegister(entity_isSlowingToStopPath);
-
-	luaRegister(entity_findNearestEntityOfType);
-	luaRegister(entity_isFollowingEntity);
-	luaRegister(entity_resumePath);
-
-	luaRegister(entity_generateCollisionMask);
-
-	luaRegister(entity_isAnimating);
-	luaRegister(entity_getAnimationName);
-	luaRegister(entity_getAnimationLength);
-
-	luaRegister(entity_setCull);
-
-	luaRegister(entity_setTexture);
-	luaRegister(entity_setFillGrid);
-
-	luaRegister(entity_interpolateTo);
-	luaRegister(entity_isInterpolating);
-	luaRegister(entity_isRotating);
-
-
-	luaRegister(entity_isFlippedHorizontal);
-	lua_register(state, "entity_isfh", l_entity_isFlippedHorizontal);
-	luaRegister(entity_isFlippedVertical);
-
-	luaRegister(entity_setWidth);
-	luaRegister(entity_setHeight);
-	luaRegister(entity_push);
-
-	luaRegister(entity_alpha);
-
-	luaRegister(findWall);
-
-
-	luaRegister(overrideZoom);
-	luaRegister(disableOverrideZoom);
-
-
-
-	luaRegister(spawnAroundEntity);
-
-	luaRegister(entity_toggleBone);
-
-	luaRegister(bone_damageFlash);
-	luaRegister(bone_setColor);
-	luaRegister(bone_setPosition);
-	luaRegister(bone_rotate);
-	luaRegister(bone_rotateOffset);
-	luaRegister(bone_getRotation);
-	luaRegister(bone_offset);
-
-	luaRegister(bone_alpha);
-
-	luaRegister(bone_setTouchDamage);
-	luaRegister(bone_getNormal);
-	luaRegister(bone_getPosition);
-	luaRegister(bone_getScale);
-	luaRegister(bone_getWorldPosition);
-	luaRegister(bone_getWorldRotation);
-
-
-
-	luaRegister(bone_getName);
-	luaRegister(bone_isName);
-	luaRegister(bone_getIndex);
-	luaRegister(node_x);
-	luaRegister(node_y);
-	luaRegister(node_isEntityPast);
-	luaRegister(node_isEntityInRange);
-	luaRegister(node_isPositionIn);
-
-
-
-	luaRegister(entity_warpLastPosition);
-	luaRegister(entity_x);
-	luaRegister(entity_y);
-	luaRegister(entity_velx);
-	luaRegister(entity_vely);
-	luaRegister(entity_velTowards);
-
-
-
-	luaRegister(updateMusic);
-
-	luaRegister(entity_touchAvatarDamage);
-	luaRegister(getNaija);
-	luaRegister(getLi);
-	luaRegister(setLi);
-
-	luaRegister(randAngle360);
-	luaRegister(randVector);
-
-	luaRegister(entity_getNearestEntity);
-	luaRegister(entity_getNearestBoneToPosition);
-
-	luaRegister(entity_getNearestNode);
-
-	luaRegister(node_getNearestEntity);
-	luaRegister(node_getNearestNode);
-
-
-	luaRegister(entity_getRotation);
-
-	luaRegister(node_isEntityIn);
-
-
-
-	luaRegister(isLeftMouse);
-	luaRegister(isRightMouse);
-
-
-	luaRegister(setTimerTextAlpha);
-	luaRegister(setTimerText);
-
-
-	luaRegister(getWallNormal);
-	luaRegister(getLastCollidePosition);
-
-
-
-
-	// ============== deprecated
-
-	luaRegister(entity_fireAtTarget);  // FIXME: still used by several scripts
-	luaRegister(entity_setAffectedBySpells);  // FIXME: still used by several scripts
-
+	// Register all custom functions and constants.
+	for (unsigned int i = 0; i < sizeof(luaFunctionTable)/sizeof(*luaFunctionTable); i++)
+	{
+		lua_register(state, luaFunctionTable[i].name, luaFunctionTable[i].func);
+	}
+	for (unsigned int i = 0; i < sizeof(luaConstantTable)/sizeof(*luaConstantTable); i++)
+	{
+		lua_pushnumber(state, luaConstantTable[i].value);
+		lua_setglobal(state, luaConstantTable[i].name);
+	}
 
 	// All done, return the new state.
-
 	return state;
 }
 
@@ -8576,18 +9134,6 @@ void ScriptInterface::collectGarbage()
 
 void ScriptInterface::shutdown()
 {
-#if 0  // FIXME: not used
-	for (ParticleEffectScripts::iterator i = particleEffectScripts.begin(); i != particleEffectScripts.end(); i++)
-	{
-		ParticleEffectScript *p = &(*i).second;
-		if (p->lua)
-		{
-			destroyLuaThread(p->lua);
-			p->lua = 0;
-		}
-	}
-#endif
-
 	if (loadedScripts.begin() != loadedScripts.end())
 	{
 		for (ScriptFileMap::iterator i = loadedScripts.begin(); i != loadedScripts.end(); i++)
@@ -8595,16 +9141,6 @@ void ScriptInterface::shutdown()
 			debugLog("Script still in use at shutdown: " + (*i).first);
 		}
 	}
-}
-
-void ScriptInterface::setCurrentParticleData(ParticleData *p)
-{
-	currentParticleData = p;
-}
-
-void ScriptInterface::setCurrentParticleEffect(ScriptedParticleEffect *p)
-{
-	currentParticleEffect = p;
 }
 
 Script *ScriptInterface::openScript(const std::string &file)
@@ -8665,34 +9201,21 @@ Script *ScriptInterface::openScript(const std::string &file)
 		return NULL;
 	}
 
-	Script *script = new Script;
-	script->L = thread;
-	script->file = realFile;
-
-	return script;
-}
-
-void ScriptInterface::pushScriptFunc(Script *script, const char *name)
-{
-	// FIXME: Temporary HACK to load thread-scope variable table.
-	l_getVars(script->L);
-	lua_setglobal(script->L, "v");
-
-	lua_getglobal(script->L, name);
+	return new Script(thread, realFile);
 }
 
 void ScriptInterface::closeScript(Script *script)
 {
-	lua_State *baseState = loadedScripts[script->file];
+	lua_State *baseState = loadedScripts[script->getFile()];
 	if (!baseState)
 	{
-		debugLog("Lost base state for script [" + script->file + "]");
+		debugLog("Lost base state for script [" + script->getFile() + "]");
 		delete script;
-		loadedScripts.erase(script->file);  // HACK: see above
+		loadedScripts.erase(script->getFile());  // HACK: see above
 		return;
 	}
 
-	destroyLuaThread(baseState, script->L);
+	destroyLuaThread(baseState, script->getLuaState());
 
 	// If this was the last instance of this script, unload the script itself.
 	lua_getglobal(baseState, "_threadtable");
@@ -8701,7 +9224,7 @@ void ScriptInterface::closeScript(Script *script)
 	if (empty)
 	{
 		destroyLuaVM(baseState);
-		loadedScripts.erase(script->file);
+		loadedScripts.erase(script->getFile());
 	}
 	else
 	{
@@ -8713,7 +9236,6 @@ void ScriptInterface::closeScript(Script *script)
 
 bool ScriptInterface::runScriptNum(const std::string &file, const std::string &func, int num)
 {
-	noMoreConversationsThisRun = false;
 	std::string realFile = file;
 	if (file.find('/')==std::string::npos)
 		realFile = "scripts/" + file + ".lua";
@@ -8721,12 +9243,9 @@ bool ScriptInterface::runScriptNum(const std::string &file, const std::string &f
 	if (!script)
 		return false;
 
-	lua_getfield(script->L, LUA_GLOBALSINDEX, func.c_str());
-	lua_pushnumber(script->L, num);
-	int result = lua_pcall(script->L, 1, 0, 0);
-	if (result != 0)
+	if (!script->call(func.c_str(), num))
 	{
-		debugLog(lua_tostring(script->L, -1));
+		debugLog(script->getLastError());
 		debugLog("(error calling func: " + func + " in script: " + file + ")");
 		closeScript(script);
 		return false;
@@ -8738,7 +9257,6 @@ bool ScriptInterface::runScriptNum(const std::string &file, const std::string &f
 
 bool ScriptInterface::runScript(const std::string &file, const std::string &func)
 {
-	noMoreConversationsThisRun = false;
 	std::string realFile = file;
 	if (file.find('/')==std::string::npos)
 		realFile = "scripts/" + file + ".lua";
@@ -8746,20 +9264,145 @@ bool ScriptInterface::runScript(const std::string &file, const std::string &func
 	if (!script)
 		return false;
 
-	if (!func.empty())
+	if (!func.empty() && !script->call(func.c_str()))
 	{
-		lua_getfield(script->L, LUA_GLOBALSINDEX, func.c_str());
-		int result = lua_pcall(script->L, 0, 0, 0);
-		if (result != 0)
-		{
-			debugLog(lua_tostring(script->L, -1));
-			debugLog("(error calling func: " + func + " in script: " + file + ")");
-			closeScript(script);
-			return false;
-		}
+		debugLog(script->getLastError());
+		debugLog("(error calling func: " + func + " in script: " + file + ")");
+		closeScript(script);
+		return false;
 	}
 
 	closeScript(script);
 	return true;
 }
 
+//-------------------------------------------------------------------------
+
+bool Script::doCall(int nparams, int nrets)
+{
+	l_getVars(L);
+	lua_setglobal(L, "v");
+	if (lua_pcall(L, nparams, nrets, 0) == 0)
+	{
+		return true;
+	}
+	else
+	{
+		lastError = lua_tostring(L, -1);
+		lua_pop(L, 1);
+	}
+}
+
+bool Script::call(const char *name)
+{
+	lua_getglobal(L, name);
+	return doCall(0);
+}
+
+bool Script::call(const char *name, float param1)
+{
+	lua_getglobal(L, name);
+	lua_pushnumber(L, param1);
+	return doCall(1);
+}
+
+bool Script::call(const char *name, void *param1)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	return doCall(1);
+}
+
+bool Script::call(const char *name, void *param1, float param2)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	lua_pushnumber(L, param2);
+	return doCall(2);
+}
+
+bool Script::call(const char *name, void *param1, void *param2)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	luaPushPointer(L, param2);
+	return doCall(2);
+}
+
+bool Script::call(const char *name, void *param1, float param2, float param3)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	lua_pushnumber(L, param2);
+	lua_pushnumber(L, param3);
+	return doCall(3);
+}
+
+bool Script::call(const char *name, void *param1, float param2, float param3, bool *ret1)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	lua_pushnumber(L, param2);
+	lua_pushnumber(L, param3);
+	if (!doCall(3, 1))
+		return false;
+	*ret1 = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+	return true;
+}
+
+bool Script::call(const char *name, void *param1, const char *param2, float param3)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	lua_pushstring(L, param2);
+	lua_pushnumber(L, param3);
+	return doCall(3);
+}
+
+bool Script::call(const char *name, void *param1, void *param2, void *param3)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	luaPushPointer(L, param2);
+	luaPushPointer(L, param3);
+	return doCall(3);
+}
+
+bool Script::call(const char *name, void *param1, float param2, float param3, float param4)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	lua_pushnumber(L, param2);
+	lua_pushnumber(L, param3);
+	lua_pushnumber(L, param4);
+	return doCall(4);
+}
+
+bool Script::call(const char *name, void *param1, void *param2, void *param3, void *param4)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	luaPushPointer(L, param2);
+	luaPushPointer(L, param3);
+	luaPushPointer(L, param4);
+	return doCall(4);
+}
+
+bool Script::call(const char *name, void *param1, void *param2, void *param3, float param4, float param5, float param6, float param7, void *param8, bool *ret1)
+{
+	lua_getglobal(L, name);
+	luaPushPointer(L, param1);
+	luaPushPointer(L, param2);
+	luaPushPointer(L, param3);
+	lua_pushnumber(L, param4);
+	lua_pushnumber(L, param5);
+	lua_pushnumber(L, param6);
+	lua_pushnumber(L, param7);
+	luaPushPointer(L, param8);
+	if (!doCall(8, 1))
+		return false;
+	*ret1 = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+	return true;
+}

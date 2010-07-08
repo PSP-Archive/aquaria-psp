@@ -21,8 +21,6 @@ v = getVars()
 
 -- rotfish-blob
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.fireDelay = 1
 v.moveTimer = 0
 

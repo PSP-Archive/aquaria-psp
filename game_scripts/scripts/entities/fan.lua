@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.flag = 0
 STATE_BUSTED	= 1001
 

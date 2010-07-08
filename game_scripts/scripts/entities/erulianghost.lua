@@ -20,8 +20,6 @@
 v = getVars()
 
 -- energy door
-dofile("scripts/entities/entityinclude.lua")
-
 function init(me)
 	setupEntity(me, "")
 	entity_initSkeletal(me, "Erulian")

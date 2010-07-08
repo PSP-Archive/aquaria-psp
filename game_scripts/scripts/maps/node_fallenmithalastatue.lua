@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init(me)
 	if not isDemo() then
 		if isFlag(FLAG_BOSS_MITHALA, 0) then

@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.n = 0
 
 v.notes = { 1, 3, 4, 5 }

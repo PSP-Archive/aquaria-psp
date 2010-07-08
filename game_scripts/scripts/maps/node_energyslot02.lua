@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.doorID = 13
 v.holderID = 4
 v.flag = FLAG_ENERGYSLOT02

@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init()
 	setElementLayerVisible(7, false)
 	--fadeIn(1)

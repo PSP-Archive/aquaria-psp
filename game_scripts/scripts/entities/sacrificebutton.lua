@@ -19,8 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
-
 function init(me)
 	entity_setEntityType(me, ET_NEUTRAL)
 	entity_initSkeletal(me, "SacrificeButton", "")

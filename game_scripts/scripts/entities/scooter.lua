@@ -23,7 +23,6 @@ v = getVars()
 -- S C O O T E R
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
 -- specific
 STATE_JUMP				= 1000
 STATE_TRANSITION		= 1001

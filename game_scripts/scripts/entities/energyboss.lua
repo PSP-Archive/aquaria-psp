@@ -23,8 +23,6 @@ v = getVars()
 -- Energy Boss
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 STATE_MOVING				= 1001
 STATE_MOVEBACK				= 1002
 STATE_SHOCKED				= 1003

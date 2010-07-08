@@ -21,8 +21,6 @@ v = getVars()
 
 -- KRILL EGG
 
-dofile("scripts/entities/entityinclude.lua")
-
 v.growTimer = 0
 v.scaling = false
 
