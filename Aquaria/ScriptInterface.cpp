@@ -9290,6 +9290,7 @@ bool Script::doCall(int nparams, int nrets)
 	{
 		lastError = lua_tostring(L, -1);
 		lua_pop(L, 1);
+		return false;
 	}
 }
 
