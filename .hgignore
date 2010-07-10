@@ -6,6 +6,8 @@
 ^PSP/ICON0\.PNG$
 ^PSP/ICON0-alpha\.pnm$
 ^PSP/PARAM\.SFO$
+^PSP/tools/AquariaPSPBuilder(\.exe)?$
+^PSP/tools/AquariaPSPBuilder-(eboot|scripts|ui)\.i$
 ^PSP/tools/build-pkg(\.exe)?$
 ^PSP/tools/oggtomp3(\.exe)?$
 ^PSP/tools/pngtotex(\.exe)?$

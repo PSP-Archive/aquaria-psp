@@ -129,7 +129,7 @@ int main(int argc, char **argv)
     char *namebuf;
     uint32_t namesize;
     PKGIndexEntry *index = filelist_to_index(filelist, nfiles,
-                                              &namebuf, &namesize);
+                                             &namebuf, &namesize);
     if (!index) {
         exit(1);
     }
@@ -435,8 +435,8 @@ static int append_matching_files(FileInfo **filelist_ptr, uint32_t *nfiles_ptr,
  * 【戻り値】PKGIndexEntry構造体配列へのポインタ（エラーの場合はNULL）
  */
 static PKGIndexEntry *filelist_to_index(FileInfo *filelist, int nfiles,
-                                         char **namebuf_ret,
-                                         uint32_t *namesize_ret)
+                                        char **namebuf_ret,
+                                        uint32_t *namesize_ret)
 {
     PKGIndexEntry *index = NULL;
     char *namebuf = NULL;
@@ -654,8 +654,8 @@ static int write_package(const char *filename, FileInfo *filelist,
  * 【戻り値】なし
  */
 static void pkg_sort(PKGIndexEntry * const index, const uint32_t nfiles,
-                      const char *namebuf,
-                      const uint32_t left, const uint32_t right)
+                     const char *namebuf,
+                     const uint32_t left, const uint32_t right)
 {
 #define NAME(a)  (namebuf + PKG_NAMEOFS(index[(a)].nameofs_flags))
 #define LESS(a)  (index[(a)].hash < pivot_hash   \

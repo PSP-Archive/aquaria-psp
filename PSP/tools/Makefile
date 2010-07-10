@@ -30,9 +30,18 @@ LIBS    =
 
 # Flags for various libraries
 
+ifeq ($(shell uname -s | cut -c1-5 | tr A-Z a-z),mingw)
+GTKSYS = win32
+else
+GTKSYS = x11
+endif
+CFLAGS_gtk  = $(shell pkg-config --cflags gtk+-$(GTKSYS)-2.0)
+LDFLAGS_gtk =
+LIBS_gtk    = $(shell pkg-config --libs gtk+-$(GTKSYS)-2.0)
+
 CFLAGS_png  =
 LDFLAGS_png =
-LIBS_png    = -lpng
+LIBS_png    = -lpng -lz
 
 CFLAGS_vorbis  =
 LDFLAGS_vorbis =
@@ -46,7 +55,22 @@ LIBS_lame    = -lmp3lame
 
 # Programs to build and their sources/flags
 
-PROGRAMS = build-pkg oggtomp3 pngtotex
+PROGRAMS = AquariaPSPBuilder build-pkg oggtomp3 pngtotex
+
+AquariaPSPBuilder_SOURCES = AquariaPSPBuilder.c quantize.c zoom.c
+AquariaPSPBuilder_AUTOGEN = AquariaPSPBuilder-eboot.i \
+                            AquariaPSPBuilder-scripts.i \
+                            AquariaPSPBuilder-ui.i
+AquariaPSPBuilder_DEPS    = ../src/common.h ../src/resource/package-pkg.h \
+                            ../src/texture.h quantize.h sse2.h zoom.h \
+                            $(AquariaPSPBuilder_AUTOGEN)
+AquariaPSPBuilder_CFLAGS  = $(SYS_CFLAGS) $(CFLAGS) -DIN_TOOL $(CFLAGS_gtk) \
+                            $(CFLAGS_vorbis) $(CFLAGS_lame) $(CFLAGS_png) \
+                            -DHG_REVISION=\"$(shell hg id -n)\"
+AquariaPSPBuilder_LDFLAGS = $(LDFLAGS) $(LDFLAGS_gtk) \
+                            $(LDFLAGS_vorbis) $(LDFLAGS_lame) $(LDFLAGS_png)
+AquariaPSPBuilder_LIBS    = $(LIBS) $(LIBS_gtk) \
+                            $(LIBS_vorbis) $(LIBS_lame) $(LIBS_png)
 
 build-pkg_SOURCES = build-pkg.c
 build-pkg_DEPS    = ../src/common.h ../src/resource/package-pkg.h
@@ -71,7 +95,11 @@ pngtotex_LIBS     = $(LIBS)    $(LIBS_png)
 .PHONY: all clean
 all: $(PROGRAMS:%=%$(EXEEXT))
 clean:
-	rm -f $(PROGRAMS:%=%$(EXEEXT))
+	rm -f $(PROGRAMS:%=%$(EXEEXT)) $(AquariaPSPBuilder_AUTOGEN)
+
+AquariaPSPBuilder$(EXEEXT): $(AquariaPSPBuilder_SOURCES) $(AquariaPSPBuilder_DEPS) Makefile
+	$(CC) $(AquariaPSPBuilder_CFLAGS) $(AquariaPSPBuilder_SOURCES) \
+		$(AquariaPSPBuilder_LDFLAGS) $(AquariaPSPBuilder_LIBS) -o $@
 
 build-pkg$(EXEEXT): $(build-pkg_SOURCES) $(build-pkg_DEPS) Makefile
 	$(CC) $(build-pkg_CFLAGS) $(build-pkg_SOURCES) \
@@ -84,5 +112,59 @@ oggtomp3$(EXEEXT): $(oggtomp3_SOURCES) $(oggtomp3_DEPS) Makefile
 pngtotex$(EXEEXT): $(pngtotex_SOURCES) $(pngtotex_DEPS) Makefile
 	$(CC) $(pngtotex_CFLAGS) $(pngtotex_SOURCES) \
 		$(pngtotex_LDFLAGS) $(pngtotex_LIBS) -o $@
+
+#-------------------------------------
+
+AquariaPSPBuilder-eboot.i: ../aquaria.prx ../PARAM.SFO Makefile
+	perl \
+		-e 'foreach (@ARGV) {' \
+		-e '    my ($$id, $$file) = split(/=/, $$_);' \
+		-e '    print "static const unsigned char $${id}[] = {\n";' \
+		-e '    my $$size = 0;' \
+		-e '    open F, "<$$file" or die "$$file: $$!\n";' \
+		-e '    while (read(F, $$_, 16) > 0) {' \
+		-e '        print join(",",unpack("C*",$$_)) . ",\n";' \
+		-e '        $$size += length($$_);' \
+		-e '    }' \
+		-e '    close F;' \
+		-e '    print "};\nstatic const unsigned int $${id}_size = $$size;\n";' \
+		-e '}' \
+		'aquaria_prx=../aquaria.prx' 'param_sfo=../PARAM.SFO' >$@
+../PARAM.SFO: ../aquaria.prx
+../aquaria.prx:
+	make -C ..
+
+AquariaPSPBuilder-scripts.i: FORCE
+	find ../../game_scripts/scripts -name \*.lua \
+	| perl \
+		-e 'print "static const struct {const char *path, *data;} script_data[] = {\n";' \
+		-e 'while (<STDIN>) {' \
+		-e '    my $$path = $$_;' \
+		-e '    chomp $$path;' \
+		-e '    open F, "<$$path" or die "$$path: $$!\n";' \
+		-e '    my $$data;' \
+		-e '    {local $$/ = undef; $$data = <F>;}' \
+		-e '    close F;' \
+		-e '    $$path =~ s,^\.\./\.\./game_scripts/,, or die "Bad path: $$path\n";' \
+		-e '    $$data =~ s/([\\"])/\\$$1/g;' \
+		-e '    $$data =~ s/\n/\\n\\\n/g;' \
+		-e '    print "{\"$$path\", \"$$data\"},\n"' \
+		-e '}' \
+		-e 'print "};\n";' \
+		>$@
+
+.PHONY: FORCE
+FORCE:
+
+AquariaPSPBuilder-ui.i: AquariaPSPBuilder.glade Makefile
+	perl \
+		-e 'print "static const char ui_glade[] = \"\\\n";' \
+		-e 'while (<STDIN>) {' \
+		-e '    s/([\\"])/\\$$1/g;' \
+		-e '    s/\n/\\n\\\n/;' \
+		-e '    print;' \
+		-e '}' \
+		-e 'print "\";\n";' \
+		<$< >$@
 
 ###########################################################################

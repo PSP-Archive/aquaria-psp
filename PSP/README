@@ -11,11 +11,10 @@ Important notice (limitations of this version)
 Due to Aquaria's memory requirements, the game will only run on a PSP-2000
 ("Slim") or later.  Aquaria will _not_ run on a PSP-1000 ("Phat").  Sorry!
 
-Save early and often!  Aquaria seems to have a few memory leaks or
-fragmentation issues which would be unnoticeable on a PC, but which
-quickly run the PSP out of resources, leading to a crash.  Sometimes it
-helps to exit the game (to the PSP's menu) after saving, then restart and
-reload your game.
+Save early and often!  Memory fragmentation issues which are normally
+unnoticeable on a PC can cause the PSP to crash after playing for a
+while.  It may help to periodically exit the game (to the PSP's menu)
+after saving, then restart and reload your game.
 
 Other issues:
 
@@ -25,15 +24,56 @@ Other issues:
   on the PSP; it might be necessary to use prerendered screens.)
 
 - There is a race condition in the file I/O thread which on rare
-  occasion may cause garbled audio output or crash the program.
+  occasion may cause garbled audio output or crash the program.  The bug
+  is more likely to be seen when many sound effects are playing at once.
 
 
-Build prerequisites
--------------------
+Using the Aquaria PSP Builder
+-----------------------------
+You can use the "Aquaria PSP Builder" program to build the game using a
+precompiled copy of the PSP program, though you will of course need the
+data files from the commercial distribution of the game.  The builder is
+self-contained, so that you don't need to install any compilers or other
+tools -- simply run the program and follow the prompts.
+
+The first time you use the builder, it will convert the Aquaria data
+files to a format suitable for use by the PSP.  This is a fairly
+time-consuming process, and will typically take 10-15 minutes even on
+a fast PC.  These converted files will be saved in the folder you
+specify as the "New PSP data folder"; you can delete this folder when
+the build finishes, but if you keep it on your system, you can then
+reuse it when a newer version of the PSP program is released to save
+time during the build.
+
+When the builder finishes its work, the folder you specified in the
+"Output game folder" field will contain all the files needed to play
+Aquaria on the PSP.  Copy this folder to your PSP, either using the
+PSP's USB mode or a separate Memory Stick reader, under the "PSP/GAME"
+folder.  For example, if you use Windows and your PSP is connected as
+drive E:, you should end up with the following folder structure:
+
+E: --> PSP --> GAME --> AQUARIA
+
+where "AQUARIA" is the name of the output game folder you created (any
+name is fine).
+
+Once you have Aquaria installed on your PSP, skip down to the "Default
+controls" section for information on playing the game.
+
+Note that the current version of the builder does not include an icon
+with the program, so the game will show up in the PSP's game list with
+the default grey icon.  Also note that the links in the "about this
+program" screen will not work if your system web browser is
+misconfigured, or if (on Linux) you do not have the "gvfs" package
+installed.
+
+
+Source code build prerequisites
+-------------------------------
 The PSP port of Aquaria uses the unofficial PSP SDK from ps2dev.org; the
 author builds using Subversion revision 2494 of that SDK.  You will
 naturally need a cross-compiler as well; the code assumes GCC, and was
-built using GCC 4.4.3.
+built using GCC 4.4.4.
 
 In order to build Aquaria for PSP, you should also have the following
 packages prebuilt and installed for the PSP cross-compiling environment:
@@ -135,50 +175,6 @@ However, see the "Converting data files" and "Using a package file"
 sections below for important notes regarding the data files.
 
 
-Default controls
-----------------
-The default controls for the PSP are as follows:
-
-Analog pad      -- move Naija
-Directional pad -- select options in menus
-L/R triggers    -- change page in menus
-Cross    -- swim faster; select menu option (left mouse button equivalent)
-Circle   -- interact with object; other actions (right mouse button equiv.)
-Square   -- revert to normal form; select food for cooking
-Triangle -- display world map; remove food from cooking slot
-Start    -- open/close in-game menu; pause cutscene
-Select   -- cook food; skip cutscene when paused
-
-While in the food menu, the currently selected food item can be discarded
-into the environment by holding Select and pressing Triangle while the
-cooking slots are empty.
-
-In the world map, use the analog pad to scroll, or hold Circle while
-moving the analog pad up or down to zoom.
-
-
-Save files
-----------
-Aquaria for PSP saves all of its data, both saved games and system data,
-using the PSP's native save data system.  The save files will show up on
-the PSP's save data menu just like save data from other games.  Saved
-game files use a screenshot from the game as the save file image, just
-like the in-game load/save menu; system data files (user settings and
-achievements) use the same icon as the game itself, if you created one
-when you built the program (see above).
-
-One side effect of using the PSP's save data system is that the user
-settings file cannot be edited outside of Aquaria, since the PSP
-automatically checksums and encrypts all save files.  For normal play
-this should not be a problem, but if the Makefile variable
-ALLOW_SETTINGS_OVERRIDE is set to 1, Aquaria will attempt to load a
-"usersettings.xml" file on startup, and will use that file if it exists
-rather than loading the PSP save file.  However, settings changed in the
-in-game options menu are saved _only_ to the PSP save file, so those
-changes will not appear when the game is restarted unless the
-"usersettings.xml" file is removed or renamed.
-
-
 Converting data files
 ---------------------
 While Aquaria for PSP will run with the stock data files distributed
@@ -231,6 +227,50 @@ file will _not_ be searched on the Memory Stick when looking for files.
 For example, if you include a "_mods" directory in the package file, you
 will not later be able to add mods by creating a "_mods" subdirectory in
 the Aquaria installation directory on your Memory Stick.
+
+
+Default controls
+----------------
+The default controls for the PSP are as follows:
+
+Analog pad      -- move Naija
+Directional pad -- select options in menus
+L/R triggers    -- change page in menus
+Cross    -- swim faster; select menu option (left mouse button equivalent)
+Circle   -- interact with object; other actions (right mouse button equiv.)
+Square   -- revert to normal form; select food for cooking
+Triangle -- display world map; remove food from cooking slot
+Start    -- open/close in-game menu; pause cutscene
+Select   -- cook food; skip cutscene when paused
+
+While in the food menu, the currently selected food item can be discarded
+into the environment by holding Select and pressing Triangle while the
+cooking slots are empty.
+
+In the world map, use the analog pad to scroll, or hold Circle while
+moving the analog pad up or down to zoom.
+
+
+Save files
+----------
+Aquaria for PSP saves all of its data, both saved games and system data,
+using the PSP's native save data system.  The save files will show up on
+the PSP's save data menu just like save data from other games.  Saved
+game files use a screenshot from the game as the save file image, just
+like the in-game load/save menu; system data files (user settings and
+achievements) use the same icon as the game itself, if you created one
+when you built the program.
+
+One side effect of using the PSP's save data system is that the user
+settings file cannot be edited outside of Aquaria, since the PSP
+automatically checksums and encrypts all save files.  For normal play
+this should not be a problem, but if the Makefile variable
+ALLOW_SETTINGS_OVERRIDE is set to 1 when building from the source code,
+Aquaria will attempt to load a "usersettings.xml" file on startup, and
+will use that file if it exists rather than loading the PSP save file.
+However, settings changed in the in-game options menu are saved _only_
+to the PSP save file, so those changes will not appear when the game is
+restarted unless the "usersettings.xml" file is removed or renamed.
 
 
 Notes on the source code

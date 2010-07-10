@@ -142,7 +142,7 @@ static int convert_to_8bpp(const char **files, unsigned int num_files,
     if (!textures) {
         fprintf(stderr, "Out of memory for texture array (%u entries)\n",
                 num_files);
-        return 0;
+        goto error_return;
     }
 
     for (i = 0; i < num_files; i++) {
@@ -150,7 +150,7 @@ static int convert_to_8bpp(const char **files, unsigned int num_files,
     }
 
     /* First load all the specified files into memory and shrink them
-     * down to half size, adding mipmaps if requested.. */
+     * down to half size, adding mipmaps if requested. */
 
     for (i = 0; i < num_files; i++) {
         textures[i] = read_png(files[i]);
@@ -229,7 +229,7 @@ static int convert_to_8bpp(const char **files, unsigned int num_files,
         int pathlen = snprintf(pathbuf, sizeof(pathbuf)-4, "%s", files[i]);
         if (pathlen >= sizeof(pathbuf)-4) {
             DMSG("Pathname too long: %s", files[i]);
-            return 0;
+            goto error_free_textures;
         }
         if (stricmp(pathbuf + pathlen - 4, ".png") == 0) {
             pathbuf[pathlen-4] = 0;
@@ -238,7 +238,7 @@ static int convert_to_8bpp(const char **files, unsigned int num_files,
         memcpy(pathbuf + pathlen, ".tex", 5);
         if (!write_tex(textures[i], pathbuf)) {
             fprintf(stderr, "Failed to write %s\n", pathbuf);
-            return 0;
+            goto error_free_textures;
         }
 
         free(textures[i]);
@@ -256,6 +256,7 @@ static int convert_to_8bpp(const char **files, unsigned int num_files,
         free(textures[i]);
         free(textures);
     }
+  error_return:
     return 0;
 }
 
