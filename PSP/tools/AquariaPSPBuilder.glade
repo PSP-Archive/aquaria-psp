@@ -59,7 +59,7 @@ Aquaria PSP Builder Menu
                     <property name="visible">True</property>
                     <property name="xalign">0</property>
                     <property name="xpad">24</property>
-                    <property name="label" translatable="yes">(Select this option if you are building
+                    <property name="label" translatable="yes">(Select this option if you're building
  Aquaria for PSP for the first time.
  The build may take 10-15 minutes or
  longer, depending on your system.)
@@ -104,7 +104,7 @@ Aquaria PSP Builder Menu
                     <property name="visible">True</property>
                     <property name="xalign">0</property>
                     <property name="xpad">24</property>
-                    <property name="label" translatable="yes">(Select this option if you have built
+                    <property name="label" translatable="yes">(Select this option if you've built
  Aquaria for PSP before, and you
  want to save time by reusing the
  data folder from a previous build.)
@@ -924,8 +924,8 @@ Released under the &lt;a href="http://www.gnu.org/licenses/old-licenses/gpl-2.0.
     <property name="destroy_with_parent">True</property>
     <property name="type_hint">dialog</property>
     <property name="transient_for">main_window</property>
-    <property name="create_folders">False</property>
     <property name="action">select-folder</property>
+    <property name="create_folders">False</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox1">
         <property name="visible">True</property>
@@ -990,8 +990,8 @@ Released under the &lt;a href="http://www.gnu.org/licenses/old-licenses/gpl-2.0.
     <property name="destroy_with_parent">True</property>
     <property name="type_hint">dialog</property>
     <property name="transient_for">main_window</property>
-    <property name="create_folders">False</property>
     <property name="action">select-folder</property>
+    <property name="create_folders">False</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox3">
         <property name="visible">True</property>

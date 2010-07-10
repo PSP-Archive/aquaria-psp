@@ -23,6 +23,9 @@ Other issues:
   rendering method used by the FTGL library is too inefficient for use
   on the PSP; it might be necessary to use prerendered screens.)
 
+- It's not currently possible to check the songs in the game menu.  Pay
+  close attention when you learn them!
+
 - There is a race condition in the file I/O thread which on rare
   occasion may cause garbled audio output or crash the program.  The bug
   is more likely to be seen when many sound effects are playing at once.
