@@ -26,7 +26,7 @@ end
 
 function update(me, dt)
 	if node_isEntityIn(me, v.n) then
-		entity_addVel(v.n, -500, -500)
+		entity_addVel(v.n, -50000*dt, -50000*dt)
 		if hasLi() then
 			local li = getLi()
 			local node = getNode("LIFROMSUN")
