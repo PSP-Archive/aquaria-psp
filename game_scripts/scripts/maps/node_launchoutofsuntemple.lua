@@ -19,16 +19,14 @@
 
 v = getVars()
 
-v.ran = false
 v.n = 0
 function init(me)
 	v.n = getNaija()
 end
 
 function update(me, dt)
-	if not v.ran and node_isEntityIn(me, v.n) then
-		v.ran = true
-		entity_addVel(v.n, -500, -500)
+	if node_isEntityIn(me, v.n) then
+		entity_addVel(v.n, -50000*dt, -50000*dt)
 		if hasLi() then
 			local li = getLi()
 			local node = getNode("LIFROMSUN")
