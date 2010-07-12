@@ -706,7 +706,6 @@ void RenderObject::renderCall()
 #ifdef BBGE_BUILD_OPENGL
 			if (RenderObject::renderPaths && position.path.getNumPathNodes() > 0)
 			{
-				glRotatef(0, 0, 1, -rotation.z);
 				glLineWidth(4);
 				glEnable(GL_BLEND);
 				
@@ -730,7 +729,6 @@ void RenderObject::renderCall()
 					glVertex2f(position.path.getPathNode(i)->value.x-position.x, position.path.getPathNode(i)->value.y-position.y);
 				}
 				glEnd();
-				//glPopMatrix();
 			}
 #endif
 #ifdef BBGE_BUILD_OPENGL
