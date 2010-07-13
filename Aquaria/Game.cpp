@@ -8119,6 +8119,7 @@ void Game::onPressEscape()
 
 		if ((dsq->saveSlotMode != SSM_NONE || dsq->inModSelector) && core->isNested())
 		{
+			dsq->selectedSaveSlot = 0;
 			core->quitNestedMain();
 		}
 	}
