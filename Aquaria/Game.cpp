@@ -1517,7 +1517,7 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 
 void Game::pickupIngredientEffects(IngredientData *data)
 {
-	Quad *q = new Quad("gfx/ingredients/" + data->gfx, Vector(800-20 + core->getVirtualOffX(), 460+ingOffY));
+	Quad *q = new Quad("gfx/ingredients/" + data->gfx, Vector(800-20 + core->getVirtualOffX(), (570-2*(100*miniMapRender->scale.y))+ingOffY));
 	q->scale = Vector(0.8, 0.8);
 	q->followCamera = 1;
 	q->alpha.path.addPathNode(0, 0);
@@ -6720,9 +6720,8 @@ void Game::applyState()
 	miniMapRender = new MiniMapRender;
 
 	//miniMapRender->position = Vector(740,540);
-	// position = vw - 55
-	// set x in minimaprender::onupdate
-	miniMapRender->position = Vector(0,545); // x=745
+	// position = (vw,vh) - (scale*100)
+	// set in minimaprender::onupdate
 	miniMapRender->scale = Vector(0.55, 0.55);
 
 
