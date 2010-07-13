@@ -141,8 +141,8 @@ void ScreenTransition::onRender()
 	int width2 = width/2;
 	int height2 = height/2;
 	
-	const float pw = (float) (double(windowWidth)/double(textureWidth));
-	const float ph = (float) (double(windowHeight)/double(textureHeight));
+	const float pw = float(windowWidth)/float(textureWidth);
+	const float ph = float(windowHeight)/float(textureHeight);
 	
 	/*
 	std::ostringstream os;
@@ -162,7 +162,7 @@ void ScreenTransition::onRender()
 #if 0 //def BBGE_BUILD_MACOSX
 	float aspect = float(core->width) / float(core->height);
 	float checkAspect = 16.0f/10.0f;
-	if (fabs(aspect - checkAspect) < 0.01f)
+	if (fabsf(aspect - checkAspect) < 0.01f)
 	{
 		glTranslatef(0.5f,0.0f,0.0f);
 	}

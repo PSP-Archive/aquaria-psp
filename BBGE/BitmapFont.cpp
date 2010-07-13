@@ -345,9 +345,9 @@ void BitmapText::onRender()
 			{
 				std::pair<int, int> sz;
 				bmpFont->font.GetStringSize(lines[i], &sz);
-				x = -sz.first*0.5*bmpFont->scale;
+				x = -sz.first*0.5f*bmpFont->scale;
 			}
-			float la = 1.0-(scrollDelay/scrollSpeed);
+			float la = 1.0f-(scrollDelay/scrollSpeed);
 			/*
 			std::ostringstream os;
 			os << "la: " << la;
@@ -367,7 +367,7 @@ void BitmapText::onRender()
 			{
 				std::pair<int, int> sz;
 				bmpFont->font.GetStringSize(lines[i], &sz);
-				x = -sz.first*0.5*bmpFont->scale;
+				x = -sz.first*0.5f*bmpFont->scale;
 			}
 			bmpFont->font.DrawString(lines[i], bmpFont->scale, x, y, top_color, bottom_color, alpha.x, 1);
 			y += adj;
@@ -401,7 +401,7 @@ void BitmapText::render()
 			InterpolatedVector oldAlpha = alpha, oldPos = position;
 			Vector adjust(rand()%5-2, rand()%5-2+2);
 			position += adjust;
-			alpha = alpha * 0.4;
+			alpha = alpha * 0.4f;
 			bfePass = 1;
 			RenderObject::render();
 			alpha = oldAlpha;

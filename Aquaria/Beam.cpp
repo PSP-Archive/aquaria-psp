@@ -85,9 +85,9 @@ void Beam::killAllBeams()
 void Beam::trace()
 {
 	float angle = MathFunctions::toRadians(this->angle);
-		//(float(-this->angle)/180.0)*PI;
+		//(float(-this->angle)/180.0f)*PI;
 	//float angle = rotation.z;
-	Vector mov(sin(angle), cos(angle));
+	Vector mov(sinf(angle), cosf(angle));
 	TileVector t(position);
 	Vector startTile(t.x, t.y);
 
@@ -163,7 +163,7 @@ void Beam::onUpdate(float dt)
 
 	Quad::onUpdate(dt);
 
-	if (alpha.x > 0.5)
+	if (alpha.x > 0.5f)
 	{
 		FOR_ENTITIES(i)
 		{

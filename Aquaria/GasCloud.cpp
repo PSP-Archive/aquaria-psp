@@ -60,7 +60,7 @@ void GasCloud::onUpdate(float dt)
 	Entity::onUpdate(dt);
 	if (emitter)
 		emitter->position = this->position;
-	if (life > 0.1)
+	if (life > 0.1f)
 	{
 		if (damage > 0)
 		{

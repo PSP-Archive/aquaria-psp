@@ -52,7 +52,7 @@ void Slider::setValue(float v)
 	if (value > 1)
 		value = 1;
 
-	slider.position.x = (value * sliderLength) - sliderLength/2.0;
+	slider.position.x = (value * sliderLength) - sliderLength/2.0f;
 }
 
 float Slider::getValue()
@@ -71,7 +71,7 @@ void Slider::onUpdate(float dt)
 
 	if (alpha.x != 1) return;	
 	
-	bool b = (core->mouse.buttons.left || core->mouse.buttons.right) && fabs(core->mouse.position.y-position.y) < grabRadius;
+	bool b = (core->mouse.buttons.left || core->mouse.buttons.right) && fabsf(core->mouse.position.y-position.y) < grabRadius;
 	if (!b && inSlider)
 		inSlider = false;
 
@@ -82,14 +82,14 @@ void Slider::onUpdate(float dt)
 		else if (wasDown && !core->mouse.buttons.left)
 		{
 			wasDown = false;
-			setValue(value - 0.1);
+			setValue(value - 0.1f);
 		}
 		if (!wasDown2 && core->mouse.buttons.right)
 			wasDown2 = true;
 		else if (wasDown2 && !core->mouse.buttons.right)
 		{
 			wasDown2 = false;
-			setValue(value + 0.1);
+			setValue(value + 0.1f);
 		}
 	}
 	else

@@ -102,11 +102,11 @@ void DebugFont::onRender()
 #ifdef BBGE_BUILD_OPENGL
 	for (int i = 0; i < lines.size(); i++)
 	{
-		//float width = (lines[i].size()-1) * fontDrawSize * 1.4 * 0.75;
-		float width = (lines[i].size()) * fontDrawSize * 1.4 * 0.75;
+		//float width = (lines[i].size()-1) * fontDrawSize * 1.4f * 0.75f;
+		float width = (lines[i].size()) * fontDrawSize * 1.4f * 0.75f;
 		if (align == ALIGN_CENTER)
 		{
-			glTranslatef(-width*0.5, 0, 0);
+			glTranslatef(-width*0.5f, 0, 0);
 		}
 
 		glColor4f(0,0,0,alpha.x*alphaMod);
@@ -116,7 +116,7 @@ void DebugFont::onRender()
 
 		if (align == ALIGN_CENTER)
 		{
-			glTranslatef(width*0.5, 0, 0);
+			glTranslatef(width*0.5f, 0, 0);
 		}
 	}
 #endif
@@ -141,11 +141,11 @@ DebugButton::DebugButton(int buttonID, DebugButtonReceiver *receiver, int bgWidt
 
 	highlight = new Quad();
 	highlight->setWidthHeight(szw, fsize);
-	highlight->position = Vector(szw*0.5, 0);
+	highlight->position = Vector(szw*0.5f, 0);
 	highlight->alpha = 0.5;
 	addChild(highlight, PM_POINTER);
 
-	label = new DebugFont(float(fsize)/3.0, "DebugButton");
+	label = new DebugFont(float(fsize)/3.0f, "DebugButton");
 	label->position = Vector(20, 0);
 	addChild(label, PM_POINTER);
 

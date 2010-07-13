@@ -254,7 +254,7 @@ void Joystick::callibrate(Vector &calvec, float deadZone)
 			Vector pos2 = calvec;
 			pos2.setLength2D(deadZone);
 			calvec -= pos2;
-			float mult = 1.0/float(1.0-deadZone);
+			float mult = 1.0f/float(1.0f-deadZone);
 			calvec.x *= mult;
 			calvec.y *= mult;
 			if (calvec.x > 1)
@@ -284,14 +284,14 @@ void Joystick::update(float dt)
 
 		Sint16 xaxis = SDL_JoystickGetAxis(sdl_joy, s1ax);
 		Sint16 yaxis = SDL_JoystickGetAxis(sdl_joy, s1ay);
-		position.x = double(xaxis)/32768.0;
-		position.y = double(yaxis)/32768.0;
+		position.x = xaxis/32768.0f;
+		position.y = yaxis/32768.0f;
 
 
 		Sint16 xaxis2 = SDL_JoystickGetAxis(sdl_joy, s2ax);
 		Sint16 yaxis2 = SDL_JoystickGetAxis(sdl_joy, s2ay);
-		rightStick.x = double(xaxis2)/32768.0;
-		rightStick.y = double(yaxis2)/32768.0;
+		rightStick.x = xaxis2/32768.0f;
+		rightStick.y = yaxis2/32768.0f;
 
 		/*
 		std::ostringstream os;
@@ -343,8 +343,8 @@ void Joystick::update(float dt)
 		XINPUT_STATE xinp;
 		XInputGetState(0, &xinp);
 		
-		leftTrigger = float(xinp.Gamepad.bLeftTrigger)/255.0;
-		rightTrigger = float(xinp.Gamepad.bRightTrigger)/255.0;
+		leftTrigger = float(xinp.Gamepad.bLeftTrigger)/255.0f;
+		rightTrigger = float(xinp.Gamepad.bRightTrigger)/255.0f;
 
 		leftShoulder = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER;
 		rightShoulder = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER;
@@ -367,10 +367,10 @@ void Joystick::update(float dt)
 		buttons[2] = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_X?DOWN:UP;
 		buttons[3] = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_Y?DOWN:UP;
 
-		position = Vector(xinp.Gamepad.sThumbLX, xinp.Gamepad.sThumbLY)/32768.0;
+		position = Vector(xinp.Gamepad.sThumbLX, xinp.Gamepad.sThumbLY)/32768.0f;
 		position.y = -rightStick.y;
 
-		rightStick = Vector(xinp.Gamepad.sThumbRX, xinp.Gamepad.sThumbRY)/32768.0;
+		rightStick = Vector(xinp.Gamepad.sThumbRX, xinp.Gamepad.sThumbRY)/32768.0f;
 		rightStick.y = -rightStick.y;
 
 		callibrate(position, deadZone1);

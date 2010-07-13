@@ -31,16 +31,16 @@ float Bias( float x, float biasAmt )
 	static float lastExponent = 0;
 	if( lastAmt != biasAmt )
 	{
-		lastExponent = log( biasAmt ) * -1.4427f; // (-1.4427 = 1 / log(0.5))
+		lastExponent = logf( biasAmt ) * -1.4427f; // (-1.4427 = 1 / log(0.5))
 	}
-	return pow( x, lastExponent );
+	return powf( x, lastExponent );
 }
 
 
 float Gain( float x, float biasAmt )
 {
 	// WARNING: not thread safe
-	if( x < 0.5 )
+	if( x < 0.5f )
 		return 0.5f * Bias(2*x, 1-biasAmt);
 	else
 		return 1 - 0.5f * Bias(2 - 2*x, 1-biasAmt);
@@ -49,7 +49,7 @@ float Gain( float x, float biasAmt )
 
 float SmoothCurve( float x )
 {
-	return (1 - cos( x * PI )) * 0.5f;
+	return (1 - cosf( x * PI )) * 0.5f;
 }
 
 
@@ -59,7 +59,7 @@ inline float MovePeak( float x, float flPeakPos )
 	if( x < flPeakPos )
 		return x * 0.5f / flPeakPos;
 	else
-		return 0.5 + 0.5 * (x - flPeakPos) / (1 - flPeakPos);
+		return 0.5f + 0.5f * (x - flPeakPos) / (1 - flPeakPos);
 }
 
 
@@ -93,12 +93,12 @@ const Vector Vector::unitVector3D() const
 
 const scalar_t Vector::getLength3D() const
 {
-    return (scalar_t)sqrt((double)(x*x + y*y + z*z));
+    return (scalar_t)sqrtf(x*x + y*y + z*z);
 }
 
 const scalar_t Vector::getLength2D() const
 {
-    return (scalar_t)sqrt((double)(x*x + y*y));
+    return (scalar_t)sqrtf(x*x + y*y);
 }
 
 void Vector::rotate2D360(int angle)
@@ -414,15 +414,15 @@ Vector VectorPath::getValue(float percent)
 		/*
 		int nexti = i + 1;
 		int previ = i - 1;
-		if (perc > 0.5 && nexti < pathNodes.size())
+		if (perc > 0.5f && nexti < pathNodes.size())
 		{
-			float scale = ((perc-0.5)/0.5) * 0.1;
-			targetValue = targetValue * (1.0-scale) + pathNodes[nexti].value * scale;
+			float scale = ((perc-0.5f)/0.5f) * 0.1f;
+			targetValue = targetValue * (1.0f-scale) + pathNodes[nexti].value * scale;
 		}
-		else if (perc < 0.5 && previ > 0)
+		else if (perc < 0.5f && previ > 0)
 		{
-			float scale = (1.0-(perc/0.5)) * 0.1;
-			targetValue = targetValue * (1.0-scale) + pathNodes[previ].value * scale;
+			float scale = (1.0f-(perc/0.5f)) * 0.1f;
+			targetValue = targetValue * (1.0f-scale) + pathNodes[previ].value * scale;
 		}
 		*/
 		
@@ -432,22 +432,22 @@ Vector VectorPath::getValue(float percent)
 		/*
 		int nexti = i + 1;
 		int previ = i - 1;
-		if (smoothing && perc >= 0.5 && nexti < pathNodes.size() && nexti >= 0)
+		if (smoothing && perc >= 0.5f && nexti < pathNodes.size() && nexti >= 0)
 		{
 			VectorPathNode *next = &pathNodes[nexti];
-			float nextPerc = perc - 0.5;
+			float nextPerc = perc - 0.5f;
 			v = (target->value - from->value) * (perc-nextPerc);
 			Vector v2 = (next->value - from->value) * nextPerc;
 			v = v+v2;
 			v += from->value;
 		}
-		else if (smoothing && perc <= 0.5 && previ < pathNodes.size() && previ >= 0)
+		else if (smoothing && perc <= 0.5f && previ < pathNodes.size() && previ >= 0)
 		{
 			VectorPathNode *prev = &pathNodes[previ];
-			float prevPerc = perc + 0.5;
+			float prevPerc = perc + 0.5f;
 			v = (target->value - from->value) * (perc-prevPerc);
 			Vector v2 = (from->value - prev->value) * prevPerc;
-			//v = (v + v2)/2.0;
+			//v = (v + v2)/2.0f;
 			v = v+v2;
 			v += from->value;
 		}
@@ -469,7 +469,7 @@ Vector VectorPath::getValue(float percent)
 			float dist = (target->value - p).getLength2D();
 			if (dist > 0)
 			{
-				float bulge = sin(perc * PI);
+				float bulge = sinf(perc * PI);
 				perp |= dist;
 				perp *= bulge;
 			}
@@ -645,12 +645,12 @@ void InterpolatedVector::updatePath(float dt)
 			float diff = pathTime - pathTimer;
 			if (timeSpeedEase > 0)
 			{
-				float secs = 1.0/timeSpeedEase;
+				float secs = 1.0f/timeSpeedEase;
 				if (diff <= secs)
 				{
 					timeSpeedMultiplier -= dt*timeSpeedEase;
-					if (timeSpeedMultiplier < 0.1)
-						timeSpeedMultiplier = 0.1;
+					if (timeSpeedMultiplier < 0.1f)
+						timeSpeedMultiplier = 0.1f;
 				}
 			}
 			if (timeSpeedMultiplier < 1)
@@ -682,7 +682,7 @@ void InterpolatedVector::updatePath(float dt)
 			*/
 			if (node)
 			{
-				interpolateTo(node->value, (node->value - Vector(this->x, this->y, this->z)).getLength3D()*(1.0/pathSpeed));
+				interpolateTo(node->value, (node->value - Vector(this->x, this->y, this->z)).getLength3D()*(1.0f/pathSpeed));
 			}
 			else
 			{
@@ -723,9 +723,9 @@ void InterpolatedVector::update(float dt)
 		if (ease)
 		{
 			float diff = timePassed / timePeriod;
-			if (diff > 0.5)
-				diff = 1.0 - diff;
-			diff /= 0.5;
+			if (diff > 0.5f)
+				diff = 1.0f - diff;
+			diff /= 0.5f;
 			diff *= 2;
 			//diff += 0.5f;
 			fakeTimePassed += dt*diff;
@@ -831,12 +831,12 @@ Vector lerp(const Vector &v1, const Vector &v2, float dt, int lerpType)
 		case LERP_EASE:
 		{
 			// ease in and out
-			return v1*(2*pow(dt, 3)-3*pow(dt,2)+1) + v2*(3*pow(dt,2) - 2*pow(dt,3));
+			return v1*(2*(dt*dt*dt)-3*sqr(dt)+1) + v2*(3*sqr(dt) - 2*(dt*dt*dt));
 		}
 		case LERP_EASEIN:
 		{
-			float lerpAvg = 1.0-dt;
-			return (v2-v1)*(sinf(dt*PI_HALF)*(1.0-lerpAvg)+dt*lerpAvg)+v1;
+			float lerpAvg = 1.0f-dt;
+			return (v2-v1)*(sinf(dt*PI_HALF)*(1.0f-lerpAvg)+dt*lerpAvg)+v1;
 		}
 		case LERP_EASEOUT:
 		{

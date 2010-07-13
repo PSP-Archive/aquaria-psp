@@ -94,9 +94,9 @@ void UserSettings::save()
 
 			TiXmlElement xml_volume("Volume");
 			{
-				xml_volume.SetDoubleAttribute("sfx", audio.sfxvol);
-				xml_volume.SetDoubleAttribute("vox", audio.voxvol);
-				xml_volume.SetDoubleAttribute("mus", audio.musvol);
+				xml_volume.SetDoubleAttribute("sfx", double(audio.sfxvol));
+				xml_volume.SetDoubleAttribute("vox", double(audio.voxvol));
+				xml_volume.SetDoubleAttribute("mus", double(audio.musvol));
 				xml_volume.SetAttribute("subs", audio.subtitles);
 			}
 			xml_audio.InsertEndChild(xml_volume);
@@ -196,7 +196,7 @@ void UserSettings::save()
 
 			TiXmlElement xml_joyCursorSpeed("JoyCursorSpeed");
 			{
-				xml_joyCursorSpeed.SetDoubleAttribute("v", control.joyCursorSpeed);
+				xml_joyCursorSpeed.SetDoubleAttribute("v", double(control.joyCursorSpeed));
 			}
 			xml_control.InsertEndChild(xml_joyCursorSpeed);
 
@@ -206,8 +206,8 @@ void UserSettings::save()
 				xml_joyAxes.SetAttribute("s1ay", control.s1ay);
 				xml_joyAxes.SetAttribute("s2ax", control.s2ax);
 				xml_joyAxes.SetAttribute("s2ay", control.s2ay);
-				xml_joyAxes.SetDoubleAttribute("s1dead", control.s1dead);
-				xml_joyAxes.SetDoubleAttribute("s2dead", control.s2dead);
+				xml_joyAxes.SetDoubleAttribute("s1dead", double(control.s1dead));
+				xml_joyAxes.SetDoubleAttribute("s2dead", double(control.s2dead));
 			}
 			xml_control.InsertEndChild(xml_joyAxes);
 			
@@ -376,9 +376,10 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		TiXmlElement *xml_volume = xml_audio->FirstChildElement("Volume");
 		if (xml_volume)
 		{
-			xml_volume->Attribute("sfx", &audio.sfxvol);
-			xml_volume->Attribute("vox", &audio.voxvol);
-			xml_volume->Attribute("mus", &audio.musvol);
+			double d;
+			xml_volume->Attribute("sfx", &d), audio.sfxvol = d;
+			xml_volume->Attribute("vox", &d), audio.voxvol = d;
+			xml_volume->Attribute("mus", &d), audio.musvol = d;
 			xml_volume->Attribute("subs", &audio.subtitles);
 		}
 
@@ -442,8 +443,9 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		TiXmlElement *xml_joyCursorSpeed = xml_control->FirstChildElement("JoyCursorSpeed");
 		if (xml_joyCursorSpeed)
 		{
+			double d;
 			if (xml_joyCursorSpeed->Attribute("v"))
-				xml_joyCursorSpeed->Attribute("v", &control.joyCursorSpeed);
+				xml_joyCursorSpeed->Attribute("v", &d), control.joyCursorSpeed = d;
 		}
 
 		TiXmlElement *xml_joyAxes = xml_control->FirstChildElement("JoyAxes");
@@ -453,8 +455,9 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 			xml_joyAxes->Attribute("s1ay", &control.s1ay);
 			xml_joyAxes->Attribute("s2ax", &control.s2ax);
 			xml_joyAxes->Attribute("s2ay", &control.s2ay);
-			xml_joyAxes->Attribute("s1dead", &control.s1dead);
-			xml_joyAxes->Attribute("s2dead", &control.s2dead);
+			double d;
+			xml_joyAxes->Attribute("s1dead", &d), control.s1dead = d;
+			xml_joyAxes->Attribute("s2dead", &d), control.s2dead = d;
 		}
 
 		TiXmlElement *xml_actionSet = xml_control->FirstChildElement("ActionSet");

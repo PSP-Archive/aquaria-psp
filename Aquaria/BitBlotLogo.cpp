@@ -140,14 +140,14 @@ void BitBlotLogo::applyState()
 		bird->getBoneByIdx(0)->alphaMod = 0.3;
 		bird->getBoneByIdx(1)->alphaMod = 0.3;
 		landscape->addChild(bird, PM_POINTER, RBP_OFF);
-		bird->update((rand()%100)*0.1);
+		bird->update((rand()%100)*0.1f);
 	}
 
 	//if (true)
 	if (rand()%100 < 40)
 	{
 		SkeletalSprite *dragon = new SkeletalSprite();
-		dragon->scale = Vector(0.9*0.6, 0.9*0.6);
+		dragon->scale = Vector(0.9f*0.6f, 0.9f*0.6f);
 		dragon->loadSkeletal("bb-dragon");
 		dragon->animate("idle", -1);
 		dragon->position = Vector(300 , -100);
@@ -157,7 +157,7 @@ void BitBlotLogo::applyState()
 		}
 		dragon->shareAlphaWithChildren = 1;
 		landscape->addChild(dragon, PM_POINTER, RBP_OFF);
-		dragon->update((rand()%100)*0.1);
+		dragon->update((rand()%100)*0.1f);
 	}
 
 	std::vector<SkeletalSprite*> windmills;
@@ -170,7 +170,7 @@ void BitBlotLogo::applyState()
 		windmill->position = Vector(-200 + rand()%150, 100+rand()%300);
 		windmill->shareAlphaWithChildren = 1;
 		landscape->addChild(windmill, PM_POINTER, RBP_OFF);
-		windmill->update((rand()%100)*0.1);
+		windmill->update((rand()%100)*0.1f);
 		windmill->scale = Vector(0.7, 0.7);
 		for (int i = 0; i < windmill->bones.size(); i++)
 		{

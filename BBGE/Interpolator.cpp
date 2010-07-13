@@ -56,7 +56,7 @@ void Interpolator::interpolateBySpeed (float interTo, float speed, int ltype)
 	from = *updatee;
 	timePassed = 0.0f;
 	useSpeed = false;
-	timePeriod = fabs(to-from) / speed;
+	timePeriod = fabsf(to-from) / speed;
 
 	interpolating = true;
 }

@@ -41,8 +41,8 @@ void GridRender::onUpdate(float dt)
 
 void GridRender::onRender()
 {	
-	float width2 = float(TILE_SIZE)/2.0;
-	float height2 = float(TILE_SIZE)/2.0;
+	float width2 = float(TILE_SIZE)/2.0f;
+	float height2 = float(TILE_SIZE)/2.0f;
 	int skip = 1;
 	
 	if (width2 < 5)
@@ -182,12 +182,12 @@ void SongLineRender::onRender()
 {
 	int w=core->getWindowWidth();
 	//core->getWindowWidth(&w);
-	int ls = (4*w)/1024.0;
+	int ls = (4*w)/1024.0f;
 	if (ls < 0)
 		ls = 1;
 #ifdef BBGE_BUILD_OPENGL
 	glLineWidth(ls);
-	const int alphaLine = pts.size()*(0.9);
+	const int alphaLine = pts.size()*(0.9f);
 	float a = 1;
 	glBegin(GL_LINE_STRIP);
 	for (int i = 0; i < pts.size(); i++)

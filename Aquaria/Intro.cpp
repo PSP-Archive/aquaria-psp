@@ -350,7 +350,7 @@ void Intro::update(float dt)
 		mc2->alpha = 1;
 		mc2->alpha.interpolateTo(0.2, bt*2);
 		mc2->offset = Vector(-200, 0);
-		mc2->offset.interpolateTo(Vector(0,0), bt*1.5);
+		mc2->offset.interpolateTo(Vector(0,0), bt*1.5f);
 		mc2->cull = false;
 		addRenderObject(mc1, LR_HUD2);
 
@@ -432,7 +432,7 @@ void Intro::update(float dt)
 			Bone *b = city->getBoneByIdx(i);
 			b->scale.interpolateTo(Vector(0.2, 1), 0.2, -1, 1);
 		}
-		city->alpha.interpolateTo(1.0, bt*0.75);
+		city->alpha.interpolateTo(1.0, bt*0.75f);
 		city->internalOffset = Vector(0, 50);
 		city->scale = Vector(0.6, 0.6);
 		city->scale.interpolateTo(Vector(0.75, 0.75), bt);
@@ -522,7 +522,7 @@ void Intro::update(float dt)
 		ericHandBrush->scale.interpolateTo(Vector(1.7,1.7), brusht, 0, 0, 1);
 		ericHandBrush->followCamera = 1;
 		ericHandBrush->rotation.interpolateTo(Vector(0,0,-20), brusht);
-		ericHandBrush->offset.interpolateTo(Vector(550, 550), brusht*0.75, 0, 0, 1);
+		ericHandBrush->offset.interpolateTo(Vector(550, 550), brusht*0.75f, 0, 0, 1);
 		addRenderObject(ericHandBrush, LR_HUD);
 
 

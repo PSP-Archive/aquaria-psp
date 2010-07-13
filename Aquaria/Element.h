@@ -78,7 +78,7 @@ public:
 	//InteractionContainer interactions;
 	int templateIdx;
 	int bgLayer;
-	double getSortDepth();
+	float getSortDepth();
 	bool dontSave;
 	void render();
 	//Flags elementFlags;

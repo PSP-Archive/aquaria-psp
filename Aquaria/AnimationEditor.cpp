@@ -569,7 +569,7 @@ void AnimationEditor::moveBoneStripPoint(const Vector &mov)
 					b->strip.resize(sel->changeStrip.size());
 				}
 
-				b->strip[selectedStripPoint] = sel->changeStrip[selectedStripPoint] += mov*0.006;
+				b->strip[selectedStripPoint] = sel->changeStrip[selectedStripPoint] += mov*0.006f;
 				sel->setGridPoints(sel->stripVert, sel->strip);
 				/*
 
@@ -675,20 +675,20 @@ void AnimationEditor::update(float dt)
 	int spd = 1;
 	if (core->mouse.scrollWheelChange < 0)
 	{
-		editSprite->scale -= Vector(spd*0.05,spd*0.05);
+		editSprite->scale -= Vector(spd*0.05f,spd*0.05f);
 	}
 	else if (core->mouse.scrollWheelChange > 0)
 	{
-		editSprite->scale += Vector(spd*0.05,spd*0.05);
+		editSprite->scale += Vector(spd*0.05f,spd*0.05f);
 	}
 
 	if (core->getKeyState(KEY_PGDN))
 	{
-		editSprite->scale -= Vector(spd*0.05,spd*0.05);
+		editSprite->scale -= Vector(spd*0.05f,spd*0.05f);
 	}
 	if (core->getKeyState(KEY_PGUP))
 	{
-		editSprite->scale += Vector(spd*0.05,spd*0.05);
+		editSprite->scale += Vector(spd*0.05f,spd*0.05f);
 	}
 
 	if (boneEdit == 0)

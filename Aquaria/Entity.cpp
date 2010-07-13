@@ -217,7 +217,7 @@ bool Entity::setBoneLock(const BoneLock &boneLock)
 				this->boneLock.offRot -= PI;
 			while (this->boneLock.offRot < 0)
 				this->boneLock.offRot += PI;
-			//this->boneLock.offRot = atan(this->boneLock.circleOffset.y / this->boneLock.circleOffset.x);
+			//this->boneLock.offRot = atanf(this->boneLock.circleOffset.y / this->boneLock.circleOffset.x);
 			//
 			//this->boneLock.localOffset = boneLock.bone->getOriginCollidePosition(this->boneLock.localOffset);
 			*/
@@ -590,7 +590,7 @@ void Entity::followPath(Path *p, int speedType, int dir, bool deleteOnEnd)
 			for (int i = p->nodes.size()-1; i >=0; i--)
 			{
 				PathNode pn = p->nodes[i];
-				position.path.addPathNode(pn.position, 1.0-(float(i/float(p->nodes.size()))));
+				position.path.addPathNode(pn.position, 1.0f-(float(i/float(p->nodes.size()))));
 			}
 		}
 		else
@@ -605,7 +605,7 @@ void Entity::followPath(Path *p, int speedType, int dir, bool deleteOnEnd)
 		float time = position.path.getLength()/(float)dsq->continuity.getSpeedType(speedType);
 		debugLog("Starting");
 		position.path.getPathNode(0)->value = position;
-		position.startPath(time);//, 1.0/2.0);
+		position.startPath(time);//, 1.0f/2.0f);
 		//swimPath = true;
 		/*
 		currentPathNode = 1;
@@ -671,7 +671,7 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 	float time = position.path.getLength()/(float)dsq->continuity.getSpeedType(speedType);
 	debugLog("Starting");
 	position.path.getPathNode(0)->value = position;
-	position.startPath(time);//, 1.0/2.0);
+	position.startPath(time);//, 1.0f/2.0f);
 
 	/*
 	if (dieOnPathEnd)
@@ -1093,7 +1093,7 @@ void Entity::doMovementPattern(Entity *target, MovementPatternType type, int min
 	}
 	else
 	{
-		vel -= vel*dt*0.5;
+		vel -= vel*dt*0.5f;
 	}
 }
 
@@ -1422,7 +1422,7 @@ void Entity::update(float dt)
 			{
 				// possible bug here because of return
 				return;
-				//dt *= 0.5;
+				//dt *= 0.5f;
 			}
 			//if (dsq->continuity.getWorldType() != WT_NORMAL)
 			//	return;
@@ -1706,9 +1706,9 @@ bool Entity::updateCurrents(float dt)
 			if (getEntityType() == ET_AVATAR)
 			{
 				if (v < 0)
-					dsq->rumble((-v)*scale, (1.0+v)*scale, 0.2);
+					dsq->rumble((-v)*scale, (1.0f+v)*scale, 0.2);
 				else
-					dsq->rumble((1.0-v)*scale, (v)*scale, 0.1);
+					dsq->rumble((1.0f-v)*scale, (v)*scale, 0.1);
 			}
 		}
 	}
@@ -2009,7 +2009,7 @@ void Entity::onUpdate(float dt)
 		}
 		else
 		{
-			position.pathTimeMultiplier = 1.0 - (slowingToStopPathTimer / slowingToStopPath);
+			position.pathTimeMultiplier = 1.0f - (slowingToStopPathTimer / slowingToStopPath);
 		}
 	}
 
@@ -2042,7 +2042,7 @@ void Entity::onUpdate(float dt)
 				DamageData d;
 				d.damageType = DT_ENEMY_ACTIVEPOISON;
 				d.useTimer = false;
-				d.damage = 0.5*poison;
+				d.damage = 0.5f*poison;
 				damage(d);
 
 				dsq->spawnParticleEffect("PoisonBubbles", position);
@@ -2138,7 +2138,7 @@ void Entity::onUpdate(float dt)
 				PathNode *previousNode = &followingPath->nodes[currentPathNode-1];
 				distBetweenNodes = (node->position - previousNode->position).getLength2D();
 			}
-			setMaxSpeed(lastPathMaxSpeed + (ms - lastPathMaxSpeed)*(1.0-(distFromNode/distBetweenNodes)));
+			setMaxSpeed(lastPathMaxSpeed + (ms - lastPathMaxSpeed)*(1.0f-(distFromNode/distBetweenNodes)));
 		}
 		//setMaxSpeed(ms);
 		Vector diffVec = (node->position - this->position);
@@ -2358,7 +2358,7 @@ void Entity::updateLance(float dt)
 		{
 			lanceGfx->fhTo(_fh);
 			lanceDelay = lanceDelay + dt;
-			if (lanceDelay > 0.1)
+			if (lanceDelay > 0.1f)
 			{
 				lanceDelay = 0;
 				dsq->game->fireShot("Lance", this, 0, lanceGfx->getWorldCollidePosition(Vector(-64, 0)));
@@ -2436,7 +2436,7 @@ void Entity::detachEntity(Entity *e)
 	}
 }
 
-//if (fabs(rotation.z - angle) > 180)
+//if (fabsf(rotation.z - angle) > 180)
 //{
 //	rotation.z += 360;
 //}
@@ -2479,7 +2479,7 @@ void Entity::rotateToVec(Vector addVec, float time, int offsetAngle)
 		*/
 
 		/*
-		if (fabs(angle - rotation.z) > 180)
+		if (fabsf(angle - rotation.z) > 180)
 		{
 			// something's wrong
 			rotation.z += 360;
@@ -2840,7 +2840,7 @@ void Entity::onEnterState(int action)
 		if (!isGoingToBeEaten())
 		{
 			if (!deathSound.empty())
-				sound(deathSound, (800 + rand()%400)/1000.0);
+				sound(deathSound, (800 + rand()%400)/1000.0f);
 		}
 		else
 		{
@@ -2901,7 +2901,7 @@ void Entity::freeze(float time)
 		bubble->alpha.path.addPathNode(0.5, 0);
 		bubble->alpha.path.addPathNode(0.5, 0.75);
 		bubble->alpha.path.addPathNode(0, 1);
-		bubble->alpha.startPath(time+time*0.25);
+		bubble->alpha.startPath(time+time*0.25f);
 		core->getTopStateData()->addRenderObject(bubble, LR_PARTICLES);
 
 	}
@@ -3495,7 +3495,7 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, i
 		{
 			Vector a = position - waterBubble->nodes[0].position;
 			Vector b = a;
-			b.setLength2D((waterBubble->rect.getWidth()*0.5) - b.getLength2D());
+			b.setLength2D((waterBubble->rect.getWidth()*0.5f) - b.getLength2D());
 			if (b.isLength2DIn(search*TILE_SIZE))
 			{
 				/*
@@ -3519,7 +3519,7 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, i
 	TileVector t(position);
 	TileVector useTile;
 
-	float totalDist = sqrt(float(sqr((search*2)*TILE_SIZE)+sqr((search*2)*TILE_SIZE)));
+	float totalDist = sqrtf(float(sqr((search*2)*TILE_SIZE)+sqr((search*2)*TILE_SIZE)));
 	for (int x = -search; x <= search; x++)
 	{
 		for (int y = -search; y <= search; y++)
@@ -3554,7 +3554,7 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, i
 	{
 		accum /= float(c);
 		accum /= totalDist/2;
-		accum.setLength2D(1.0 - accum.getLength2D());
+		accum.setLength2D(1.0f - accum.getLength2D());
 		if (onlyVP)
 		{
 			*vp += accum*overrideMaxSpeed*mod;
