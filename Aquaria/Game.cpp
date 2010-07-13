@@ -8162,6 +8162,7 @@ void Game::onPressEscape()
 
 		if ((dsq->saveSlotMode != SSM_NONE || dsq->inModSelector) && core->isNested())
 		{
+			dsq->selectedSaveSlot = 0;
 			core->quitNestedMain();
 		}
 	}
@@ -8170,6 +8171,7 @@ void Game::onPressEscape()
 void Game::onDebugSave()
 {
 	hideInGameMenu();
+	clearControlHint();
 	core->main(0.5);
 	dsq->game->togglePause(true);
 	dsq->doSaveSlotMenu(SSM_SAVE);

@@ -2229,7 +2229,7 @@ void Continuity::upgradeHealth()
 	a->heal(maxHealth - a->health);
 }
 
-void Continuity::saveFile(int slot, Vector position)
+void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData, int scrShotWidth, int scrShotHeight)
 {
 	if (position.isZero())
 	{
