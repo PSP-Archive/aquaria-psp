@@ -4626,80 +4626,83 @@ int Core::getVirtualHeight()
 }
 */
 
-// takes a screen shot and saves it to a TGA image
-int Core::saveScreenshotTGA(const std::string &filename)
+// Take a screenshot of the specified region of the screen and store it
+// in a 32bpp pixel buffer.  delete[] the returned buffer when it's no
+// longer needed.
+unsigned char *Core::grabScreenshot(int x, int y, int w, int h)
 {
 #ifdef BBGE_BUILD_OPENGL
-	int w, h;
+
 	unsigned char *imageData;
-	int xmin=0,ymin=0,xmax = getWindowWidth(), ymax = getWindowHeight();
 
-// compute width and heidth of the image
-	w = xmax - xmin;
-	h = ymax - ymin;
+	unsigned int size = sizeof(unsigned char) * w * h * 4;
+	imageData = new unsigned char[size];
 
-// allocate memory for the pixels
-	imageData = (unsigned char *)malloc(sizeof(unsigned char) * w * h * 4);
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	glDisable(GL_BLEND);
+	glDisable(GL_ALPHA_TEST); glDisable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST); glDisable(GL_DITHER); glDisable(GL_FOG);
+	glDisable(GL_LIGHTING); glDisable(GL_LOGIC_OP);
+	glDisable(GL_STENCIL_TEST); glDisable(GL_TEXTURE_1D);
+	glDisable(GL_TEXTURE_2D); glPixelTransferi(GL_MAP_COLOR, GL_FALSE);
+	glPixelTransferi(GL_RED_SCALE, 1); glPixelTransferi(GL_RED_BIAS, 0);
+	glPixelTransferi(GL_GREEN_SCALE, 1); glPixelTransferi(GL_GREEN_BIAS, 0);
+	glPixelTransferi(GL_BLUE_SCALE, 1); glPixelTransferi(GL_BLUE_BIAS, 0);
+	glPixelTransferi(GL_ALPHA_SCALE, 1); glPixelTransferi(GL_ALPHA_BIAS, 0);
+	glRasterPos2i(0, 0);
+	glReadPixels(x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)imageData);
+	glPopAttrib();
 
-// read the pixels from the frame buffer
-	glReadPixels(xmin, ymin, xmax, ymax, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid *)imageData);
-
+	// Force all alpha values to 255.
 	unsigned char *c = imageData;
-	for (int x=0; x < w; x++)
+	for (int x = 0; x < w; x++)
 	{
-		for (int y=0; y< h; y++)
+		for (int y = 0; y < h; y++, c += 4)
 		{
-			c += 3;
-			(*c) = 255;
-			c ++;
+			c[3] = 255;
 		}
 	}
 
+	return imageData;
 
-// save the image
-	return(tgaSave((char*)filename.c_str(),w,h,32,imageData));
+#else
+
+	#warning FIXME: Need to implement non-GL grabScreenshot().
+	// Avoid crashing, at least.
+	return new unsigned char[sizeof(unsigned char) * w * h * 4];
+
 #endif
-	return 0;
+}
+
+// Like grabScreenshot(), but grab from the center of the screen.
+unsigned char *Core::grabCenteredScreenshot(int w, int h)
+{
+	return grabScreenshot(core->width/2 - w/2, core->height/2 - h/2, w, h);
+}
+
+// takes a screen shot and saves it to a TGA image
+int Core::saveScreenshotTGA(const std::string &filename)
+{
+	int w = getWindowWidth(), h = getWindowHeight();
+	unsigned char *imageData = grabCenteredScreenshot(w, h);
+	return tgaSave(filename.c_str(),w,h,32,imageData);
 }
 
 void Core::saveCenteredScreenshotTGA(const std::string &filename, int sz)
 {
 	int w=sz, h=sz;
-	unsigned char *imageData;
-
-	int width = core->width;
-	int height = core->height;
-
 	int hsm = (w * 3.0f) / 4.0f;
+	unsigned char *imageData = grabCenteredScreenshot(w, hsm);
 
-	int w2 = w/2; int h2 = hsm/2;
-	int width2 = width/2; int height2 = height/2;
+	int imageDataSize = sizeof(unsigned char) * w * hsm * 4;
+	int tgaImageSize = sizeof(unsigned char) * w * h * 4;
+	unsigned char *tgaImage = new unsigned char[tgaImageSize];
+	memcpy(tgaImage, imageData, imageDataSize);
+	memset(tgaImage + imageDataSize, 0, tgaImageSize - imageDataSize);
+	delete[] imageData;
 
-	unsigned int size = sizeof(unsigned char) * w * h * 3;
-	imageData = (unsigned char *)malloc(size);
-
-	glRasterPos2i(0, 0);
-
-	glPushAttrib(GL_ALL_ATTRIB_BITS);
-
-	glDisable(GL_BLEND);
-
-	glDisable(GL_ALPHA_TEST); glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST); glDisable(GL_DITHER); glDisable(GL_FOG);
-	glDisable(GL_LIGHTING); glDisable(GL_LOGIC_OP);
-	glDisable(GL_STENCIL_TEST); glDisable(GL_TEXTURE_1D);
-	glDisable(GL_TEXTURE_2D); glPixelTransferi(GL_MAP_COLOR,
-		GL_FALSE); glPixelTransferi(GL_RED_SCALE, 1);
-	glPixelTransferi(GL_RED_BIAS, 0); glPixelTransferi(GL_GREEN_SCALE, 1);
-	glPixelTransferi(GL_GREEN_BIAS, 0); glPixelTransferi(GL_BLUE_SCALE, 1);
-	glPixelTransferi(GL_BLUE_BIAS, 0); glPixelTransferi(GL_ALPHA_SCALE, 1);
-	glPixelTransferi(GL_ALPHA_BIAS, 0);
-
-	//glCopyPixels(0, 0, width, height, GL_COLOR);
-	glReadPixels(width2-w2, height2-h2, w, hsm, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)imageData);
-	int savebits = 24;
-	tgaSave((char*)filename.c_str(),w,h,savebits,imageData);
-	glPopAttrib();
+	int savebits = 32;
+	tgaSave(filename.c_str(),w,h,savebits,tgaImage);
 }
 
 void Core::saveSizedScreenshotTGA(const std::string &filename, int sz, int crop34)
@@ -4781,7 +4784,7 @@ void Core::saveSizedScreenshotTGA(const std::string &filename, int sz, int crop3
 
 	int savebits = 24;
 	debugLog("saving bpp");
-	tgaSave((char*)filename.c_str(),w,h,savebits,imageData);
+	tgaSave(filename.c_str(),w,h,savebits,imageData);
 
 	debugLog("pop");
 	//glPopAttrib();
@@ -4826,7 +4829,7 @@ void Core::save64x64ScreenshotTGA(const std::string &filename)
 
 
 // save the image
-	tgaSave((char*)filename.c_str(),64,64,32,imageData);
+	tgaSave(filename.c_str(),64,64,32,imageData);
 	glPixelZoom(1,1);
 #endif
 
@@ -4838,8 +4841,8 @@ void Core::save64x64ScreenshotTGA(const std::string &filename)
 
 
 
-// saves an array of pixels as a TGA image
-int Core::tgaSave(	char 		*filename,
+// saves an array of pixels as a TGA image (frees the image data passed in)
+int Core::tgaSave(	const char	*filename,
 		short int	width,
 		short int	height,
 		unsigned char	pixelDepth,
@@ -4881,7 +4884,7 @@ int Core::tgaSave(	char 		*filename,
 
 	fwrite(&cGarbage, sizeof(unsigned char), 1, file);
 
-// convert the image data from RGB(a) to BGR(A)
+// convert the image data from RGB(A) to BGR(A)
 	if (mode >= 3)
 	for (i=0; i < width * height * mode ; i+= mode) {
 		aux = imageData[i];
@@ -4893,9 +4896,6 @@ int Core::tgaSave(	char 		*filename,
 	fwrite(imageData, sizeof(unsigned char),
 			width * height * mode, file);
 	fclose(file);
-
-// release the memory
-	free(imageData);
 
 	return (int)true;
 }
