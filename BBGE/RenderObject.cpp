@@ -688,8 +688,6 @@ void RenderObject::renderCall()
 #ifdef BBGE_BUILD_OPENGL
 			if (RenderObject::renderPaths && position.data && position.data->path.getNumPathNodes() > 0)
 			{
-				// FIXME: Isn't this parameter order wrong?  --achurch
-				glRotatef(0, 0, 1, -rotation.z);
 				glLineWidth(4);
 				glEnable(GL_BLEND);
 				
@@ -713,7 +711,6 @@ void RenderObject::renderCall()
 					glVertex2f(position.data->path.getPathNode(i)->value.x-position.x, position.data->path.getPathNode(i)->value.y-position.y);
 				}
 				glEnd();
-				//glPopMatrix();
 			}
 #endif
 #ifdef BBGE_BUILD_OPENGL

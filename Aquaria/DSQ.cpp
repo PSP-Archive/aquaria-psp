@@ -3283,6 +3283,7 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 			sfx.vol = 0.55;
 			dsq->sound->playSfx(sfx);
 			confirm("", "saved", 1);
+
 			clearSaveSlots(true);
 		}
 		else if (saveSlotMode == SSM_LOAD)

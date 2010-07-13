@@ -390,7 +390,7 @@ void PathFinding::molestPath(VectorPath &path)
 				/*
 				if (dist > maxDist)
 					maxDist = dist;
-				n *= (maxDist-dist); // *(1.0-coverage);
+				n *= (maxDist-dist); // *(1.0f-coverage);
 				*/
 				n.setLength2D(200);
 				TileVector test(node + n);
