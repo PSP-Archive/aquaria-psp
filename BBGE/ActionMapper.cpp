@@ -325,19 +325,19 @@ bool ActionMapper::getKeyState(int k)
 	}
 	else if (k == JOY1_STICK_LEFT)
 	{
-		keyState = core->joystick.position.x < -0.6;
+		keyState = core->joystick.position.x < -0.6f;
 	}
 	else if (k == JOY1_STICK_RIGHT)
 	{
-		keyState = core->joystick.position.x > 0.6;
+		keyState = core->joystick.position.x > 0.6f;
 	}
 	else if (k == JOY1_STICK_UP)
 	{
-		keyState = core->joystick.position.y < -0.6;
+		keyState = core->joystick.position.y < -0.6f;
 	}
 	else if (k == JOY1_STICK_DOWN)
 	{
-		keyState = core->joystick.position.y > 0.6;
+		keyState = core->joystick.position.y > 0.6f;
 	}
 	else if (k == X360_BTN_START)
 	{

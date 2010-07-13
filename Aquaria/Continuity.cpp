@@ -489,7 +489,7 @@ std::string Continuity::getIEString(IngredientData *data, int i)
 			std::ostringstream os;
 			os << dsq->continuity.stringBank.get(200) << " ";
 			os << dsq->continuity.stringBank.get(101) << " ";
-			os << fabs(fx.magnitude);
+			os << fabsf(fx.magnitude);
 			return os.str();
 		}
 	break;
@@ -663,7 +663,7 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 		case IET_SPEED:
 		{
 			
-			dsq->continuity.setSpeedMultiplier(1.0 + fx.magnitude*0.5, speedTime);
+			dsq->continuity.setSpeedMultiplier(1.0f + fx.magnitude*0.5f, speedTime);
 			debugLog("ingredient effect: speed");
 
 			dsq->centerMessage(getIEString(data, i), y);
@@ -707,7 +707,7 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 		break;
 		case IET_BITE:
 		{
-			dsq->continuity.setBiteMultiplier(1.0 + fx.magnitude, biteTime);
+			dsq->continuity.setBiteMultiplier(1.0f + fx.magnitude, biteTime);
 			debugLog("ingredient effect: bite");
 
 			dsq->centerMessage(getIEString(data, i), y);
@@ -717,7 +717,7 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 		break;
 		case IET_FISHPOISON:
 		{
-			dsq->continuity.setFishPoison(1.0 * fx.magnitude, fishPoisonTime);
+			dsq->continuity.setFishPoison(1.0f * fx.magnitude, fishPoisonTime);
 			debugLog("ingredient effect: fishPoison");
 
 			dsq->centerMessage(getIEString(data, i), y);
@@ -1025,7 +1025,7 @@ void Continuity::loadIngredientData()
 						else if (bit[c] == '-')
 							fx.magnitude -= 1;
 						else if (bit[c] == '~')
-							fx.magnitude += 0.1;
+							fx.magnitude += 0.1f;
 						c++;
 					}
 					data.effects.push_back(fx);
@@ -1350,7 +1350,7 @@ void Continuity::castSong(int num)
 	effect->alpha.path.addPathNode(0, 0.9);
 	effect->alpha.path.addPathNode(0, 1);
 	effect->alpha.startPath(et);
-	effect->setLife(et+0.1);
+	effect->setLife(et+0.1f);
 	effect->setDecayRate(1);
 	effect->setPositionSnapTo(&dsq->game->avatar->position);
 	dsq->game->addRenderObject(effect, LR_PARTICLES);
@@ -1816,7 +1816,7 @@ void Continuity::update(float dt)
 						core->sound->playSfx("poison");
 
 						DamageData d;
-						d.damage = poison * 0.2;
+						d.damage = poison * 0.2f;
 						d.useTimer = 0;
 						d.damageType = DT_ENEMY_ACTIVEPOISON;
 						dsq->game->avatar->damage(d);
@@ -1886,7 +1886,7 @@ void Continuity::update(float dt)
 				Avatar *a = dsq->game->avatar;
 				if (a)
 				{
-					a->heal(dt*0.5);
+					a->heal(dt*0.5f);
 				}
 				//regenBit = 0;
 			}
@@ -2187,17 +2187,17 @@ PetData *Continuity::getPetData(int idx)
 	return &petData[idx];
 }
 
-bool Continuity::isStory(double v)
+bool Continuity::isStory(float v)
 {
 	return (story == v);
 }
 
-double Continuity::getStory()
+float Continuity::getStory()
 {
 	return story;
 }
 
-void Continuity::setStory(double v)
+void Continuity::setStory(float v)
 {
 	story = v;
 }
@@ -3035,7 +3035,7 @@ public:
 
 		position = Vector(400,400);
 
-		setLife(timeScale+0.1);
+		setLife(timeScale+0.1f);
 		setDecayRate(1);
 
 		/*
@@ -3053,7 +3053,7 @@ protected:
 		Quad::onUpdate(dt);
 
 		timer += dt;
-		if (timer > 0.6*timeScale)
+		if (timer > 0.6f*timeScale)
 		{
 			if (startPos.isZero())
 			{
@@ -3061,7 +3061,7 @@ protected:
 			}
 			else
 			{
-				float p = (timer - (0.6*timeScale)) / (0.4*timeScale);
+				float p = (timer - (0.6f*timeScale)) / (0.4f*timeScale);
 				position = ((dsq->game->miniMapRender->position + dsq->game->miniMapRender->offset) - startPos)*p + startPos;
 			}
 		}

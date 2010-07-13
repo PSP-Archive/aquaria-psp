@@ -86,7 +86,7 @@ public:
 		Audio() { micOn = 0; octave=0; musvol=voxvol=sfxvol=1.0; subtitles=false; }
 		int micOn;
 		int octave;
-		double voxvol, sfxvol, musvol;
+		float voxvol, sfxvol, musvol;
 		int subtitles;
 		std::string deviceName;
 	} audio;
@@ -110,11 +110,11 @@ public:
 		int joystickEnabled;
 		int autoAim;
 		int targeting;
-		double joyCursorSpeed;
+		float joyCursorSpeed;
 		int flipInputButtons;
 		ActionSet actionSet;
 		int s1ax, s1ay, s2ax, s2ay;
-		double s1dead, s2dead;
+		float s1dead, s2dead;
 		int toolTipsOn;
 	} control;
 

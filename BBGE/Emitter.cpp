@@ -73,7 +73,7 @@ void Emitter::spawnParticle(float perc)
 	case SpawnParticleData::SPAWN_CIRCLE:
 	{
 		float a = rand()%360;
-		p->pos += Vector(sin(a)*finalRadius * data.randomSpawnMod.x, cos(a)*finalRadius * data.randomSpawnMod.y);
+		p->pos += Vector(sinf(a)*finalRadius * data.randomSpawnMod.x, cosf(a)*finalRadius * data.randomSpawnMod.y);
 	}
 	break;
 	case SpawnParticleData::SPAWN_LINE:
@@ -93,7 +93,7 @@ void Emitter::spawnParticle(float perc)
 	else
 	{
 		int r = rand()%(int(data.randomScale2*100) - int(data.randomScale1*100));
-		float sz = data.randomScale1 + float(r)/100.0;
+		float sz = data.randomScale1 + float(r)/100.0f;
 		p->scale = Vector(sz,sz);
 	}
 
@@ -116,7 +116,7 @@ void Emitter::spawnParticle(float perc)
 	if (data.randomVelocityMagnitude > 0)
 	{
 		float a = rand()%data.randomVelocityRange;
-		Vector v = Vector(sin(a)*data.randomVelocityMagnitude, cos(a)*data.randomVelocityMagnitude);
+		Vector v = Vector(sinf(a)*data.randomVelocityMagnitude, cosf(a)*data.randomVelocityMagnitude);
 		p->vel += v;
 	}
 
@@ -273,8 +273,8 @@ void Emitter::onRender()
 		core->setupRenderPositionAndScale();
 	}
 
-	float w2 = width*0.5;
-	float h2 = height*0.5;
+	float w2 = width*0.5f;
+	float h2 = height*0.5f;
 
 	float x, y;
 

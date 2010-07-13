@@ -43,7 +43,7 @@ Hair::Hair(int nodes, int segmentLength, int hairWidth) : RenderObject()
 		float perc = (float(i)/(float(hairNodes.size())));
 		if (perc < 0)
 			perc = 0;
-		hairNodes[i].percent = 1.0-perc;
+		hairNodes[i].percent = 1.0f-perc;
 		hairNodes[i].position = hairNodes[i].originalPosition = hairNodes[i].defaultPosition = Vector(0, i*segmentLength, 0);
 	}
 	hairTimer = 0;
@@ -64,15 +64,15 @@ void Hair::exertWave(float dt)
 	diff3.setLength2D(len);
 
 	hairTimer += dt;
-	while (hairTimer > 2.0)
+	while (hairTimer > 2.0f)
 	{
-		hairTimer -= 2.0;
+		hairTimer -= 2.0f;
 	}
 	float useTimer = hairTimer;
-	if (useTimer > 1.0)
-		useTimer = 1.0 - (hairTimer-1);
+	if (useTimer > 1.0f)
+		useTimer = 1.0f - (hairTimer-1);
 	float frc = 0.5;
-	diff = (diff2*(frc*(1.0-(useTimer*0.5))) + diff3*(frc);
+	diff = (diff2*(frc*(1.0f-(useTimer*0.5f))) + diff3*(frc);
 
 	diff.setLength2D(400);
 	//if (!vel.isLength2DIn(10))
@@ -95,15 +95,15 @@ void Hair::exertGravityWave(float dt)
 	diff3.setLength2D(len);
 
 	hairTimer += dt;
-	while (hairTimer > 2.0)
+	while (hairTimer > 2.0f)
 	{
-		hairTimer -= 2.0;
+		hairTimer -= 2.0f;
 	}
 	float useTimer = hairTimer;
-	if (useTimer > 1.0)
-		useTimer = 1.0 - (hairTimer-1);
+	if (useTimer > 1.0f)
+		useTimer = 1.0f - (hairTimer-1);
 	float frc = 0.333333;
-	diff = (diff2*(frc*(1.0-(useTimer*0.5))) + diff3*(frc) + Vector(0,len)*(frc*(0.5+useTimer*0.5)));
+	diff = (diff2*(frc*(1.0f-(useTimer*0.5f))) + diff3*(frc) + Vector(0,len)*(frc*(0.5f+useTimer*0.5f)));
 
 	diff.setLength2D(400);
 	//if (!vel.isLength2DIn(10))
@@ -170,7 +170,7 @@ void Hair::onRender()
 		{
 			MathFunctions::calculateAngleBetweenVectorsInDegrees(hairNodes[i+1].position, hairNodes[i].position, angle);
 			angle += 90;
-			angle = (angle*3.14f)/180.0f;
+			angle = (angle*PI)/180.0f;
 		}
 		*/
 		/*
@@ -201,7 +201,7 @@ void Hair::updateWaveTimer(float dt)
 	waveTimer += dt;
 	for (int i = 1; i < hairNodes.size(); i++)
 	{
-		hairNodes[i].defaultPosition = hairNodes[i].originalPosition + Vector(cos(waveTimer+i)*waveAmount*hairNodes[i].percent, 0, 0);
+		hairNodes[i].defaultPosition = hairNodes[i].originalPosition + Vector(cosf(waveTimer+i)*waveAmount*hairNodes[i].percent, 0, 0);
 	}
 }
 
@@ -219,16 +219,16 @@ void Hair::onUpdate(float dt)
 
 			Vector wantPos = hairNodes[i-1].position + d1;
 
-			float perc = 1.0-float(i)/float(hairNodes.size());
+			float perc = 1.0f-float(i)/float(hairNodes.size());
 			hairNodes[i].position += (wantPos - hairNodes[i].position)*dt*(40 * perc);
 			//Vector d1 = hairNodes[i-1].position - hairNodes[i-2].position;
 			//Vector d2 = hairNodes[i].position - hairNodes[i-1].position;
 			//float prod = d1.dot2D(d2);
-			////if (prod < 0.5)
+			////if (prod < 0.5f)
 			//{
 			//	d1.setLength2D(segmentLength);
 			//
-			//	Vector wantPos = (hairNodes[i-1].position + d1)*0.5 + hairNodes[i].position*0.5;
+			//	Vector wantPos = (hairNodes[i-1].position + d1)*0.5f + hairNodes[i].position*0.5f;
 			//	hairNodes[i].position += (wantPos - hairNodes[i].position)*dt*10;
 			//	break;
 			//}
@@ -291,7 +291,7 @@ void Hair::updatePositions()
 			MathFunctions::calculateAngleBetweenVectorsInRadians(d2, Vector(0,0,0), a2);
 			float a = a2 - a1;
 			hairNodes[i].angleDiff = a;
-			if (fabs(a) > maxAngle)
+			if (fabsf(a) > maxAngle)
 			{
 
 				float len = d2.getLength2D();
@@ -351,7 +351,7 @@ void Hair::updatePositions()
 		{
 			accum /= c;
 
-			//hairNodes[i].position = (hairNodes[i].position + accum)*0.5;
+			//hairNodes[i].position = (hairNodes[i].position + accum)*0.5f;
 			hairNodes[i].position = accum;
 		}
 		*/
@@ -362,13 +362,13 @@ void Hair::updatePositions()
 			Vector d1 = hairNodes[i-1].position - hairNodes[i-2].position;
 			Vector d2 = hairNodes[i].position - hairNodes[i-1].position;
 			float prod = d1.dot2D(d2);
-			if (prod < -0.5)
+			if (prod < -0.5f)
 			{
 				//d1.setLength2D(d2.getLength2D());
 				Vector wantPos = hairNodes[i-1].position + d1;
-				hairNodes[i].position = wantPos;//hairNodes[i].position*0.75 + wantPos*0.25;
+				hairNodes[i].position = wantPos;//hairNodes[i].position*0.75f + wantPos*0.25f;
 				//
-				//d2 = (d2 + d1)*0.5;
+				//d2 = (d2 + d1)*0.5f;
 				//hairNodes[i].position = hairNodes[i-1].position + d1;
 			}
 		}
@@ -387,9 +387,9 @@ void Hair::updatePositions()
 
 			float a=0;
 			MathFunctions::calculateAngleBetweenVectorsInRadians(d2, d1, a);
-			//float d = a2 - a1, c=3.14/2;
+			//float d = a2 - a1, c=PI/2;
 
-			float c=3.14/2;
+			float c=PI/2;
 			float d=0;
 
 			bool adjust = 0;
@@ -405,7 +405,7 @@ void Hair::updatePositions()
 			}
 			if (adjust)
 			{
-				Vector add(sin(d), cos(d));
+				Vector add(sinf(d), cosf(d));
 				add.setLength2D(d2.getLength2D());
 				hairNodes[i].position = hairNodes[i-1].position + add;
 			}
@@ -418,7 +418,7 @@ void Hair::updatePositions()
 		if (i < hairNodes.size()-1)
 		{
 			Vector diff2 = hairNodes[i+1].position - hairNodes[i].position;
-			float a=0,c=3.14/2;
+			float a=0,c=PI/2;
 			bool adjust = false;
 			MathFunctions::calculateAngleBetweenVectorsInRadians(hairNodes[i+1].position, hairNodes[i].position, a);
 			if (a > c)
@@ -480,7 +480,7 @@ void Hair::exertForce(const Vector &force, float dt, int usePerc)
 			hairNodes[i].position += force*dt*hairNodes[i].percent;
 		break;
 		case 1:
-			hairNodes[i].position += force*dt*(1.0-hairNodes[i].percent);
+			hairNodes[i].position += force*dt*(1.0f-hairNodes[i].percent);
 		break;
 		case 2:
 		default:

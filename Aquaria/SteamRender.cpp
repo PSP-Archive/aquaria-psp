@@ -70,10 +70,10 @@ void SteamRender::onRender()
 						pl.setLength2D(w2);
 						pr.setLength2D(w2);
 
-						if (isTouchingLine(p1, p2, dsq->screenCenter, dsq->cullRadius + p->rect.getWidth()/2.0))
+						if (isTouchingLine(p1, p2, dsq->screenCenter, dsq->cullRadius + p->rect.getWidth()/2.0f))
 						{
-							const Vector p15 = n1->position + diff * 0.25;
-							const Vector p25 = n2->position - diff * 0.25;
+							const Vector p15 = n1->position + diff * 0.25f;
+							const Vector p25 = n2->position - diff * 0.25f;
 							const Vector r1 = p1+pl;
 							const Vector r2 = p1+pr;
 							const Vector r3 = p15+pl;
@@ -83,7 +83,7 @@ void SteamRender::onRender()
 							const Vector r7 = p2+pl;
 							const Vector r8 = p2+pr;
 							const float len = diff.getLength2D();
-							const float texScale = len/float(256.0);
+							const float texScale = len/256.0f;
 
 							//qs++;
 							glBegin(GL_QUAD_STRIP);
@@ -95,17 +95,17 @@ void SteamRender::onRender()
 								glVertex2f(r2.x, r2.y);
 
 								glColor4f(1,1,1,alpha.x);
-								glTexCoord2f((0+0.25)*texScale+p->animOffset, 0);
+								glTexCoord2f((0+0.25f)*texScale+p->animOffset, 0);
 								glVertex2f(r3.x, r3.y);
 
-								glTexCoord2f((0+0.25)*texScale+p->animOffset, 1);
+								glTexCoord2f((0+0.25f)*texScale+p->animOffset, 1);
 								glVertex2f(r4.x, r4.y);
 
 								glColor4f(1,1,1,alpha.x);
-								glTexCoord2f((1-0.25)*texScale+p->animOffset, 0);
+								glTexCoord2f((1-0.25f)*texScale+p->animOffset, 0);
 								glVertex2f(r5.x, r5.y);
 
-								glTexCoord2f((1-0.25)*texScale+p->animOffset, 1);
+								glTexCoord2f((1-0.25f)*texScale+p->animOffset, 1);
 								glVertex2f(r6.x, r6.y);
 
 								glColor4f(1,1,1,0);

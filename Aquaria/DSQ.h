@@ -963,9 +963,9 @@ public:
 
 	//void setActivePet(int flag);
 
-	bool isStory(double v);
-	double getStory();
-	void setStory(double v);
+	bool isStory(float v);
+	float getStory();
+	void setStory(float v);
 
 	int getSpeedType(int speedType);
 	void setNaijaModel(std::string model);
@@ -1138,7 +1138,7 @@ public:
 protected:
 	std::vector<EatData> eats;
 	std::vector<int> speedTypes;
-	double story;
+	float story;
 	WorldType worldType;
 
 	std::vector<int> items;
@@ -1575,7 +1575,7 @@ protected:
 	void onUpdate(float dt);
 	void onRender();
 
-	void modifyDt(double &dt);
+	void modifyDt(float &dt);
 };
 
 extern DSQ *dsq;

@@ -203,7 +203,7 @@ void TTFText::onRender()
 	{
 		if (shadow)
 		{
-			glColor4f(0,0,0,0.75*alpha.x*alphaMod);
+			glColor4f(0,0,0,0.75f*alpha.x*alphaMod);
 			glPushMatrix();
 			glScalef(1, -1, 0);
 			glTranslatef(1 -hw, -1 + (i*-lineHeight), 0);

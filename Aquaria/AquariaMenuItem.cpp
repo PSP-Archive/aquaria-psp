@@ -119,7 +119,7 @@ void AquariaGuiElement::updateMovement(float dt)
 			Direction dir = DIR_NONE;
 			if (!p.isLength2DIn(0.4))
 			{
-				if (fabs(p.x) > fabs(p.y))
+				if (fabsf(p.x) > fabsf(p.y))
 				{
 					if (p.x > 0)
 						dir = DIR_RIGHT;
@@ -186,7 +186,7 @@ void AquariaGuiElement::updateMovement(float dt)
 
 						if (dir == DIR_DOWN)
 						{
-							if (fabs(p1.x - p2.x) < ch)
+							if (fabsf(p1.x - p2.x) < ch)
 							{
 								if (p2.y > p1.y) go = 1;
 								p1.x = p2.x = 0;
@@ -194,7 +194,7 @@ void AquariaGuiElement::updateMovement(float dt)
 						}
 						else if (dir == DIR_UP)
 						{
-							if (fabs(p1.x - p2.x) < ch)
+							if (fabsf(p1.x - p2.x) < ch)
 							{
 								if (p2.y < p1.y) go = 1;
 								p1.x = p2.x = 0;
@@ -202,7 +202,7 @@ void AquariaGuiElement::updateMovement(float dt)
 						}
 						else if (dir == DIR_RIGHT)
 						{
-							if (fabs(p1.y - p2.y) < ch)
+							if (fabsf(p1.y - p2.y) < ch)
 							{
 								if (p2.x > p1.x) go = 1;
 								p1.y = p2.y = 0;
@@ -210,7 +210,7 @@ void AquariaGuiElement::updateMovement(float dt)
 						}
 						else if (dir == DIR_LEFT)
 						{
-							if (fabs(p1.y - p2.y) < ch)
+							if (fabsf(p1.y - p2.y) < ch)
 							{
 								if (p2.x < p1.x) go = 1;
 								p1.y = p2.y = 0;
@@ -659,8 +659,8 @@ void AquariaKeyConfig::onUpdate(float dt)
 	Vector p = getWorldPosition();
 
 	if (waitingForInput == this || (!waitingForInput &&
-		(core->mouse.position.x > (p.x - bg->getWidth()*0.5) && core->mouse.position.x < (p.x + bg->getWidth()*0.5)
-		 && core->mouse.position.y > (p.y - bg->getHeight()*0.5) && core->mouse.position.y < (p.y + bg->getHeight()*0.5)
+		(core->mouse.position.x > (p.x - bg->getWidth()*0.5f) && core->mouse.position.x < (p.x + bg->getWidth()*0.5f)
+		 && core->mouse.position.y > (p.y - bg->getHeight()*0.5f) && core->mouse.position.y < (p.y + bg->getHeight()*0.5f)
 		 )))
 	{
 		if (waitingForInput != this)
@@ -912,8 +912,8 @@ bool AquariaMenuItem::isCursorInMenuItem()
 		hw = 64;
 	if (glow)
 	{
-		hw = glow->getWidth()/2.0;
-		hh = glow->getHeight()/2.0;
+		hw = glow->getWidth()/2.0f;
+		hh = glow->getHeight()/2.0f;
 	}
 	if (rotation.z == 90)
 	{

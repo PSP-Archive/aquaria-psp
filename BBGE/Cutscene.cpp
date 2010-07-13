@@ -74,10 +74,10 @@ void Cutscene::load(const std::string &f)
 				t += atoi(s[c]);
 			break;
 			case 6:
-				t += atoi(s[c]) * 0.1;
+				t += atoi(s[c]) * 0.1f;
 			break;
 			case 7:
-				t += atoi(s[c]) * 0.01;
+				t += atoi(s[c]) * 0.01f;
 			break;
 			}
 		}

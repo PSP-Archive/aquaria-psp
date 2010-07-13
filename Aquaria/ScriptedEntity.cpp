@@ -253,7 +253,7 @@ void ScriptedEntity::initSegments(int numSegments, int minDist, int maxDist, std
 		q->setWidthHeight(w, h);
 		
 		if (i > 0 && i < segments.size()-1 && taper !=0)
-			q->scale = Vector(1.0-(i*taper), 1-(i*taper));
+			q->scale = Vector(1.0f-(i*taper), 1-(i*taper));
 		dsq->game->addRenderObject(q, LR_ENTITIES);
 		segments[i] = q;
 	}
@@ -556,16 +556,16 @@ void ScriptedEntity::updateStrands(float dt)
 {
 	if (strands.empty()) return;
 	float angle = rotation.z;
-	angle = (3.14*(360-(angle-90)))/180.0;
-	//angle = (180*angle)/3.14;
+	angle = (PI*(360-(angle-90)))/180.0;
+	//angle = (180*angle)/PI;
 	float sz = (strands.size()/2);
 	for (int i = 0; i < strands.size(); i++)
 	{
 		float diff = (i-sz)*strandSpacing;
 		if (diff < 0)
-			strands[i]->position = position - Vector(sin(angle)*fabs(diff), cos(angle)*fabs(diff));
+			strands[i]->position = position - Vector(sinf(angle)*fabsf(diff), cosf(angle)*fabsf(diff));
 		else
-			strands[i]->position = position + Vector(sin(angle)*diff, cos(angle)*diff);
+			strands[i]->position = position + Vector(sinf(angle)*diff, cosf(angle)*diff);
 		if (dt > 0)
 			strands[i]->update(dt);
 	}

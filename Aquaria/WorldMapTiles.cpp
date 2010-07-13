@@ -41,7 +41,7 @@ void WorldMapTile::visToList()
 		{
 			for (int y = 0; y < visSize; y++)
 			{
-				if (vis[x][y].z > 0.5)
+				if (vis[x][y].z > 0.5f)
 					list.push_back(IntPair(x, y));
 			}
 		}

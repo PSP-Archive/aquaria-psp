@@ -61,7 +61,7 @@ void ParticleManager::setSize(int size)
 	particles.resize(size);
 
 	this->size = size;
-	this->halfSize = size*0.5;
+	this->halfSize = size*0.5f;
 
 	free = oldFree = 0;
 }

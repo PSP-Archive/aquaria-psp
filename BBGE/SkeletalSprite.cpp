@@ -189,7 +189,7 @@ void Bone::updateSegment(Bone *b, const Vector &diff)
 	}
 	else if (diff.getSquaredLength2D() > sqr(minDist)) // 6.3
 	{
-		b->position += diff*0.05;
+		b->position += diff*0.05f;
 
 		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
 
@@ -1205,7 +1205,7 @@ void SkeletalSprite::loadSkin(const std::string &fn)
 				/*
 				if (boneXml->Attribute("a"))
 				{
-					double alpha = 0;
+					float alpha = 0;
 					boneXml->Attribute("a", &alpha);
 					b->alpha = alpha;
 				}

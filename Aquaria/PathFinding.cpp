@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 const int divs = 6;
 const int MAX_ZONES=1000;
 const int MAX_STEPS = 5000;
-const int cutOff = int((divs*divs)*0.75);
+const int cutOff = int((divs*divs)*0.75f);
 
 namespace PathFindingGlobals
 {
@@ -373,14 +373,14 @@ void PathFinding::molestPath(VectorPath &path)
 		/*
 		float coverage = dsq->game->getCoverage(node, 100);
 		int sample = 10;
-		if (coverage > 0.4)
+		if (coverage > 0.4f)
 			sample = 5;
 		*/
 		int sample = 20;
 		float maxDist = sample * TILE_SIZE;
-		//sqrt(sqr(sample*TILE_SIZE)+sqr(sample*TILE_SIZE));
+		//sqrtf(sqr(sample*TILE_SIZE)+sqr(sample*TILE_SIZE));
 		
-		//if (coverage < 0.6)
+		//if (coverage < 0.6f)
 		{
 			Vector n = dsq->game->getWallNormal(node, sample, &dist);
 			if (dist != -1 && (n.x != 0 || n.y != 0))
@@ -388,7 +388,7 @@ void PathFinding::molestPath(VectorPath &path)
 				/*
 				if (dist > maxDist)
 					maxDist = dist;
-				n *= (maxDist-dist);//*(1.0-coverage);
+				n *= (maxDist-dist);//*(1.0f-coverage);
 				*/
 				n.setLength2D(200);
 				TileVector test(node + n);
@@ -430,7 +430,7 @@ void PathFinding::molestPath(VectorPath &path)
 		
 		Vector lastOne = normals[i-1];
 		Vector nextOne = normals[i+1];
-		newNormals[i] = (thisOne + lastOne + nextOne)/3.0;
+		newNormals[i] = (thisOne + lastOne + nextOne)/3.0f;
 		
 		//newNormals[i] = thisOne;
 	}
@@ -565,9 +565,9 @@ loop:
 		//Vector prev = path.getPathNode(i-1)->value;
 		//Vector next = path.getPathNode(i+1)->value;
 
-		//node = (node + prev)/2.0;
+		//node = (node + prev)/2.0f;
 
-		normal = (normal + lastNormal)/2.0;
+		normal = (normal + lastNormal)/2.0f;
 		path.getPathNode(i)->value += normal;
 	}
 	*/
@@ -581,7 +581,7 @@ loop:
 		if (i < sz-1)
 		{
 			p += path.getPathNode(i+1)->value - path.getPathNode(i)->value;
-			p /= 2.0;
+			p /= 2.0f;
 		}
 		Vector pl = p.getPerpendicularLeft();
 		Vector pr = p.getPerpendicularRight();
@@ -629,9 +629,9 @@ loop:
 			//
 			
 
-			path.getPathNode(i)->value = (tr.worldVector() + tl.worldVector())/2.0;
+			path.getPathNode(i)->value = (tr.worldVector() + tl.worldVector())/2.0f;
 
-			//path.getPathNode(i)->value = tl.worldVector() + (tr.worldVector() - tl.worldVector())/2.0;//(node + pl) + (pr-pl)/2.0;
+			//path.getPathNode(i)->value = tl.worldVector() + (tr.worldVector() - tl.worldVector())/2.0f;//(node + pl) + (pr-pl)/2.0f;
 			path.getPathNode(i)->value.z = 0;
 		}
 	}
@@ -677,9 +677,9 @@ loop:
 			//
 			
 
-			path.getPathNode(i)->value = (tr.worldVector() + tl.worldVector())/2.0;
+			path.getPathNode(i)->value = (tr.worldVector() + tl.worldVector())/2.0f;
 
-			//path.getPathNode(i)->value = tl.worldVector() + (tr.worldVector() - tl.worldVector())/2.0;//(node + pl) + (pr-pl)/2.0;
+			//path.getPathNode(i)->value = tl.worldVector() + (tr.worldVector() - tl.worldVector())/2.0f;//(node + pl) + (pr-pl)/2.0f;
 			path.getPathNode(i)->value.z = 0;
 		}
 	}

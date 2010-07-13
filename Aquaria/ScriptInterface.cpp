@@ -2300,8 +2300,8 @@ int l_entity_isNearGround(lua_State *L)
 		Vector v = dsq->game->getWallNormal(e->position, sampleArea);
 		if (!v.isZero())
 		{
-			//if (v.y < -0.5 && fabs(v.x) < 0.4)
-			if (v.y < 0 && fabs(v.x) < 0.6)
+			//if (v.y < -0.5f && fabsf(v.x) < 0.4f)
+			if (v.y < 0 && fabsf(v.x) < 0.6f)
 			{
 				value = true;
 			}
@@ -2950,7 +2950,7 @@ int l_spawnAroundEntity(lua_State *L)
 		{
 			float angle = i*((2*PI)/float(num));
 
-			e = dsq->game->createEntity(idx, 0, pos + Vector(sin(angle)*radius, cos(angle)*radius), 0, false, name);
+			e = dsq->game->createEntity(idx, 0, pos + Vector(sinf(angle)*radius, cosf(angle)*radius), 0, false, name);
 		}
 	}
 	lua_pushnumber(L, 0);
@@ -4470,7 +4470,7 @@ int l_quad_delete(lua_State *L)
 		else
 		{
 			q->setLife(1);
-			q->setDecayRate(1.0/t);
+			q->setDecayRate(1.0f/t);
 			q->fadeAlphaWithLife = 1;
 		}
 	}
@@ -5184,8 +5184,8 @@ int l_entity_playSfx(lua_State *L)
 		if (diff.isLength2DIn(800))
 		{
 			int dist = diff.getLength2D();
-			int vol = 255 - int((dist*255.0) / 1500.0);
-			int pan = (diff.x*100)/800.0;
+			int vol = 255 - int((dist*255.0f) / 1500.0f);
+			int pan = (diff.x*100)/800.0f;
 			if (pan < -100)
 				pan = -100;
 			if (pan > 100)
@@ -6132,7 +6132,7 @@ int l_entity_moveAlongSurface(lua_State* L)
 				*/
 				/*
 				e->position = e->lastPosition;
-				e->position.interpolateTo(to*0.5 + e->position*0.5, 0.5);
+				e->position.interpolateTo(to*0.5f + e->position*0.5f, 0.5);
 				*/
 					/*
 					Vector to = e->position;
@@ -6463,7 +6463,7 @@ int l_entity_pullEntities(lua_State *L)
 				if (diff.isLength2DIn(range))
 				{
 					Vector pull = pos - ent->position;
-					pull.setLength2D(double(len) * dt);
+					pull.setLength2D(float(len) * dt);
 					ent->vel2 += pull;
 					/*
 					std::ostringstream os;
@@ -6494,7 +6494,7 @@ int l_entity_delete(lua_State *L)
 		{
 			e->fadeAlphaWithLife = true;
 			e->setLife(1);
-			e->setDecayRate(1.0/time);
+			e->setDecayRate(1.0f/time);
 		}
 	}
 	lua_pushinteger(L, 0);
@@ -7392,7 +7392,7 @@ int l_entity_offsetUpdate(lua_State* L)
 	{
 		int uc = e->updateCull;
 		e->updateCull = -1;
-		float t = float(rand()%10000)/1000.0;
+		float t = float(rand()%10000)/1000.0f;
 		e->update(t);
 		e->updateCull = uc;
 	}
@@ -8035,8 +8035,8 @@ int l_beaconEffect(lua_State *L)
 
 	BeaconData *b = dsq->continuity.getBeaconByIndex(index);
 
-	float p1 = 0.7;
-	float p2 = 1.0 - p1;
+	float p1 = 0.7f;
+	float p2 = 1.0f - p1;
 
 	dsq->clickRingEffect(dsq->game->miniMapRender->getWorldPosition(), 0, (b->color*p1) + Vector(p2, p2, p2), 1);
 	dsq->clickRingEffect(dsq->game->miniMapRender->getWorldPosition(), 1, (b->color*p1) + Vector(p2, p2, p2), 1);
@@ -8294,7 +8294,7 @@ int l_clearHelp(lua_State *L)
 		ro->setLife(t);
 		ro->setDecayRate(1);
 		ro->alpha.stopPath();
-		ro->alpha.interpolateTo(0,t-0.01);
+		ro->alpha.interpolateTo(0,t-0.01f);
 
 		ro = rl->getNext();
 	}
@@ -8364,7 +8364,7 @@ int l_showControls(lua_State *L)
 		keyboard->alpha.path.addPathNode(0, 1);
 		keyboard->alpha.startPath(t);
 		//keyboard->alpha.interpolateTo(0.5, 4, 1, 1);
-		keyboard->scale.interpolateTo(Vector(0.9, 0.9), t+0.5);
+		keyboard->scale.interpolateTo(Vector(0.9, 0.9), t+0.5f);
 		keyboard->position = Vector(600, 400);
 		core->getTopStateData()->addRenderObject(keyboard, LR_HELP);
 	}

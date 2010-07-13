@@ -149,7 +149,7 @@ public:
 	Vector getRealPosition();
 	Vector getRealScale();
 
-	virtual double getSortDepth();
+	virtual float getSortDepth();
 
 	StateData *getStateData();
 

@@ -45,12 +45,12 @@ SchoolFish::SchoolFish() : FlockEntity()
 	rippleTimer = 0;
 	oldFlockID = -1;
 	respawnTimer = 0;
-	dodgeAbility = (rand()%900)/1000.0 + 0.1;
-	float randScale = float(rand()%200)/1000.0;
-	scale = Vector(0.6-randScale, 0.6-randScale);
+	dodgeAbility = (rand()%900)/1000.0f + 0.1f;
+	float randScale = float(rand()%200)/1000.0f;
+	scale = Vector(0.6f-randScale, 0.6f-randScale);
 
 	/*
-	float randColor = float(rand()%250)/1000.0;
+	float randColor = float(rand()%250)/1000.0f;
 	color = Vector(1-randColor, 1-randColor, 1-randColor);
 	*/
 
@@ -61,11 +61,11 @@ SchoolFish::SchoolFish() : FlockEntity()
 	color.path.addPathNode(Vector(1,1,1), 1.0);
 	color.startPath(2);
 	color.loopType = -1;
-	color.update((rand()%1000)/1000.0);
+	color.update((rand()%1000)/1000.0f);
 
 	flipDelay = 0;
 	swimSound = "SchoolFishSwim";
-	soundDelay = (rand()%300)/100.0;
+	soundDelay = (rand()%300)/100.0f;
 	range = 0;
 	setEntityType(ET_ENEMY);
 	canBeTargetedByAvatar = true;
@@ -178,11 +178,11 @@ void SchoolFish::updateVelocity(Vector &accumulator)
 
 	vel.capLength2D(getMaxSpeed() * maxSpeedLerp.x);
 	vel.z = 0;
-	if (fabs(vel.y) > fabs(vel.x))
+	if (fabsf(vel.y) > fabsf(vel.x))
 	{
 		/*
-		float sign = vel.y / fabs(vel.y);
-		vel.y = fabs(vel.x) * sign;
+		float sign = vel.y / fabsf(vel.y);
+		vel.y = fabsf(vel.x) * sign;
 		*/
 		//std::swap(vel.x, vel.y);
 		// going up 
@@ -440,10 +440,10 @@ void SchoolFish::onUpdate(float dt)
 		vel = 0;
 		v *= -5000;
 		vel += v;
-		//float t = (100 + rand()%100)/100.0;
+		//float t = (100 + rand()%100)/100.0f;
 		float t = 2;
 		maxSpeedLerp.interpolateTo(1, t);
-		burstDelay = 10;// + (rand()%100)/100.0;
+		burstDelay = 10;// + (rand()%100)/100.0f;
 		//rotateToVec(v, 0, 90);
 		//rotation.interpolateTo(0, 1);
 
@@ -469,7 +469,7 @@ void SchoolFish::onUpdate(float dt)
 		}
 	}
 
-	if (stickToNaijasHead && alpha.x < 0.1)
+	if (stickToNaijasHead && alpha.x < 0.1f)
 		stickToNaijasHead = false;
 
 	if (this->layer < LR_ENTITIES)
@@ -524,7 +524,7 @@ void SchoolFish::onUpdate(float dt)
 		if (soundDelay <= 0)
 		{
 			//sound(swimSound, 1000 + rand()%100);
-			soundDelay = 4+(rand()%50)/100.0;
+			soundDelay = 4+(rand()%50)/100.0f;
 		}
 		*/
 		/*
@@ -619,7 +619,7 @@ void SchoolFish::onUpdate(float dt)
 				const float amt = 0;
 				/*
 
-				if (fabs(dir.x) > fabs(dir.y))
+				if (fabsf(dir.x) > fabsf(dir.y))
 				{
 					if (dir.x > amt && !isfh())
 					{
@@ -646,8 +646,12 @@ void SchoolFish::onUpdate(float dt)
 
 			//rotateToVec(accumulator, 5, 90);
 
-			float angle = atan(dir.y/dir.x);
-			angle = ((angle*180)/3.14);
+			// FIXME: Changed to atan2f() to avoid potential
+			// division by zero, but kept X positive to keep
+			// the angle within [-90,90].  Can the logic change
+			// to deal with angles in [-180,180]?  --achurch
+			float angle = atan2f(dir.x<0 ? -dir.y : dir.y, fabsf(dir.x));
+			angle = ((angle*180)/PI);
 
 			if (angle > 45)
 				angle = 45;

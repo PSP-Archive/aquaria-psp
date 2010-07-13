@@ -242,7 +242,7 @@ void Avatar::onAnimationKeyPassed(int key)
 	{
 		if (key == 0 || key == 2)
 		{
-			//core->sound->playSfx("SwimKick", 255, 0, 1000+getMaxSpeed()/10.0);
+			//core->sound->playSfx("SwimKick", 255, 0, 1000+getMaxSpeed()/10.0f);
 		}
 	}
 	Entity::onAnimationKeyPassed(key);
@@ -267,7 +267,7 @@ void Avatar::doBounce()
 
 Vector randCirclePos(Vector position, int radius)
 {
-	float a = ((rand()%360)*(2*PI))/360.0;
+	float a = ((rand()%360)*(2*PI))/360.0f;
 	return position + Vector(sinf(a), cosf(a))*radius;
 }
 
@@ -363,7 +363,7 @@ SongIcon::SongIcon(int note) : Quad(), note(note)
 	minTime = 0;
 	ptimer = 0;
 	noteColor = dsq->getNoteColor(note);
-	//color = dsq->getNoteColor(note)*0.75 + Vector(1,1,1)*0.25;
+	//color = dsq->getNoteColor(note)*0.75f + Vector(1,1,1)*0.25f;
 	color = dsq->getNoteColor(note);
 	len = 0;
 
@@ -428,7 +428,7 @@ void SongIcon::onUpdate(float dt)
 			closeNote();
 		}
 	}
-	if (alpha.x > 0.5)
+	if (alpha.x > 0.5f)
 	{
 		spawnParticles(dt);
 	}
@@ -485,8 +485,8 @@ void SongIcon::onUpdate(float dt)
 			rippleTimer -= dt;
 			if (rippleTimer <= 0)
 			{
-				//rippleTimer = 1.0 - ((7 - note)/7.0)*0.7;
-				rippleTimer = 0.5 - (note/7.0)*0.4;
+				//rippleTimer = 1.0f - ((7 - note)/7.0f)*0.7f;
+				rippleTimer = 0.5f - (note/7.0f)*0.4f;
 
 				if (core->afterEffectManager)
 					core->afterEffectManager->addEffect(new ShockEffect(position,core->screenCenter,0.02,0.015,22,0.2f, 1.2));
@@ -551,12 +551,12 @@ void SongIcon::openNote()
 	float glowLife = 0.5;
 
 	Quad *q = new Quad("particles/glow", position);
-	q->scale.interpolateTo(Vector(10, 10), glowLife+0.1);
+	q->scale.interpolateTo(Vector(10, 10), glowLife+0.1f);
 	q->alpha.path.addPathNode(0,0);
 	q->alpha.path.addPathNode(0.75,0.2);
 	q->alpha.path.addPathNode(0,1);
 	q->alpha.startPath(glowLife);
-	q->color = dsq->getNoteColor(note); //*0.5 + Vector(0.5, 0.5, 0.5)
+	q->color = dsq->getNoteColor(note); //*0.5f + Vector(0.5, 0.5, 0.5)
 	q->setBlendType(RenderObject::BLEND_ADD);
 	q->followCamera = 1;
 	dsq->game->addRenderObject(q, LR_HUD);
@@ -568,8 +568,8 @@ void SongIcon::openNote()
 	Quad *q = new Quad(os2.str(), position);
 	q->color = 0;
 	q->scale = Vector(0.5,0.5);
-	q->scale.interpolateTo(Vector(2, 2), glowLife+0.1);
-	//q->scale.interpolateTo(Vector(10, 10), glowLife+0.1);
+	q->scale.interpolateTo(Vector(2, 2), glowLife+0.1f);
+	//q->scale.interpolateTo(Vector(10, 10), glowLife+0.1f);
 	q->alpha.path.addPathNode(0,0);
 	q->alpha.path.addPathNode(0.5,0.2);
 	q->alpha.path.addPathNode(0,1);
@@ -807,8 +807,8 @@ void Avatar::startFlourish()
 	Animation *fanim = skeletalSprite.getAnimation(anim);
 	if (fanim)
 	{
-		flourishTimer.start(fanim->getAnimationLength()-0.2);
-		flourishPowerTimer.start(fanim->getAnimationLength()*0.5);
+		flourishTimer.start(fanim->getAnimationLength()-0.2f);
+		flourishPowerTimer.start(fanim->getAnimationLength()*0.5f);
 	}
 	skeletalSprite.transitionAnimate(anim, 0.1, 0, LAYER_FLOURISH);
 	flourish = true;
@@ -965,7 +965,7 @@ void Avatar::updateHair(float dt)
 
 		Vector diff3 = position - headPos;
 
-		if (state.lockedToWall && wallPushVec.y < 0 && (fabs(wallPushVec.y) > fabs(wallPushVec.x)))
+		if (state.lockedToWall && wallPushVec.y < 0 && (fabsf(wallPushVec.y) > fabsf(wallPushVec.x)))
 		{
 			if (isfh())
 			{
@@ -979,19 +979,19 @@ void Avatar::updateHair(float dt)
 		diff3.setLength2D(len);
 		/*
 		diff.y = -diff.y;
-		diff = (diff + diff2)/2.0;
+		diff = (diff + diff2)/2.0f;
 		*/
 
 		hairTimer += dt;
-		while (hairTimer > 2.0)
+		while (hairTimer > 2.0f)
 		{
-			hairTimer -= 2.0;
+			hairTimer -= 2.0f;
 		}
 		float useTimer = hairTimer;
-		if (useTimer > 1.0)
-			useTimer = 1.0 - (hairTimer-1);
+		if (useTimer > 1.0f)
+			useTimer = 1.0f - (hairTimer-1);
 		float frc = 0.333333;
-		diff = (diff2*(frc*(1.0-(useTimer*0.5))) + diff3*(frc) + Vector(0,len)*(frc*(0.5+useTimer*0.5)));
+		diff = (diff2*(frc*(1.0f-(useTimer*0.5f))) + diff3*(frc) + Vector(0,len)*(frc*(0.5f+useTimer*0.5f)));
 
 
 
@@ -1014,11 +1014,11 @@ void Avatar::updateHair(float dt)
 
 void Avatar::updateDamageVisualEffects()
 {
-   	int damageThreshold = float(maxHealth/5.0)*3.0f;
+   	int damageThreshold = float(maxHealth/5.0f)*3.0f;
 	if (health <= damageThreshold)
 	{
 		//dsq->game->damageSprite->alpha.interpolateTo(0.9, 0.5);
-		float a = ((damageThreshold - health)/float(damageThreshold))*1.0;
+		float a = ((damageThreshold - health)/float(damageThreshold))*1.0f;
 		dsq->game->damageSprite->alpha.interpolateTo(a, 0.3);
 
 		/*
@@ -1048,7 +1048,7 @@ void Avatar::checkUpgradeForShot(Shot *s)
 	if (dsq->continuity.energyMult <= 1)
 		s->extraDamage = dsq->continuity.energyMult * 1;
 	else
-		s->extraDamage = dsq->continuity.energyMult * 0.75;
+		s->extraDamage = dsq->continuity.energyMult * 0.75f;
 
 	if (s->extraDamage > 0)
 	{
@@ -1134,7 +1134,7 @@ void Avatar::onDamage(DamageData &d)
 					break;
 				}
 
-				i -= 0.5;
+				i -= 0.5f;
 			}
 		}
 	}
@@ -1254,11 +1254,11 @@ void Avatar::updateHeartbeatSfx(float t)
 		BASS_ChannelGetInfo(heartbeat, &info);
 		int num = (beatHealth - health);
 		float wantFreq = 1000 + num*300;
-		float useFreq = ((wantFreq*info.freq)/1000.0);
-		float vol = 75 + (num*25)*0.5;
-		vol *= (core->sound->getUseSfxVol()/100.0);
+		float useFreq = ((wantFreq*info.freq)/1000.0f);
+		float vol = 75 + (num*25)*0.5f;
+		vol *= (core->sound->getUseSfxVol()/100.0f);
 		//int vol = 100;
-		BASS_ChannelSlideAttributes(heartbeat, useFreq, vol, -101, 1000.0*t);
+		BASS_ChannelSlideAttributes(heartbeat, useFreq, vol, -101, 1000.0f*t);
 	}
 	*/
 }
@@ -1485,7 +1485,7 @@ BOOL CALLBACK recordCallback(HRECORD handle, const void *buf, DWORD len, DWORD u
 	//for (int i = 5; i < 13; i++)
 	for (int i = 12; i < 64; i++)
 	{
-		if (fft[i] > 0.01 && (fft[i] > largest || largest == -1))
+		if (fft[i] > 0.01f && (fft[i] > largest || largest == -1))
 		{
 			largest = fft[i];
 			v = i;
@@ -1496,7 +1496,7 @@ BOOL CALLBACK recordCallback(HRECORD handle, const void *buf, DWORD len, DWORD u
 	largest = -1;
 	// find the next largest
 
-	float dt = (double(curTime-lastTick)/double(freq));
+	float dt = (float(curTime-lastTick)/float(freq));
 	lastTick = curTime;
 	int posMicNote=-1;
 	if (c != 0)
@@ -1514,7 +1514,7 @@ BOOL CALLBACK recordCallback(HRECORD handle, const void *buf, DWORD len, DWORD u
 
 	posMicNote = dsq->fftnotes.getNoteFromFFT(v, octave);
 
-	//if (lastLargest<largest || fabs(largest-lastLargest) < 0.05)
+	//if (lastLargest<largest || fabsf(largest-lastLargest) < 0.05f)
 	if (true)
 	{
 		lastLargest = largest;
@@ -1541,7 +1541,7 @@ BOOL CALLBACK recordCallback(HRECORD handle, const void *buf, DWORD len, DWORD u
 	timeFromLastNote += dt;
 	if (curMicNote != lastMicNote)
 		timeFromLastNote = 0;
-	if (timeFromLastNote > 0.0001)
+	if (timeFromLastNote > 0.0001f)
 	{
 		micNote = curMicNote;
 		timeFromLastNote = 0;
@@ -1732,7 +1732,7 @@ void Avatar::updateDualFormGlow(float dt)
 			perc = float(dsq->continuity.dualFormCharge)/float(requiredDualFormCharge);
 		if (perc > 1)
 			perc = 1;
-		bone_dualFormGlow->alpha = perc*0.5 + 0.1;
+		bone_dualFormGlow->alpha = perc*0.5f + 0.1f;
 		bone_dualFormGlow->scale.interpolateTo(Vector(perc, perc), 0.2);
 	}
 }
@@ -2174,7 +2174,7 @@ void Avatar::updateSingingInterface(float dt)
 				if (desired == lastDesired)
 				{
 					dpadTimer += dt;
-					if (dpadTimer > 0.05)
+					if (dpadTimer > 0.05f)
 					{
 						dpadTimer = 0;
 						doit = true;
@@ -2213,8 +2213,8 @@ void Avatar::updateSingingInterface(float dt)
 						Vector d = dsq->joystick.position;
 
 						/*
-						d.x = float(int((d.x*2)))/4.0;
-						d.y = float(int((d.y*2)))/4.0;
+						d.x = float(int((d.x*2)))/4.0f;
+						d.y = float(int((d.y*2)))/4.0f;
 						d.normalize2D();
 						*/
 
@@ -2290,7 +2290,7 @@ void Avatar::updateSingingInterface(float dt)
 			/*
 			static float timer=0;
 			timer += dt;
-			if (timer > 0.1)
+			if (timer > 0.1f)
 			{
 				if (dist.getSquaredLength2D() > sqr(singingInterfaceRadius))
 				{
@@ -2326,7 +2326,7 @@ void Avatar::setSongIconPositions()
 	float rad = 0;
 	for (int i = 0; i < songIcons.size(); i++)
 	{
-		songIcons[i]->position = Vector(400,300)+/*this->position + */Vector(sin(rad)*singingInterfaceRadius, cos(rad)*singingInterfaceRadius);
+		songIcons[i]->position = Vector(400,300)+/*this->position + */Vector(sinf(rad)*singingInterfaceRadius, cosf(rad)*singingInterfaceRadius);
 		rad += radIncr;
 	}
 }
@@ -2469,8 +2469,8 @@ void Avatar::updateTargets(float dt, bool override)
 	{
 		maxTargetDelay = 0;
 		std::vector<Target> oldTargets = targets;
-		if ((dsq->continuity.form == FORM_ENERGY) && ((core->mouse.buttons.right && state.spellCharge > 0.3) || override))
-			//&& state.spellCharge > 0.2 /*&& state.spellCharge < 0.5*/
+		if ((dsq->continuity.form == FORM_ENERGY) && ((core->mouse.buttons.right && state.spellCharge > 0.3f) || override))
+			//&& state.spellCharge > 0.2f /*&& state.spellCharge < 0.5f*/
 		{
 			// crappy hack for now, assuming one target:
 			targets.clear();
@@ -2652,7 +2652,7 @@ void Avatar::updateTargetQuads(float dt)
 bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 {
 	if (state.swimTimer > 0)
-		state.swimTimer -= 0.5;
+		state.swimTimer -= 0.5f;
 
 	skeletalSprite.getAnimationLayer(ANIMLAYER_UPPERBODYIDLE)->stopAnimation();
 
@@ -2676,7 +2676,7 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 	ShotData *shotData = Shot::getShotData(shot);
 
 
-	bool aimAt = (dir.z == 1.0);
+	bool aimAt = (dir.z == 1.0f);
 	//bool aimAt = true;
 	dir.z = 0;
 	Entity *closest = 0;
@@ -2745,7 +2745,7 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 				Vector oldDir = dir;
 
 				dir.normalize2D();
-				dir = (dir + oldDir)/2.0;
+				dir = (dir + oldDir)/2.0f;
 				*/
 
 			if (!aimAt)
@@ -2995,12 +2995,12 @@ void Avatar::formAbility(int ability)
 							for (; i < num; i++)
 							{
 								Shot *s = dsq->game->fireShot("DualForm", this, 0, position, 0);
-								//*0.5 + getAim()*0.5
+								//*0.5f + getAim()*0.5f
 								Vector v1 = this->getTendrilAimVector(i, num);
 								Vector v2 = getAim();
 								v1.normalize2D();
 								v2.normalize2D();
-								s->setAimVector(v1*0.1 + v2*0.9);
+								s->setAimVector(v1*0.1f + v2*0.9f);
 							}
 							core->sound->playSfx("DualForm-Shot");
 							dsq->spawnParticleEffect("DualFormFire", position);
@@ -3213,7 +3213,7 @@ void Avatar::formAbility(int ability)
 						{
 							Vector aim = this->getVectorToCursor();
 							aim.normalize2D();
-							s->setAimVector(getTendrilAimVector(i, num)*0.1 + aim*0.9);
+							s->setAimVector(getTendrilAimVector(i, num)*0.1f + aim*0.9f);
 						}
 
 						if (s->shotData && s->shotData->avatarKickBack)
@@ -3394,14 +3394,14 @@ void Avatar::formAbility(int ability)
 
 Vector Avatar::getTendrilAimVector(int i, int max)
 {
-	float a = float(float(i)/float(max))*3.14*2;
+	float a = float(float(i)/float(max))*PI*2;
 	Vector aim(sinf(a), cosf(a));
 	if (state.lockedToWall)
 	{
 		Vector n = dsq->game->getWallNormal(position);
 		if (!n.isZero())
 		{
-			aim = aim*0.4 + n*0.6;
+			aim = aim*0.4f + n*0.6f;
 		}
 	}
 	return aim;
@@ -3509,7 +3509,7 @@ void Avatar::doShock(const std::string &shotName)
 	Vector aim = getAim();
 	aim.normalize2D();
 	int sz = entitiesToHit.size();
-	float spread = 3.14;
+	float spread = PI;
 
 
 
@@ -3553,7 +3553,7 @@ void Avatar::doShock(const std::string &shotName)
 				*/
 				Vector d = e->position - position;
 				/*
-				float a = float(float(i)/float(sz))*3.14*2;
+				float a = float(float(i)/float(sz))*PI*2;
 				Vector aim(sinf(a), cosf(a));
 
 				swizzleTendrilAimVector(aim);
@@ -4130,7 +4130,7 @@ void Avatar::lockToWallCommon()
 	stopBurst();
 	stopRoll();
 	disableOverideMaxSpeed();
-	core->sound->playSfx("LockToWall", 1.0, 0);//, (1000+rand()%100)/1000.0);
+	core->sound->playSfx("LockToWall", 1.0, 0);//, (1000+rand()%100)/1000.0f);
 	//bursting = false;
 	animatedBurst = false;
 	this->burst = 1;
@@ -4286,7 +4286,7 @@ void Avatar::lockToWall()
 	if (good /*&& dsq->game->)isObstructed(t2, OT_BLACK)*/ /*&& diff.getSquaredLength2D() > sqr(40)*/)
 	{
 		wallNormal = dsq->game->getWallNormal(position);
-		bool outOfWaterHit = (!_isUnderWater && !(wallNormal.y < -0.1));
+		bool outOfWaterHit = (!_isUnderWater && !(wallNormal.y < -0.1f));
 		if (wallNormal.isZero() ) //|| outOfWaterHit
 		{
 			debugLog("COULD NOT FIND NORMAL, GOING TO BOUNCE");
@@ -4336,7 +4336,7 @@ void Avatar::lockToWall()
 			wallPushVec *= 2000;
 			wallPushVec.z = 0;
 			skeletalSprite.stopAllAnimations();
-			if (wallPushVec.y < 0 && (fabs(wallPushVec.y) > fabs(wallPushVec.x)))
+			if (wallPushVec.y < 0 && (fabsf(wallPushVec.y) > fabsf(wallPushVec.x)))
 			{
 				skeletalSprite.transitionAnimate("wallLookUp", 0.2, -1);
 			}
@@ -5190,7 +5190,7 @@ void Avatar::startBackFlip()
 	if (riding) return;
 
 	skeletalSprite.getAnimationLayer(ANIMLAYER_OVERRIDE)->transitionAnimate("backflip", 0.2, 0);
-	vel.x = -vel.x*0.25;
+	vel.x = -vel.x*0.25f;
 	state.backFlip = true;
 }
 
@@ -5267,7 +5267,7 @@ void Avatar::startBurst()
 
 			lastBurstType = BURST_NORMAL;
 		}
-		else if (bursting && burstTimer > 0.3)
+		else if (bursting && burstTimer > 0.3f)
 		{
 			if (!flourish && !state.nearWall)
 				//&& dsq->continuity.form == FORM_NORMAL)
@@ -5331,7 +5331,7 @@ void Avatar::startWallBurst(bool useCursor)
 			if (wallBurstTimer > 0)
 			{
 				Vector wallJumpDir = position - lastWallJumpPos;
-				if (lastWallJumpPos.isZero() || wallJumpDir.dot2D(lastWallJumpPos) > 0.2)
+				if (lastWallJumpPos.isZero() || wallJumpDir.dot2D(lastWallJumpPos) > 0.2f)
 				{
 					std::ostringstream os;
 					os << "wallJumps: " << wallJumps;
@@ -5344,7 +5344,7 @@ void Avatar::startWallBurst(bool useCursor)
 					stopWallJump();
 				}
 			}
-			wallBurstTimer = 0.8 - 0.1 * wallJumps;
+			wallBurstTimer = 0.8f - 0.1f * wallJumps;
 			if (wallBurstTimer <= 0)
 			{
 				// super boost!
@@ -5361,20 +5361,20 @@ void Avatar::startWallBurst(bool useCursor)
 			bittenEntities.clear();
 			if (useCursor)
 			{
-				wallPushVec = (goDir*0.75 + wallNormal*0.25);
+				wallPushVec = (goDir*0.75f + wallNormal*0.25f);
 				//wallPushVec = goDir;
 			}
 			else
 			{
 				float v = goDir.dot2D(wallNormal);
-				if (v <= -0.8)
+				if (v <= -0.8f)
 					wallPushVec = wallNormal;
 				else
 				{
-					wallPushVec = (goDir*0.5 + wallNormal*0.5);	
+					wallPushVec = (goDir*0.5f + wallNormal*0.5f);	
 				}
 			}
-				//wallPushVec = (goDir*0.9 + wallNormal*0.1);
+				//wallPushVec = (goDir*0.9f + wallNormal*0.1f);
 			wallPushVec.setLength2D(vars->maxWallJumpBurstSpeed);
 
 			position.stop();
@@ -5589,7 +5589,7 @@ void Avatar::action(int id, int state)
 						test.normalize2D();
 						float dott = wallNormal.dot2D(test);
 
-						if (dott > -0.3)
+						if (dott > -0.3f)
 						{
 							burst = 1;
 							bursting = false;
@@ -5608,7 +5608,7 @@ void Avatar::action(int id, int state)
 					wallNormal = getWallNormal(TileVector(position));
 					Vector left = wallNormal.getPerpendicularLeft();
 					Vector right = wallNormal.getPerpendicularRight();
-					position += left*0.1;
+					position += left*0.1f;
 				}
 				*/
 			}
@@ -6313,15 +6313,15 @@ void Avatar::updateAura(float dt)
 		{
 		case AURA_SHIELD:
 		{
-			//shieldPosition = position + Vector(cos(auraTimer*4)*100, sin(auraTimer*4)*100);
+			//shieldPosition = position + Vector(cosf(auraTimer*4)*100, sinf(auraTimer*4)*100);
 			shieldPosition = position;
 			/*
-			float a = ((rotation.z)*PI)/180.0 + PI*0.5;
+			float a = ((rotation.z)*PI)/180.0f + PI*0.5f;
 			shieldPosition = position + Vector(cosf(a)*100, sinf(a)*100);
 			*/
 			for (Shot::Shots::iterator i = Shot::shots.begin(); i != Shot::shots.end(); ++i)
 			{
-				//&& (*i)->life > 0.2
+				//&& (*i)->life > 0.2f
 				if ((*i) && dsq->game->isDamageTypeEnemy((*i)->getDamageType()) && (*i)->firer != this
 					&& (!(*i)->shotData || !(*i)->shotData->ignoreShield))
 				{
@@ -6427,7 +6427,7 @@ void Avatar::chargeVisualEffect(const std::string &tex)
 	chargeEffect->position = this->position;
 	chargeEffect->setPositionSnapTo(&position);
 	chargeEffect->setLife(1);
-	chargeEffect->setDecayRate(1.0/time);
+	chargeEffect->setDecayRate(1.0f/time);
 	chargeEffect->scale = Vector(0.1, 0.1);
 	chargeEffect->scale.interpolateTo(Vector(1,1),time);
 	//chargeEffect->rotation.interpolateTo(Vector(0,0,360), time);
@@ -6461,7 +6461,7 @@ void Avatar::updateFormVisualEffects(float dt)
 
 		static float lfgTimer = 0;
 		lfgTimer += dt;
-		if (lfgTimer > 0.5)
+		if (lfgTimer > 0.5f)
 		{
 			//debugLog("lightFormGlow to front");
 			lightFormGlow->moveToFront();
@@ -6512,28 +6512,11 @@ int Avatar::getCursorQuadrant()
 		stopRoll();
 		return -999;
 	}
-	//diff = getForward();
-	float angle = atanf(diff.y / diff.x);
-	//float angle = rotation.z;
 
-	/*
-	std::ostringstream os;
-	os << "angle: " << angle;
-	debugLog(os.str());
-	*/
-
-
-	int quad = 0;
-	if (angle > -1.6 && angle <= 0 && diff.x > 0)
-		quad = 1;
-	else if (angle > -1.6 && angle <= 0 && diff.x < 0 && diff.y > 0)
-		quad = 3;
-	else if (angle < 1.6 && angle >= 0 && diff.y < 0)
-		quad = 4;
+	if (diff.y < 0)
+		return diff.x < 0 ? 4 : 1;
 	else
-		quad = 2;
-
-	return quad;
+		return diff.x < 0 ? 3 : 2;
 }
 
 int Avatar::getQuadrantDirection(int lastQuad, int quad)
@@ -6742,7 +6725,7 @@ void Avatar::updateRoll(float dt)
 		}
 
 		state.rollTimer += dt;
-		if (state.rollTimer > 0.55)
+		if (state.rollTimer > 0.55f)
 		{
 			state.rollTimer = 0;
 			if (dsq->continuity.form == FORM_DUAL)
@@ -6769,7 +6752,7 @@ void Avatar::updateRoll(float dt)
 	{
 		if (_isUnderWater)
 		{
-			if (rollDelay < 0.5)
+			if (rollDelay < 0.5f)
 			{
 				startRoll(isfh()?1:-1);
 			}
@@ -6944,14 +6927,14 @@ void Avatar::adjustHeadRot()
 		// 0 to 30 range
 		if (bone_head->rotation.z > 0)
 		{
-			bone_head->internalOffset.x = (bone_head->rotation.z/30.0)*5;
-			//bone_head->internalOffset.y = (bone_head->rotation.z/30.0)*1;
+			bone_head->internalOffset.x = (bone_head->rotation.z/30.0f)*5;
+			//bone_head->internalOffset.y = (bone_head->rotation.z/30.0f)*1;
 		}
 		// 0 to -10 range
 		if (bone_head->rotation.z < 0)
 		{
-			bone_head->internalOffset.x = (bone_head->rotation.z/(-10.0))*-4;
-			bone_head->internalOffset.y = (bone_head->rotation.z/(-10.0))*-2;
+			bone_head->internalOffset.x = (bone_head->rotation.z/(-10.0f))*-4;
+			bone_head->internalOffset.y = (bone_head->rotation.z/(-10.0f))*-2;
 		}
 	}
 }
@@ -7016,7 +6999,7 @@ void Avatar::updateLookAt(float dt)
 			setHeadTexture("blink", 0.1);
 			if (chance(50))
 			{
-				state.blinkTimer = blinkTime-0.2;
+				state.blinkTimer = blinkTime-0.2f;
 			}
 			else
 			{
@@ -7092,7 +7075,7 @@ void Avatar::updateLookAt(float dt)
 				bone_head->internalOffset.interpolateTo(Vector(0,0), 0.2);
 			}
 
-			if (state.updateLookAtTime > 1.5)
+			if (state.updateLookAtTime > 1.5f)
 			{
 				state.lookAtEntity = dsq->game->getNearestEntity(position, 800, this, ET_NOTYPE, DT_NONE, LR_ENTITIES0, LR_ENTITIES2);
 				if (state.lookAtEntity && state.lookAtEntity->isv(EV_LOOKAT, 1))
@@ -7128,7 +7111,7 @@ void Avatar::updateLookAt(float dt)
 					os << state.updateLookAtTime << " : found no entities";
 					debugLog(os.str());
 					*/
-					//state.updateLookAtTime -= 0.3;
+					//state.updateLookAtTime -= 0.3f;
 				}
 
 				//skeletalSprite.animate("blink", 2, ANIMLAYER_HEADOVERRIDE);
@@ -7427,7 +7410,7 @@ void Avatar::onUpdate(float dt)
 				// prevent from falling out
 				// if circle, clamp
 				waterBubble->clampPosition(&position);
-				vel *= 0.5;
+				vel *= 0.5f;
 				startBurstCommon();
 			}
 			else
@@ -7435,7 +7418,7 @@ void Avatar::onUpdate(float dt)
 				if (!dsq->game->waterLevel.isInterpolating())
 				{
 					if (vel.y < 0)
-						vel.y = -vel.y*0.5;
+						vel.y = -vel.y*0.5f;
 					position.y = dsq->game->waterLevel.x + collideRadius;
 				}
 			}
@@ -7454,15 +7437,15 @@ void Avatar::onUpdate(float dt)
 
 			if (dsq->continuity.form != FORM_FISH)
 			{
-				vel *= vars->jumpVelocityMod; // 1.25;
+				vel *= vars->jumpVelocityMod; // 1.25f;
 				vel.capLength2D(2000);
-				currentMaxSpeed *= 2.0;
+				currentMaxSpeed *= 2.0f;
 			}
 			else
 			{
-				vel *= 1.5;
+				vel *= 1.5f;
 				vel.capLength2D(1500);
-				currentMaxSpeed *= 1.5;
+				currentMaxSpeed *= 1.5f;
 			}
 
 			// total max speed
@@ -7496,7 +7479,7 @@ void Avatar::onUpdate(float dt)
 				
 
 				dsq->voiceOnce("Naija_VeilCrossing");
-				core->main(10*0.1);
+				core->main(10*0.1f);
 
 				dsq->gameSpeed.interpolateTo(1, 0.2);
 
@@ -7536,14 +7519,14 @@ void Avatar::onUpdate(float dt)
 		splash(true);
 
 		lastOutOfWaterMaxSpeed = getMaxSpeed();
-		lastOutOfWaterMaxSpeed *= 0.75;
+		lastOutOfWaterMaxSpeed *= 0.75f;
 
 		if (lastOutOfWaterMaxSpeed > 1000)
 			lastOutOfWaterMaxSpeed = 1000;
 
 		fallGravityTimer = 0.5;
 		if (rolling)
-			fallGravityTimer *= 1.5;
+			fallGravityTimer *= 1.5f;
 		stopBurst();
 
 		if (state.backFlip)
@@ -7565,7 +7548,7 @@ void Avatar::onUpdate(float dt)
 	}
 
 
-	if (!state.backFlip && !_isUnderWater && state.outOfWaterTimer < 0.1 && !riding && !boneLock.on)
+	if (!state.backFlip && !_isUnderWater && state.outOfWaterTimer < 0.1f && !riding && !boneLock.on)
 	{
 		const int check = 64;
 		Vector m = getVectorToCursor();
@@ -7600,7 +7583,7 @@ void Avatar::onUpdate(float dt)
 
 	/*
 	bobTimer += dt*2;
-	offset.y = sin(bobTimer)*5 - 2.5f;
+	offset.y = sinf(bobTimer)*5 - 2.5f;
 	*/
 
 	if (isEntityDead())
@@ -7680,7 +7663,7 @@ void Avatar::onUpdate(float dt)
 				EMOTE_NAIJAUGH			= 6
 				*/
 				float p = dsq->continuity.tripTimer.getPerc();
-				if (p > 0.6)
+				if (p > 0.6f)
 				{
 					if (core->afterEffectManager)
 						core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),position+offset,0.04,0.06,15,0.2f));
@@ -7690,8 +7673,8 @@ void Avatar::onUpdate(float dt)
 					if (core->afterEffectManager)
 						core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),position+offset,0.4,0.6,15,0.2f));
 				}
-				if (p > 0.75){}
-				else if (p > 0.5)
+				if (p > 0.75f){}
+				else if (p > 0.5f)
 				{
 					dsq->shakeCamera(2, 4);
 					if (chance(80))
@@ -7704,7 +7687,7 @@ void Avatar::onUpdate(float dt)
 				}
 				else
 				{
-					if (p < 0.2)
+					if (p < 0.2f)
 						dsq->shakeCamera(10, 4);
 					else
 						dsq->shakeCamera(5, 4);
@@ -7827,7 +7810,7 @@ void Avatar::onUpdate(float dt)
 			/*
 			static float c = 0;
 			c += dt;
-			if (c > 0.2)
+			if (c > 0.2f)
 			{
 				EnergyTendril *t = new EnergyTendril(avatar->position, pullTarget->position);
 				core->addRenderObject(t, LR_PARTICLES);
@@ -7840,7 +7823,7 @@ void Avatar::onUpdate(float dt)
 	formTimer += dt;
 
 	/*
-	if (formTimer > 2.0 && dsq->continuity.form == FORM_SPIRIT)
+	if (formTimer > 2.0f && dsq->continuity.form == FORM_SPIRIT)
 	{
 		changeForm(FORM_NORMAL, true);
 	}
@@ -7890,7 +7873,7 @@ void Avatar::onUpdate(float dt)
 	}
 
 	// revert stuff
-	float revertGrace = 0.4;
+	float revertGrace = 0.4f;
 	static bool revertButtonsAreDown = false;
 	if (inputEnabled && (dsq->inputMode == INPUT_KEYBOARD || dsq->inputMode == INPUT_MOUSE) && (!pathToActivate && !entityToActivate))
 	{
@@ -7920,7 +7903,7 @@ void Avatar::onUpdate(float dt)
 		//&& !isActing(ACTION_PRIMARY) && !isActing(ACTION_SECONDARY)
 		else if ((!core->mouse.pure_buttons.left && !core->mouse.pure_buttons.right))
 		{
-			if (revertTimer > 0 && getVectorToCursor(true).isLength2DIn(minMouse) && state.spellCharge < revertGrace+0.1)
+			if (revertTimer > 0 && getVectorToCursor(true).isLength2DIn(minMouse) && state.spellCharge < revertGrace+0.1f)
 			{
 				revert();
 				//changeForm(FORM_NORMAL);
@@ -7940,7 +7923,7 @@ void Avatar::onUpdate(float dt)
 		if (isActing("a1"))
 		{
 			wallNormal = dsq->game->getWallNormal(position);
-			if (wallNormal.dot2D(lastWallNormal)<=0.3)
+			if (wallNormal.dot2D(lastWallNormal)<=0.3f)
 			{
 				stopWallCrawl();
 			}
@@ -8049,7 +8032,7 @@ void Avatar::onUpdate(float dt)
 			// HACK: hacked out for now
 			// FINDTARGET
 
-			if (charging && !targets.empty() && targets[0] == 0 && state.spellCharge > 0.2
+			if (charging && !targets.empty() && targets[0] == 0 && state.spellCharge > 0.2f
 				&& dsq->continuity.form == FORM_ENERGY)
 			{
 				for (int i = 0; i < dsq->entities.size(); i++)
@@ -8076,7 +8059,7 @@ void Avatar::onUpdate(float dt)
 			os << "boneLock.wallNormal(" << boneLock.wallNormal.x << ", " << boneLock.wallNormal.y << ")";
 			debugLog(os.str());
 			*/
-			if (!_isUnderWater && !(boneLock.wallNormal.y < -0.03))
+			if (!_isUnderWater && !(boneLock.wallNormal.y < -0.03f))
 			{
 				if (lockToWallFallTimer == -1)
 					lockToWallFallTimer = 0.4;
@@ -8177,14 +8160,14 @@ void Avatar::onUpdate(float dt)
 		{
 			/*
 			chargeGraphic->position = this->position;
-			chargeGraphic->position.z = position.z + 0.05;
+			chargeGraphic->position.z = position.z + 0.05f;
 			*/
 			state.spellCharge += dt;
 			switch (dsq->continuity.form)
 			{
 			case FORM_SUN:
 			{
-				if (state.spellCharge > 1.5 && chargeLevelAttained <1)
+				if (state.spellCharge > 1.5f && chargeLevelAttained <1)
 				{
 					chargeLevelAttained = 1.5;
 					core->sound->playSfx("PowerUp");
@@ -8194,7 +8177,7 @@ void Avatar::onUpdate(float dt)
 			break;
 			case FORM_DUAL:
 			{
-				if (state.spellCharge >= 1.4 && chargeLevelAttained<1)
+				if (state.spellCharge >= 1.4f && chargeLevelAttained<1)
 				{
 					chargeLevelAttained = 1;
 
@@ -8211,7 +8194,7 @@ void Avatar::onUpdate(float dt)
 					//chargeVisualEffect("particles/energy-charge-2");
 				}
 				/*
-				if (state.spellCharge >= 1.5 && chargeLevelAttained<2)
+				if (state.spellCharge >= 1.5f && chargeLevelAttained<2)
 				{
 					chargeLevelAttained = 2;
 
@@ -8228,7 +8211,7 @@ void Avatar::onUpdate(float dt)
 			case FORM_ENERGY:
 			{
 				/*
-				if (state.spellCharge >= 0.99 && chargeLevelAttained<1)
+				if (state.spellCharge >= 0.99f && chargeLevelAttained<1)
 				{
 					chargeLevelAttained = 1;
 					debugLog("charge visual effect 1");
@@ -8236,7 +8219,7 @@ void Avatar::onUpdate(float dt)
 
 				}
 				*/
-				if (state.spellCharge >= 1.5 && chargeLevelAttained<2)
+				if (state.spellCharge >= 1.5f && chargeLevelAttained<2)
 				{
 					chargeLevelAttained = 2;
 					core->sound->playSfx("PowerUp");
@@ -8252,7 +8235,7 @@ void Avatar::onUpdate(float dt)
 			break;
 			case FORM_NATURE:
 			{
-				if (state.spellCharge >= 0.9 && chargeLevelAttained<2)
+				if (state.spellCharge >= 0.9f && chargeLevelAttained<2)
 				{
 					chargeLevelAttained = 2;
 					core->sound->playSfx("PowerUp");
@@ -8263,7 +8246,7 @@ void Avatar::onUpdate(float dt)
 					chargingEmitter->start();
 				}
 				/*
-				if (state.spellCharge >= 0.5 && chargeLevelAttained<1)
+				if (state.spellCharge >= 0.5f && chargeLevelAttained<1)
 				{
 					chargeLevelAttained = 1;
 					core->sound->playSfx("PowerUp");
@@ -8271,7 +8254,7 @@ void Avatar::onUpdate(float dt)
 					chargeEmitter->start();
 				}
 
-				if (state.spellCharge >= 2.0 && chargeLevelAttained<2)
+				if (state.spellCharge >= 2.0f && chargeLevelAttained<2)
 				{
 					chargeLevelAttained = 2;
 					core->sound->playSfx("PowerUp");
@@ -8287,10 +8270,10 @@ void Avatar::onUpdate(float dt)
 			}
 		}
 		/*
-		float angle = 3.14f - ((rotation.z/180)*3.14f);
+		float angle = PI - ((rotation.z/180)*PI);
 		int height = 25;
 		*/
-		//hair->hairNodes[0].position = position + Vector(sin(angle)*height, cos(angle)*height);
+		//hair->hairNodes[0].position = position + Vector(sinf(angle)*height, cosf(angle)*height);
 
 
 		if (biteTimer < biteTimerMax)
@@ -8383,7 +8366,7 @@ void Avatar::onUpdate(float dt)
 			{
 				static float fishPoison = 0;
 				fishPoison += dt;
-				if (fishPoison > 0.2)
+				if (fishPoison > 0.2f)
 				{
 					fishPoison = 0;
 					Shot *s = dsq->game->fireShot("FishPoison", this, 0, position);
@@ -8541,7 +8524,7 @@ void Avatar::onUpdate(float dt)
 						// stop movement
 						if (addVec.isLength2DIn(STOP_DISTANCE))
 						{
-							vel *= 0.9;
+							vel *= 0.9f;
 							if (!rolling)
 								rotation.interpolateTo(Vector(0,0,0), 0.1);
 							if (vel.isLength2DIn(50))
@@ -8616,7 +8599,7 @@ void Avatar::onUpdate(float dt)
 				float jpos[2];
 				glfwGetJoystickPos(GLFW_JOYSTICK_1, jpos, 2);
 				const float deadZone = 0.1;
-				if (fabs(jpos[0]) > deadZone || fabs(jpos[1]) > deadZone)
+				if (fabsf(jpos[0]) > deadZone || fabsf(jpos[1]) > deadZone)
 					addVec = Vector(jpos[0]*a, -jpos[1]*a);
 			}
 			*/
@@ -8680,7 +8663,7 @@ void Avatar::onUpdate(float dt)
 
 				/*
 				if (dsq->continuity.form == FORM_SPIRIT)
-					currentMaxSpeed *= 0.5;
+					currentMaxSpeed *= 0.5f;
 				*/
 
 				if (leaches > 0)
@@ -8771,10 +8754,10 @@ void Avatar::onUpdate(float dt)
 					if (velLen > 1200)
 						time = 1;
 					//skeletalSprite.setTimeMultiplier(time*3);// 5
-					//skeletalSprite.setTimeMultiplier(time*3.5);
+					//skeletalSprite.setTimeMultiplier(time*3.5f);
 					//skeletalSprite.setTimeMultiplier(time*4);
-					//animator.timePeriod = 1.5*(1.0f-time);
-					skeletalSprite.setTimeMultiplier(time*4.5);
+					//animator.timePeriod = 1.5f*(1.0f-time);
+					skeletalSprite.setTimeMultiplier(time*4.5f);
 				}
 				else
 				{
@@ -8794,12 +8777,12 @@ void Avatar::onUpdate(float dt)
 		/*
 		if (dsq->continuity.form == FORM_SPIRIT)
 		{
-			currentSwimSpeed *= 0.3;
+			currentSwimSpeed *= 0.3f;
 		}
 		*/
 		if (!_isUnderWater && !state.lockedToWall)
 		{
-			//currentSwimSpeed *= 1.5;
+			//currentSwimSpeed *= 1.5f;
 			//float a = *dt;
 			// base on where the mouse is
 			/*
@@ -8969,7 +8952,7 @@ void Avatar::onUpdate(float dt)
 			rotationOffset.interpolateTo(Vector(rotSpread, 0), t, -1, 1, 1);
 			*/
 
-			for (int i = 0; i < int((t*0.5)/0.01); i++)
+			for (int i = 0; i < int((t*0.5f)/0.01f); i++)
 			{
 				internalOffset.update(0.01);
 				//rotationOffset.update(0.01);
@@ -8982,7 +8965,7 @@ void Avatar::onUpdate(float dt)
 			*/
 
 			//lastSpreadUp = !lastSpreadUp;
-			//internalOffset.update(t*0.5);
+			//internalOffset.update(t*0.5f);
 		}
 
 		if (dsq->continuity.form != FORM_ENERGY && dsq->continuity.form != FORM_DUAL && dsq->continuity.form != FORM_FISH)
@@ -9051,7 +9034,7 @@ void Avatar::onUpdate(float dt)
 		}
 		else
 		{
-			if (dsq->game->waterLevel.x > 0 && fabs(avatar->position.y - dsq->game->waterLevel.x) < 800)
+			if (dsq->game->waterLevel.x > 0 && fabsf(avatar->position.y - dsq->game->waterLevel.x) < 800)
 			{
 				float time = 0.5;
 				if (!myZoom.interpolating || (core->globalScale.target != zoomSurface && myZoom.timePeriod != time))
@@ -9265,7 +9248,7 @@ void Avatar::onUpdate(float dt)
 
 								vel = -vel;
 
-								//vel = (vel*0.5 + n*0.5);
+								//vel = (vel*0.5f + n*0.5f);
 								if (vel.y < 0)
 								{
 									//debugLog("Vel less than 0");
@@ -9303,12 +9286,12 @@ void Avatar::onUpdate(float dt)
 								// works as long as not buried in wall ... yep. =(
 								if (dsq->game->isObstructed(TileVector(position)))
 								{
-									//vel = -vel*0.5;
+									//vel = -vel*0.5f;
 									vel = 0;
 								}
 								else
 								{
-									// && dsq->game->getPercObsInArea(position, 4) < 0.75
+									// && dsq->game->getPercObsInArea(position, 4) < 0.75f
 									if (!inCurrent)
 									{
 										/*
@@ -9348,8 +9331,8 @@ void Avatar::onUpdate(float dt)
 													//n.setLength2D(len/2);
 													//vel += n;
 													n.setLength2D(len);
-													vel = (n+vel)*0.5;
-													//vel = (n + vel)*0.5;
+													vel = (n+vel)*0.5f;
+													//vel = (n + vel)*0.5f;
 												}
 											}
 										//}
@@ -9390,7 +9373,7 @@ void Avatar::onUpdate(float dt)
 						Vector add = n * 100;
 						Vector f = getForward();
 						n = (n + f * 100);
-						n *= 0.5;
+						n *= 0.5f;
 						vel += n;
 					}
 				}
@@ -9642,11 +9625,11 @@ bool Avatar::checkWarpAreas()
 					else
 					{
 						avatar->position = backPos;
-						//avatar->vel = -avatar->vel * 0.5;
+						//avatar->vel = -avatar->vel * 0.5f;
 						Vector n = p->getEnterNormal();
 						n.setLength2D(avatar->vel.getLength2D());
 						avatar->vel += n;
-						avatar->vel *= 0.5;
+						avatar->vel *= 0.5f;
 					}
 					return true;
 				}
@@ -9708,7 +9691,7 @@ bool Avatar::checkWarpAreas()
 					else
 					{
 						position = lastPosition;
-						vel = -vel*1.1;
+						vel = -vel*1.1f;
 					}
 				}
 			}
