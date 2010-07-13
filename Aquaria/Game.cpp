@@ -769,11 +769,12 @@ void SongSlot::onUpdate(float dt)
 			dsq->game->playSongInMenu(songType);
 			dsq->game->songLabel->setText(dsq->continuity.getSongNameBySlot(songSlot));
 			dsq->game->songLabel->alpha.interpolateTo(1, 0.2);
-			if (core->mouse.buttons.left && !mbDown)
+			const bool anyButton = core->mouse.buttons.left || core->mouse.buttons.right;
+			if (!mbDown && anyButton)
 			{
 				mbDown = true;
 			}
-			else if (mbDown && !core->mouse.buttons.left)
+			else if (mbDown && anyButton)
 			{
 				mbDown = false;
 
@@ -9401,17 +9402,13 @@ void Game::toggleMainMenu(bool f)
 					}
 				}
 			}
-			songSlots[i]->setDirMove(DIR_RIGHT, 0);
-			songSlots[i]->setCanDirMove(false);
 		}
 
-		/*
 		if (ss)
 		{
 			ss->setDirMove(DIR_RIGHT, (AquariaMenuItem*)menu[5]);
 		}
-		*/
-		((AquariaMenuItem*)menu[5])->setDirMove(DIR_LEFT, 0);
+		((AquariaMenuItem*)menu[5])->setDirMove(DIR_LEFT, ss);
 
 		doMenuSectionHighlight(0);
 	}
