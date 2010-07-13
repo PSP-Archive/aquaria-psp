@@ -88,6 +88,36 @@ int ge_start_sublist(uint32_t *list, int size)
 /*-----------------------------------------------------------------------*/
 
 /**
+ * ge_replace_sublist:  作成中のサブリストを別のメモリ領域に置き換える。
+ * リスト満杯時、リストバッファを再確保したときに呼び出されることを想定
+ * している。
+ *
+ * サブリスト作成中でない場合、何もしない。
+ *
+ * 【引　数】list: サブリストバッファへのポインタ
+ * 　　　　　size: サブリストバッファのサイズ（ワード単位）
+ * 【戻り値】なし
+ */
+void ge_replace_sublist(uint32_t *list, int size)
+{
+    if (!list || size <= 0) {
+        DMSG("Invalid parameters: %p %d", list, size);
+        return;
+    }
+    if (!saved_gelist_ptr) {
+        DMSG("Not currently creating a sublist!");
+        return;
+    }
+
+    const uint32_t offset = gelist_ptr - sublist_base;
+    sublist_base = (uint32_t *)list;
+    gelist_ptr   = sublist_base + offset;
+    gelist_limit = sublist_base + size;
+}
+
+/*-----------------------------------------------------------------------*/
+
+/**
  * ge_finish_sublist:  現在作成中のサブリストを終了させる。サブリスト作成中
  * でない場合、何もせずNULLを返す。
  *
@@ -130,6 +160,23 @@ void ge_call_sublist(const uint32_t *list)
     CHECK_GELIST(2);
     internal_add_command(GECMD_ADDRESS_BASE, ((uint32_t)list & 0xFF000000)>>8);
     internal_add_command(GECMD_CALL, (uint32_t)list & 0x00FFFFFF);
+}
+
+/*-----------------------------------------------------------------------*/
+
+/**
+ * ge_sublist_free:  現在作成中のサブリストの空きワード数を返す。
+ *
+ * 【引　数】なし
+ * 【戻り値】空きワード数（サブリスト作成中でない場合は0）
+ */
+uint32_t ge_sublist_free(void)
+{
+    if (!saved_gelist_ptr) {
+        return 0;
+    }
+
+    return gelist_limit - gelist_ptr;
 }
 
 /*************************************************************************/

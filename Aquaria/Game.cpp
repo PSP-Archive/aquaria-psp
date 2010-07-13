@@ -5361,6 +5361,7 @@ bool Game::loadSceneXML(std::string scene)
 	}
 	this->reconstructGrid(true);
 	rebuildElementUpdateList();
+	setElementLayerFlags();
 
 	findMaxCameraValues();
 
@@ -6133,6 +6134,19 @@ void Game::rebuildElementUpdateList()
 				elementUpdateList.push_back(e);
 			}
 		}
+	}
+}
+
+void Game::setElementLayerFlags()
+{
+	for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS16; i++)
+	{
+		// FIXME: Background SchoolFish get added to ELEMENTS11, so
+		// we can't optimize that layer.  (Maybe create a new layer?)
+		if (i == LR_ELEMENTS11)
+			continue;
+
+		dsq->getRenderObjectLayer(i)->setOptimizeStatic(!sceneEditor.isOn());
 	}
 }
 
@@ -8892,7 +8906,10 @@ CollideData Game::collideCircleWithAllEntities(Vector pos, float r, Entity *me, 
 void Game::toggleSceneEditor()
 {
 	if (!core->getAltState())
+	{
 		sceneEditor.toggle();
+		setElementLayerFlags();
+	}
 }
 
 void Game::toggleMiniMapRender()

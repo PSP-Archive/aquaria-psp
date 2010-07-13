@@ -54,6 +54,8 @@ Element::Element(Element::Type elementType) : Quad(), type(elementType)
 	wavyMax = 0;
 	oldRotation = 0;
 	templateIdx = -1;
+
+	setStatic(true);
 }
 
 void Element::wavyPull(int to, int from, float dt)
@@ -299,12 +301,14 @@ void Element::setElementEffectByIndex(int eidx)
 	case EFX_SEGS:
 	{
 		setSegs(e.segsx, e.segsy, e.segs_dgox, e.segs_dgoy, e.segs_dgmx, e.segs_dgmy, e.segs_dgtm, e.segs_dgo);
+		setStatic(false);
 	}
 	break;
 	case EFX_ALPHA:
 	{
 		setBlendType(e.blendType);
 		alpha = e.alpha;
+		setStatic(false);
 	}
 	break;
 	case EFX_WAVY:
@@ -337,7 +341,11 @@ void Element::setElementEffectByIndex(int eidx)
 		wavyMin = e.wavy_min;
 		wavyMax = e.wavy_max;
 		*/
+		setStatic(false);
 	}
+	break;
+	default:
+		setStatic(true);
 	break;
 	}
 	elementEffectType = e.type;

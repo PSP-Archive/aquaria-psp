@@ -561,6 +561,19 @@ extern void ge_add_commandf(uint8_t command, float parameter);
 extern int ge_start_sublist(uint32_t *list, int size);
 
 /**
+ * ge_replace_sublist:  作成中のサブリストを別のメモリ領域に置き換える。
+ * リスト満杯時、リストバッファを再確保したときに呼び出されることを想定
+ * している。
+ *
+ * サブリスト作成中でない場合、何もしない。
+ *
+ * 【引　数】list: サブリストバッファへのポインタ
+ * 　　　　　size: サブリストバッファのサイズ（ワード単位）
+ * 【戻り値】なし
+ */
+extern void ge_replace_sublist(uint32_t *list, int size);
+
+/**
  * ge_finish_sublist:  現在作成中のサブリストを終了させる。サブリスト作成中
  * でない場合、何もせずNULLを返す。
  *
@@ -576,6 +589,14 @@ extern uint32_t *ge_finish_sublist(void);
  * 【戻り値】なし
  */
 extern void ge_call_sublist(const uint32_t *list);
+
+/**
+ * ge_sublist_free:  現在作成中のサブリストの空きワード数を返す。
+ *
+ * 【引　数】なし
+ * 【戻り値】空きワード数（サブリスト作成中でない場合は0）
+ */
+extern uint32_t ge_sublist_free(void);
 
 /************* 3次元座標変換行列設定関数 (ge-util/matrix.c) *************/
 

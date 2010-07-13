@@ -14,6 +14,14 @@
 #include "sysdep-psp/ge-util.h"
 #include "sysdep-psp/psplocal.h"
 
+/*
+ * This source code implements the subset of OpenGL necessary for Aquaria
+ * to run properly, along with a few PSP-specific interface functions
+ * (identifiable by a "fakegl" instead of "gl" name prefix) used to
+ * improve performance.  This is _not_ intended as a general-purpose
+ * OpenGL implementation.
+ */
+
 /*************************************************************************/
 /****************************** Local data *******************************/
 /*************************************************************************/
@@ -169,6 +177,10 @@ static Matrix4f *current_matrix = &modelview_matrix_stack[0];
  * the stack.  See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=16660) */
 static Matrix4f temp_matrix1, temp_matrix2;
 
+/* Constant identity matrix, to simplify matrix initialization. */
+static const Matrix4f identity_matrix =
+    {.m = {{1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1}}};
+
 /*-----------------------------------------------------------------------*/
 
 /******** Texture management ********/
@@ -264,6 +276,61 @@ static unsigned int uncached_vertices;
  * to kickstart the GE's processing. */
 #define UNCACHED_VERTEX_LIMIT  100
 
+/*-----------------------------------------------------------------------*/
+
+/******** Display list management ********/
+
+/* Vertex buffer structure.  Since we don't know ahead of time how many
+ * vertices will be registered between a glBegin() and glEnd() call, and
+ * we can't (easily) move vertex buffers in memory because of the pointers
+ * stored in the GE command words, we give each GL display list a linked
+ * list of fixed-size vertex buffers, allocating a new buffer when the
+ * previous one is full and freeing all buffers when the display list is
+ * destroyed. */
+typedef struct VertexBuffer_ VertexBuffer;
+struct VertexBuffer_ {
+    VertexBuffer *next; // Next vertex buffer in list
+    uint32_t size;      // Size of this vertex buffer (in bytes)
+    uint32_t used;      // Number of bytes used in this vertex buffer
+    uint8_t data[0];    // Actual vertex data
+};
+
+/* Size of a single vertex buffer (in bytes).  For efficiency, this should
+ * be large enough both to minimize the allocation overhead ratio and to
+ * fit all vertices from any single glBegin()/glEnd() pair. */
+#define VERTEX_BUFFER_SIZE  16384
+
+/* Dynamically-resized array of display lists associated with list IDs.
+ * List ID 0 is never used.  As with textures, display lists are not
+ * deleted immediately, and are instead linked using the "to_free" and
+ * "next_free" fields for delayed freeing. */
+typedef struct DisplayList_ {
+    uint32_t *list;         // List address pointer
+    VertexBuffer *vertex_buffers; // Vertex buffer list
+    uint32_t size;          // List size (in words, not bytes)
+    uint32_t to_free:1;     // 1 = List has been deleted and is awaiting
+                            //     destruction
+    uint32_t in_use:1;      // 1 = List has been allocated with glNewLists()
+    uint32_t next_free:30;  // Index of next list to free, or 0 if none
+} DisplayList;
+static DisplayList *dlist_array = NULL;
+static uint32_t dlist_array_size = 0;
+static uint32_t first_dlist_to_free = 0;  // 0 = none
+
+/* ID of display list currently being generated, or 0 for none. */
+static uint32_t current_dlist;
+
+/* Saved modelview matrix (see glNewList()). */
+static Matrix4f dlist_saved_matrix;
+/* Saved modelview matrix stack pointer (see glNewList()). */
+static unsigned int dlist_saved_matrix_top;
+
+/* Memory allocation size increment for display lists (in words). */
+#define DLIST_SIZE_INCREMENT  4096
+
+/* Free space threshold (in words) below which we expand the list buffer. */
+#define DLIST_EXPAND_THRESHOLD  100
+
 /*************************************************************************/
 
 /******** Error-setting macro including a debug log message ********/
@@ -275,7 +342,19 @@ static unsigned int uncached_vertices;
 
 /*-----------------------------------------------------------------------*/
 
-/******** Internal helper routine declarations ********/
+/******** Internal helper routine/macro declarations ********/
+
+/* Always call this by the check_dlist_size() macro, not directly. */
+#define check_dlist_size() \
+    do {if (current_dlist) _check_dlist_size(current_dlist);} while (0)
+static void _check_dlist_size(unsigned int dlist);
+
+static void *dlist_reserve_vertexbytes(uint32_t bytes);
+#define reserve_vertexbytes(bytes) \
+    (current_dlist ? dlist_reserve_vertexbytes((bytes)) \
+                   : ge_reserve_vertexbytes((bytes)))
+
+static void update_render_state(void);
 
 static void copy_indexed(const void *data, Texture *texture,
                          unsigned int x0, unsigned int y0,
@@ -286,6 +365,7 @@ static void copy_RGB(const void *data, Texture *texture,
 static void copy_RGBA(const void *data, Texture *texture,
                       unsigned int x0, unsigned int y0,
                       unsigned int width, unsigned int height);
+
 static void fb_to_luminance(unsigned int x0, unsigned int y0,
                             unsigned int width, unsigned int height,
                             uint8_t *dest, unsigned int dest_stride,
@@ -315,6 +395,8 @@ GLenum glGetError(void)
 
 void glPushAttrib(GLbitfield mask)
 {
+    check_dlist_size();
+
     if (!in_frame) {
         DMSG("Called outside a frame!");
         SET_ERROR(GL_INVALID_OPERATION);
@@ -433,6 +515,8 @@ void glPushAttrib(GLbitfield mask)
 
 void glPopAttrib(void)
 {
+    check_dlist_size();
+
     if (!in_frame) {
         DMSG("Called outside a frame!");
         SET_ERROR(GL_INVALID_OPERATION);
@@ -599,6 +683,8 @@ void glPopClientAttrib(void)
 
 void glEnable(GLenum cap)
 {
+    check_dlist_size();
+
     if (!in_frame) {
         DMSG("Called outside a frame!");
         SET_ERROR(GL_INVALID_OPERATION);
@@ -661,6 +747,8 @@ void glEnable(GLenum cap)
 
 void glDisable(GLenum cap)
 {
+    check_dlist_size();
+
     if (!in_frame) {
         DMSG("Called outside a frame!");
         SET_ERROR(GL_INVALID_OPERATION);
@@ -749,6 +837,10 @@ void glGetFloatv(GLenum pname, GLfloat *params)
         params[3] = (current_color>>24 & 0xFF) / 255.0f;
         break;
       case GL_MODELVIEW_MATRIX:
+        if (current_dlist) {
+            DMSG("WARNING: glGetFloat(GL_MODELVIEW_MATRIX) is unreliable"
+                 " in a display list");
+        }
         memcpy(params, &modelview_matrix_stack[modelview_matrix_top], 16*4);
         break;
       default:
@@ -788,6 +880,8 @@ void glGetIntegerv(GLenum pname, GLint *params)
 
 void glBlendFunc(GLenum sfactor, GLenum dfactor)
 {
+    check_dlist_size();
+
     if (!in_frame) {
         DMSG("Called outside a frame!");
         SET_ERROR(GL_INVALID_OPERATION);
@@ -879,6 +973,8 @@ void glBlendFunc(GLenum sfactor, GLenum dfactor)
 
 void glLightfv(GLenum light, GLenum pname, const GLfloat *params)
 {
+    check_dlist_size();
+
     if (!in_frame) {
         DMSG("Called outside a frame!");
         SET_ERROR(GL_INVALID_OPERATION);
@@ -1087,6 +1183,8 @@ void glPixelZoom(GLfloat xfactor, GLfloat yfactor)
 
 void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
+    check_dlist_size();
+
     if (!in_frame) {
         DMSG("Called outside a frame!");
         SET_ERROR(GL_INVALID_OPERATION);
@@ -1114,6 +1212,11 @@ void glMatrixMode(GLenum mode)
     matrix_mode = mode;
     switch (matrix_mode) {
       case GL_PROJECTION:
+        if (current_dlist) {
+            DMSG("Setting projection matrix not allowed in a display list");
+            SET_ERROR(GL_INVALID_OPERATION);
+            return;
+        }
         current_matrix = &projection_matrix_stack[projection_matrix_top];
         break;
       case GL_MODELVIEW:
@@ -1126,6 +1229,10 @@ void glMatrixMode(GLenum mode)
 
 void glLoadMatrixf(const GLfloat *m)
 {
+    if (current_dlist && modelview_matrix_top == dlist_saved_matrix_top) {
+        DMSG("WARNING: display list set matrix without push");
+    }
+
     memcpy(current_matrix, m, 16*4);
 
     switch (matrix_mode) {
@@ -1138,8 +1245,7 @@ void glLoadMatrixf(const GLfloat *m)
 
 void glLoadIdentity(void)
 {
-    static const float identity[16] = {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1};
-    glLoadMatrixf(identity);
+    glLoadMatrixf(identity_matrix.a);
 }
 
 /*-----------------------------------------------------------------------*/
@@ -1189,6 +1295,12 @@ void glPopMatrix(void)
             SET_ERROR(GL_STACK_UNDERFLOW);
             return;
         }
+        if (current_dlist && modelview_matrix_top <= dlist_saved_matrix_top) {
+            DMSG("WARNING: display list tried to pop past the original stack"
+                 " pointer, ignoring");
+            SET_ERROR(GL_STACK_UNDERFLOW);
+            return;
+        }
         modelview_matrix_top--;
         current_matrix = &modelview_matrix_stack[modelview_matrix_top];
         modelview_matrix_changed = 1;
@@ -1200,6 +1312,10 @@ void glPopMatrix(void)
 
 void glMultMatrixf(const GLfloat *m)
 {
+    if (current_dlist && modelview_matrix_top == dlist_saved_matrix_top) {
+        DMSG("WARNING: display list set matrix without push");
+    }
+
     temp_matrix1 = *current_matrix;
     memcpy(&temp_matrix2, m, 16*4);
     mat4_mul(current_matrix, &temp_matrix2, &temp_matrix1);
@@ -1214,6 +1330,10 @@ void glMultMatrixf(const GLfloat *m)
 
 void glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
 {
+    if (current_dlist && modelview_matrix_top == dlist_saved_matrix_top) {
+        DMSG("WARNING: display list set matrix without push");
+    }
+
     temp_matrix1 = *current_matrix;
     temp_matrix2._11 = 2.0f / (right - left);
     temp_matrix2._12 = 0;
@@ -1243,6 +1363,10 @@ void glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat 
 
 void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 {
+    if (current_dlist && modelview_matrix_top == dlist_saved_matrix_top) {
+        DMSG("WARNING: display list set matrix without push");
+    }
+
     if (angle == 0) {
         return;
     }
@@ -1347,6 +1471,10 @@ void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 
 void glScalef(GLfloat x, GLfloat y, GLfloat z)
 {
+    if (current_dlist && modelview_matrix_top == dlist_saved_matrix_top) {
+        DMSG("WARNING: display list set matrix without push");
+    }
+
     if (x != 1) {
         current_matrix->_11 *= x;
         current_matrix->_12 *= x;
@@ -1376,6 +1504,10 @@ void glScalef(GLfloat x, GLfloat y, GLfloat z)
 
 void glTranslatef(GLfloat x, GLfloat y, GLfloat z)
 {
+    if (current_dlist && modelview_matrix_top == dlist_saved_matrix_top) {
+        DMSG("WARNING: display list set matrix without push");
+    }
+
     float m41 = current_matrix->_41;
     float m42 = current_matrix->_42;
     float m43 = current_matrix->_43;
@@ -1451,6 +1583,7 @@ void glGenTextures(GLsizei n, GLuint *textures)
         }
         textures[i] = id++;
         texture_array[textures[i]].texture = UNDEFINED_TEXTURE;
+        texture_array[textures[i]].to_free = 0;
     }
 }
 
@@ -1469,7 +1602,9 @@ void glBindTexture(GLenum target, GLuint texture)
         SET_ERROR(GL_INVALID_VALUE);
         return;
     }
-    if (!texture_array[texture].texture) {
+    if (texture != 0
+     && (!texture_array[texture].texture || texture_array[texture].to_free)
+    ) {
         DMSG("Invalid texture ID %u (deleted)", (int)texture);
         SET_ERROR(GL_INVALID_VALUE);
         return;
@@ -2216,6 +2351,8 @@ void glBegin(GLenum mode)
 
 void glEnd(void)
 {
+    check_dlist_size();
+
     if (!current_primitive) {
         SET_ERROR(GL_INVALID_OPERATION);
         return;
@@ -2228,67 +2365,17 @@ void glEnd(void)
     }
 
     if (current_primitive == GL_LINE_LOOP) {
-        uint32_t *last_vertex = ge_reserve_vertexbytes(vertex_words * 4);
+        uint32_t *last_vertex = reserve_vertexbytes(vertex_words * 4);
         if (!last_vertex) {
             SET_ERROR(GL_OUT_OF_MEMORY);
+            current_primitive = 0;
             return;
         }
         memcpy(last_vertex, first_vertex, vertex_words * 4);
         num_vertices++;
     }
 
-    if (projection_matrix_changed) {
-        ge_set_projection_matrix(&projection_matrix_stack[projection_matrix_top]);
-        projection_matrix_changed = 0;
-    }
-    if (modelview_matrix_changed) {
-        ge_set_view_matrix(&modelview_matrix_stack[modelview_matrix_top]);
-        modelview_matrix_changed = 0;
-    }
-    if (texture_changed) {
-        if (bound_texture != 0
-         && texture_array[bound_texture].texture != UNDEFINED_TEXTURE
-        ) {
-            Texture *tex = texture_array[bound_texture].texture;
-            if (tex->indexed) {
-                ge_set_colortable(tex->palette, 256, GE_PIXFMT_8888, 0, 0xFF);
-            }
-            unsigned int width = tex->width, height = tex->height;
-            unsigned int stride = tex->stride;
-            const unsigned int pixel_size = (tex->indexed ? 1 : 4);
-            const uint8_t *pixels = tex->pixels;
-            ge_set_texture_data(0, pixels, width, height, stride);
-            unsigned int level;
-            for (level = 1; level <= tex->mipmaps; level++) {
-                pixels += stride * height * pixel_size;
-                width  = (width+1)/2;
-                height = (height+1)/2;
-                stride = align_up(stride/2, pixel_size==1 ? 16 : 4);
-                ge_set_texture_data(level, pixels, width, height, stride);
-            }
-            ge_set_texture_format(level, tex->swizzled,
-                                  tex->indexed ? GE_TEXFMT_T8 : GE_TEXFMT_8888);
-            ge_set_texture_draw_mode(GE_TEXDRAWMODE_MODULATE, 1);
-            /* Use texture coordinate scaling to adjust texture coordinates
-             * when the texture width or height is not a power of 2. */
-            const int log2_width  = tex->width==1 ? 0 :
-                ubound(32 - __builtin_clz(tex->width-1), 9);
-            const int log2_height = tex->height==1 ? 0 :
-                ubound(32 - __builtin_clz(tex->height-1), 9);
-            ge_set_texture_scale((float)tex->width  / (float)(1<<log2_width),
-                                 (float)tex->height / (float)(1<<log2_height));
-        }
-        texture_changed = 0;
-    }
-    if (texture_filter_changed) {
-        ge_set_texture_filter(texture_mag_filter, texture_min_filter,
-                              texture_mip_filter);
-        texture_filter_changed = 0;
-    }
-    if (texture_wrap_mode_changed) {
-        ge_set_texture_wrap_mode(texture_wrap_u, texture_wrap_v);
-        texture_wrap_mode_changed = 0;
-    }
+    update_render_state();
     if (enable_texture_2D
      && (bound_texture == 0
          || texture_array[bound_texture].texture == UNDEFINED_TEXTURE)
@@ -2324,6 +2411,8 @@ void glEnd(void)
 
 void glColor4ub(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha)
 {
+    check_dlist_size();
+
     current_color = red<<0 | green<<8 | blue<<16 | alpha<<24;
 
     if (color_material_state) {
@@ -2369,6 +2458,8 @@ void glTexCoord2f(float s, float t)
 
 void glVertex3f(float x, float y, float z)
 {
+    check_dlist_size();
+
     if (!current_primitive) {
         SET_ERROR(GL_INVALID_OPERATION);
         return;
@@ -2401,10 +2492,10 @@ void glVertex3f(float x, float y, float z)
         if (vertex_format & GE_VERTEXFMT_NORMAL_32BITF) {
             vertex_words += 3;
         }
-        first_vertex = ge_reserve_vertexbytes(vertex_words * 4);
+        first_vertex = reserve_vertexbytes(vertex_words * 4);
         vertex_buffer = first_vertex;
     } else {
-        vertex_buffer = ge_reserve_vertexbytes(vertex_words * 4);
+        vertex_buffer = reserve_vertexbytes(vertex_words * 4);
     }
     if (UNLIKELY(!vertex_buffer)) {
         DMSG("Vertex buffer overflow!");
@@ -2430,7 +2521,7 @@ void glVertex3f(float x, float y, float z)
 
     if (current_primitive == GL_QUADS && (num_vertices % 4) == 3) {
         /* Store the previous vertex immediately after this one. */
-        vertex_buffer = ge_reserve_vertexbytes(vertex_words * 4);
+        vertex_buffer = reserve_vertexbytes(vertex_words * 4);
         if (UNLIKELY(!vertex_buffer)) {
             DMSG("Vertex buffer overflow!");
             SET_ERROR(GL_OUT_OF_MEMORY);
@@ -2457,11 +2548,251 @@ void glVertex3f(float x, float y, float z)
 }
 
 /*************************************************************************/
+/*********************** Display list manipulation ***********************/
+/*************************************************************************/
+
+GLuint glGenLists(GLsizei range)
+{
+    if (current_primitive) {
+        SET_ERROR(GL_INVALID_OPERATION);
+        return 0;
+    }
+
+    /* For simplicity, we only handle the case of a single allocation. */
+    if (range != 1) {
+        SET_ERROR(GL_INVALID_VALUE);
+        return 0;
+    }
+
+    uint32_t id;
+    for (id = 1; id < dlist_array_size; id++) {
+        if (!dlist_array[id].list) {
+            break;
+        }
+    }
+    if (id >= dlist_array_size) {
+        const uint32_t new_size = id+1;
+        DisplayList *new_array =
+            mem_realloc(dlist_array, sizeof(*new_array) * new_size, 0);
+        if (!new_array) {
+            DMSG("Failed to realloc dlist array from %u to %u entries",
+                 dlist_array_size, new_size);
+            SET_ERROR(GL_OUT_OF_MEMORY);
+            return 0;
+        }
+        dlist_array = new_array;
+        dlist_array_size = new_size;
+    }
+
+    dlist_array[id].list = NULL;
+    dlist_array[id].vertex_buffers = NULL;
+    dlist_array[id].to_free = 0;
+    dlist_array[id].in_use = 1;
+    return id;
+}
+
+/*-----------------------------------------------------------------------*/
+
+void glDeleteLists(GLuint list, GLsizei range)
+{
+    if (current_primitive || current_dlist) {
+        SET_ERROR(GL_INVALID_OPERATION);
+        return;
+    }
+
+    GLsizei i;
+    for (i = 0; i < range; i++, list++) {
+        if (list == 0 || list >= dlist_array_size) {
+            DMSG("Invalid display list ID %u (limit %u)",
+                 (int)list, dlist_array_size);
+            continue;
+        }
+        if (!dlist_array[list].in_use) {
+            DMSG("Invalid display list ID %u (not allocated)", (int)list);
+            SET_ERROR(GL_INVALID_VALUE);
+            return;
+        }
+        if (dlist_array[list].to_free) {
+            /* Already marked for deletion, so skip it. */
+        } else if (dlist_array[list].list) {
+            dlist_array[list].to_free = 1;
+            dlist_array[list].next_free = first_dlist_to_free;
+            first_dlist_to_free = list;
+        } else {
+            /* No list was created, so we can free the entry immediately. */
+            dlist_array[list].in_use = 0;
+        }
+    }
+}
+
+/*************************************************************************/
+
+void glNewList(GLuint list, GLenum mode)
+{
+    if (current_primitive || current_dlist) {
+        SET_ERROR(GL_INVALID_OPERATION);
+        return;
+    }
+
+    if (list == 0 || list >= dlist_array_size) {
+        DMSG("Invalid display list ID %u (limit %u)",
+             (int)list, dlist_array_size);
+        SET_ERROR(GL_INVALID_VALUE);
+        return;
+    }
+    if (!dlist_array[list].in_use) {
+        DMSG("Invalid display list ID %u (not allocated)", (int)list);
+        SET_ERROR(GL_INVALID_VALUE);
+        return;
+    }
+    if (dlist_array[list].to_free) {
+        DMSG("Invalid display list ID %u (deleted)", (int)list);
+        SET_ERROR(GL_INVALID_VALUE);
+        return;
+    }
+    if (dlist_array[list].list) {
+        DMSG("Invalid display list ID %u (already created)", (int)list);
+        SET_ERROR(GL_INVALID_OPERATION);
+        return;
+    }
+
+    dlist_array[list].size = DLIST_SIZE_INCREMENT;
+    dlist_array[list].list = mem_alloc(dlist_array[list].size * 4, 4, 0);
+    if (!dlist_array[list].list) {
+        SET_ERROR(GL_OUT_OF_MEMORY);
+        return;
+    }
+
+    if (!ge_start_sublist(dlist_array[list].list, dlist_array[list].size)) {
+        SET_ERROR(GL_OUT_OF_MEMORY);
+        mem_free(dlist_array[list].list);
+        dlist_array[list].list = NULL;
+        return;
+    }
+
+    /* Since we store actual matrices in the display list rather than
+     * matrix operations, we save the current modelview matrix and replace
+     * it with an identity matrix; we then apply the (possibly transformed)
+     * new matrix as the GE model matrix, leaving the GE view matrix
+     * untouched so the list caller can transform it as appropriate. */
+    dlist_saved_matrix = modelview_matrix_stack[modelview_matrix_top];
+    modelview_matrix_stack[modelview_matrix_top] = identity_matrix;
+    modelview_matrix_changed = 0;
+    /* Also save the current modelview matrix stack pointer, and warn if a
+     * command tries to modify the current matrix without first pushing it
+     * or if the stack isn't properly restored at the end of the list. */
+    dlist_saved_matrix_top = modelview_matrix_top;
+
+    /* Clear the texture change flags for a clean slate (we don't want to
+     * have any previous changes applied within the list). */
+    texture_changed = 0;
+    texture_filter_changed = 0;
+    texture_wrap_mode_changed = 0;
+
+    /* Save the current state, and clear cached blend factor values so
+     * the next glBlendFunc() call will always write a GE command into the
+     * sublist. */
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    blend_sfactor = blend_dfactor = -1;
+
+    if (matrix_mode != GL_MODELVIEW) {
+        DMSG("Forcing modelview matrix mode");
+        glMatrixMode(GL_MODELVIEW);
+    }
+
+    current_dlist = list;
+}
+
+/*-----------------------------------------------------------------------*/
+
+void glEndList(void)
+{
+    if (!current_dlist) {
+        SET_ERROR(GL_INVALID_OPERATION);
+        return;
+    }
+
+    /* Make sure to reset the model matrix to the identity when we're done,
+     * so it doesn't affect subsequent renders. */
+    check_dlist_size();
+    ge_set_model_matrix(&identity_matrix);
+
+    uint32_t *list_end = ge_finish_sublist();
+
+    DisplayList *dlist = &dlist_array[current_dlist];
+    const uint32_t list_size = list_end - dlist->list;
+    if (list_size > dlist->size) {
+        DMSG("BUG?  List end %p - base %p > size %u*4", list_end,
+             dlist->list, dlist->size);
+    } else {
+        uint32_t *list = mem_realloc(dlist->list, list_size*4, 0);
+        if (list) {
+            dlist->list = list;
+        }
+    }
+    sceKernelDcacheWritebackRange(dlist->list, list_size*4);
+    if (dlist->vertex_buffers) {
+        VertexBuffer *buffer = dlist->vertex_buffers;
+        buffer = mem_realloc(buffer, sizeof(VertexBuffer) + buffer->used, 0);
+        if (buffer) {
+            buffer->size = buffer->used;
+            dlist->vertex_buffers = buffer;
+        }
+        for (buffer = dlist->vertex_buffers; buffer; buffer = buffer->next) {
+            sceKernelDcacheWritebackRange(buffer->data, buffer->used);
+        }
+    }
+
+    current_dlist = 0;
+
+    glPopAttrib();
+
+    if (modelview_matrix_top != dlist_saved_matrix_top) {
+        DMSG("WARNING: display list left matrix stack unbalanced"
+             " (old=%u new=%u), restoring", dlist_saved_matrix_top,
+             modelview_matrix_top);
+        modelview_matrix_top = dlist_saved_matrix_top;
+    }
+    modelview_matrix_stack[modelview_matrix_top] = dlist_saved_matrix;
+    modelview_matrix_changed = 1;
+    texture_changed = 1;
+    texture_filter_changed = 1;
+    texture_wrap_mode_changed = 1;
+}
+
+/*************************************************************************/
+
+void glCallList(GLuint list)
+{
+    if (current_primitive || current_dlist) {
+        SET_ERROR(GL_INVALID_OPERATION);
+        return;
+    }
+
+    if (list == 0 || list >= dlist_array_size) {
+        DMSG("Invalid display list ID %u (limit %u)",
+             (int)list, dlist_array_size);
+        SET_ERROR(GL_INVALID_VALUE);
+        return;
+    }
+    if (!dlist_array[list].list || dlist_array[list].to_free) {
+        DMSG("Invalid display list ID %u (undefined or deleted)", (int)list);
+        SET_ERROR(GL_INVALID_VALUE);
+        return;
+    }
+
+    update_render_state();
+    ge_call_sublist(dlist_array[list].list);
+}
+
+/*************************************************************************/
 /************************ Miscellaneous routines *************************/
 /*************************************************************************/
 
 void glClear(GLbitfield mask)
 {
+    check_dlist_size();
+
     if (!in_frame) {
         DMSG("Called outside a frame!");
         SET_ERROR(GL_INVALID_OPERATION);
@@ -2515,6 +2846,8 @@ void glRasterPos2i(GLint x, GLint y)
 
 void glCopyPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type)
 {
+    check_dlist_size();
+
     if (!in_frame) {
         DMSG("Called outside a frame!");
         SET_ERROR(GL_INVALID_OPERATION);
@@ -2588,6 +2921,11 @@ void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
 
 void glFlush(void)
 {
+    if (current_dlist) {
+        SET_ERROR(GL_INVALID_OPERATION);
+        return;
+    }
+
     if (in_frame) {
         ge_commit();
         uncached_vertices = 0;
@@ -2598,6 +2936,11 @@ void glFlush(void)
 
 void glFinish(void)
 {
+    if (current_dlist) {
+        SET_ERROR(GL_INVALID_OPERATION);
+        return;
+    }
+
     if (in_frame) {
         ge_sync();
         uncached_vertices = 0;
@@ -2636,7 +2979,7 @@ void fakeglBeginFrame(void)
     }
 
     /* We now know the GE is done rendering the previous frame, so destroy
-     * all textures that were deleted during that frame. */
+     * all textures and display lists that were deleted during that frame. */
     uint32_t tex_id = first_texture_to_free;
     while (tex_id != 0) {
         if (texture_array[tex_id].texture != UNDEFINED_TEXTURE) {
@@ -2647,6 +2990,23 @@ void fakeglBeginFrame(void)
         tex_id = texture_array[tex_id].next_free;
     }
     first_texture_to_free = 0;
+    uint32_t dlist_id = first_dlist_to_free;
+    while (dlist_id != 0) {
+        if (dlist_array[dlist_id].list) {
+            VertexBuffer *vbuf, *next;
+            for (vbuf = dlist_array[dlist_id].vertex_buffers; vbuf; vbuf = next) {
+                next = vbuf->next;
+                mem_free(vbuf);
+            }
+            mem_free(dlist_array[dlist_id].list);
+        }
+        dlist_array[dlist_id].list = NULL;
+        dlist_array[dlist_id].vertex_buffers = NULL;
+        dlist_array[dlist_id].to_free = 0;
+        dlist_array[dlist_id].in_use = 0;
+        dlist_id = dlist_array[dlist_id].next_free;
+    }
+    first_dlist_to_free = 0;
 
     uncached_vertices = 0;
 
@@ -2712,6 +3072,14 @@ void fakeglEndFrame(void)
     if (!in_frame) {
         DMSG("Not rendering a frame!");
         return;
+    }
+
+    if (current_dlist) {
+        glEndList();
+    }
+    if (current_primitive) {
+        DMSG("WARNING: Aborting unfinished primitive %d", current_primitive);
+        current_primitive = 0;
     }
 
     in_frame = 0;
@@ -2807,6 +3175,222 @@ const Texture *fakeglGetTexPointerPSP(GLenum target)
 
 /*************************************************************************/
 /*********************** Internal helper routines ************************/
+/*************************************************************************/
+
+/**
+ * _check_dlist_size:  Check whether the current display list is close to
+ * full, and expand it if so.  This function should be called at the
+ * beginning of any routine which may add commands to the GE display list.
+ *
+ * [Parameters]
+ *     dlist: Current value of current_dlist (passed in for speed)
+ * [Return value]
+ *     None
+ * [Preconditions]
+ *     current_dlist != 0
+ */
+static void _check_dlist_size(unsigned int dlist)
+{
+    if (ge_sublist_free() < DLIST_EXPAND_THRESHOLD) {
+        uint32_t new_size = dlist_array[dlist].size + DLIST_SIZE_INCREMENT;
+        uint32_t *new_list =
+            mem_realloc(dlist_array[dlist].list, new_size*4, 0);
+        if (!new_list) {
+            DMSG("Out of memory trying to expand list %p: %u -> %u",
+                 dlist_array[dlist].list, dlist_array[dlist].size, new_size);
+            return;
+        }
+        ge_replace_sublist(new_list, new_size);
+        dlist_array[dlist].list = new_list;
+        dlist_array[dlist].size = new_size;
+    }
+}
+
+/*************************************************************************/
+
+/**
+ * dlist_reserve_vertexbytes:  Allocate space for vertex data to be
+ * associated with the current GL display list.  Allocates a new vertex
+ * buffer if the current one is full, or expands the current buffer if it
+ * has not yet been used in any GE commands (determined by checking whether
+ * first_vertex == VertexBuffer.data).
+ *
+ * [Parameters]
+ *     bytes: Number of bytes to reserve
+ * [Return value]
+ *     Address of allocated memory, or NULL if out of memory
+ * [Preconditions]
+ *     current_dlist != 0
+ */
+static void *dlist_reserve_vertexbytes(uint32_t bytes)
+{
+    DisplayList *dlist = &dlist_array[current_dlist];
+
+    /* First try to allocate from the current vertex buffer, if any. */
+
+    if (dlist->vertex_buffers) {
+        VertexBuffer *buffer = dlist->vertex_buffers;
+        if (buffer->used + bytes <= buffer->size) {
+            void *retval = &buffer->data[buffer->used];
+            buffer->used += bytes;
+            return retval;
+        }
+
+        /* If the vertex buffer is only being used for the current
+         * primitive, then we can't split this vertex into a new buffer,
+         * but we can expand the current buffer safely. */
+
+        if (first_vertex == (VertexData *)buffer->data) {
+            uint32_t new_size = buffer->size + VERTEX_BUFFER_SIZE;
+            VertexBuffer *new_buffer =
+                mem_realloc(buffer, sizeof(VertexBuffer) + new_size, 0);
+            if (!new_buffer) {
+                DMSG("Failed to expand vertex buffer %p from %u to %u bytes",
+                     buffer, buffer->size, new_size);
+                return NULL;
+            }
+            buffer = new_buffer;
+            buffer->size = new_size;
+            dlist->vertex_buffers = buffer;
+            first_vertex = (VertexData *)buffer->data;
+            void *retval = &buffer->data[buffer->used];
+            buffer->used += bytes;
+            return retval;
+        }
+    }  // if (dlist->vertex_buffers)
+
+    /* The current buffer is full or there was no current buffer, so
+     * allocate a new one, making sure it will have enough room for the
+     * new vertex. */
+
+    VertexBuffer *old_buffer = dlist->vertex_buffers;
+    uint32_t bytes_to_move = 0;
+    uint32_t move_offset = 0;
+    if (old_buffer && first_vertex) {
+        move_offset = (uint8_t *)first_vertex - old_buffer->data;
+        if (move_offset >= old_buffer->used) {
+            DMSG("BUG? move_offset %u (first_vertex %p) >= old_buffer->used %u"
+                 " (data %p)", move_offset, first_vertex, old_buffer->used,
+                 old_buffer->data);
+            move_offset = 0;
+        } else {
+            bytes_to_move = old_buffer->used - move_offset;
+        }
+    }
+
+    uint32_t size = max(VERTEX_BUFFER_SIZE, bytes_to_move + bytes);
+    VertexBuffer *buffer = mem_alloc(sizeof(VertexBuffer) + size, 0, 0);
+    if (!buffer) {
+        DMSG("No memory for new vertex buffer (%u bytes)", size);
+        return NULL;
+    }
+    buffer->size = VERTEX_BUFFER_SIZE;
+    buffer->used = 0;
+
+    /* If there was a vertex buffer, copy any pending vertex data for the
+     * current primitive into the new buffer, then truncate the old buffer
+     * to the minimum needed size to conserve memory. */
+
+    if (old_buffer) {
+        if (bytes_to_move) {
+            memcpy(buffer->data, &old_buffer->data[move_offset], bytes_to_move);
+            old_buffer->used -= bytes_to_move;
+            buffer->used = bytes_to_move;
+            first_vertex = (VertexData *)buffer->data;
+        }
+        VertexBuffer *temp =
+            mem_realloc(old_buffer, sizeof(VertexBuffer) + old_buffer->used, 0);
+        if (temp) {
+            temp->size = temp->used;
+            dlist->vertex_buffers = temp;
+        }
+    }
+
+    /* Link the new buffer into the display list's vertex buffer list and
+     * return the allocated vertex data pointer. */
+
+    buffer->next = dlist->vertex_buffers;
+    dlist->vertex_buffers = buffer;
+    void *retval = &buffer->data[buffer->used];
+    buffer->used += bytes;
+    return retval;
+}
+
+/*************************************************************************/
+
+/**
+ * update_render_state:  Apply any transformation matrix or texture state
+ * changes to the current GE state, and clear the relevant "changed" flags.
+ *
+ * [Parameters]
+ *     None
+ * [Return value]
+ *     None
+ */
+static void update_render_state(void)
+{
+    if (projection_matrix_changed) {
+        ge_set_projection_matrix(&projection_matrix_stack[projection_matrix_top]);
+        projection_matrix_changed = 0;
+    }
+
+    if (modelview_matrix_changed) {
+        if (current_dlist) {
+            ge_set_model_matrix(&modelview_matrix_stack[modelview_matrix_top]);
+        } else {
+            ge_set_view_matrix(&modelview_matrix_stack[modelview_matrix_top]);
+        }
+        modelview_matrix_changed = 0;
+    }
+
+    if (texture_changed) {
+        if (bound_texture != 0
+         && texture_array[bound_texture].texture != UNDEFINED_TEXTURE
+        ) {
+            Texture *tex = texture_array[bound_texture].texture;
+            if (tex->indexed) {
+                ge_set_colortable(tex->palette, 256, GE_PIXFMT_8888, 0, 0xFF);
+            }
+            unsigned int width = tex->width, height = tex->height;
+            unsigned int stride = tex->stride;
+            const unsigned int pixel_size = (tex->indexed ? 1 : 4);
+            const uint8_t *pixels = tex->pixels;
+            ge_set_texture_data(0, pixels, width, height, stride);
+            unsigned int level;
+            for (level = 1; level <= tex->mipmaps; level++) {
+                pixels += stride * height * pixel_size;
+                width  = (width+1)/2;
+                height = (height+1)/2;
+                stride = align_up(stride/2, pixel_size==1 ? 16 : 4);
+                ge_set_texture_data(level, pixels, width, height, stride);
+            }
+            ge_set_texture_format(level, tex->swizzled,
+                                  tex->indexed ? GE_TEXFMT_T8 : GE_TEXFMT_8888);
+            ge_set_texture_draw_mode(GE_TEXDRAWMODE_MODULATE, 1);
+            /* Use texture coordinate scaling to adjust texture coordinates
+             * when the texture width or height is not a power of 2. */
+            const int log2_width  = tex->width==1 ? 0 :
+                ubound(32 - __builtin_clz(tex->width-1), 9);
+            const int log2_height = tex->height==1 ? 0 :
+                ubound(32 - __builtin_clz(tex->height-1), 9);
+            ge_set_texture_scale((float)tex->width  / (float)(1<<log2_width),
+                                 (float)tex->height / (float)(1<<log2_height));
+        }
+        texture_changed = 0;
+    }
+
+    if (texture_filter_changed) {
+        ge_set_texture_filter(texture_mag_filter, texture_min_filter,
+                              texture_mip_filter);
+        texture_filter_changed = 0;
+    }
+
+    if (texture_wrap_mode_changed) {
+        ge_set_texture_wrap_mode(texture_wrap_u, texture_wrap_v);
+        texture_wrap_mode_changed = 0;
+    }
+}
+
 /*************************************************************************/
 
 /**

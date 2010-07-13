@@ -500,8 +500,21 @@ void ge_end_frame(void)
     if (dumpflag) {
         DMSG("======== gelist ========");
         uint32_t *ptr = gelist_base;
+        uint32_t address_base = 0;
         while (ptr < gelist_ptr) {
-            DMSG("%08X", *ptr++);
+            const uint32_t insn = *ptr++;
+            DMSG("%08X", insn);
+            if (insn>>24 == GECMD_ADDRESS_BASE) {
+                address_base = insn<<8;
+            } else if (insn>>24 == GECMD_CALL) {
+                const uint32_t address = address_base | (insn & 0xFFFFFF);
+                const uint32_t *subptr = (const uint32_t *)address;
+                DMSG("(call %p)", subptr);
+                do {
+                    DMSG("%08X", *subptr);
+                } while ((*subptr++)>>24 != GECMD_RETURN);
+                DMSG("(return)");
+            }
         }
         DMSG("======== vertlist ========");
         uint16_t *vptr = (uint16_t *)vertlist_base;

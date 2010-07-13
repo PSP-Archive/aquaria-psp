@@ -114,6 +114,7 @@ void Core::reloadDevice()
 	for (int i = 0; i < renderObjectLayers.size(); i++)
 	{
 		RenderObjectLayer *r = &renderObjectLayers[i];
+		r->reloadDevice();
 		RenderObject *robj = r->getFirst();
 		while (robj)
 		{

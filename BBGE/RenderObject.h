@@ -101,11 +101,18 @@ public:
 	virtual void update(float dt);
 	bool isDead() const {return _dead;}
 	bool isHidden() const {return _hidden || (parent && parent->isHidden());}
+	bool isStatic() const {return _static;}
 
 	// Set whether the object is hidden.  If hidden, no updates (except
 	// lifetime checks) or render operations will be performed, and no
 	// child objects will be updated or rendered.
 	void setHidden(bool hidden) {_hidden = hidden;}
+
+	// Set whether the object is static.  If static, the object's data
+	// (including position, scale, rotation, color, etc.) are assumed
+	// not to change over the lifetime of the object, to allow for
+	// optimized rendering.
+	void setStatic(bool staticFlag) {_static = staticFlag;}
 
 	void setLife(float life)
 	{
@@ -352,11 +359,12 @@ protected:
 	std::vector<MotionBlurFrame>motionBlurPositions;
 	bool motionBlur, motionBlurTransition;
 
-	int idx;
 	bool _dead;
 	bool _hidden;
+	bool _static;
 	bool _fv, _fh;
 	//bool rotateFirst;
+	int idx;
 	RenderObject *parent;
 	StateData *stateData;
 	float decayRate;

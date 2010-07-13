@@ -607,28 +607,10 @@ void Quad::renderSingle()
 // single, repeating-texture quad) extend over 10,000 virtual pixels, or
 // over 5,000 native pixels -- easily enough to hit the hard-clip limit.
 // To get around this, we break such repeating quads down into smaller
-// pieces at the texture edges such that no piece has a displayed size
-// larger than the offscreen boundary area, i.e. 2048 - 480/2 native
-// pixels wide or 2048 - 272/2 high.
+// pieces at the texture edges.
 
 void Quad::renderRepeatForPSP()
 {
-	float m[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, m);
-	const float finalScaleX = m[0];
-	const float finalScaleY = m[5];
-	if (finalScaleX == 0 || finalScaleY == 0)
-	{
-		// Should be impossible, but avoid division by zero later.
-		return renderSingle();
-	}
-	if (finalScaleX * width  < 2048 - 480/2
-	 && finalScaleY * height < 2048 - 272/2)
-	{
-		// No need for the hack, so just draw it normally.
-		return renderSingle();
-	}
-
 	// Get the texture coordinates, and calculate the texture's size in
 	// texture units.
 	float s0 = upperLeftTextureCoordinates.x;
@@ -651,59 +633,46 @@ void Quad::renderRepeatForPSP()
 		return renderSingle();
 	}
 
-	// Find the largest number of repetitions of the texture which will
-	// fit within the boundary area.  (float -> int conversions truncate,
-	// so this code is safe.)
-	const float textureSizeX = (finalScaleX * width ) / texCoordWidth;
-	const float textureSizeY = (finalScaleY * height) / texCoordHeight;
-	const int maxRepetitionsX = int((2048 - 480/2) / textureSizeX);
-	const int maxRepetitionsY = int((2048 - 272/2) / textureSizeY);
-	const int maxRepetitions = (maxRepetitionsX < maxRepetitionsY) ? maxRepetitionsX : maxRepetitionsY;
-
-	// Figure out how many subdivisions we need to draw in each direction.
-	int numColumns, numRows;
-	float ds, dt;  // Increments in each direction
-	if (s1 > s0)
-	{
-		ds = maxRepetitions;
-		numColumns = int(ceilf((s1 - floorf(s0)) / maxRepetitions));
-	}
-	else
-	{
-		ds = -maxRepetitions;
-		numColumns = int(ceilf((s0 - floorf(s1)) / maxRepetitions));
-	}
-	if (t1 > t0)
-	{
-		dt = maxRepetitions;
-		numRows = int(ceilf((t1 - floorf(t0)) / maxRepetitions));
-	}
-	else
-	{
-		dt = -maxRepetitions;
-		numRows = int(ceilf((t0 - floorf(t1)) / maxRepetitions));
-	}
-
 	// Iterate over the texture coordinate range, drawing quads.
 	const float x0 = -width/2, y0 = +height/2;
 	const float recip_texCoordWidth  = 1/texCoordWidth;
 	const float recip_texCoordHeight = 1/texCoordHeight;
+	const int numRows = t1 > t0 ? (int)(ceilf(t1) - floorf(t0)) : (int)(ceilf(t0) - floorf(t1));
+	const int numColumns = s1 > s0 ? (int)(ceilf(s1) - floorf(s0)) : (int)(ceilf(s0) - floorf(s1));
 	float t = t0, nextT;
 
 	glBegin(GL_QUADS);
 	for (int row = 0; row < numRows; row++, t = nextT)
 	{
-		nextT = (dt > 0 ? floorf(t) : ceilf(t)) + dt;
-		if ((dt > 0 && nextT > t1) || (dt < 0 && nextT < t1))
-			nextT = t1;
+		if (t1 > t0)
+		{
+			nextT = floorf(t) + 1;
+			if (nextT > t1)
+				nextT = t1;
+		}
+		else
+		{
+			nextT = ceilf(t) - 1;
+			if (nextT < t1)
+				nextT = t1;
+		}
 		const float y = y0 - (fabsf(t - t0) * recip_texCoordHeight) * height;
 		const float nextY = y0 - (fabsf(nextT - t0) * recip_texCoordHeight) * height;
 		float s = s0, nextS;
 		for (int column = 0; column < numColumns; column++, s = nextS)
 		{
-			nextS = (ds > 0 ? floorf(s) : ceilf(s)) + ds;
-			if ((ds > 0 && nextS > s1) || (ds < 0 && nextS < s1))
-				nextS = s1;
+			if (s1 > s0)
+			{
+				nextS = floorf(s) + 1;
+				if (nextS > s1)
+					nextS = s1;
+			}
+			else
+			{
+				nextS = ceilf(s) - 1;
+				if (nextS < s1)
+					nextS = s1;
+			}
 			const float x = x0 + (fabsf(s - s0) * recip_texCoordWidth) * width;
 			const float nextX = x0 + (fabsf(nextS - s0) * recip_texCoordWidth) * width;
 			glTexCoord2f(s, t);
