@@ -758,11 +758,12 @@ void SongSlot::onUpdate(float dt)
 			dsq->game->playSongInMenu(songType);
 			dsq->game->songLabel->setText(dsq->continuity.getSongNameBySlot(songSlot));
 			dsq->game->songLabel->alpha.interpolateTo(1, 0.2);
-			if (core->mouse.buttons.left && !mbDown)
+			const bool anyButton = core->mouse.buttons.left || core->mouse.buttons.right;
+			if (!mbDown && anyButton)
 			{
 				mbDown = true;
 			}
-			else if (mbDown && !core->mouse.buttons.left)
+			else if (mbDown && anyButton)
 			{
 				mbDown = false;
 
