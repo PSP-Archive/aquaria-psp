@@ -32,7 +32,6 @@ RenderObjectLayer::RenderObjectLayer()
 	followCamera = NO_FOLLOW_CAMERA;
 	visible = true;
 	startPass = endPass = 0;
-	currentPass = 0;
 	followCameraLock = FCL_NONE;
 	cull = true;
 	update = true;
@@ -318,4 +317,23 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
         renderObjectList.remove(r);
 	renderObjectList.push_front(r);
 #endif
+}
+
+void RenderObjectLayer::renderPass(int pass)
+{
+	core->currentLayerPass = pass;
+
+	for (RenderObject *robj = getFirst(); robj; robj = getNext())
+	{
+		core->totalRenderObjectCount++;
+		if (robj->getParent() || robj->alpha.x == 0)
+			continue;
+
+		if (!this->cull || !robj->cull || robj->isOnScreen())
+		{
+			robj->render();
+			core->renderObjectCount++;
+		}
+		core->processedRenderObjectCount++;
+	}
 }

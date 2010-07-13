@@ -846,6 +846,7 @@ public:
 	void moveToBack(RenderObject *r);
 	void setCull(bool c);
 	void sort();
+	void renderPass(int pass);
 
 	inline bool empty()
 	{
@@ -913,7 +914,7 @@ public:
 	}
 
 	//inclusive
-	int startPass, endPass, currentPass;
+	int startPass, endPass;
 	bool visible;
 	float followCamera;
 

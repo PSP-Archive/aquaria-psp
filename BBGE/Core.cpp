@@ -4052,7 +4052,6 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 
 		RenderObjectLayer *r = &renderObjectLayers[i];
 		RenderObject::rlayer = r;
-		RenderObject *robj;
 		if (r->visible)
 		{
 			if (r->mode != mode)
@@ -4069,27 +4068,15 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 				break;
 				}
 			}
-			for (r->currentPass = r->startPass; r->currentPass <= r->endPass; r->currentPass++)
+			if (r->startPass == r->endPass)
 			{
-				if (r->startPass == r->endPass)
+				r->renderPass(RenderObject::RENDER_ALL);
+			}
+			else
+			{
+				for (int pass = r->startPass; pass <= r->endPass; pass++)
 				{
-					currentLayerPass = RenderObject::RENDER_ALL;
-				}
-				else
-					currentLayerPass = r->currentPass;
-
-				for (robj = r->getFirst(); robj; robj = r->getNext())
-				{
-					totalRenderObjectCount++;
-					if (robj->parent || robj->alpha.x == 0)
-						continue;
-
-					if (!r->cull || !robj->cull || robj->isOnScreen())
-					{
-						robj->render();
-						renderObjectCount++;
-					}
-					processedRenderObjectCount++;
+					r->renderPass(pass);
 				}
 			}
 		}
