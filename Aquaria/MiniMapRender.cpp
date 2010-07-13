@@ -41,6 +41,18 @@ namespace MiniMapRenderSpace
 	const float waterBitSize = 10;
 	// Distance in tiles between adjacent water bits
 	const int tileStep = 12;
+	// Base size of warp/save icons
+	const float iconBaseSize = 14;
+	// Additional radius added (or subtracted) by "throb" effect
+	const float iconThrobSize = 6;
+	// Size of cooking icon (fixed)
+	const float iconCookSize = 16;
+	// Maximum offset of warp/save/cooking icons from center of minimap
+	const float iconMaxOffset = miniMapRadius * miniMapScale * (7.0f/8.0f);
+	// Distance at which the icon decreases to minimum size
+	const float iconMaxDistance = iconMaxOffset * 3;
+	// Scale of the icon at minimum size
+	const float iconMinScale = 0.6;
 	// Radius of the health bar circle
 	const int healthBarRadius = miniMapRadius + 4;
 	// Number of steps around health bar at which to draw bits
@@ -514,7 +526,8 @@ void MiniMapRender::onRender()
 
 	if (!radarHide)
 	{
-		const int iconSize = sinf(game->getTimer()*PI)*6 + 14;
+		const float factor = sinf(game->getTimer()*PI);
+		const float iconSize = iconBaseSize + factor*iconThrobSize;
 		texRipple->apply();
 		for (int i = 0; i < dsq->game->paths.size(); i++)
 		{
@@ -535,7 +548,22 @@ void MiniMapRender::onRender()
 				{
 					Vector pt(p->nodes[0].position);
 					Vector d = pt - dsq->game->avatar->position;
-					d.capLength2D(miniMapRadius * miniMapScale * (7.0f/8.0f));
+					const float len = d.getLength2D();
+					float iconScale;
+					if (len < iconMaxOffset)
+					{
+						iconScale = 1;
+					}
+					else
+					{
+						d *= iconMaxOffset / len;
+						float k;
+						if (len < iconMaxDistance)
+							k = ((iconMaxDistance - len) / (iconMaxDistance - iconMaxOffset));
+						else
+							k = 0;
+						iconScale = iconMinScale + k*(1-iconMinScale);
+					}
 					const Vector miniMapPos = Vector(d)*Vector(1.0f/miniMapScale, 1.0f/miniMapScale);
 
 					switch(p->pathType)
@@ -545,7 +573,7 @@ void MiniMapRender::onRender()
 						glColor4f(1, 1, 1, 1);
 
 						glTranslatef(miniMapPos.x, miniMapPos.y, 0);
-						int sz = 16;
+						const float sz = iconCookSize * iconScale;
 
 						texCook->apply();
 
@@ -587,7 +615,7 @@ void MiniMapRender::onRender()
 					if (render)
 					{
 						glTranslatef(miniMapPos.x, miniMapPos.y, 0);
-						int sz = iconSize;
+						int sz = iconSize * iconScale;
 
 						glBegin(GL_QUADS);
 							glTexCoord2f(0, 1);
