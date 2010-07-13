@@ -346,8 +346,6 @@ void Element::setElementEffectByIndex(int eidx)
 void Element::render()
 {
 	if (!elementActive) return;
-	InterpolatedVector bcolor = color;
-	color = dsq->game->sceneColor * color * dsq->game->sceneColor2 * dsq->game->sceneColor3;
 	if (dsq->game->sceneEditor.isOn() && this->bgLayer == dsq->game->sceneEditor.bgLayer
 		&& dsq->game->sceneEditor.editType == ET_ELEMENTS)
 	{
@@ -396,7 +394,6 @@ void Element::render()
 	*/
 
 	renderBorder = false;
-	color = bcolor;
 }
 
 void Element::fillGrid()

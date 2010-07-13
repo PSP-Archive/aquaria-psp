@@ -123,7 +123,6 @@ void Ingredient::eat(Entity *e)
 void Ingredient::onUpdate(float dt)
 {
 	if (dsq->game->isPaused()) return;
-	color = dsq->game->sceneColor * dsq->game->sceneColor2 * dsq->game->sceneColor3;
 	if (dsq->continuity.getWorldType() == WT_SPIRIT) return;
 
 	Vector lastPosition = position;
