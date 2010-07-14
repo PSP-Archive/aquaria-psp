@@ -42,11 +42,14 @@ tools -- simply run the program and follow the prompts.
 The first time you use the builder, it will convert the Aquaria data
 files to a format suitable for use by the PSP.  This is a fairly
 time-consuming process, and will typically take 10-15 minutes even on
-a fast PC.  These converted files will be saved in the folder you
-specify as the "New PSP data folder"; you can delete this folder when
-the build finishes, but if you keep it on your system, you can then
-reuse it when a newer version of the PSP program is released to save
-time during the build.
+a fast PC.  (While processing some files, the program may not respond to
+input for 30-45 seconds or so; if the window appears blank or you can't
+click the "Pause" or "Abort" button, wait a few minutes and try again.)
+These converted files will be saved in the folder you specify as the
+"new PSP data folder"; you can delete this folder when the build
+finishes, but if you keep it on your system, you can then reuse it when
+a newer version of the PSP program is released to save time during the
+build.
 
 When the builder finishes its work, the folder you specified in the
 "Output game folder" field will contain all the files needed to play
@@ -69,6 +72,15 @@ the default grey icon.  Also note that the links in the "about this
 program" screen will not work if your system web browser is
 misconfigured, or if (on Linux) you do not have the "gvfs" package
 installed.
+
+For developers, the source code for this tool is included under the
+PSP/tools subdirectory in the source tree.  In order to build it, you
+will need the headers and libraries for the libpng, libogg, libvorbis,
+LAME, and GTK+ (2.16 or later) packages installed; on Ubuntu 10.04, for
+example, these are the libpng12-dev, libogg-dev, libvorbis-dev,
+libmp3lame-dev, and libgtk2.0-dev packages.  You will also need to be
+able to build the PSP executable itself, as described below, and you
+will need Perl available in your shell's search path.
 
 
 Source code build prerequisites
