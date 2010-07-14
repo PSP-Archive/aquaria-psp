@@ -8,6 +8,10 @@
 ###########################################################################
 
 # System environment settings
+#
+# Note: Define GENERIC=1 to build AquariaPSPBuilder for a generic system.
+# This disables the use of SSE2 on 32-bit x86 and links the PNG/Ogg/LAME
+# libraries statically.
 
 EXEEXT =
 # Be sure to define either IS_LITTLE_ENDIAN or IS_BIG_ENDIAN here.
@@ -15,7 +19,11 @@ SYS_CFLAGS = -DIS_LITTLE_ENDIAN
 
 ARCH = $(shell uname -m)
 ifeq ($(ARCH),i686)
+ifneq ($(GENERIC),)
+SYS_CFLAGS += -mtune=generic
+else
 SYS_CFLAGS += -msse2 -DUSE_SSE2
+endif
 endif
 ifeq ($(ARCH),x86_64)
 SYS_CFLAGS += -DUSE_SSE2 -DARCH_AMD64
@@ -50,6 +58,12 @@ LIBS_vorbis    = -lvorbisfile -lvorbis -logg
 CFLAGS_lame  =
 LDFLAGS_lame =
 LIBS_lame    = -lmp3lame
+
+ifneq ($(GENERIC),)
+LIBS_png    := $(LIBS_png:-l%=/usr/lib/lib%.a)
+LIBS_vorbis := $(LIBS_vorbis:-l%=/usr/lib/lib%.a)
+LIBS_lame   := $(LIBS_lame:-l%=/usr/lib/lib%.a)
+endif
 
 ######################################
 

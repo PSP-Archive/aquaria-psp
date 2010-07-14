@@ -34,7 +34,7 @@
 
 
 #define PNG_USER_MEM_SUPPORTED
-#include <libpng14/png.h>
+#include <png.h>
 
 static jmp_buf png_jmpbuf;
 
