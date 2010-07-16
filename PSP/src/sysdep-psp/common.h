@@ -17,8 +17,9 @@
  * を、VFPUを利用した高速のものに置き換える。定義した方がプログラムの実行速
  * 度が上がるので通常は定義した方がよく、主にデバッグなどのために一括無効化
  * するために設けられている。
+ * 　※Aquariaでは、OpenGLの座標変換処理でVFPUを使うので無効化。
  */
-#define USE_VFPU_VECTOR_MATRIX_FUNCS
+// #define USE_VFPU_VECTOR_MATRIX_FUNCS
 
 /**
  * USE_TRIG_TABLES:  定義すると、dsinf()、dcosf()、dtanf()、dsincosf()の各

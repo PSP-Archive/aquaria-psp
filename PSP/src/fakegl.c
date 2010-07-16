@@ -11,6 +11,7 @@
 #include "graphics.h"
 #include "memory.h"
 #include "texture.h"
+#include "vector.h"
 #include "sysdep-psp/ge-util.h"
 #include "sysdep-psp/psplocal.h"
 
@@ -21,6 +22,25 @@
  * improve performance.  This is _not_ intended as a general-purpose
  * OpenGL implementation.
  */
+
+/*************************************************************************/
+/***************************** Configuration *****************************/
+/*************************************************************************/
+
+/**
+ * STORE_MODELVIEW_MATRIX_IN_VFPU:  If defined, the modelview matrix will
+ * be cached in the VFPU matrix registers while a frame is being rendered,
+ * allowing faster transformation operations.  (The projection matrix is
+ * left in memory on the assumption that it will rarely be transformed.)
+ * The current modelview matrix is stored in M700, and other VFPU matrices
+ * are used as temporaries.  Note that the "C" and "R" vector prefixes are
+ * treated to mean "row" and "column" respectively, so that the numeric
+ * element indices match those of the Matrix4f structure.
+ *
+ * No other code may use the VFPU between fakeglBegin{,Offscreen}Frame()
+ * and fakeglEndFrame() if this is defined.
+ */
+#define STORE_MODELVIEW_MATRIX_IN_VFPU
 
 /*************************************************************************/
 /****************************** Local data *******************************/
@@ -841,7 +861,19 @@ void glGetFloatv(GLenum pname, GLfloat *params)
             DMSG("WARNING: glGetFloat(GL_MODELVIEW_MATRIX) is unreliable"
                  " in a display list");
         }
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+        asm(".set push; .set noreorder\n"
+            "usv.q C700,  0(%[matrix])\n"
+            "usv.q C710, 16(%[matrix])\n"
+            "usv.q C720, 32(%[matrix])\n"
+            "usv.q C730, 48(%[matrix])\n"
+            ".set pop"
+            : /* no outputs */
+            : [matrix] "r" (params)
+        );
+#else
         memcpy(params, &modelview_matrix_stack[modelview_matrix_top], 16*4);
+#endif
         break;
       default:
         DMSG("Invalid/unsupported parameter 0x%X", (int)pname);
@@ -1233,7 +1265,34 @@ void glLoadMatrixf(const GLfloat *m)
         DMSG("WARNING: display list set matrix without push");
     }
 
-    memcpy(current_matrix, m, 16*4);
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+    if (matrix_mode == GL_MODELVIEW) {
+        asm(".set push; .set noreorder\n"
+            "ulv.q C700,  0(%[matrix])\n"
+            "ulv.q C710, 16(%[matrix])\n"
+            "ulv.q C720, 32(%[matrix])\n"
+            "ulv.q C730, 48(%[matrix])\n"
+            ".set pop"
+            : /* no outputs */
+            : [matrix] "r" (m)
+        );
+    } else
+#endif
+    {
+        float *dest = &current_matrix->a[0];
+        unsigned int i;
+        for (i = 0; i < 16; i += 4) {
+            /* Unrolled to help out the optimizer. */
+            const float x = m[i+0];
+            const float y = m[i+1];
+            const float z = m[i+2];
+            const float w = m[i+3];
+            dest[i+0] = x;
+            dest[i+1] = y;
+            dest[i+2] = z;
+            dest[i+3] = w;
+        }
+    }
 
     switch (matrix_mode) {
         case GL_PROJECTION: projection_matrix_changed = 1; break;
@@ -1268,8 +1327,21 @@ void glPushMatrix(void)
             SET_ERROR(GL_STACK_OVERFLOW);
             return;
         }
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+        asm(".set push; .set noreorder\n"
+            "sv.q C700,  0(%[matrix])\n"
+            "sv.q C710, 16(%[matrix])\n"
+            "sv.q C720, 32(%[matrix])\n"
+            "sv.q C730, 48(%[matrix])\n"
+            ".set pop"
+            : /* no outputs */
+            : [matrix] "r" (&modelview_matrix_stack[modelview_matrix_top])
+        );
+#endif
         modelview_matrix_top++;
+#ifndef STORE_MODELVIEW_MATRIX_IN_VFPU
         modelview_matrix_stack[modelview_matrix_top] = *current_matrix;
+#endif
         current_matrix = &modelview_matrix_stack[modelview_matrix_top];
         break;
     }
@@ -1303,6 +1375,17 @@ void glPopMatrix(void)
         }
         modelview_matrix_top--;
         current_matrix = &modelview_matrix_stack[modelview_matrix_top];
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+        asm(".set push; .set noreorder\n"
+            "lv.q C700,  0(%[matrix])\n"
+            "lv.q C710, 16(%[matrix])\n"
+            "lv.q C720, 32(%[matrix])\n"
+            "lv.q C730, 48(%[matrix])\n"
+            ".set pop"
+            : /* no outputs */
+            : [matrix] "r" (&modelview_matrix_stack[modelview_matrix_top])
+        );
+#endif
         modelview_matrix_changed = 1;
         break;
     }
@@ -1316,9 +1399,26 @@ void glMultMatrixf(const GLfloat *m)
         DMSG("WARNING: display list set matrix without push");
     }
 
-    temp_matrix1 = *current_matrix;
-    memcpy(&temp_matrix2, m, 16*4);
-    mat4_mul(current_matrix, &temp_matrix2, &temp_matrix1);
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+    if (matrix_mode == GL_MODELVIEW) {
+        asm(".set push; .set noreorder\n"
+            "ulv.q C000,  0(%[matrix])\n"
+            "ulv.q C010, 16(%[matrix])\n"
+            "ulv.q C020, 32(%[matrix])\n"
+            "ulv.q C030, 48(%[matrix])\n"
+            "vmmov.q M100, M700\n"
+            "vmmul.q M700, M000, M100\n"
+            ".set pop"
+            : /* no outputs */
+            : [matrix] "r" (m)
+        );
+    } else
+#endif
+    {
+        temp_matrix1 = *current_matrix;
+        memcpy(&temp_matrix2, m, 16*4);
+        mat4_mul(current_matrix, &temp_matrix2, &temp_matrix1);
+    }
 
     switch (matrix_mode) {
         case GL_PROJECTION: projection_matrix_changed = 1; break;
@@ -1351,6 +1451,21 @@ void glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat 
     temp_matrix2._42 = -(top + bottom) / (top - bottom);
     temp_matrix2._43 = -(zFar + zNear) / (zFar - zNear);
     temp_matrix2._44 = 1;
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+    if (matrix_mode == GL_MODELVIEW) {  // Unlikely, but just in case
+        asm(".set push; .set noreorder\n"
+            "lv.q C000,  0(%[matrix])\n"
+            "lv.q C010, 16(%[matrix])\n"
+            "lv.q C020, 32(%[matrix])\n"
+            "lv.q C030, 48(%[matrix])\n"
+            "vmmov.q M100, M700\n"
+            "vmmul.q M700, M000, M100\n"
+            ".set pop"
+            : /* no outputs */
+            : [matrix] "r" (&temp_matrix2)
+        );
+    } else
+#endif
     mat4_mul(current_matrix, &temp_matrix2, &temp_matrix1);
 
     switch (matrix_mode) {
@@ -1371,67 +1486,168 @@ void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
         return;
     }
 
+#ifndef STORE_MODELVIEW_MATRIX_IN_VFPU
     float c, s;
-    if (angle == 180) {  // Special case for Aquaria (horizontal flipping)
-        c = -1;
-        s = 0;
-    } else {
-        dsincosf(angle, &s, &c);
-    }
+#endif
+    asm(".set push; .set noreorder\n"
+        "mtv %[angle], S100\n"
+        "mtv %[rcp_90], S102\n"
+        "vmul.s S110, S100, S102\n"
+        "vone.s S103\n"
+        "vadd.s S111, S110, S103\n"
+        "vsin.p C120, C110\n"
+#ifndef STORE_MODELVIEW_MATRIX_IN_VFPU
+        "mfv %[s], S120\n"
+        "mfv %[c], S121\n"
+#endif
+        ".set pop"
+        :
+#ifndef STORE_MODELVIEW_MATRIX_IN_VFPU
+          [s] "=r" (s), [c] "=r" (c)
+#endif
+        : [angle] "r" (angle), [rcp_90] "r" (1/90.0f)
+    );
 
     if (x == 0 && y == 0 && z == 1) {
         /* [+c +s  0  0]
          * [-s +c  0  0]
          * [ 0  0  1  0]
          * [ 0  0  0  1] */
-        const float m11 = current_matrix->_11;
-        const float m12 = current_matrix->_12;
-        const float m13 = current_matrix->_13;
-        const float m21 = current_matrix->_21;
-        const float m22 = current_matrix->_22;
-        const float m23 = current_matrix->_23;
-        current_matrix->_11 =  m11*c + m21*s;
-        current_matrix->_12 =  m12*c + m22*s;
-        current_matrix->_13 =  m13*c + m23*s;
-        current_matrix->_21 = -m11*s + m21*c;
-        current_matrix->_22 = -m12*s + m22*c;
-        current_matrix->_23 = -m13*s + m23*c;
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+        if (matrix_mode == GL_MODELVIEW) {
+            asm(".set push; .set noreorder\n"
+                "vmov.q C000, C120[y,x,0,0]\n"
+                "vmov.q C010, C120[-x,y,0,0]\n"
+                /* Save the first product row separately so we don't
+                 * overwrite the source values for the second product row. */
+                "vdot.t S100, C000, R700\n"
+                "vdot.t S101, C000, R701\n"
+                "vdot.t S102, C000, R702\n"
+                /* The GE doesn't use the fourth column of the modelview
+                 * matrix, so skip it.
+                 * "vdot.t S103, C000, R703\n" */
+                "vdot.t S710, C010, R700\n"
+                "vdot.t S711, C010, R701\n"
+                "vdot.t S712, C010, R702\n"
+                /* Copy the saved product row back to the matrix. */
+                "vmov.t C700, C100\n"
+                ".set pop"
+            );
+        } else
+#endif
+        {
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+            float s, c;
+            asm(".set push; .set noreorder\n"
+                "mfv %[s], S120\n"
+                "mfv %[c], S121\n"
+                ".set pop"
+                : [s] "=r" (s), [c] "=r" (c)
+            );
+#endif
+            const float m11 = current_matrix->_11;
+            const float m12 = current_matrix->_12;
+            const float m13 = current_matrix->_13;
+            const float m21 = current_matrix->_21;
+            const float m22 = current_matrix->_22;
+            const float m23 = current_matrix->_23;
+            current_matrix->_11 =  m11*c + m21*s;
+            current_matrix->_12 =  m12*c + m22*s;
+            current_matrix->_13 =  m13*c + m23*s;
+            current_matrix->_21 = -m11*s + m21*c;
+            current_matrix->_22 = -m12*s + m22*c;
+            current_matrix->_23 = -m13*s + m23*c;
+        }
 
     } else if (x == 0 && y == 1 && z == 0) {
         /* [+c  0 -s  0]
          * [ 0  1  0  0]
          * [+s  0 +c  0]
          * [ 0  0  0  1] */
-        const float m11 = current_matrix->_11;
-        const float m12 = current_matrix->_12;
-        const float m13 = current_matrix->_13;
-        const float m31 = current_matrix->_31;
-        const float m32 = current_matrix->_32;
-        const float m33 = current_matrix->_33;
-        current_matrix->_11 = m11*c - m31*s;
-        current_matrix->_12 = m12*c - m32*s;
-        current_matrix->_13 = m13*c - m33*s;
-        current_matrix->_31 = m11*s + m31*c;
-        current_matrix->_32 = m12*s + m32*c;
-        current_matrix->_33 = m13*s + m33*c;
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+        if (matrix_mode == GL_MODELVIEW) {
+            asm(".set push; .set noreorder\n"
+                "vmov.q C000, C120[y,0,-x,0]\n"
+                "vmov.q C020, C120[x,0,y,0]\n"
+                "vdot.t S100, C000, R700\n"
+                "vdot.t S101, C000, R701\n"
+                "vdot.t S102, C000, R702\n"
+                "vdot.t S720, C020, R700\n"
+                "vdot.t S721, C020, R701\n"
+                "vdot.t S722, C020, R702\n"
+                "vmov.t C700, C100\n"
+                ".set pop"
+            );
+        } else
+#endif
+        {
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+            float s, c;
+            asm(".set push; .set noreorder\n"
+                "mfv %[s], S120\n"
+                "mfv %[c], S121\n"
+                ".set pop"
+                : [s] "=r" (s), [c] "=r" (c)
+            );
+#endif
+            const float m11 = current_matrix->_11;
+            const float m12 = current_matrix->_12;
+            const float m13 = current_matrix->_13;
+            const float m31 = current_matrix->_31;
+            const float m32 = current_matrix->_32;
+            const float m33 = current_matrix->_33;
+            current_matrix->_11 = m11*c - m31*s;
+            current_matrix->_12 = m12*c - m32*s;
+            current_matrix->_13 = m13*c - m33*s;
+            current_matrix->_31 = m11*s + m31*c;
+            current_matrix->_32 = m12*s + m32*c;
+            current_matrix->_33 = m13*s + m33*c;
+        }
 
     } else if (x == 1 && y == 0 && z == 0) {
         /* [ 1  0  0  0]
          * [ 0 +c +s  0]
          * [ 0 -s +c  0]
          * [ 0  0  0  1] */
-        const float m21 = current_matrix->_21;
-        const float m22 = current_matrix->_22;
-        const float m23 = current_matrix->_23;
-        const float m31 = current_matrix->_31;
-        const float m32 = current_matrix->_32;
-        const float m33 = current_matrix->_33;
-        current_matrix->_21 =  m21*c + m31*s;
-        current_matrix->_22 =  m22*c + m32*s;
-        current_matrix->_23 =  m23*c + m33*s;
-        current_matrix->_31 = -m21*s + m31*c;
-        current_matrix->_32 = -m22*s + m32*c;
-        current_matrix->_33 = -m23*s + m33*c;
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+        if (matrix_mode == GL_MODELVIEW) {
+            asm(".set push; .set noreorder\n"
+                "vmov.q C010, C120[0,y,x,0]\n"
+                "vmov.q C020, C120[0,-x,y,0]\n"
+                "vdot.t S110, C010, R700\n"
+                "vdot.t S111, C010, R701\n"
+                "vdot.t S112, C010, R702\n"
+                "vdot.t S720, C020, R700\n"
+                "vdot.t S721, C020, R701\n"
+                "vdot.t S722, C020, R702\n"
+                "vmov.t C710, C110\n"
+                ".set pop"
+            );
+        } else
+#endif
+        {
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+            float s, c;
+            asm(".set push; .set noreorder\n"
+                "mfv %[s], S120\n"
+                "mfv %[c], S121\n"
+                ".set pop"
+                : [s] "=r" (s), [c] "=r" (c)
+            );
+#endif
+            const float m21 = current_matrix->_21;
+            const float m22 = current_matrix->_22;
+            const float m23 = current_matrix->_23;
+            const float m31 = current_matrix->_31;
+            const float m32 = current_matrix->_32;
+            const float m33 = current_matrix->_33;
+            current_matrix->_21 =  m21*c + m31*s;
+            current_matrix->_22 =  m22*c + m32*s;
+            current_matrix->_23 =  m23*c + m33*s;
+            current_matrix->_31 = -m21*s + m31*c;
+            current_matrix->_32 = -m22*s + m32*c;
+            current_matrix->_33 = -m23*s + m33*c;
+        }
 
     } else {
         /* Arbitrary axis */
@@ -1440,6 +1656,16 @@ void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
         x *= scale;
         y *= scale;
         z *= scale;
+
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+        float s, c;
+        asm(".set push; .set noreorder\n"
+            "mfv %[s], S120\n"
+            "mfv %[c], S121\n"
+            ".set pop"
+            : [s] "=r" (s), [c] "=r" (c)
+        );
+#endif
 
         temp_matrix1 = *current_matrix;
         temp_matrix2._11 = x*x*(1-c) + c;
@@ -1458,6 +1684,21 @@ void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
         temp_matrix2._42 = 0;
         temp_matrix2._43 = 0;
         temp_matrix2._44 = 1;
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+        if (matrix_mode == GL_MODELVIEW) {
+            asm(".set push; .set noreorder\n"
+                "lv.q C000,  0(%[matrix])\n"
+                "lv.q C010, 16(%[matrix])\n"
+                "lv.q C020, 32(%[matrix])\n"
+                "lv.q C030, 48(%[matrix])\n"
+                "vmmov.q M100, M700\n"
+                "vmmul.q M700, M000, M100\n"
+                ".set pop"
+                : /* no outputs */
+                : [matrix] "r" (&temp_matrix2)
+            );
+        } else
+#endif
         mat4_mul(current_matrix, &temp_matrix2, &temp_matrix1);
     }
 
@@ -1475,23 +1716,40 @@ void glScalef(GLfloat x, GLfloat y, GLfloat z)
         DMSG("WARNING: display list set matrix without push");
     }
 
-    if (x != 1) {
-        current_matrix->_11 *= x;
-        current_matrix->_12 *= x;
-        current_matrix->_13 *= x;
-        current_matrix->_14 *= x;
-    }
-    if (y != 1) {
-        current_matrix->_21 *= y;
-        current_matrix->_22 *= y;
-        current_matrix->_23 *= y;
-        current_matrix->_24 *= y;
-    }
-    if (z != 1) {
-        current_matrix->_31 *= z;
-        current_matrix->_32 *= z;
-        current_matrix->_33 *= z;
-        current_matrix->_34 *= z;
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+    if (matrix_mode == GL_MODELVIEW) {
+        asm(".set push; .set noreorder\n"
+            "mtv %[x], S000\n"
+            "mtv %[y], S011\n"
+            "mtv %[z], S022\n"
+            "vscl.q C700, C700, S000\n"
+            "vscl.q C710, C710, S011\n"
+            "vscl.q C720, C720, S022\n"
+            ".set pop"
+            : /* no outputs */
+            : [x] "r" (x), [y] "r" (y), [z] "r" (z)
+        );
+    } else
+#endif
+    {
+        if (x != 1) {
+            current_matrix->_11 *= x;
+            current_matrix->_12 *= x;
+            current_matrix->_13 *= x;
+            current_matrix->_14 *= x;
+        }
+        if (y != 1) {
+            current_matrix->_21 *= y;
+            current_matrix->_22 *= y;
+            current_matrix->_23 *= y;
+            current_matrix->_24 *= y;
+        }
+        if (z != 1) {
+            current_matrix->_31 *= z;
+            current_matrix->_32 *= z;
+            current_matrix->_33 *= z;
+            current_matrix->_34 *= z;
+        }
     }
 
     switch (matrix_mode) {
@@ -1508,27 +1766,45 @@ void glTranslatef(GLfloat x, GLfloat y, GLfloat z)
         DMSG("WARNING: display list set matrix without push");
     }
 
-    float m41 = current_matrix->_41;
-    float m42 = current_matrix->_42;
-    float m43 = current_matrix->_43;
-    if (x != 0) {
-        m41 += x * current_matrix->_11;
-        m42 += x * current_matrix->_12;
-        m43 += x * current_matrix->_13;
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+    if (matrix_mode == GL_MODELVIEW) {
+        asm(".set push; .set noreorder\n"
+            "mtv %[x], S030\n"
+            "mtv %[y], S031\n"
+            "mtv %[z], S032\n"
+            "vone.s S033\n"
+            "vdot.q S730, C030, R700\n"
+            "vdot.q S731, C030, R701\n"
+            "vdot.q S732, C030, R702\n"
+            ".set pop"
+            : /* no outputs */
+            : [x] "r" (x), [y] "r" (y), [z] "r" (z)
+        );
+    } else
+#endif
+    {
+        float m41 = current_matrix->_41;
+        float m42 = current_matrix->_42;
+        float m43 = current_matrix->_43;
+        if (x != 0) {
+            m41 += x * current_matrix->_11;
+            m42 += x * current_matrix->_12;
+            m43 += x * current_matrix->_13;
+        }
+        if (y != 0) {
+            m41 += y * current_matrix->_21;
+            m42 += y * current_matrix->_22;
+            m43 += y * current_matrix->_23;
+        }
+        if (z != 0) {
+            m41 += z * current_matrix->_31;
+            m42 += z * current_matrix->_32;
+            m43 += z * current_matrix->_33;
+        }
+        current_matrix->_41 = m41;
+        current_matrix->_42 = m42;
+        current_matrix->_43 = m43;
     }
-    if (y != 0) {
-        m41 += y * current_matrix->_21;
-        m42 += y * current_matrix->_22;
-        m43 += y * current_matrix->_23;
-    }
-    if (z != 0) {
-        m41 += z * current_matrix->_31;
-        m42 += z * current_matrix->_32;
-        m43 += z * current_matrix->_33;
-    }
-    current_matrix->_41 = m41;
-    current_matrix->_42 = m42;
-    current_matrix->_43 = m43;
 
     switch (matrix_mode) {
         case GL_PROJECTION: projection_matrix_changed = 1; break;
@@ -2675,8 +2951,29 @@ void glNewList(GLuint list, GLenum mode)
      * it with an identity matrix; we then apply the (possibly transformed)
      * new matrix as the GE model matrix, leaving the GE view matrix
      * untouched so the list caller can transform it as appropriate. */
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+    asm(".set push; .set noreorder\n"
+        "sv.q C700,  0(%[matrix])\n"
+        "sv.q C710, 16(%[matrix])\n"
+        "sv.q C720, 32(%[matrix])\n"
+        "sv.q C730, 48(%[matrix])\n"
+        ".set pop"
+        : /* no outputs */
+        : [matrix] "r" (&modelview_matrix_stack[modelview_matrix_top])
+    );
+#endif
     dlist_saved_matrix = modelview_matrix_stack[modelview_matrix_top];
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+    asm(".set push; .set noreorder\n"
+        "vidt.q C700\n"
+        "vidt.q C710\n"
+        "vidt.q C720\n"
+        "vidt.q C730\n"
+        ".set pop"
+    );
+#else
     modelview_matrix_stack[modelview_matrix_top] = identity_matrix;
+#endif
     modelview_matrix_changed = 0;
     /* Also save the current modelview matrix stack pointer, and warn if a
      * command tries to modify the current matrix without first pushing it
@@ -2754,6 +3051,17 @@ void glEndList(void)
         modelview_matrix_top = dlist_saved_matrix_top;
     }
     modelview_matrix_stack[modelview_matrix_top] = dlist_saved_matrix;
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+    asm(".set push; .set noreorder\n"
+        "lv.q C700,  0(%[matrix])\n"
+        "lv.q C710, 16(%[matrix])\n"
+        "lv.q C720, 32(%[matrix])\n"
+        "lv.q C730, 48(%[matrix])\n"
+        ".set pop"
+        : /* no outputs */
+        : [matrix] "r" (&modelview_matrix_stack[modelview_matrix_top])
+    );
+#endif
     modelview_matrix_changed = 1;
     texture_changed = 1;
     texture_filter_changed = 1;
@@ -3010,6 +3318,18 @@ void fakeglBeginFrame(void)
 
     uncached_vertices = 0;
 
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+    asm(".set push; .set noreorder\n"
+        "lv.q C700,  0(%[matrix])\n"
+        "lv.q C710, 16(%[matrix])\n"
+        "lv.q C720, 32(%[matrix])\n"
+        "lv.q C730, 48(%[matrix])\n"
+        ".set pop"
+        : /* no outputs */
+        : [matrix] "r" (&modelview_matrix_stack[modelview_matrix_top])
+    );
+#endif
+
     ge_set_projection_matrix(&projection_matrix_stack[projection_matrix_top]);
     ge_set_view_matrix(&modelview_matrix_stack[modelview_matrix_top]);
     ge_set_viewport(viewport_x, viewport_y, viewport_w, viewport_h);
@@ -3090,6 +3410,18 @@ void fakeglEndFrame(void)
     } else {
         graphics_finish_frame();
     }
+
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+    asm(".set push; .set noreorder\n"
+        "sv.q C700,  0(%[matrix])\n"
+        "sv.q C710, 16(%[matrix])\n"
+        "sv.q C720, 32(%[matrix])\n"
+        "sv.q C730, 48(%[matrix])\n"
+        ".set pop"
+        : /* no outputs */
+        : [matrix] "r" (&modelview_matrix_stack[modelview_matrix_top])
+    );
+#endif
 
     uncached_vertices = 0;
 }
@@ -3335,6 +3667,17 @@ static void update_render_state(void)
     }
 
     if (modelview_matrix_changed) {
+#ifdef STORE_MODELVIEW_MATRIX_IN_VFPU
+        asm(".set push; .set noreorder\n"
+            "sv.q C700,  0(%[matrix])\n"
+            "sv.q C710, 16(%[matrix])\n"
+            "sv.q C720, 32(%[matrix])\n"
+            "sv.q C730, 48(%[matrix])\n"
+            ".set pop"
+            : /* no outputs */
+            : [matrix] "r" (&modelview_matrix_stack[modelview_matrix_top])
+        );
+#endif
         if (current_dlist) {
             ge_set_model_matrix(&modelview_matrix_stack[modelview_matrix_top]);
         } else {
