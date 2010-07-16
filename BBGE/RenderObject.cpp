@@ -683,7 +683,7 @@ void RenderObject::renderCall()
 		{
 
 #ifdef BBGE_BUILD_OPENGL
-			glTranslatef(position.x, position.y, position.z);//position.z);
+			glTranslatef(position.x, position.y, position.z);
 #endif
 #ifdef BBGE_BUILD_DIRECTX
 			core->translateMatrixStack(position.x, position.y, 0);
@@ -800,7 +800,7 @@ void RenderObject::renderCall()
 	//if (useColor)
 	{
 #ifdef BBGE_BUILD_OPENGL
-		if (rlayer && (rlayer->color.x != 1.0f || rlayer->color.y != 1.0f || rlayer->color.z != 1.0f))
+		if (rlayer)
 			glColor4f(color.x * rlayer->color.x, color.y * rlayer->color.y, color.z * rlayer->color.z, alpha.x*alphaMod);
 		else
 			glColor4f(color.x, color.y, color.z, alpha.x*alphaMod);
@@ -856,7 +856,48 @@ void RenderObject::renderCall()
 		doRender = (core->currentLayerPass == pass);
 	}
 
-	if (renderCollisionShape && !collisionRects.empty())
+	if (renderCollisionShape)
+		renderCollision();
+
+	if (doRender)
+		onRender();
+
+		//collisionShape.render();
+	if (!RENDEROBJECT_SHAREATTRIBUTES)
+	{
+		glPopAttrib();
+	}
+
+	for (Children::iterator i = children.begin(); i != children.end(); i++)
+	{
+		if (!(*i)->isDead() && !(*i)->renderBeforeParent)
+			(*i)->render();
+	}
+
+
+	if (!RENDEROBJECT_FASTTRANSFORM)
+	{
+#ifdef BBGE_BUILD_OPENGL
+		glPopMatrix();
+#endif
+#ifdef BBGE_BUILD_DIRECTX
+		core->getD3DMatrixStack()->Pop();
+		core->applyMatrixStackToWorld();
+#endif
+	}
+
+
+	position -= offset;
+
+	if (integerizePositionForRender)
+	{
+		position = savePosition;
+	}
+}
+
+void RenderObject::renderCollision()
+{
+	if (!collisionRects.empty())
 	{
 #ifdef BBGE_BUILD_OPENGL
 		glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -896,7 +937,7 @@ void RenderObject::renderCall()
 #endif
 	}
 
-	if (renderCollisionShape && !collisionMask.empty())
+	if (!collisionMask.empty())
 	{
 #ifdef BBGE_BUILD_OPENGL
 		glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -944,7 +985,7 @@ void RenderObject::renderCall()
 		//glTranslatef(offset.x, offset.y,0);
 #endif
 	}
-	else if (renderCollisionShape && collideRadius > 0)
+	else if (collideRadius > 0)
 	{
 		/*
 		glPushMatrix();
@@ -962,41 +1003,6 @@ void RenderObject::renderCall()
 		glTranslatef(offset.x, offset.y,0);
 		glPopMatrix();
 		*/
-	}
-
-	if (doRender)
-		onRender();
-
-		//collisionShape.render();
-	if (!RENDEROBJECT_SHAREATTRIBUTES)
-	{
-		glPopAttrib();
-	}
-
-	for (Children::iterator i = children.begin(); i != children.end(); i++)
-	{
-		if (!(*i)->isDead() && !(*i)->renderBeforeParent)
-			(*i)->render();
-	}
-
-
-	if (!RENDEROBJECT_FASTTRANSFORM)
-	{
-#ifdef BBGE_BUILD_OPENGL
-		glPopMatrix();
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-		core->getD3DMatrixStack()->Pop();
-		core->applyMatrixStackToWorld();
-#endif
-	}
-
-
-	position -= offset;
-
-	if (integerizePositionForRender)
-	{
-		position = savePosition;
 	}
 }
 

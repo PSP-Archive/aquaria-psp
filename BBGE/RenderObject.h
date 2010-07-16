@@ -345,6 +345,7 @@ protected:
 	bool hasRenderPass(const int pass);
 
 	inline void renderCall();
+	void renderCollision();
 
 	bool repeatTexture;
 	//ParentManaged pm;
