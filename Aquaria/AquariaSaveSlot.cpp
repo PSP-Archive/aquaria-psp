@@ -287,12 +287,9 @@ void AquariaSaveSlot::transition()
 		screen->alpha.interpolateTo(0, 1.0);
 #ifdef BBGE_BUILD_PSP 
 		// Interpolate the coordinates to fill the entire (wide) screen.
+		// The texture coordinates are adjusted during onUpdate() to match
+		// the scale for each frame.
 		screen->scale.interpolateTo(Vector(core->getVirtualWidth()/float(screen->getWidth()), core->getVirtualHeight()/float(screen->getHeight())), 1.0);
-		// Also interpolate the texture coordinates so the screenshot
-		// doesn't get stretched.
-		const float cut = (((144.0f/80.0f) - (480.0f/272.0f)) / 2) / (144.0f/80.0f);
-		screen->upperLeftTextureCoordinates.interpolateTo(Vector(0+cut, 0), 1.0);
-		screen->lowerRightTextureCoordinates.interpolateTo(Vector(1-cut, 1), 1.0);
 #else  // !PSP
 		screen->scale.interpolateTo(Vector(800/float(screen->getWidth()), 600/float(screen->getHeight())), 1.0);
 #endif
@@ -311,6 +308,11 @@ void AquariaSaveSlot::onUpdate(float dt)
 	if (!(screen->alpha.isInterpolating() || screen->alpha == 0))
 		screen->alpha = this->alpha;
 	Quad::onUpdate(dt);
+#ifdef BBGE_BUILD_PSP
+	const float cut = (((144.0f/80.0f) - ((screen->width*screen->scale.x)/(screen->height*screen->scale.y))) / 2) / (144.0f/80.0f);
+	screen->upperLeftTextureCoordinates.x = 0+cut;
+	screen->lowerRightTextureCoordinates.x = 1-cut;
+#endif
 
 	if (done || closed) return;
 	if (alpha.x == 1)
