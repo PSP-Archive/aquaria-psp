@@ -747,7 +747,7 @@ CONST_FUNCTION float dsinf(const float x)
 
 CONST_FUNCTION float dcosf(const float x)
 {
-    float result, temp, x_frac, one;
+    float result, temp, x_frac;
     uint32_t x_bits;
     asm(".set push; .set noreorder\n\
         mfc1 %[x_bits], %[x]                                            \n\
@@ -819,9 +819,9 @@ CONST_FUNCTION float dcosf(const float x)
         li $t0, 0x7FFFFFFF                                              \n\
         mtc1 $t0, %[result]                                             \n\
         .set pop"
-        : [result] "=f" (result), [temp] "=f" (temp), [x_frac] "=f" (x_frac),
-          [x_bits] "=r" (x_bits), /* $f0への配置禁止用 */ "=f" (one)
-        : [x] "f" (x), [table] "r" (dsincosf_table), [one] "4" (1.0f)
+        : [result] "=&f" (result), [temp] "=&f" (temp),
+          [x_frac] "=&f" (x_frac), [x_bits] "=&r" (x_bits)
+        : [x] "f" (x), [table] "r" (dsincosf_table), [one] "f" (1.0f)
         : "t0", "t1", "t2", "t3"
     );
     return result;
@@ -840,7 +840,7 @@ CONST_FUNCTION float dcosf(const float x)
  */
 void dsincosf_kernel(const float x)
 {
-    float result, temp, x_frac, cos_frac, one;
+    float result, temp, x_frac, cos_frac;
     uint32_t x_bits, sign;
     asm volatile(".set push; .set noreorder\n\
         mfc1 %[x_bits], %[x]                                            \n\
@@ -940,11 +940,10 @@ void dsincosf_kernel(const float x)
         jr $ra                                                          \n\
         mtc1 $t0, $f1                                                   \n\
         .set pop"
-        : [result] "=f" (result), [temp] "=f" (temp), [x_frac] "=f" (x_frac),
-          [cos_frac] "=f" (cos_frac), [x_bits] "=r" (x_bits),
-          [sign] "=r" (sign),
-          /* resultへの配置禁止用 */ "=f" (one)
-        : [x] "f" (x), [table] "r" (dsincosf_table), [one] "6" (1.0f)
+        : [result] "=&f" (result), [temp] "=&f" (temp),
+          [x_frac] "=&f" (x_frac), [cos_frac] "=&f" (cos_frac),
+          [x_bits] "=&r" (x_bits), [sign] "=&r" (sign)
+        : [x] "f" (x), [table] "r" (dsincosf_table), [one] "f" (1.0f)
         : "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "$f0", "$f1"
     );
 }
@@ -963,7 +962,7 @@ void dsincosf_kernel(const float x)
  */
 CONST_FUNCTION float dtanf(const float x)
 {
-    float result, temp, x_frac, one;
+    float result, temp, x_frac;
     uint32_t x_bits;
     asm(".set push; .set noreorder\n\
         mfc1 %[x_bits], %[x]                                            \n\
@@ -1029,9 +1028,9 @@ CONST_FUNCTION float dtanf(const float x)
         li $t0, 0x7FFFFFFF                                              \n\
         mtc1 $t0, %[result]                                             \n\
         .set pop"
-        : [result] "=f" (result), [temp] "=f" (temp), [x_frac] "=f" (x_frac),
-          [x_bits] "=r" (x_bits), /* $f0への配置禁止用 */ "=f" (one)
-        : [x] "f" (x), [table] "r" (dtanf_table), [one] "4" (1.0f),
+        : [result] "=&f" (result), [temp] "=&f" (temp),
+          [x_frac] "=&f" (x_frac), [x_bits] "=&r" (x_bits)
+        : [x] "f" (x), [table] "r" (dtanf_table), [one] "f" (1.0f),
           [modval] "r" (180*4)
         : "t0", "t1", "t2", "t3"
     );

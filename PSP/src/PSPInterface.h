@@ -10,6 +10,8 @@
 
 /*************************************************************************/
 
+/**** Leading C++ junk. ****/
+
 #ifdef __cplusplus
 #define this _this
 #define private _private
@@ -17,6 +19,8 @@ extern "C" {
 #endif
 
 /*-----------------------------------------------------------------------*/
+
+/**** Include all the PSP-specific headers. ****/
 
 #define SYSDEP_COMMON_H "sysdep-psp/common.h"
 
@@ -51,6 +55,10 @@ extern "C" {
 
 #undef Texture
 
+/*-----------------------------------------------------------------------*/
+
+/**** Redefine various library functions to our versions. ****/
+
 /* We don't have exit(), so substitute sys_exit() instead. */
 #undef exit
 #define exit(code)  sys_exit((code))
@@ -71,6 +79,8 @@ int psp_closedir(psp_DIR *dir);
 #define closedir psp_closedir
 
 /*-----------------------------------------------------------------------*/
+
+/**** Trailing C++ junk. ****/
 
 #ifdef __cplusplus
 

@@ -3395,10 +3395,12 @@ void fakeglEndFrame(void)
     }
 
     if (current_dlist) {
+        DMSG("WARNING: Aborting unfinished display list %u", current_dlist);
         glEndList();
+        current_dlist = 0;
     }
     if (current_primitive) {
-        DMSG("WARNING: Aborting unfinished primitive %d", current_primitive);
+        DMSG("WARNING: Aborting unfinished primitive %u", current_primitive);
         current_primitive = 0;
     }
 

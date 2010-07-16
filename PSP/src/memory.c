@@ -690,7 +690,7 @@ void *DEBUG_MEM(mem_realloc)(void *ptr, uint32_t size, uint32_t flags
                 area->align    = align;
                 area->alignofs = alignofs;
                 area->base     = (uint8_t *)area + sizeof(AreaInfo) + alignofs;
-                area->alloc_size     = size;
+                area->alloc_size = size;
 #ifdef USE_VALGRIND
                 /* valgrind: 下で領域の登録を行うので、ここで重複しないように
                  * 直接memcheckのマクロを呼び出す。また、旧メモリ領域をすでに
@@ -1137,12 +1137,12 @@ static AreaInfo *do_alloc(MemoryPool *pool,
     }
 
     /* 新確保領域の情報を設定して返す */
-    newarea->temp     = found->temp;
-    newarea->nblocks  = nblocks;
-    newarea->alloc_size     = size;
-    newarea->align    = align;
-    newarea->alignofs = (uint16_t)alignofs;
-    newarea->base     = (uint8_t *)newarea + sizeof(AreaInfo) + alignofs;
+    newarea->temp       = found->temp;
+    newarea->nblocks    = nblocks;
+    newarea->alloc_size = size;
+    newarea->align      = align;
+    newarea->alignofs   = (uint16_t)alignofs;
+    newarea->base       = (uint8_t *)newarea + sizeof(AreaInfo) + alignofs;
     VG_DISABLE_AREA(newarea);
     if (found != newarea) {
         VG_DISABLE_AREA(found);
