@@ -2036,6 +2036,10 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 						// tx / scale.x
 						int px = int(tx/q->scale.x) + x;
 						int py = int(ty/q->scale.y) + y;
+#ifdef BBGE_BUILD_PSP  // Texture sizes are halved on the PSP.
+						px /= 2;
+						py /= 2;
+#endif
 						if (px < w && py < h)
 						{
 							if (c==3)
