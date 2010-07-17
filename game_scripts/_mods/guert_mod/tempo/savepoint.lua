@@ -20,8 +20,6 @@
 v = getVars()
 
 -- === SAVE POINT ===
-dofile("scripts/entities/entityinclude.lua")
-
 function init(me)
 	setupConversationEntity(me, "save-point", "save-point")
 	entity_setActivation(me, AT_CLICK, 80, 256)
