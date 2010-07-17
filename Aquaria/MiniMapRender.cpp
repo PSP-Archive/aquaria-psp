@@ -621,7 +621,7 @@ void MiniMapRender::onRender()
 					if (render)
 					{
 						glTranslatef(miniMapPos.x, miniMapPos.y, 0);
-						int sz = iconSize * iconScale;
+						const float sz = iconSize * iconScale;
 
 						glBegin(GL_QUADS);
 							glTexCoord2f(0, 1);

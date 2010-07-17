@@ -19,7 +19,6 @@
 
 v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
 dofile(appendUserDataPath("_mods/jukebox/scripts/jukeboxinclude.lua"))
 
 v.naija = 0

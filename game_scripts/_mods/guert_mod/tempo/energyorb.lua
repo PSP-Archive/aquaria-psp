@@ -23,7 +23,6 @@ v = getVars()
 -- ENERGY ORB
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
 v.charge = 0
 v.delay = 1
 
