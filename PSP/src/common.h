@@ -288,6 +288,29 @@
 #endif
 
 /*
+ * BARRIER
+ *
+ * メモリバリアを設定する。メモリロード・ストアはバリアを超えて移動されない。
+ * 主に複数のスレッドからアクセスされるデータへのアクセス順序を制限するのに
+ * 用いる。
+ */
+#ifdef __GNUC__
+# if defined(__x86_64__)
+#  define BARRIER()  asm volatile("mfence")
+# elif defined(__i386__)
+/* MFENCEはSSE2専用だが、CPUIDで同様の結果が得られる */
+#  define BARRIER()  asm volatile("cpuid" : : : "eax", "ebx", "ecx", "edx")
+# elif defined(__mips__)
+#  define BARRIER()  asm volatile("sync")
+# else
+#  warning Memory barrier CPU instruction unknown!  Multithreading behavior may be unstable.
+#  define BARRIER()  asm volatile("")
+# endif
+#else
+# error Please define BARRIER() for this compiler.
+#endif
+
+/*
  * DEBUG_MATH_BARRIER
  *
  * 浮動小数点演算において、引数として渡された変数に対する最適化を断ち切る。
@@ -314,7 +337,7 @@
  */
 #ifdef DEBUG
 # ifdef __GNUC__
-#  ifdef PSP
+#  ifdef __mips__
 #   define DEBUG_MATH_BARRIER(var)  asm volatile("" : "=f" (var) : "0" (var))
 #  else
 #   define DEBUG_MATH_BARRIER(var)  asm volatile("" : "=x" (var) : "0" (var))

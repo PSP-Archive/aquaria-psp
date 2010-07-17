@@ -310,6 +310,7 @@ static uint32_t psp_decode_mp3_get_pcm(SoundDecodeHandle *this,
             }
             sceKernelDelayThread(100);
         }
+        BARRIER();
 
         /* デコードされたPCMデータを呼び出し側のバッファにコピーする */
 
@@ -331,6 +332,7 @@ static uint32_t psp_decode_mp3_get_pcm(SoundDecodeHandle *this,
 
         if (private->next_pcm_offset >= pcm_buffer_len) {
             private->pcm_buffer_ok[private->next_pcm_buffer] = 0;
+            BARRIER();
             private->next_pcm_buffer =
                 (private->next_pcm_buffer + 1) % NUM_PCM_BUFFERS;
             private->next_pcm_offset = 0;
@@ -404,6 +406,7 @@ static int decode_thread(SceSize args, void *argp)
         while (private->pcm_buffer_ok[target_pcm_buffer]) {
             sceKernelDelayThread(1000);
         }
+        BARRIER();
 
         /* ループ開始位置に到達した場合はファイルオフセットを記録する。
          * MP3音声では、直前のフレームデータ（最大511バイト）を参照する
@@ -491,6 +494,7 @@ static int decode_thread(SceSize args, void *argp)
         private->pcm_buffer_pos[target_pcm_buffer] = frame_pos;
         private->pcm_buffer_len[target_pcm_buffer] = pcm_len;
         private->pcm_buffer_ok[target_pcm_buffer] = 1;
+        BARRIER();
 
         /* 次のバッファに進む */
 

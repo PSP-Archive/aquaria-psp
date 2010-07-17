@@ -157,8 +157,9 @@ static uint32_t decode_ogg_get_pcm(SoundDecodeHandle *this,
         } else if (thisread < 0) {
             DMSG("Decompression error: %d", thisread);
             break;
+        } else {
+            copied += thisread / (2*channels);
         }
-        copied += thisread / (2*channels);
 
         if (this->looplen > 0 && ov_pcm_tell(&private->vf) >= loopend)  {
             ov_pcm_seek(&this->private->vf, this->loopstart);

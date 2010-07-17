@@ -23,13 +23,6 @@ Other issues:
   rendering method used by the FTGL library is too inefficient for use
   on the PSP; it might be necessary to use prerendered screens.)
 
-- It's not currently possible to check the songs in the game menu.  Pay
-  close attention when you learn them!
-
-- There is a race condition in the file I/O thread which on rare
-  occasion may cause garbled audio output or crash the program.  The bug
-  is more likely to be seen when many sound effects are playing at once.
-
 
 Using the Aquaria PSP Builder
 -----------------------------
@@ -114,7 +107,7 @@ to your layman configuration file, then run "layman -f" followed by
 "layman -a psp-devel" to add the Portage overlay to your system.
 
 
-Building the source
+Building the source (read this entire section before starting to build!)
 -------------------
 The PSP port of Aquaria uses a traditional Makefile rather than the CMake
 build system (mostly because CMake is poorly suited to cross-compiling).
@@ -225,8 +218,8 @@ script without any command line parameters for documentation.
 
 Using a package file
 --------------------
-Aquaria for PSP has the ability to load its data files from a "package
-file", which is a single file containing all of the data used by Aquaria.
+Aquaria for PSP has the ability to load its data from a "package file",
+which is a single file containing all of the data used by Aquaria.
 The use of a package file can improve load times dramatically; in one
 early test, the time taken on the initial loading screen dropped from
 460 seconds (nearly eight minutes!) to just 14 seconds.

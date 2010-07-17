@@ -560,7 +560,7 @@ int psp_file_init(const char *basepath_)
     for (i = 0; i < lenof(filetable); i++) {
         char namebuf[32];
         snprintf(namebuf, sizeof(namebuf), "File%dMutex", i);
-        file_mutex[i] = sceKernelCreateSema(namebuf, 0, 1, 1, 0);
+        file_mutex[i] = sceKernelCreateSema(namebuf, 0, 1, 1, NULL);
         if (file_mutex[i] < 0) {
             DMSG("Failed to create file %d mutex: %s",
                  i, psp_strerror(file_mutex[i]));

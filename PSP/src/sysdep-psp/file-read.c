@@ -82,6 +82,14 @@
 /* 期限付き専用モードのループ間隔（μ秒） */
 #define PRIORITY_DELAY  10000
 
+/* イベントフラグ用ビット定義 */
+#define EVENT_BIT_FINISHED  1   // 読み込み完了
+
+/* psp_file_read_submit()のmutex確保タイムアウト（μ秒）。高優先度のセーブ
+ * スレッドに割り込まれてもエラーにならないよう、高めに設定されているが、
+ * 通常は数μ秒以内に解放される。 */
+#define SUBMIT_MUTEX_TIMEOUT  3000000
+
 /*************************************************************************/
 
 static struct request {
@@ -94,6 +102,7 @@ static struct request {
                         // 　　　abort設定を除く）
                         // 　1：読み込みスレッドからのアクセス禁止
             abort;      // 中止フラグ
+    SceUID event_flag;  // 同期用イベントフラグ
     int fd;             // ファイルデスクリプタ
     uint32_t start;     // 次ブロックの読み込み位置
     uint32_t len;       // 残り読み込みバイト数
@@ -108,7 +117,10 @@ static struct request {
 static int16_t first_immediate, first_timed;
 
 /* 読み込みスレッドハンドル */
-SceUID file_read_thread_handle;
+static SceUID file_read_thread_handle;
+
+/* psp_file_read_submit()用mutex */
+static SceUID file_read_submit_mutex;
 
 /*************************************************************************/
 
@@ -128,18 +140,52 @@ static int handle_request(struct request *req, int all);
  */
 int psp_file_read_init(void)
 {
-    mem_clear(requests, sizeof(requests));
     first_immediate = -1;
     first_timed = -1;
+
+    file_read_submit_mutex = sceKernelCreateSema("FileReadSubmitMutex",
+                                                 0, 1, 1, NULL);
+    if (file_read_submit_mutex < 0) {
+        DMSG("Error creating submit mutex: %s",
+             psp_strerror(file_read_submit_mutex));
+        file_read_submit_mutex = 0;
+        goto error_return;
+    }
+
+    mem_clear(requests, sizeof(requests));
+    unsigned int i;
+    for (i = 0; i < lenof(requests); i++) {
+        char namebuf[28];
+        snprintf(namebuf, sizeof(namebuf), "FileReadFlag%u", i);
+        requests[i].event_flag = sceKernelCreateEventFlag(namebuf, 0, 0, 0);
+        if (requests[i].event_flag < 0) {
+            DMSG("Error creating event flag %u: %s", i,
+                 psp_strerror(requests[i].event_flag));
+            requests[i].event_flag = 0;
+            goto error_free_event_flags;
+        }
+    }
 
     file_read_thread_handle = psp_start_thread(
         "FileReadThread", file_read_thread, THREADPRI_FILEIO, 0x1000, 0, NULL
     );
     if (file_read_thread_handle < 0) {
-        return 0;
+        goto error_free_event_flags;
     }
 
     return 1;
+
+  error_free_event_flags:
+    for (i = 0; i < lenof(requests); i++) {
+        if (requests[i].event_flag) {
+            sceKernelDeleteEventFlag(requests[i].event_flag);
+            requests[i].event_flag = 0;
+        }
+    }
+    sceKernelDeleteEventFlag(file_read_submit_mutex);
+    file_read_submit_mutex = 0;
+  error_return:
+    return 0;
 }
 
 /*************************************************************************/
@@ -172,6 +218,14 @@ int psp_file_read_submit(int fd, uint32_t start, uint32_t len, void *buf,
     /* まず期限を計算する */
     int32_t deadline = sceKernelGetSystemTimeLow() + time_limit;
 
+    /* mutexを確保する */
+    unsigned int timeout = SUBMIT_MUTEX_TIMEOUT;
+    int res = sceKernelWaitSema(file_read_submit_mutex, 1, &timeout);
+    if (res != 0) {
+        DMSG("Failed to lock submit mutex: %s", psp_strerror(res));
+        return 0;
+    }
+
     /* 空きエントリーを探す */
     int index;
     for (index = 0; index < lenof(requests); index++) {
@@ -182,11 +236,16 @@ int psp_file_read_submit(int fd, uint32_t start, uint32_t len, void *buf,
     if (index >= lenof(requests)) {
         DMSG("No open request slots for: %d 0x%08X %u %p %d %d",
              fd, start, len, buf, timed, time_limit);
+        sceKernelSignalSema(file_read_submit_mutex, 1);
         return 0;
     }
 
+    /* エントリーを確保して、mutexを解放する（inuseフラグさえ立っていれば
+     * 別スレッドに上書きされてしまう心配はない） */
+    requests[index].inuse = 1;
+    sceKernelSignalSema(file_read_submit_mutex, 1);
+
     /* 要求データを格納する */
-    requests[index].inuse    = 1;
     requests[index].new      = 1;
     requests[index].timed    = (timed != 0);
     requests[index].finished = 0;
@@ -197,6 +256,7 @@ int psp_file_read_submit(int fd, uint32_t start, uint32_t len, void *buf,
     requests[index].buf      = buf;
     requests[index].deadline = deadline;
     requests[index].waiter   = 0;
+    sceKernelClearEventFlag(requests[index].event_flag, ~0);
 
     /* 読み込みスレッドが停止中であれば、再開する */
     sceKernelWakeupThread(file_read_thread_handle);
@@ -242,11 +302,8 @@ int psp_file_read_wait(int id)
         return SCE_KERNEL_ERROR_ASYNC_BUSY;
     }
     requests[index].waiter = sceKernelGetThreadId();
-    /* 要求完了毎に起こされるので、finishedフラグが立つまで眠る */
-    while (!requests[index].finished) {
-        // FIXME: We really need to use event flags instead of sleeps.
-        sceKernelSleepThread();
-    }
+    sceKernelWaitEventFlag(requests[index].event_flag, EVENT_BIT_FINISHED,
+                           PSP_EVENT_WAITCLEAR, NULL, NULL);
     int32_t retval = requests[index].res;
     requests[index].inuse = 0;
     return retval;
@@ -419,11 +476,8 @@ static int handle_request(struct request *req, int all)
   finish_request:;
     /* 要求の処理が完了したので完了フラグを立て、待っているスレッドがあれば
      * 起こす */
-    const SceUID waiter = req->waiter;
     req->finished = 1;
-    if (waiter) {
-        sceKernelWakeupThread(waiter);
-    }
+    sceKernelSetEventFlag(req->event_flag, EVENT_BIT_FINISHED);
     return 1;
 }
 
