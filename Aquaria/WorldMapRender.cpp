@@ -749,9 +749,12 @@ void WorldMapRender::clearVis(WorldMapTile *tile)
 	}
 	else if (visMethod == VIS_WRITE)
 	{
-		resetTileAlpha(tile, savedTexData);
-		delete[] savedTexData;
-		savedTexData = 0;
+		if (savedTexData)
+		{
+			resetTileAlpha(tile, savedTexData);
+			delete[] savedTexData;
+			savedTexData = 0;
+		}
 	}
 #endif
 }
@@ -983,6 +986,7 @@ void WorldMapRender::bindInput()
 
 void WorldMapRender::destroy()
 {
+	clearVis(activeTile);
 	RenderObject::destroy();
 	delete[] savedTexData;
 }
