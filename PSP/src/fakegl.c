@@ -2659,15 +2659,97 @@ void glEnd(void)
         ge_disable(GE_STATE_TEXTURE);
     }
 
-    ge_set_vertex_format(vertex_format);
-    ge_set_vertex_pointer(first_vertex);
-    if (current_primitive == GL_QUADS) {
-        unsigned int i;
-        for (i = 0; i+4 <= num_vertices; i += 4) {
-            ge_draw_primitive(GE_PRIMITIVE_TRIANGLE_STRIP, 4);
+    /* Check whether this is a full-screen quad, which needs to be
+     * optimized to avoid rendering slowdown. */
+    int is_full_screen_quad = 0;
+    if (!current_dlist
+     && current_primitive == GL_QUADS
+     && num_vertices == 4
+    ) {
+        const Matrix4f *Mview = &modelview_matrix_stack[modelview_matrix_top];
+        const Matrix4f *Mproj = &projection_matrix_stack[projection_matrix_top];
+        if (Mview->_12 == 0 && Mview->_21 == 0) {
+            const float xscale = Mview->_11 * Mproj->_11 * (480/2);
+            const float yscale = Mview->_22 * Mproj->_22 * (272/2);
+            const float xofs = ((Mview->_41 * Mproj->_11) + (Mproj->_41 + 1)) * (480/2);
+            const float yofs = ((Mview->_42 * Mproj->_22) + (Mproj->_42 + 1)) * (272/2);
+            const VertexData *vptr = first_vertex;
+            const Texture *texture = texture_array[bound_texture].texture;
+            if (vertex_format == (GE_VERTEXFMT_COLOR_8888
+                                  | GE_VERTEXFMT_VERTEX_32BITF)) {
+                const float x0 = vptr[0*4+1].f * xscale + xofs;
+                const float y0 = vptr[0*4+2].f * yscale + yofs;
+                const float x3 = vptr[3*4+1].f * xscale + xofs;
+                const float y3 = vptr[3*4+2].f * yscale + yofs;
+                if (x0 < 0.5f && y0 < 0.5f
+                 && x3 > 479.5f && y3 > 271.5f
+                 && vptr[0*4+0].i == current_color
+                 && vptr[1*4+0].i == current_color
+                 && vptr[1*4+1].f == vptr[3*4+1].f
+                 && vptr[1*4+2].f == vptr[0*4+2].f
+                 && vptr[2*4+0].i == current_color
+                 && vptr[2*4+1].f == vptr[0*4+1].f
+                 && vptr[2*4+2].f == vptr[3*4+2].f
+                 && vptr[3*4+0].i == current_color
+                ) {
+                    is_full_screen_quad = 2;
+                }
+            } else if (vertex_format == (GE_VERTEXFMT_TEXTURE_32BITF
+                                         | GE_VERTEXFMT_COLOR_8888
+                                         | GE_VERTEXFMT_VERTEX_32BITF)
+                       && texture != NULL && texture != UNDEFINED_TEXTURE) {
+                const float u0 = vptr[0*6+0].f * texture->width;
+                const float v0 = vptr[0*6+1].f * texture->height;
+                const float x0 = vptr[0*6+3].f * xscale + xofs;
+                const float y0 = vptr[0*6+4].f * yscale + yofs;
+                const float u3 = vptr[3*6+0].f * texture->width;
+                const float v3 = vptr[3*6+1].f * texture->height;
+                const float x3 = vptr[3*6+3].f * xscale + xofs;
+                const float y3 = vptr[3*6+4].f * yscale + yofs;
+                if (fabsf(u0) < 0.001f && fabsf(v0) < 0.001f
+                 && fabsf(x0) < 0.001f && fabsf(y0) < 0.001f
+                 && fabsf(u3-480) < 0.001f && fabsf(v3-272) < 0.001f
+                 && fabsf(x3-480) < 0.001f && fabsf(y3-272) < 0.001f
+                 && vptr[1*6+0].f == vptr[3*6+0].f
+                 && vptr[1*6+1].f == vptr[0*6+1].f
+                 && vptr[1*6+3].f == vptr[3*6+3].f
+                 && vptr[1*6+4].f == vptr[0*6+4].f
+                 && vptr[2*6+0].f == vptr[0*6+0].f
+                 && vptr[2*6+1].f == vptr[3*6+1].f
+                 && vptr[2*6+3].f == vptr[0*6+3].f
+                 && vptr[2*6+4].f == vptr[3*6+4].f
+                ) {
+                    is_full_screen_quad = 1;
+                }
+            }
         }
+    }
+    if (is_full_screen_quad) {
+        ge_set_texture_filter(GE_TEXFILTER_NEAREST, GE_TEXFILTER_NEAREST,
+                              GE_TEXMIPFILTER_NONE);
+        texture_filter_changed = 1;  // Restore it next time around.
+        ge_set_vertex_format(GE_VERTEXFMT_TRANSFORM_2D
+                             | GE_VERTEXFMT_TEXTURE_16BIT
+                             | GE_VERTEXFMT_COLOR_8888
+                             | GE_VERTEXFMT_VERTEX_16BIT);
+        ge_set_vertex_pointer(NULL);
+        int x;
+        for (x = 0; x < 480; x += 16) {
+            ge_add_uv_color_xy_vertex(x, 272, current_color, x, 0);
+            ge_add_uv_color_xy_vertex(x+16, 0, current_color, x+16, 272);
+        }
+        ge_draw_primitive(GE_PRIMITIVE_SPRITES, (480/16)*2);
     } else {
-        ge_draw_primitive(ge_primitive, num_vertices);
+        ge_set_vertex_format(vertex_format);
+        ge_set_vertex_pointer(first_vertex);
+        if (current_primitive == GL_QUADS) {
+            unsigned int i;
+            for (i = 0; i+4 <= num_vertices; i += 4) {
+                ge_draw_primitive(GE_PRIMITIVE_TRIANGLE_STRIP, 4);
+            }
+        } else {
+            ge_draw_primitive(ge_primitive, num_vertices);
+        }
     }
 
     uncached_vertices += num_vertices;
