@@ -45,6 +45,323 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //#define _DEBUG 1
 #endif
 
+// Set this to true to stream all audio from disk, regardless of whether
+// streaming was requested.  This saves a huge amount of memory (~100MB)
+// but can cause "pops" in sound effect playback due to disk access delays.
+// Caching the Ogg data in memory would get the best of both worlds, but
+// that's still TBD at the moment.  --achurch
+const bool STREAM_EVERYTHING = false;
+
+///////////////////////////////////////////////////////////////////////////
+
+// Decoder implementation for streamed Ogg Vorbis audio.
+
+// Callback set (OV_CALLBACKS_NOCLOSE from libvorbis 1.2.0).  It might be
+// better to just update libogg/libvorbis to the current versions so we
+// don't have to worry about identifier collisions -- we can then drop
+// all this and use OV_CALLBACKS_NOCLOSE in the ov_open_callbacks() call.
+static int _ov_header_fseek_wrap(FILE *f,ogg_int64_t off,int whence){
+  if(f==NULL)return(-1);
+#ifdef __MINGW32__
+  return fseeko64(f,off,whence);
+#elif defined (_WIN32)
+  return _fseeki64(f,off,whence);
+#else
+  return fseek(f,off,whence);
+#endif
+}
+static int noclose(FILE *f) {return 0;}
+static ov_callbacks local_OV_CALLBACKS_NOCLOSE = {
+  (size_t (*)(void *, size_t, size_t, void *))  fread,
+  (int (*)(void *, ogg_int64_t, int))           _ov_header_fseek_wrap,
+  (int (*)(void *))                             noclose,  // NULL doesn't work in libvorbis-1.1.2
+  (long (*)(void *))                            ftell
+};
+
+class OggDecoder {
+public:
+    OggDecoder(FILE *fp);
+    ~OggDecoder();
+
+    // Start playing on the given channel, with optional looping.
+    bool start(ALuint source, bool loop);
+
+    // Decode audio into any free buffers.  Must be called periodically
+    // on systems without threads; may be called without harm on systems
+    // with threads (the function does nothing in that case).
+    void update();
+
+    // Terminate playback.
+    void stop();
+
+    // Return the current playback position in seconds.
+    double position();
+
+private:
+    // Decoding loop, run in a separate thread (if threads are available).
+    static void decode_loop(OggDecoder *this_);
+
+    // Decode and queue PCM data for one buffer; does nothing if the end
+    // of the stream has already been reached or an unrecoverable error
+    // has occurred during decoding.  If looping, the audio will instead
+    // restart at the beginning of the stream after reaching the end,
+    // but will still stop on an unrecoverable error.
+    void queue(ALuint buffer);
+
+    static const int NUM_BUFFERS = 8;
+    static const int BUFFER_LENGTH = 4096;  // In samples (arbitrary)
+    char pcm_buffer[BUFFER_LENGTH * 4];     // Temporary buffer for decoding
+    ALuint buffers[NUM_BUFFERS];
+    ALuint source;
+
+    FILE *fp;
+    OggVorbis_File vf;
+    ALenum format;
+    int freq;
+
+#ifdef BBGE_BUILD_SDL
+    SDL_Thread *thread;
+#else
+    #warning Threads not supported, music may cut out on area changes!
+    // ... because the stream runs out of decoded data while the area is
+    // still loading, so OpenAL aborts playback.
+#endif
+    volatile bool stop_thread;
+
+    bool playing;
+    bool loop;
+    bool eof;  // End of file _or_ unrecoverable error encountered
+    unsigned int samples_done;  // Number of samples played and dequeued
+};
+
+OggDecoder::OggDecoder(FILE *fp)
+{
+    for (int i = 0; i < NUM_BUFFERS; i++)
+    {
+        buffers[i] = 0;
+    }
+    this->fp = fp;
+    this->source = 0;
+#ifdef BBGE_BUILD_SDL
+    this->thread = NULL;
+#endif
+    this->stop_thread = true;
+    this->playing = false;
+    this->loop = false;
+    this->eof = false;
+    this->samples_done = 0;
+}
+
+OggDecoder::~OggDecoder()
+{
+    if (playing)
+        stop();
+
+    for (int i = 0; i < NUM_BUFFERS; i++)
+    {
+        if (buffers[i])
+            alDeleteBuffers(1, &buffers[i]);
+    }
+
+    fclose(fp);
+}
+
+bool OggDecoder::start(ALuint source, bool loop)
+{
+    this->source = source;
+    this->loop = loop;
+
+    if (ov_open_callbacks(fp, &vf, NULL, 0, local_OV_CALLBACKS_NOCLOSE) != 0)
+    {
+        debugLog("ov_open() failed");
+        return false;
+    }
+
+    vorbis_info *info = ov_info(&vf, -1);
+    if (!info)
+    {
+        debugLog("ov_info() failed");
+        ov_clear(&vf);
+        return false;
+    }
+    if (info->channels == 1)
+        format = AL_FORMAT_MONO16;
+    else if (info->channels == 2)
+        format = AL_FORMAT_STEREO16;
+    else
+    {
+        std::ostringstream os;
+        os << "Bad channel count " << info->channels;
+        debugLog(os.str());
+        ov_clear(&vf);
+        return false;
+    }
+    freq = info->rate;
+
+    (void) alGetError();
+    alGenBuffers(NUM_BUFFERS, buffers);
+    if (alGetError())
+    {
+        debugLog("Failed to generate OpenAL buffers");
+        ov_clear(&vf);
+        return false;
+    }
+
+    playing = true;
+    eof = false;
+    samples_done = 0;
+    for (int i = 0; i < NUM_BUFFERS; i++)
+        queue(buffers[i]);
+
+#ifdef BBGE_BUILD_SDL
+    stop_thread = false;
+    thread = SDL_CreateThread((int (*)(void *))decode_loop, this);
+    if (!thread) {
+	debugLog("Failed to create decode thread: " + std::string(SDL_GetError()));
+    }
+#endif
+
+    return true;
+}
+
+void OggDecoder::update()
+{
+    if (!playing)
+        return;
+#ifdef BBGE_BUILD_SDL
+    if (thread)
+	return;
+#endif
+
+    int processed = 0;
+    alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed);
+    for (int i = 0; i < processed; i++)
+    {
+        samples_done += BUFFER_LENGTH;
+        ALuint buffer;
+        (void) alGetError();
+        alSourceUnqueueBuffers(source, 1, &buffer);
+        if (!alGetError())
+            queue(buffer);
+    }
+}
+
+void OggDecoder::stop()
+{
+    if (!playing)
+        return;
+
+#ifdef BBGE_BUILD_SDL
+    if (thread)
+    {
+	stop_thread = true;
+	SDL_WaitThread(thread, NULL);
+	thread = NULL;
+    }
+#endif
+
+    alSourceStop(source);
+    int queued = 0;
+    alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
+    for (int i = 0; i < queued; i++)
+    {
+        ALuint buffer;
+        alSourceUnqueueBuffers(source, 1, &buffer);
+    }
+    for (int i = 0; i < NUM_BUFFERS; i++)
+    {
+        alDeleteBuffers(1, &buffers[i]);
+        buffers[i] = 0;
+    }
+}
+
+double OggDecoder::position()
+{
+    ALint samples_played = 0;
+    alGetSourcei(source, AL_SAMPLE_OFFSET, &samples_played);
+    samples_played += samples_done;
+    return (double)samples_played / (double)freq;
+}
+
+void OggDecoder::decode_loop(OggDecoder *this_)
+{
+    while (!this_->stop_thread)
+    {
+#ifdef BBGE_BUILD_SDL
+	SDL_Delay(1);
+#endif
+
+	int processed = 0;
+	alGetSourcei(this_->source, AL_BUFFERS_PROCESSED, &processed);
+	for (int i = 0; i < processed; i++)
+	{
+	    this_->samples_done += BUFFER_LENGTH;
+	    ALuint buffer;
+	    (void) alGetError();
+	    alSourceUnqueueBuffers(this_->source, 1, &buffer);
+	    if (!alGetError())
+		this_->queue(buffer);
+	}
+    }
+}
+
+void OggDecoder::queue(ALuint buffer)
+{
+    if (!playing || eof)
+        return;
+
+    const int channels = (format == AL_FORMAT_STEREO16 ? 2 : 1);
+    const int buffer_size = BUFFER_LENGTH * channels * 2;
+    int pcm_size = 0;
+    bool just_looped = false;  // Avoid infinite loops on empty files.
+
+    while (pcm_size < buffer_size && !eof)
+    {
+        int bitstream_unused;
+        const int nread = ov_read(
+            &vf, pcm_buffer + pcm_size, buffer_size - pcm_size,
+            /*bigendianp*/ 0, /*word*/ 2, /*sgned*/ 1, &bitstream_unused
+        );
+        if (nread == 0 || nread == OV_EOF)
+        {
+            if (loop && !just_looped)
+            {
+                just_looped = true;
+                samples_done = 0;
+                ov_pcm_seek(&vf, 0);
+            }
+            else
+            {
+                eof = true;
+            }
+        }
+        else if (nread == OV_HOLE)
+        {
+            debugLog("Warning: decompression error, data dropped");
+        }
+        else if (nread < 0)
+        {
+            std::ostringstream os;
+            os << "Decompression error: " << nread;
+            debugLog(os.str());
+            eof = true;
+        }
+        else
+        {
+            pcm_size += nread;
+            just_looped = false;
+        }
+    }
+
+    if (pcm_size > 0)
+    {
+        alBufferData(buffer, format, pcm_buffer, pcm_size, freq);
+        alSourceQueueBuffers(source, 1, &buffer);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////
+
 /* for porting purposes... */
 #ifndef STUBBED
 #ifndef _DEBUG
@@ -92,8 +409,64 @@ namespace FMOD {
 
 static ALenum GVorbisFormat = AL_NONE;
 
+// FMOD::Sound implementation ...
+
+class OpenALSound
+{
+public:
+    OpenALSound(OggDecoder * const _decoder, const bool _looping);
+    OpenALSound(const ALuint _bid, const bool _looping);
+    bool isLooping() const { return looping; }
+    OggDecoder *getDecoder() const { return decoder; }
+    ALuint getBufferName() const { return bid; }
+    FMOD_RESULT release();
+    void reference() { refcount++; }
+
+private:
+    OggDecoder * const decoder;
+    const ALuint bid;    // buffer id (only if decoder == NULL)
+    const bool looping;
+    int refcount;
+};
+
+OpenALSound::OpenALSound(OggDecoder * const _decoder, const bool _looping)
+    : decoder(_decoder)
+    , bid(0)
+    , looping(_looping)
+    , refcount(1)
+{
+}
+
+OpenALSound::OpenALSound(const ALuint _bid, const bool _looping)
+    : decoder(NULL)
+    , bid(_bid)
+    , looping(_looping)
+    , refcount(1)
+{
+}
+
+ALBRIDGE(Sound,release,(),())
+FMOD_RESULT OpenALSound::release()
+{
+    refcount--;
+    if (refcount <= 0)
+    {
+        if (decoder)
+        {
+            delete decoder;
+        }
+        else
+        {
+            alDeleteBuffers(1, &bid);
+            SANITY_CHECK_OPENAL_CALL();
+        }
+        delete this;
+    }
+    return FMOD_OK;
+}
+
+
 class OpenALChannelGroup;
-class OpenALSound;
 
 class OpenALChannel
 {
@@ -197,6 +570,8 @@ void OpenALChannel::update()
         SANITY_CHECK_OPENAL_CALL();
         if (state == AL_STOPPED)
             stop();
+        else if (sound->getDecoder())
+            sound->getDecoder()->update();
     }
 }
 
@@ -214,10 +589,17 @@ ALBRIDGE(Channel,getPosition,(unsigned int *position, FMOD_TIMEUNIT postype),(po
 FMOD_RESULT OpenALChannel::getPosition(unsigned int *position, FMOD_TIMEUNIT postype)
 {
     assert(postype == FMOD_TIMEUNIT_MS);
-    ALfloat secs = 0.0f;
-    alGetSourcefv(sid, AL_SEC_OFFSET, &secs);
-    SANITY_CHECK_OPENAL_CALL();
-    *position = (unsigned int) (secs * 1000.0f);
+    if (sound->getDecoder())
+    {
+        *position = (unsigned int) (sound->getDecoder()->position() * 1000.0);
+    }
+    else
+    {
+        ALfloat secs = 0.0f;
+        alGetSourcefv(sid, AL_SEC_OFFSET, &secs);
+        SANITY_CHECK_OPENAL_CALL();
+        *position = (unsigned int) (secs * 1000.0f);
+    }
     return FMOD_OK;
 }
 
@@ -432,44 +814,6 @@ FMOD_RESULT DSP::setParameter(int index, float value)
 }
 
 
-// FMOD::Sound implementation ...
-
-class OpenALSound
-{
-public:
-    OpenALSound(const ALuint _bid, const bool _looping);
-    bool isLooping() const { return looping; }
-    ALuint getBufferName() const { return bid; }
-    FMOD_RESULT release();
-    void reference() { refcount++; }
-
-private:
-    const ALuint bid;  // buffer id
-    const bool looping;
-    int refcount;
-};
-
-OpenALSound::OpenALSound(const ALuint _bid, const bool _looping)
-    : bid(_bid)
-    , looping(_looping)
-    , refcount(1)
-{
-}
-
-ALBRIDGE(Sound,release,(),())
-FMOD_RESULT OpenALSound::release()
-{
-    refcount--;
-    if (refcount <= 0)
-    {
-        alDeleteBuffers(1, &bid);
-        SANITY_CHECK_OPENAL_CALL();
-        delete this;
-    }
-    return FMOD_OK;
-}
-
-
 void OpenALChannel::setSound(OpenALSound *_sound)
 {
     if (sound)
@@ -566,26 +910,13 @@ FMOD_RESULT OpenALSystem::createDSPByType(const FMOD_DSP_TYPE type, DSP **dsp)
     return FMOD_ERR_INTERNAL;
 }
 
-static void *decode_to_pcm(const char *_fname, ALenum &format, ALsizei &size, ALuint &freq, const bool streaming)
+static void *decode_to_pcm(FILE *io, ALenum &format, ALsizei &size, ALuint &freq, const bool streaming)
 {
 #ifdef __POWERPC__
     const int bigendian = 1;
 #else
     const int bigendian = 0;
 #endif
-
-    // !!! FIXME: if it's not Ogg, we don't have a decoder. I'm lazy.  :/
-    char *fname = (char *) alloca(strlen(_fname) + 16);
-    strcpy(fname, _fname);
-    char *ptr = strrchr(fname, '.');
-    if (ptr) *ptr = '\0';
-    strcat(fname, ".ogg");
-
-    // just in case...
-    #undef fopen
-    FILE *io = fopen(core->adjustFilenameCase(fname).c_str(), "rb");
-    if (io == NULL)
-        return NULL;
 
     ALubyte *retval = NULL;
 
@@ -664,38 +995,64 @@ FMOD_RESULT OpenALSystem::createSound(const char *name_or_data, const FMOD_MODE 
     assert(!exinfo);
 
     FMOD_RESULT retval = FMOD_ERR_INTERNAL;
-    ALenum pcmfmt = AL_NONE;
-    ALsizei pcmsize = 0;
-    ALuint pcmfreq = 0;
-    void *pcm = decode_to_pcm(name_or_data, pcmfmt, pcmsize, pcmfreq, (mode & FMOD_CREATESTREAM) != 0);
-    if (pcm == NULL)
+
+    // !!! FIXME: if it's not Ogg, we don't have a decoder. I'm lazy.  :/
+    char *fname = (char *) alloca(strlen(name_or_data) + 16);
+    strcpy(fname, name_or_data);
+    char *ptr = strrchr(fname, '.');
+    if (ptr) *ptr = '\0';
+    strcat(fname, ".ogg");
+
+    // just in case...
+    #undef fopen
+    FILE *io = fopen(core->adjustFilenameCase(fname).c_str(), "rb");
+    if (io == NULL)
         return FMOD_ERR_INTERNAL;
 
-    #if 0
-    static int dump_id = 0;
-    char buf[128];
-    snprintf(buf, sizeof (buf), "dump_%d.pcm", dump_id++);
-    FILE *io = fopen(buf, "wb");
-    if (io != NULL)
+    if ((mode & FMOD_CREATESTREAM) || STREAM_EVERYTHING)
     {
-        fwrite(pcm, pcmsize, 1, io);
-        fclose(io);
+        OggDecoder *decoder = new OggDecoder(io);
+        if (decoder)
+        {
+            *sound = (Sound *) new OpenALSound(decoder, (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
+            retval = FMOD_OK;
+        }
     }
-    #endif
-
-    ALuint bid = 0;
-    alGetError();
-    alGenBuffers(1, &bid);
-    SANITY_CHECK_OPENAL_CALL();
-    if (alGetError() == AL_NO_ERROR)
+    else
     {
-        alBufferData(bid, pcmfmt, pcm, pcmsize, pcmfreq);
+        ALenum pcmfmt = AL_NONE;
+        ALsizei pcmsize = 0;
+        ALuint pcmfreq = 0;
+        void *pcm = decode_to_pcm(io, pcmfmt, pcmsize, pcmfreq, (mode & FMOD_CREATESTREAM) != 0);
+        if (pcm == NULL)
+            return FMOD_ERR_INTERNAL;
+
+        #if 0
+        static int dump_id = 0;
+        char buf[128];
+        snprintf(buf, sizeof (buf), "dump_%d.pcm", dump_id++);
+        FILE *io = fopen(buf, "wb");
+        if (io != NULL)
+        {
+            fwrite(pcm, pcmsize, 1, io);
+            fclose(io);
+        }
+        #endif
+
+        ALuint bid = 0;
+        alGetError();
+        alGenBuffers(1, &bid);
         SANITY_CHECK_OPENAL_CALL();
-        *sound = (Sound *) new OpenALSound(bid, (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
-        retval = FMOD_OK;
-    }
+        if (alGetError() == AL_NO_ERROR)
+        {
+            alBufferData(bid, pcmfmt, pcm, pcmsize, pcmfreq);
+            SANITY_CHECK_OPENAL_CALL();
+            *sound = (Sound *) new OpenALSound(bid, (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
+            retval = FMOD_OK;
+        }
 
-    free(pcm);
+        free(pcm);
+    }
 
     return retval;
 }
@@ -815,10 +1172,19 @@ FMOD_RESULT OpenALSystem::playSound(FMOD_CHANNELINDEX channelid, Sound *_sound, 
     alSourceStop(sid);  // stop any playback, set to AL_INITIAL.
     alSourceRewind(sid);  // stop any playback, set to AL_INITIAL.
     SANITY_CHECK_OPENAL_CALL();
-    alSourcei(sid, AL_BUFFER, sound->getBufferName());
-    SANITY_CHECK_OPENAL_CALL();
-    alSourcei(sid, AL_LOOPING, sound->isLooping() ? AL_TRUE : AL_FALSE);
-    SANITY_CHECK_OPENAL_CALL();
+    if (sound->getDecoder())
+    {
+        alSourcei(sid, AL_BUFFER, NULL);  // Reset state to AL_UNDETERMINED.
+        if (!sound->getDecoder()->start(sid, sound->isLooping()))
+            return FMOD_ERR_INTERNAL;
+    }
+    else
+    {
+        alSourcei(sid, AL_BUFFER, sound->getBufferName());
+        SANITY_CHECK_OPENAL_CALL();
+        alSourcei(sid, AL_LOOPING, sound->isLooping() ? AL_TRUE : AL_FALSE);
+        SANITY_CHECK_OPENAL_CALL();
+    }
 
     channels[channelid].reacquire();
     channels[channelid].setPaused(paused);
