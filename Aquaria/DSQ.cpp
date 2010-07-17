@@ -834,7 +834,7 @@ static const float loadingProgressTable[] = {
 	#define LOAD_GRAPHICS2	5  // After creating more graphics resources
 	#define LOAD_TEXTURES	6  // After loading textures to be precached
 	#define LOAD_FINISHED	7  // All done!
-	0.01, 0.06, 0.51, 0.52, 0.53, 0.54, 0.89, 1.00,
+	0.01, 0.07, 0.20, 0.23, 0.24, 0.25, 0.89, 1.00,
 };
 
 void loadBit(int index, float perc = 1)
