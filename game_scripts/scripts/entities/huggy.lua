@@ -155,18 +155,22 @@ function update(me, dt)
 		end
 		
 		entity_exertHairForce(me, 0, 4, 1)				--tail gravity
-	
-		entity_rotate(me, bone_getWorldRotation(v.attachBone))
-		entity_setPosition(me, bone_getWorldPosition(v.attachBone))
 		
+		local flyOff = false
 		if avatar_isRolling() then
 			v.rollTime = v.rollTime + dt
-			if v.rollTime > v.maxRollTime then			
-				entity_setState(me, STATE_FLYOFF, 0.5)
+			if v.rollTime > v.maxRollTime then
+				flyOff = true
 			end
 		end
 		if isForm(FORM_FISH) then
+			flyOff = true
+		end
+		if flyOff then  -- attachBone may no longer be valid!
 			entity_setState(me, STATE_FLYOFF, 0.5)
+		else
+			entity_rotate(me, bone_getWorldRotation(v.attachBone))
+			entity_setPosition(me, bone_getWorldPosition(v.attachBone))
 		end
 	end		
 	
@@ -213,6 +217,7 @@ function enterState(me)
 	elseif entity_isState(me, STATE_FLYOFF) then
 		entity_setEntityType(me, ET_ENEMY)
 		esetv(me, EV_LOOKAT,1)
+		v.attachBone = 0
 		v.rollTime = 0
 		entity_setMaxSpeed(me, 840)
 		entity_addRandomVel(me, 1200)
