@@ -235,6 +235,7 @@ public:
 
 	void startCharge(int ability);
 	int currentMaxSpeed;
+	Vector getFakeCursorPosition();
 	Vector getVectorToCursor(bool trueMouse=false);
 	Vector getVectorToCursorFromScreenCentre();
 
