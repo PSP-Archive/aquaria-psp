@@ -65,7 +65,8 @@ int decode_ogg_open(SoundDecodeHandle *this)
     this->get_pcm = decode_ogg_get_pcm;
     this->close   = decode_ogg_close;
 
-    this->private = mem_alloc(sizeof(*this->private), 0, MEM_ALLOC_TEMP);
+    this->private = mem_alloc(sizeof(*this->private), 0,
+                              MEM_ALLOC_TEMP | MEM_ALLOC_CLEAR);
     if (!this->private) {
         DMSG("Out of memory");
         return 0;
