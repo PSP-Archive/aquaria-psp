@@ -49,6 +49,10 @@ function activate(me)
 	showInGameMenu(true, true)
 	
 	setActivation(true)
+	
+	if getInputMode() ~= INPUT_MOUSE then
+		setMousePos(toWindowFromWorld(node_x(me), node_y(me)))
+	end
 end
 
 function update(me, dt)
