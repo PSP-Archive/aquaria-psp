@@ -37,6 +37,11 @@ function action(me, action, state)
 			setNodeToActivate(node)
 			setMousePos(toWindowFromWorld(node_x(node), node_y(node)-20))
 			return false
+		elseif action == ACTION_MENUUP and not isDemo() then
+			local node = getNode("TITLE_REPLAYINTRO")
+			setNodeToActivate(node)
+			setMousePos(toWindowFromWorld(node_x(node), node_y(node)-20))
+			return false
 		end
 	end
 	return true
