@@ -21,8 +21,22 @@ v = getVars()
 
 function init(me)
 	node_setCursorActivation(me, (not isDemo()))
+	node_setCatchActions(me, true)
 end
 	
+function action(me, action, state)
+	if isNestedMain() then return end
+	if getNodeToActivate() == me and state == 1 then
+		if action == ACTION_MENUDOWN then
+			local node = getNode("TITLE_CONTINUE")
+			setNodeToActivate(node)
+			setMousePos(toWindowFromWorld(node_x(node), node_y(node)-20))
+			return false
+		end
+	end
+	return true
+end
+
 function activate(me)
 	if isDemo() then return end
 	if isNestedMain() then return end
@@ -33,6 +47,10 @@ function activate(me)
 	
 	if confirm("", "replayintro") then
 		jumpState("intro")
+	else
+		if getInputMode() ~= INPUT_MOUSE then
+			setMousePos(toWindowFromWorld(node_x(me), node_y(me)))
+		end
 	end
 end
 
