@@ -111,11 +111,12 @@ void ModSelector::onUpdate(float dt)
 		if (isCoordinateInside(core->mouse.position))
 		{
 			scale.interpolateTo(Vector(1.1, 1.1), 0.1);
-			if (core->mouse.buttons.left && !mouseDown)
+			const bool anyButton = core->mouse.buttons.left || core->mouse.buttons.right;
+			if (anyButton && !mouseDown)
 			{
 				mouseDown = true;
 			}
-			else if (!core->mouse.buttons.left && mouseDown)
+			else if (!anyButton && mouseDown)
 			{
 				core->quitNestedMain();
 				dsq->modIsSelected = true;
