@@ -253,7 +253,6 @@ extern void debugLog(const std::string &s);
 	char *old_position = position;
 
 #define VERIFY(type,def_value)  do {                                    \
-	unsigned long old_ispos = ispos;                                    \
 	type test;                                                          \
 	std_is >> test;                                                     \
 	ispos += std_is.gcount();                                           \
@@ -261,12 +260,15 @@ extern void debugLog(const std::string &s);
 		test = def_value;                                               \
 	}                                                                   \
 	if (test != target) {                                               \
-		std::ostringstream os_target; os_target << target;              \
-		std::ostringstream os_test;   os_test   << test;                \
+		std::ostringstream os_target; os_target   << target;            \
+		std::ostringstream os_test;   os_test     << test;              \
+		std::ostringstream os_offset; os_offset << (position - buffer); \
 		debugLog(std::string("SimpleIStringStream >> " #type ": MISMATCH") \
 		         + " (us=" + os_target.str()                            \
 		         + " STL=" + (std_is.fail() ? "<<FAIL>>" : os_test.str()) \
-		         + ") at: [" + std::string(old_position).substr(0,100) + "]");\
+		         + ") at: [" + std::string(old_position).substr(0,100)  \
+		         + "] ([" + std::string(buffer).substr(0,100) + "] + "  \
+		         + os_offset.str() + ")");                              \
 	}                                                                   \
 } while (0)
 
@@ -420,9 +422,13 @@ inline SimpleIStringStream::operator bool() const
 {
 #ifdef SISS_VERIFY
 	if (!error != bool(std_is)) {
+		std::ostringstream os_offset; os_offset << (position - buffer);
 		debugLog(std::string("SimpleIStringStream bool MISMATCH: us=")
 		         + (!error ? "true" : "false") + " STL="
-		         + (std_is ? "true" : "false"));
+		         + (std_is ? "true" : "false") + " at: ["
+		         + std::string(position).substr(0,100) + "] (["
+		         + std::string(buffer).substr(0,100) + "] + "
+		         + os_offset.str() + ")");
 	}
 #endif
 	return !error;
@@ -440,7 +446,7 @@ inline SimpleIStringStream &SimpleIStringStream::operator>>(bool &target)
 			skip_spaces();
 			unsigned long longval = strtoul(position, &position, 10);
 			target = (longval == 1);
-			error = (position == old_position);
+			error = (position == old_position || *position == 0);
 		}
 		VERIFY(bool, false);
 	} else {
@@ -461,7 +467,7 @@ inline SimpleIStringStream &SimpleIStringStream::operator>>(short &target)
 		} else {
 			skip_spaces();
 			target = (short)strtol(position, &position, 0);
-			error = (position == old_position);
+			error = (position == old_position || *position == 0);
 		}
 		VERIFY(short, 0);
 	} else {
@@ -480,7 +486,7 @@ inline SimpleIStringStream &SimpleIStringStream::operator>>(unsigned short &targ
 		} else {
 			skip_spaces();
 			target = (unsigned short)strtoul(position, &position, 0);
-			error = (position == old_position);
+			error = (position == old_position || *position == 0);
 		}
 		VERIFY(unsigned short, 0);
 	} else {
@@ -501,7 +507,7 @@ inline SimpleIStringStream &SimpleIStringStream::operator>>(int &target)
 		} else {
 			skip_spaces();
 			target = (int)strtol(position, &position, 0);
-			error = (position == old_position);
+			error = (position == old_position || *position == 0);
 		}
 		VERIFY(int, 0);
 	} else {
@@ -520,7 +526,7 @@ inline SimpleIStringStream &SimpleIStringStream::operator>>(unsigned int &target
 		} else {
 			skip_spaces();
 			target = (unsigned int)strtoul(position, &position, 0);
-			error = (position == old_position);
+			error = (position == old_position || *position == 0);
 		}
 		VERIFY(unsigned int, 0);
 	} else {
@@ -541,7 +547,7 @@ inline SimpleIStringStream &SimpleIStringStream::operator>>(long &target)
 		} else {
 			skip_spaces();
 			target = strtol(position, &position, 0);
-			error = (position == old_position);
+			error = (position == old_position || *position == 0);
 		}
 		VERIFY(long, 0);
 	} else {
@@ -560,7 +566,7 @@ inline SimpleIStringStream &SimpleIStringStream::operator>>(unsigned long &targe
 		} else {
 			skip_spaces();
 			target = strtoul(position, &position, 0);
-			error = (position == old_position);
+			error = (position == old_position || *position == 0);
 		}
 		VERIFY(unsigned long, 0);
 	} else {
@@ -581,7 +587,7 @@ inline SimpleIStringStream &SimpleIStringStream::operator>>(float &target)
 		} else {
 			skip_spaces();
 			target = strtof(position, &position);
-			error = (position == old_position);
+			error = (position == old_position || *position == 0);
 		}
 		VERIFY(float, 0);
 	} else {
@@ -600,7 +606,7 @@ inline SimpleIStringStream &SimpleIStringStream::operator>>(double &target)
 		} else {
 			skip_spaces();
 			target = strtod(position, &position);
-			error = (position == old_position);
+			error = (position == old_position || *position == 0);
 		}
 		VERIFY(double, 0);
 	} else {
@@ -624,6 +630,7 @@ inline SimpleIStringStream &SimpleIStringStream::operator>>(char &target)
 			target = *position;
 			if (*position) {
 				position++;
+				error = (*position == 0);
 			} else {
 				error = true;
 			}
@@ -648,6 +655,7 @@ inline SimpleIStringStream &SimpleIStringStream::operator>>(signed char &target)
 			target = *position;
 			if (*position) {
 				position++;
+				error = (*position == 0);
 			} else {
 				error = true;
 			}
@@ -672,6 +680,7 @@ inline SimpleIStringStream &SimpleIStringStream::operator>>(unsigned char &targe
 			target = *position;
 			if (*position) {
 				position++;
+				error = (*position == 0);
 			} else {
 				error = true;
 			}
@@ -705,9 +714,10 @@ inline SimpleIStringStream &SimpleIStringStream::operator>>(std::string &target)
 					position++;
 				}
 				target.assign(start, position - start);
+				error = (*position == 0);
 			}
-			VERIFY(std::string, "");
 		}
+		VERIFY(std::string, "");
 	} else {
 		target = "";
 		error = true;
