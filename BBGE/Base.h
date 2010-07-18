@@ -184,11 +184,14 @@ enum Direction
 	}\
 
 
-// double -> float, since they're only used with float variables.  --achurch
-const float SQRT2 = 1.41421356;
+const float SQRT2		= 1.41421356;
 
 const float PI			= 3.14159265;
-const float PI_HALF	= 1.57079633;
+const float PI_HALF		= 1.57079633;
+
+#ifndef HUGE_VALF
+	#define HUGE_VALF	((float)1e38)
+#endif
 
 struct IntPair
 {

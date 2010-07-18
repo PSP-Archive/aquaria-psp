@@ -2975,19 +2975,18 @@ Path *Game::getScriptedPathAtCursor(bool withAct)
 
 Path *Game::getNearestPath(const Vector &pos, const std::string &s)
 {
-	Path *closest=0;
-	int smallestDist = -1;
-	Path *cp = 0;
+	Path *closest = 0;
+	float smallestDist = HUGE_VALF;
 	std::string st = s;
 	stringToLower(st);
 	for (int i = 0; i < dsq->game->paths.size(); i++)
 	{
-		cp = dsq->game->paths[i];
-		if (cp->nodes.size()>0 && (st.empty() || st == cp->name))
+		Path *cp = dsq->game->paths[i];
+		if (!cp->nodes.empty() && (st.empty() || st == cp->name))
 		{
-			Vector v = cp->nodes[0].position - pos;
-			float dist = v.getSquaredLength2D();
-			if (smallestDist == -1 || dist < smallestDist )
+			const Vector v = cp->nodes[0].position - pos;
+			const float dist = v.getSquaredLength2D();
+			if (dist < smallestDist)
 			{
 				smallestDist = dist;
 				closest = cp;
@@ -2999,18 +2998,16 @@ Path *Game::getNearestPath(const Vector &pos, const std::string &s)
 
 Path *Game::getNearestPath(const Vector &pos, PathType pathType)
 {
-	Path *closest=0;
-	int smallestDist = -1;
-	Path *cp = 0;
-	Vector v;
+	Path *closest = 0;
+	float smallestDist = HUGE_VALF;
 	for (int i = 0; i < dsq->game->paths.size(); i++)
 	{
-		cp = dsq->game->paths[i];
+		Path *cp = dsq->game->paths[i];
 		if (cp->pathType == pathType && !cp->nodes.empty())
 		{
-			v = cp->nodes[0].position - pos;
-			float dist = v.getSquaredLength2D();
-			if (smallestDist == -1 || dist < smallestDist )
+			const Vector v = cp->nodes[0].position - pos;
+			const float dist = v.getSquaredLength2D();
+			if (dist < smallestDist)
 			{
 				smallestDist = dist;
 				closest = cp;
@@ -6752,17 +6749,17 @@ void Game::applyState()
 	{
 		stringToLower(fromScene);
 		debugLog("fromScene: " + fromScene + " fromWarpType: " + fromWarpType);
-		int smallestDist = -1;
-		Path *closest=0;
+		float smallestDist = HUGE_VALF;
+		Path *closest = 0;
 		Vector closestPushOut;
-		bool doFlip=false;
+		bool doFlip = false;
 		for (int i = 0; i < dsq->game->paths.size(); i++)
 		{
 			Path *p = dsq->game->paths[i];
 			Vector pos = p->nodes[0].position;
 			if (p && (nocasecmp(p->warpMap, fromScene)==0))
 			{
-				int dist = -1;
+				float dist = -1;
 				bool go = false;
 				Vector pushOut;
 				switch(fromWarpType)
@@ -6795,7 +6792,7 @@ void Game::applyState()
 					{
 						debugLog(p->warpMap + ": warpType is wonky");
 					}
-					else if ((dist < smallestDist || smallestDist == -1))
+					else if (dist < smallestDist)
 					{
 						smallestDist = dist;
 						closest = p;
@@ -8332,9 +8329,9 @@ Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Entity *circle)
 	return collideSkeletalVsCircle(skeletal, pos, circle->collideRadius);
 }
 
-Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, int radius)
+Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, float radius)
 {
-	//int smallestDist = -1;
+	//float smallestDist = HUGE_VALF;
 	Bone *closest = 0;
 	for (int i = 0; i < skeletal->skeletalSprite.bones.size(); i++)
 	{
@@ -8342,7 +8339,7 @@ Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, in
 		/*
 		int checkRadius = sqr(radius+b->collisionMaskRadius);
 		Vector bonePos = b->getWorldCollidePosition();
-		int dist = (bonePos - pos).getSquaredLength2D();
+		float dist = (bonePos - pos).getSquaredLength2D();
 		*/
 
 		// MULTIPLE CIRCLES METHOD
@@ -8368,7 +8365,7 @@ Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, in
 		{
 			if (dist < checkRadius)
 			{
-				if (smallestDist == -1 || dist < smallestDist)
+				if (dist < smallestDist)
 				{
 					closest = b;
 					smallestDist = dist;
@@ -8380,7 +8377,7 @@ Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, in
 	return closest;
 }
 
-bool Game::collideCircleVsLine(Entity *ent, Vector start, Vector end, int radius)
+bool Game::collideCircleVsLine(Entity *ent, Vector start, Vector end, float radius)
 {
 	bool collision = false;
 	if (isTouchingLine(start, end, ent->position, radius+ent->collideRadius, &lastCollidePosition))
@@ -8390,7 +8387,7 @@ bool Game::collideCircleVsLine(Entity *ent, Vector start, Vector end, int radius
 	return collision;
 }
 
-bool Game::collideCircleVsLineAngle(Entity *ent, float angle, int startLen, int endLen, int radius, Vector basePos)
+bool Game::collideCircleVsLineAngle(Entity *ent, float angle, float startLen, float endLen, float radius, Vector basePos)
 {
 	bool collision = false;
 	float rads = MathFunctions::toRadians(angle);
@@ -8410,20 +8407,20 @@ bool Game::collideCircleVsLineAngle(Entity *ent, float angle, int startLen, int 
 }
 
 
-Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Vector pos, int radius)
+Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius)
 {
-	int smallestDist = -1;
+	float smallestDist = HUGE_VALF;
 	Bone *closest = 0;
 	if (!(pos - skeletal->position).isLength2DIn(2000)) return 0;
 	for (int i = 0; i < skeletal->skeletalSprite.bones.size(); i++)
 	{
 		Bone *b = skeletal->skeletalSprite.bones[i];
-		int checkRadius = sqr(radius+b->collisionMaskRadius);
-		Vector bonePos = b->getWorldCollidePosition();
-		int dist = (bonePos - pos).getSquaredLength2D();
 
 		if (b->alpha.x == 1 && b->renderQuad)
 		{
+			float checkRadius = sqr(radius+b->collisionMaskRadius);
+			Vector bonePos = b->getWorldCollidePosition();
+			float dist = (bonePos - pos).getSquaredLength2D();
 			// BOUND RECT METHOD
 			if (!b->collisionRects.empty())
 			{
@@ -8454,7 +8451,7 @@ Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Vector pos, int radius)
 			{
 				if (dist < sqr(radius+b->collideRadius))
 				{
-					if (smallestDist == -1 || dist < smallestDist)
+					if (dist < smallestDist)
 					{
 						closest = b;
 						smallestDist = dist;
@@ -8624,7 +8621,7 @@ void Game::handleShotCollisionsHair(Entity *e, int num)
 	}
 }
 
-CollideData Game::collideCircleWithAllEntities(Vector pos, int r, Entity *me, int spellType, bool checkAvatarFlag)
+CollideData Game::collideCircleWithAllEntities(Vector pos, float r, Entity *me, int spellType, bool checkAvatarFlag)
 {
 	CollideData c;
 	//if (me && (checkHitEntitiesFlag && !me->hitEntity)) return 0;
@@ -8641,13 +8638,12 @@ CollideData Game::collideCircleWithAllEntities(Vector pos, int r, Entity *me, in
 				if (spellType == 0)
 				{
 					Bone *closest = 0;
-					int dist = 0;
-					int smallestDist = -1;
+					float smallestDist = HUGE_VALF;
 					for (int i = 0; i < e->skeletalSprite.bones.size(); i++)
 					{
 						Bone *b = e->skeletalSprite.bones[i];
 						Vector bonePos = b->getWorldCollidePosition();
-						dist = (bonePos - pos).getSquaredLength2D();
+						float dist = (bonePos - pos).getSquaredLength2D();
 						if (!b->collisionMask.empty() && b->alpha.x == 1)
 						{
 							if (dist < sqr(r + b->collisionMaskRadius))
@@ -8673,10 +8669,10 @@ CollideData Game::collideCircleWithAllEntities(Vector pos, int r, Entity *me, in
 						else if (b->collideRadius && b->alpha.x == 1)
 						{
 							//Vector bonePos = b->getWorldCollidePosition();
-							//dist = (bonePos - pos).getSquaredLength2D();
+							//float dist = (bonePos - pos).getSquaredLength2D();
 							if (dist < sqr(r+b->collideRadius))
 							{
-								if (smallestDist == -1 || dist < smallestDist)
+								if (dist < smallestDist)
 								{
 									closest = b;
 									smallestDist = dist;
