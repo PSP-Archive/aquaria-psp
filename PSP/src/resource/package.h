@@ -63,6 +63,21 @@ typedef void (*PackageListStartFunc)(PackageModuleInfo *module);
 typedef const char *(*PackageListNextFunc)(PackageModuleInfo *module);
 
 /**
+ * PackageHasPathFunc:  特定のパス名がパッケージファイルの管理下にあるか
+ * どうかを返す。リソースにアクセスする際、パッケージ内でリソースが見つから
+ * ない場合において、物理ファイルシステムにアクセスすべきかどうか判断する
+ * たみに呼び出される。
+ *
+ * 【引　数】module: パッケージモジュール情報ポインタ
+ * 　　　　　  path: チェックするパス名
+ * 【戻り値】0以外＝パス名がパッケージの管理下にあり、物理ファイルシステム
+ * 　　　　　　　　　へのアクセスをするべきでない
+ * 　　　　　　　0＝パス名がパッケージの管理下にはなく、物理ファイルシステム
+ * 　　　　　　　　　へのアクセスをしてもよい
+ */
+typedef int (*PackageHasPathFunc)(PackageModuleInfo *module, const char *path);
+
+/**
  * PackageFileInfoFunc:  指定されたパス名に関する情報を返す。*_ret変数の値は
  * 成功時のみ設定される。
  *
@@ -112,6 +127,7 @@ struct PackageModuleInfo_ {
     PackageCleanupFunc cleanup;
     PackageListStartFunc list_files_start;
     PackageListNextFunc list_files_next;
+    PackageHasPathFunc has_path; // NULL可（NULLの場合、戻り値が0以外とみなす）
     PackageFileInfoFunc file_info;
     PackageDecompressFunc decompress;
 

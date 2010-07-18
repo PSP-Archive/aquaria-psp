@@ -280,6 +280,16 @@ static int package_pkg_decompress(PackageModuleInfo *module,
 
 static PackageFile aquaria_pkg = {.pathname = "aquaria.dat"};
 
+/* MOD対策（_modsがパッケージに入らないため） */
+static int package_aquaria_has_path(PackageModuleInfo *module, const char *path)
+{
+    PRECOND_SOFT(path != NULL, return 0);
+    while (strncmp(path, "./", 2) == 0) {
+        path += 2;
+    }
+    return strnicmp(path, "_mods/", 6) != 0;
+}
+
 /*-----------------------------------------------------------------------*/
 
 PackageModuleInfo package_info_aquaria = {
@@ -288,6 +298,7 @@ PackageModuleInfo package_info_aquaria = {
     .cleanup          = package_pkg_cleanup,
     .list_files_start = package_pkg_list_files_start,
     .list_files_next  = package_pkg_list_files_next,
+    .has_path         = package_aquaria_has_path,
     .file_info        = package_pkg_file_info,
     .decompress       = package_pkg_decompress,
     .module_data      = &aquaria_pkg,

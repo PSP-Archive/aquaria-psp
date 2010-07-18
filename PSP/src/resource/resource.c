@@ -413,16 +413,21 @@ int resource_exists(const char *path)
         SysFile *fp;
         uint32_t pos, len, size;
         int compressed;
-        return (*pkginfo->file_info)(pkginfo, path, &fp, &pos, &len,
-                                     &compressed, &size);
-    } else {
-        SysFile *fp = sys_file_open(path);
-        if (fp) {
-            sys_file_close(fp);
+        if ((*pkginfo->file_info)(pkginfo, path, &fp, &pos, &len,
+                                  &compressed, &size)) {
             return 1;
-        } else {
+        }
+        if (!pkginfo->has_path || (*pkginfo->has_path)(pkginfo, path)) {
             return 0;
         }
+    }
+
+    SysFile *fp = sys_file_open(path);
+    if (fp) {
+        sys_file_close(fp);
+        return 1;
+    } else {
+        return 0;
     }
 }
 
@@ -1431,7 +1436,7 @@ static int load_from_package(ResourceInfo *resinfo, const char *path
     int compressed;
     if (!(*pkginfo->file_info)(pkginfo, path, &fp, &pos, &len,
                                &compressed, &size)) {
-        if (pkginfo->prefixlen == 0) {
+        if (pkginfo->has_path && !(*pkginfo->has_path)(pkginfo, path)) {
             return 0;  // 通常のファイルとして存在するかもしれない
         }
         return -1;  // パッケージプレフィックスが一致するので、確実に存在しない
