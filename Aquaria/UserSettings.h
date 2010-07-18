@@ -174,4 +174,10 @@ public:
 	void load(bool doApply=true, const std::string &overrideFile="");
 	void save();
 	void apply();
+
+private:
+#ifdef BBGE_BUILD_PSP
+	// Mirror of current file data (so we know if we can skip saving)
+	std::string currentData;
+#endif
 };

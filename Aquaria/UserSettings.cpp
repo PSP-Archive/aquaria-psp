@@ -266,19 +266,29 @@ void UserSettings::save()
 	TiXmlPrinter printer;
 	printer.SetIndent("\t");
 	doc.Accept(&printer);
-	unsigned long icon0Size = 0;
-	char *icon0 = readFile("ICON0.PNG", &icon0Size);
-	if (savefile_save(SAVE_FILE_CONFIG,
-			printer.CStr(), printer.Str().length(),
-			icon0, icon0Size, "Aquaria System Data",
-			"System data used by Aquaria.  Deleting this"
-			" file will reset all options to their defaults."))
+	std::string data = printer.Str();
+	// If the XML data is identical to what's already in the file,
+	// skip saving so we don't waste a whole second doing the save.
+	if (data != currentData)
 	{
-		while (!savefile_status(NULL)) {
-			sys_time_delay(0.01);
+		unsigned long icon0Size = 0;
+		char *icon0 = readFile("ICON0.PNG", &icon0Size);
+		if (savefile_save(SAVE_FILE_CONFIG,
+				printer.CStr(), printer.Str().length(),
+				icon0, icon0Size, "Aquaria System Data",
+				"System data used by Aquaria.  Deleting this"
+				" file will reset all options to their defaults."))
+		{
+			int32_t succeeded;
+			while (!savefile_status(&succeeded))
+			{
+				sys_time_delay(0.01);
+			}
+			if (succeeded)
+				currentData = data;
 		}
+		delete[] icon0;
 	}
-	delete[] icon0;
 #endif
 
 	//clearInputCodeMap();
@@ -393,10 +403,16 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 #elif defined(BBGE_BUILD_PSP)
 	bool loaded = false;
 	if (!overrideFile.empty())
+	{
 		loaded = doc.LoadFile(overrideFile);
+		currentData = "";
+	}
 # ifdef AQUARIA_ALLOW_PSP_SETTINGS_OVERRIDE
 	if (!loaded)
+	{
 		loaded = doc.LoadFile(userSettingsFilename);
+		currentData = "";
+	}
 # endif
 	if (!loaded)
 	{
@@ -411,12 +427,13 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 			if (bytesRead > 0)
 			{
 				buffer[bytesRead] = 0;
+				currentData = buffer;
 				doc.Parse(buffer);
 				loaded = true;
 			}
 		}
 		delete[] buffer;
-		}
+	}
 #endif
 	
 	version.settingsVersion = 0;
