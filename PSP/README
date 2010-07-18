@@ -141,7 +141,7 @@ executed, pass "V=1" on the "make" command line.
 If you get a "multiple definition of 'strtof'" error during the final
 link, either:
     1) do a "make clean", then re-run "make" with "CAN_OVERRIDE_STRTOF=0"
-       on the command line; or
+       on the command line (this will reduce performance); or
     2) patch the Newlib C library to allow the strtof() function to be
        overridden, rebuild and reinstall newlib, then run "make" to
        repeat the final link of Aquaria.

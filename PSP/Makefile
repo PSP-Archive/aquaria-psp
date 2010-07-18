@@ -51,8 +51,13 @@ USE_INSTALLED_LUA = 1
 # through 1.16.0), but can be fixed by adding __attribute__((weak)) to the
 # strtof() definition in newlib/libc/stdlib/strtod.c.
 #
-# If you set this and attempt to build with a library that does not allow
-# overriding, you'll get "multiple definition" errors during the final link.
+# If you set this to 1 and attempt to build with a library that does not
+# allow overriding, you'll get "multiple definition" errors during the
+# final link.
+#
+# Setting this to 0 will cause the build to use the standard library's
+# version of strtof().  For Newlib, this is significantly slower due to
+# the function's internal use of double-precision floating point values.
 
 CAN_OVERRIDE_STRTOF = 1
 
@@ -61,7 +66,7 @@ CAN_OVERRIDE_STRTOF = 1
 # WARNINGS_AS_ERRORS:  If set to 1, the source code will be compiled with
 # -Werror to cause the build to abort if a warning is detected.
 
-WARNINGS_AS_ERRORS = 1
+WARNINGS_AS_ERRORS = 0
 
 #-------------------------------------
 
