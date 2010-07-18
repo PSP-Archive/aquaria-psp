@@ -32,7 +32,7 @@ static jmp_buf png_jmpbuf;
  * current Mercurial revision, which should be defined on the compilation
  * command line with e.g. -DHG_REVISION=\"revision\" (for GCC -- note the
  * backslashes!), to form the final version string. */
-#define VERSION  "1.0"
+#define VERSION  "1.1"
 
 #ifndef HG_REVISION
 # error Define HG_REVISION on the compilation command line.
@@ -62,6 +62,9 @@ static int in_build = 0;
 /* Flag: Is the build paused? */
 static int paused = 0;
 
+/* Current data filename for showing in the build frame. */
+static const char *current_file = NULL;
+
 /*-----------------------------------------------------------------------*/
 
 /* Local function declarations. */
@@ -87,6 +90,7 @@ static void uicb_button_build_gendata(void);
 static void uicb_button_build_reuse(void);
 static void uicb_button_pause(GtkWidget *widget);
 static void uicb_button_abort(void);
+static void uicb_toggle_hide_filenames(void);
 
 static void generate_data(const char *in_path, const char *out_path,
                           double progress_min, double progress_max);
@@ -106,6 +110,8 @@ static void build_write_file(const char *directory, const char *filename,
                              const void *contents, long length);
 static void build_report_error(const char *path, int is_write,
                                const GError *error);
+
+static void show_current_filename(void);
 
 /*************************************************************************/
 /************************** Program entry point **************************/
@@ -310,6 +316,7 @@ static void ui_init_connect_callback(
         {"uicb_button_build_reuse",     uicb_button_build_reuse},
         {"uicb_button_pause",           uicb_button_pause},
         {"uicb_button_abort",           uicb_button_abort},
+        {"uicb_toggle_hide_filenames",  uicb_toggle_hide_filenames},
     };
 
     unsigned int i;
@@ -627,10 +634,10 @@ static void uicb_button_build_gendata(void)
     gtk_widget_hide(ui_get_widget("frame_reuse"));
     gtk_widget_hide(ui_get_widget("frame_about"));
     gtk_widget_show(ui_get_widget("frame_build"));
-    gtk_widget_set_sensitive(ui_get_widget("label_build_file_title"), TRUE);
-    gtk_widget_set_sensitive(ui_get_widget("label_build_file"), TRUE);
-    gtk_widget_set_sensitive(ui_get_widget("label_build_count_title"), TRUE);
-    gtk_widget_set_sensitive(ui_get_widget("label_build_count"), TRUE);
+    gtk_widget_set_sensitive(ui_get_widget("label_build_file_title"), FALSE);
+    gtk_widget_set_sensitive(ui_get_widget("label_build_file"), FALSE);
+    gtk_widget_set_sensitive(ui_get_widget("label_build_count_title"), FALSE);
+    gtk_widget_set_sensitive(ui_get_widget("label_build_count"), FALSE);
 
     in_build = 1;
     generate_data(path_pcdata, path_pspout, 0.0, 0.985);
@@ -652,6 +659,7 @@ static void uicb_button_build_gendata(void)
     gtk_progress_bar_set_text(
         GTK_PROGRESS_BAR(ui_get_widget("progress_build")), "Finished!"
     );
+    gtk_widget_set_sensitive(ui_get_widget("check_hide_filenames"), FALSE);
     gtk_toggle_button_set_active(
         GTK_TOGGLE_BUTTON(ui_get_widget("button_build_pause")), FALSE
     );
@@ -678,10 +686,10 @@ static void uicb_button_build_reuse(void)
     gtk_widget_hide(ui_get_widget("frame_reuse"));
     gtk_widget_hide(ui_get_widget("frame_about"));
     gtk_widget_show(ui_get_widget("frame_build"));
-    gtk_widget_set_sensitive(ui_get_widget("label_build_file_title"), TRUE);
-    gtk_widget_set_sensitive(ui_get_widget("label_build_file"), TRUE);
-    gtk_widget_set_sensitive(ui_get_widget("label_build_count_title"), TRUE);
-    gtk_widget_set_sensitive(ui_get_widget("label_build_count"), TRUE);
+    gtk_widget_set_sensitive(ui_get_widget("label_build_file_title"), FALSE);
+    gtk_widget_set_sensitive(ui_get_widget("label_build_file"), FALSE);
+    gtk_widget_set_sensitive(ui_get_widget("label_build_count_title"), FALSE);
+    gtk_widget_set_sensitive(ui_get_widget("label_build_count"), FALSE);
 
     in_build = 1;
     build_eboot(path_pspin, path_gameout);
@@ -702,6 +710,7 @@ static void uicb_button_build_reuse(void)
     gtk_progress_bar_set_text(
         GTK_PROGRESS_BAR(ui_get_widget("progress_build")), "Finished!"
     );
+    gtk_widget_set_sensitive(ui_get_widget("check_hide_filenames"), FALSE);
     gtk_toggle_button_set_active(
         GTK_TOGGLE_BUTTON(ui_get_widget("button_build_pause")), FALSE
     );
@@ -736,6 +745,17 @@ static void uicb_button_abort(void)
     if (ui_show_message("message_abort_check", ui_get_widget("main_window"))) {
         gtk_main_quit();
     }
+}
+
+/*-----------------------------------------------------------------------*/
+
+/**
+ * uicb_button_abort:  Callback for the build frame "hide filenames"
+ * checkbox.
+ */
+static void uicb_toggle_hide_filenames(void)
+{
+    show_current_filename();
 }
 
 /*************************************************************************/
@@ -863,15 +883,13 @@ static void generate_data(const char *in_path, const char *out_path,
         }
     }
 
-    gtk_widget_set_sensitive(ui_get_widget("label_build_file_title"), TRUE);
-    gtk_widget_set_sensitive(ui_get_widget("label_build_file"), TRUE);
     gtk_widget_set_sensitive(ui_get_widget("label_build_count_title"), TRUE);
     gtk_widget_set_sensitive(ui_get_widget("label_build_count"), TRUE);
 
     bdone_png = bdone_ogg = bdone_other = 0;
     for (i = 0; i < nfiles; i++) {
-        gtk_label_set_text(GTK_LABEL(ui_get_widget("label_build_file")),
-                           filelist[i].path);
+        current_file = filelist[i].path;
+        show_current_filename();
         char countbuf[32];
         snprintf(countbuf, sizeof(countbuf), "%u/%u", i+1, nfiles);
         gtk_label_set_text(GTK_LABEL(ui_get_widget("label_build_count")),
@@ -1841,10 +1859,8 @@ static void build_eboot(const char *in_path, const char *out_path)
 
     gtk_label_set_text(GTK_LABEL(ui_get_widget("label_build_status")),
                        "Building Aquaria for PSP...");
-    gtk_label_set_text(GTK_LABEL(ui_get_widget("label_build_file")),
-                       "EBOOT.PBP");
-    gtk_widget_set_sensitive(ui_get_widget("label_build_file_title"), TRUE);
-    gtk_widget_set_sensitive(ui_get_widget("label_build_file"), TRUE);
+    current_file = "EBOOT.PBP";
+    show_current_filename();
     gtk_label_set_text(GTK_LABEL(ui_get_widget("label_build_count")), "---");
     gtk_widget_set_sensitive(ui_get_widget("label_build_count_title"), FALSE);
     gtk_widget_set_sensitive(ui_get_widget("label_build_count"), FALSE);
@@ -2114,14 +2130,12 @@ static void build_package(const char *in_path, const char *out_path,
      * (4) Copy all files' data into the package file.
      */
 
-    gtk_widget_set_sensitive(ui_get_widget("label_build_file_title"), TRUE);
-    gtk_widget_set_sensitive(ui_get_widget("label_build_file"), TRUE);
     gtk_widget_set_sensitive(ui_get_widget("label_build_count_title"), TRUE);
     gtk_widget_set_sensitive(ui_get_widget("label_build_count"), TRUE);
 
     for (i = 0; i < nfiles; i++) {
-        gtk_label_set_text(GTK_LABEL(ui_get_widget("label_build_file")),
-                           filelist[i].pathname);
+        current_file = filelist[i].pathname;
+        show_current_filename();
         char countbuf[32];
         snprintf(countbuf, sizeof(countbuf), "%u/%u", i+1, nfiles);
         gtk_label_set_text(GTK_LABEL(ui_get_widget("label_build_count")),
@@ -2491,6 +2505,37 @@ static void build_report_error(const char *path, int is_write,
         default_secondary_text ? default_secondary_text : ""
     );
     g_free(default_secondary_text);
+}
+
+/*************************************************************************/
+
+/**
+ * show_current_file:  Show the current filename in the build frame, unless
+ * the "hide filenames" checkbox is checked, in which case the filename
+ * will be hidden.
+ *
+ * [Parameters]
+ *     None
+ * [Return value]
+ *     None
+ */
+static void show_current_filename(void)
+{
+    if (!in_build) {
+        return;
+    }
+
+    GtkWidget *checkbox = ui_get_widget("check_hide_filenames");
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox))) {
+        gtk_label_set_text(GTK_LABEL(ui_get_widget("label_build_file")), "---");
+        gtk_widget_set_sensitive(ui_get_widget("label_build_file_title"),FALSE);
+        gtk_widget_set_sensitive(ui_get_widget("label_build_file"), FALSE);
+    } else {
+        gtk_label_set_text(GTK_LABEL(ui_get_widget("label_build_file")),
+                           current_file);
+        gtk_widget_set_sensitive(ui_get_widget("label_build_file_title"), TRUE);
+        gtk_widget_set_sensitive(ui_get_widget("label_build_file"), TRUE);
+    }
 }
 
 /*************************************************************************/
