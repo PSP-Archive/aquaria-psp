@@ -4900,12 +4900,11 @@ bool Game::loadSceneXML(std::string scene)
 
 		for (int i = 0; i < num; i++)
 		{
-			SchoolFish *s = new SchoolFish;
+			SchoolFish *s = new SchoolFish(texture);
 			{
 				s->position = Vector(x+i*5,y+i*5);
 				s->startPos = s->position;
 				s->addToFlock(id);
-				s->setTexture(texture);
 				if (range != 0)
 					s->range = range;
 				if (maxSpeed != 0)
