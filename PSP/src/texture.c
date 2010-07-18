@@ -636,6 +636,9 @@ static Texture *texture_parse_png(uint8_t *data, uint32_t len,
 
     png_read_end(png, NULL);
     png_destroy_read_struct(&png, &info, NULL);
+    if (reuse) {
+        mem_free(data);
+    }
     return texture;
 }
 

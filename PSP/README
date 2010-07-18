@@ -185,13 +185,19 @@ sections below for important notes regarding the data files.
 
 Converting data files
 ---------------------
-While Aquaria for PSP will run with the stock data files distributed
+While Aquaria for PSP will run(*) with the stock data files distributed
 with the commercial version of the game, it will run very slowly.  This
 is due to the significant cost of decompressing and shrinking (because
 the PSP can't handle textures larger than 512x512 pixels) all of the PNG
 textures on load, and the extreme effort required to decode Ogg Vorbis
 audio on the PSP (a single stereo stream consumes around 50% CPU time,
 even at the highest possible CPU clock speed).
+
+(*) Only in the sense that the program will start and proceed as far as
+    the title screen.  Even after shrinking, PNG textures require 4x as
+    much memory as the custom texture format described below, and
+    current PSP models do not have enough memory to hold all of the
+    textures required for gameplay.
 
 To address this problem, there are two tools in the "tools" subdirectory:
 "pngtotex" and "oggtomp3".  The former converts PNG textures to half-size,
