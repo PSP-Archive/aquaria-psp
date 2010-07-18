@@ -775,7 +775,6 @@ public:
 	Path *getNearestPath(const Vector &pos, const std::string &name="", const Path *ignore=0);
 	Path *getNearestPath(const Vector &pos, PathType pathType=PATH_NONE);
 	Path *getNearestPath(Path *p, std::string name);
-	void moveMouseToPathNode(std::string name);
 
 	std::string avatarTransit;
 	SceneEditor sceneEditor;

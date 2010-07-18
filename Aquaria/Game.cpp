@@ -3127,20 +3127,6 @@ Path *Game::getPathByName(std::string name)
 	return 0;
 }
 
-// Used to return the mouse pointer to the position of a menu item when
-// closing a submenu in keyboard or joystick mode.  (See FIXME note in
-// DSQ::doModSelect().)
-void Game::moveMouseToPathNode(std::string name)
-{
-	Path *p = dsq->game->getPathByName(name);
-	if (p)
-	{
-		// FIXME: Is there an exported C++ function equivalent to
-		// the toWindowFromWorld() used by Lua scripts?  --achurch
-		core->setMousePosition((p->nodes[0].position - core->screenCenter) * core->globalScale.x + Vector(400,300-20));
-	}
-}
-
 
 void Game::addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y, int l1, int l2, int l3)
 {
@@ -9122,10 +9108,6 @@ void Game::onOptionsSave()
 		if (optionsOnly)
 		{
 			hideInGameMenu();
-			// FIXME: Hack for title screen, as in DSQ::doModSelect().
-			if (dsq->inputMode != INPUT_MOUSE) {
-				moveMouseToPathNode("title_options");
-			}
 		}
 		else
 		{
@@ -9161,10 +9143,6 @@ void Game::onOptionsCancel()
 		if (optionsOnly)
 		{
 			hideInGameMenu();
-			// FIXME: Hack for title screen, as in DSQ::doModSelect().
-			if (dsq->inputMode != INPUT_MOUSE) {
-				moveMouseToPathNode("title_options");
-			}
 		}
 		else
 		{

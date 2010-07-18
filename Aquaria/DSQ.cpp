@@ -2585,12 +2585,6 @@ void DSQ::doLoadMenu()
 		//loaded = false;
 		clearSaveSlots(true);
 	}
-	// FIXME: Hack for title screen, as in doModSelect().  Be careful:
-	// if an in-game "load" command is ever added, this will need a way
-	// to distinguish whether the caller is the title screen or not.
-	if (inputMode != INPUT_MOUSE) {
-		dsq->game->moveMouseToPathNode("title_continue");
-	}
 }
 
 void DSQ::doSavePoint(const Vector &position)
@@ -2774,13 +2768,6 @@ void DSQ::doModSelect()
 	modIsSelected = false;
 
 	resetTimer();
-
-	// FIXME: It would be cleaner to put this in the script, but
-	// there's currently no way to retrieve the input mode from a
-	// script.  --achurch
-	if (inputMode != INPUT_MOUSE) {
-		dsq->game->moveMouseToPathNode("title_mods");
-	}
 }
 
 void DSQ::createModSelector()
@@ -3500,11 +3487,6 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 		ret = false;
 
 	AquariaGuiElement::currentGuiInputLevel = 0;
-
-	// FIXME: Hack for title screen quit option, as in doModSelect().
-	if (image == "exit" && inputMode != INPUT_MOUSE) {
-		dsq->game->moveMouseToPathNode("title_quit");
-	}
 
 	return ret;
 }
