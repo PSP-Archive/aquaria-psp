@@ -33,6 +33,10 @@ function activate(me)
 	
 	if confirm("", "replayintro") then
 		jumpState("intro")
+	else
+		if getInputMode() ~= INPUT_MOUSE then
+			setMousePos(toWindowFromWorld(node_x(me), node_y(me)))
+		end
 	end
 end
 

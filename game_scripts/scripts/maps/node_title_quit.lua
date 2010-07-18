@@ -50,7 +50,11 @@ function activate(me)
 	if confirm("", "exit") then
 		doQuit = true
 	end
-
+	
+	if getInputMode() ~= INPUT_MOUSE then
+		setMousePos(toWindowFromWorld(node_x(me), node_y(me)))
+	end
+	
 	setNodeToActivate(0)
 	stopCursorGlow()
 	
