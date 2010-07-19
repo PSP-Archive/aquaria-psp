@@ -2919,7 +2919,7 @@ void Core::main(float runTime)
 	// platforms as well?  --achurch)
 	//curTime = lastTime = sys_time_now();
 	curTime = sys_time_now();
-	if (curTime - lastTime > 0.1)
+	if (curTime - lastTime > 0.1f)
 		lastTime = curTime;
 #endif
 
