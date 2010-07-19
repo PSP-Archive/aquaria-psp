@@ -100,6 +100,12 @@ public:
 
 	virtual void update(float dt);
 	bool isDead() const {return _dead;}
+	bool isHidden() const {return _hidden || (parent && parent->isHidden());}
+
+	// Set whether the object is hidden.  If hidden, no updates (except
+	// lifetime checks) or render operations will be performed, and no
+	// child objects will be updated or rendered.
+	void setHidden(bool hidden) {_hidden = hidden;}
 
 	void setLife(float life)
 	{
@@ -335,6 +341,7 @@ protected:
 
 	int idx;
 	bool _dead;
+	bool _hidden;
 	bool _fv, _fh;
 	//bool rotateFirst;
 	RenderObject *parent;

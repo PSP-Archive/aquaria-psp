@@ -198,6 +198,7 @@ RenderObject::RenderObject()
 	life = maxLife = 1;
 	decayRate = 0;
 	_dead = false;
+	_hidden = false;
 	fadeAlphaWithLife = false;
 	blendType = BLEND_DEFAULT;
 	//lifeAlphaFadeMultiplier = 1;
@@ -517,6 +518,8 @@ bool RenderObject::hasRenderPass(const int pass)
 
 void RenderObject::render()
 {
+	if (isHidden()) return;
+
 	/// new (breaks anything?)
 	if (alpha.x == 0 || alphaMod == 0) return;
 
@@ -1182,6 +1185,9 @@ void RenderObject::update(float dt)
 		//dt *= updateMultiplier;
 		onUpdate(dt);
 
+		if (isHidden())
+			return;
+
 		for (Children::iterator i = children.begin(); i != children.end(); i++)
 		{
 			if ((*i)->updateAfterParent && (((*i)->pm == PM_POINTER) || ((*i)->pm == PM_STATIC)))
@@ -1276,6 +1282,10 @@ void RenderObject::onUpdate(float dt)
 	if (isDead()) return;
 	//collisionShape.updatePosition(position);
 	updateLife(dt);
+
+	// FIXME: We might not need to do lifetime checks either; I just
+	// left that above for safety since I'm not certain.  --achurch
+	if (isHidden()) return;
 
 	/*
 	width.update(dt);

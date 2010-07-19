@@ -168,20 +168,18 @@ void AquariaGuiElement::updateMovement(float dt)
 			if (!gui)
 			{
 				debugLog("updating closest");
-				int smallDist = -1,dist=0;
+				int smallDist = -1, dist = 0;
 
-				AquariaGuiElement *gui=0, *closest=0;
-				Vector p1, p2;
-				int go=0;
+				AquariaGuiElement *gui = 0, *closest = 0;
 				int ch = 64;
 				for (GuiElements::iterator i = guiElements.begin(); i != guiElements.end(); i++)
 				{
 					gui = (*i);
 					if (gui != this && gui->isGuiVisible() && gui->canDirMove)
 					{
-						go = 0;
-						p1 = getGuiPosition();
-						p2 = gui->getGuiPosition();
+						int go = 0;
+						Vector p1 = getGuiPosition();
+						Vector p2 = gui->getGuiPosition();
 
 						if (dir == DIR_DOWN)
 						{
@@ -266,7 +264,7 @@ Vector AquariaGuiQuad::getGuiPosition()
 
 bool AquariaGuiQuad::isGuiVisible()
 {
-	return alpha.x > 0 && alphaMod > 0 && renderQuad;
+	return !isHidden() && alpha.x > 0 && alphaMod > 0 && renderQuad;
 }
 
 void AquariaGuiQuad::update(float dt)
@@ -321,7 +319,7 @@ Vector AquariaSlider::getGuiPosition()
 
 bool AquariaSlider::isGuiVisible()
 {
-	return alpha.x > 0 && alphaMod > 0;
+	return !isHidden() && alpha.x > 0 && alphaMod > 0;
 }
 
 AquariaCheckBox::AquariaCheckBox()
@@ -355,7 +353,7 @@ Vector AquariaCheckBox::getGuiPosition()
 
 bool AquariaCheckBox::isGuiVisible()
 {
-	return alpha.x > 0 && alphaMod > 0;
+	return !isHidden() && alpha.x > 0 && alphaMod > 0;
 }
 
 
@@ -417,7 +415,7 @@ Vector AquariaKeyConfig::getGuiPosition()
 
 bool AquariaKeyConfig::isGuiVisible()
 {
-	return alpha.x > 0 && alphaMod > 0;
+	return !isHidden() && alpha.x > 0 && alphaMod > 0;
 }
 
 void AquariaKeyConfig::toggleEnterKey(int on)
@@ -761,7 +759,7 @@ Vector AquariaMenuItem::getGuiPosition()
 
 bool AquariaMenuItem::isGuiVisible()
 {
-	return alpha.x > 0 && alphaMod > 0;
+	return !isHidden() && alpha.x > 0 && alphaMod > 0;
 }
 
 void AquariaMenuItem::useSound(const std::string &tex)
