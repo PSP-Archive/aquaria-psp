@@ -236,7 +236,8 @@ void stringToLowerUserData(std::string &s)
 	}
 }
 
-int nocasecmp(const std::string & s1, const std::string& s2)
+#if !defined(BBGE_BUILD_UNIX)
+int nocasecmp(const std::string &s1, const std::string &s2)
 {
 	std::string::const_iterator it1=s1.begin();
 	std::string::const_iterator it2=s2.begin();
@@ -257,6 +258,7 @@ int nocasecmp(const std::string & s1, const std::string& s2)
       return 0;
     return (size1<size2) ? -1 : 1;
 }
+#endif  // #if !BBGE_BUILD_UNIX
 
 std::string upperCase(const std::string &s1)
 {

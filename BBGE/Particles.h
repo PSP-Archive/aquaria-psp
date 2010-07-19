@@ -132,7 +132,7 @@ public:
 	void start();
 	void stop();
 
-	bool isEmpty();
+	bool isEmpty() const {return particles.empty();}
 
 
 	Vector getSpawnPosition();
@@ -158,7 +158,7 @@ public:
 	void bankLoad(const std::string &name, const std::string &path);
 	void start();
 	void stop();
-	bool isRunning();
+	bool isRunning() const {return running;}
 	void killParticleEffect();
 	Emitter *addNewEmitter();
 	void clearEmitters();

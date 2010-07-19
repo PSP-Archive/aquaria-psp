@@ -95,12 +95,14 @@ public:
 	void clean();
 	void setActionMapperCallback(ActionMapper *actionMapperCallback, int actionValue, int stateToCall=0);
 protected:
-	EventManage evm;
 	Event *e;
+	unsigned char _evm;  // Keep the structure size down.
+	inline EventManage evm() const {return EventManage(_evm);}
+
+	bool stateToCall;
 
 	ActionMapper *actionMapperCallback;
 	int actionValue;
-	bool stateToCall;
 };
 
 

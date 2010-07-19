@@ -277,11 +277,11 @@ void Quad::initQuad()
 	renderBorder = false;
 	renderCenter = true;
 	width = 2; height = 2;
-	llalpha = Vector(1);
-	lralpha = Vector(1);
-	ulalpha = Vector(1);
-	uralpha = Vector(1);
-	oriented = false;
+	//llalpha = Vector(1);
+	//lralpha = Vector(1);
+	//ulalpha = Vector(1);
+	//uralpha = Vector(1);
+	//oriented = false;
 	upperLeftTextureCoordinates = Vector(0,0);
 	lowerRightTextureCoordinates = Vector(1,1);
 	renderQuad = true;
@@ -320,9 +320,8 @@ int Quad::getCullRadius()
 {
 	if (overrideCullRadius)
 		return overrideCullRadius;
-	int w = (int(width))*scale.x+1;
-	int h = (int(height))*scale.y+1;
-
+	int w = int(width*scale.x)+1;
+	int h = int(height*scale.y)+1;
 	return w + h;
 }
 
@@ -381,16 +380,6 @@ bool Quad::isCoordinateInsideWorldRect(const Vector &coord, int w, int h)
 	return false;
 }
 
-int Quad::getWidth()
-{
-	return width;
-}
-
-int Quad::getHeight()
-{
-	return height;
-}
-
 void Quad::updateGrid(float dt)
 {
 	//if (xDivs == 0 && yDivs == 0) return;
@@ -403,20 +392,22 @@ void Quad::updateGrid(float dt)
 		int hx = xDivs/2;
 		for (int x = 0; x < xDivs; x++)
 		{
+			float yoffset = x * drawGridOffsetY;
+			float addY = 0;
+			if (drawGridModY != 0)
+				addY = cosf(gridTimer+yoffset)*drawGridModY;
 			for (int y = 0; y < yDivs; y++)
 			{
 				float xoffset = y * drawGridOffsetX;
-				float yoffset = x * drawGridOffsetY;
 				if (drawGridModX != 0)
 				{
-					float add = (sinf(gridTimer+xoffset)*drawGridModX);
+					float addX = (sinf(gridTimer+xoffset)*drawGridModX);
 					if (drawGridOut && x < hx)
-						drawGrid[x][y].x += add;
+						drawGrid[x][y].x += addX;
 					else
-						drawGrid[x][y].x -= add;
+						drawGrid[x][y].x -= addX;
 				}
-				if (drawGridModY != 0)
-					drawGrid[x][y].y += cosf(gridTimer+yoffset)*drawGridModY;
+				drawGrid[x][y].y += addY;
 			}
 		}
 	}
@@ -424,43 +415,34 @@ void Quad::updateGrid(float dt)
 
 void Quad::renderGrid()
 {
+	if (xDivs < 2 || yDivs < 2)
+		return;
+
 #ifdef BBGE_BUILD_OPENGL
-	float percentX, percentY;
-	float baseX, baseY;
-	{
-		//if (this->texture)
-		if (false)
-		{
-			//percentX = (this->getWidth()*scale.x)/this->texture->width;
-			//percentY = (this->getHeight()*scale.y)/this->texture->height;
+	const float percentX = fabsf(this->lowerRightTextureCoordinates.x - this->upperLeftTextureCoordinates.x);
+	const float percentY = fabsf(this->upperLeftTextureCoordinates.y - this->lowerRightTextureCoordinates.y);
 
-		}
-		else
-		{
-			percentX = fabsf(this->lowerRightTextureCoordinates.x - this->upperLeftTextureCoordinates.x);
-			percentY = fabsf(this->upperLeftTextureCoordinates.y - this->lowerRightTextureCoordinates.y);
-#if defined(BBGE_BUILD_UNIX)
-			if (lowerRightTextureCoordinates.x < upperLeftTextureCoordinates.x)
-				baseX = lowerRightTextureCoordinates.x;
-			else
-				baseX = upperLeftTextureCoordinates.x;
+	const float baseX =
+		(lowerRightTextureCoordinates.x < upperLeftTextureCoordinates.x)
+		? lowerRightTextureCoordinates.x : upperLeftTextureCoordinates.x;
+	const float baseY =
+		(lowerRightTextureCoordinates.y < upperLeftTextureCoordinates.y)
+		? lowerRightTextureCoordinates.y : upperLeftTextureCoordinates.y;
 
-			if (lowerRightTextureCoordinates.y < upperLeftTextureCoordinates.y)
-				baseY = lowerRightTextureCoordinates.y;
-			else
-				baseY = upperLeftTextureCoordinates.y;
-#else
-			baseX = MIN(lowerRightTextureCoordinates.x, upperLeftTextureCoordinates.x);
-			baseY = MIN(lowerRightTextureCoordinates.y, upperLeftTextureCoordinates.y);
-#endif
+	// NOTE: These are used to avoid repeated expensive divide operations,
+	// but they may cause rounding error of around 1 part per million,
+	// which could in theory cause minor graphical glitches with broken
+	// OpenGL implementations.  --achurch
+	const float incX = percentX / (float)(xDivs-1);
+	const float incY = percentY / (float)(yDivs-1);
 
-		}
-		//percentX = (float)screenWidth/(float)textureWidth;
-		//percentY = (float)screenHeight/(float)textureHeight;
-	}
+	const float w = this->getWidth();
+	const float h = this->getHeight();
 
-	int w = this->getWidth();
-	int h = this->getHeight();
+	const float red   = this->color.x;
+	const float green = this->color.y;
+	const float blue  = this->color.z;
+	const float alpha = this->alpha.x * this->alphaMod;
 
 	if (core->mode == Core::MODE_2D)
 	{
@@ -469,37 +451,40 @@ void Quad::renderGrid()
 		glDisable(GL_CULL_FACE);
 		*/
 		glBegin(GL_QUADS);
-		for (int i = 0; i < (xDivs-1); i++)
+		float u0 = baseX;
+		float u1 = u0 + incX;
+		for (int i = 0; i < (xDivs-1); i++, u0 = u1, u1 += incX)
 		{
-			for (int j = 0; j < (yDivs-1); j++)
+			float v0 = 1 - percentY + baseY;
+			float v1 = v0 + incY;
+			for (int j = 0; j < (yDivs-1); j++, v0 = v1, v1 += incY)
 			{
-				if (drawGrid[i][j].z != 0 || drawGrid[i][j+1].z != 0 || drawGrid[i+1][j] != 0 || drawGrid[i+1][j+1] != 0)
+				if (drawGrid[i][j].z != 0 || drawGrid[i][j+1].z != 0 || drawGrid[i+1][j].z != 0 || drawGrid[i+1][j+1].z != 0)
 				{
-					
-					glColor4f(color.x, color.y, color.z, drawGrid[i][j].z*alpha.x*alphaMod);
-					glTexCoord2f((i/(float)(xDivs-1)*percentX)+baseX,  1-((1*percentY-(j)/(float)(yDivs-1)*percentY))+baseY);//*upperLeftTextureCoordinates.y
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,i/(float)(xDivs-1)*percentX,  1*percentY-(j)/(float)(yDivs-1)*percentY);
+
+					glColor4f(red, green, blue, alpha*drawGrid[i][j].z);
+					glTexCoord2f(u0, v0);
+						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u0-baseX, v0-baseY);
 						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,0);
 					glVertex2f(w*drawGrid[i][j].x,		h*drawGrid[i][j].y);
 					//
-					glColor4f(color.x, color.y, color.z, drawGrid[i][j+1].z*alpha.x*alphaMod);
-					glTexCoord2f((i/(float)(xDivs-1)*percentX)+baseX, 1-((1*percentY-(j+1)/(float)(yDivs-1)*percentY))+baseY);//*lowerRightTextureCoordinates.y
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,i/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
+					glColor4f(red, green, blue, alpha*drawGrid[i][j+1].z);
+					glTexCoord2f(u0, v1);
+						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u0-baseX, v1-baseY);
 						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,(float)(screenHeight/(yDivs-1))/16);
 					glVertex2f(w*drawGrid[i][j+1].x,		h*drawGrid[i][j+1].y);
 					//
-					glColor4f(color.x, color.y, color.z, drawGrid[i+1][j+1].z*alpha.x*alphaMod);
-					glTexCoord2f(((i+1)/(float)(xDivs-1)*percentX)+baseX, 1-((1*percentY-(j+1)/(float)(yDivs-1)*percentY))+baseY);//*lowerRightTextureCoordinates.y
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,(i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
+					glColor4f(red, green, blue, alpha*drawGrid[i+1][j+1].z);
+					glTexCoord2f(u1, v1);
+						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u1-baseX, v1-baseY);
 						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,(float)(screenHeight/(yDivs-1))/16);
 					glVertex2f(w*drawGrid[i+1][j+1].x,	h*drawGrid[i+1][j+1].y);
 					//
-					glColor4f(color.x, color.y, color.z, drawGrid[i+1][j].z*alpha.x*alphaMod);
-					glTexCoord2f(((i+1)/(float)(xDivs-1)*percentX)+baseX, 1-((1*percentY-(j)/(float)(yDivs-1)*percentY))+baseY);	//*upperLeftTextureCoordinates.y
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,(i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j)/(float)(yDivs-1)*percentY);
+					glColor4f(red, green, blue, alpha*drawGrid[i+1][j].z);
+					glTexCoord2f(u1, v0);
+						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u1-baseX, v0-baseY);
 						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,0);
 					glVertex2f(w*drawGrid[i+1][j].x,		h*drawGrid[i+1][j].y);
-				//glEnd();
 				}
 			}
 		}

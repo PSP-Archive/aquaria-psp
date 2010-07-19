@@ -6234,45 +6234,38 @@ luaFunc(ing_hasIET)
 luaFunc(entity_getNearestEntity)
 {
 	Entity *me = entity(L);
-	std::string name;
+	const char *name = 0;
 	if (lua_isstring(L, 2))
-	{
 		name = lua_tostring(L, 2);
-		stringToLower(name);
-	}
 
 	bool nameCheck = true;
-	if (!name.empty() && (name[0] == '!' || name[0] == '~'))
+	if (name && (name[0] == '!' || name[0] == '~'))
 	{
-		name = name.substr(1, name.size());
+		name++;
 		nameCheck = false;
 	}
 
 	int range = lua_tointeger(L, 3);
 	int type = lua_tointeger(L, 4);
 	int damageTarget = lua_tointeger(L, 5);
-	range = sqr(range);
-	Entity *closest=0;
-	float smallestDist = HUGE_VALF;
+	Entity *closest = 0;
+	float smallestDist = range ? sqr(range) : HUGE_VALF;
 	FOR_ENTITIES(i)
 	{
 		Entity *e = *i;
-		if (e != me && e->isPresent())
+		if (e != me && e->isPresent() && e->isNormalLayer())
 		{
-			if (e->isNormalLayer())
+			if (!name || ((nocasecmp(e->name, name)==0) == nameCheck))
 			{
-				if (name.empty() || ((nocasecmp(e->name, name)==0) == nameCheck))
+				if (type == 0 || e->getEntityType() == type)
 				{
-					if (type == 0 || e->getEntityType() == type)
+					if (damageTarget == 0 || e->isDamageTarget((DamageType)damageTarget))
 					{
-						if (damageTarget == 0 || e->isDamageTarget((DamageType)damageTarget))
+						float dist = (me->position - e->position).getSquaredLength2D();
+						if (dist < smallestDist)
 						{
-							float dist = (me->position - e->position).getSquaredLength2D();
-							if ((range == 0 || dist < range) && dist < smallestDist)
-							{
-								smallestDist = dist;
-								closest = e;
-							}
+							smallestDist = dist;
+							closest = e;
 						}
 					}
 				}

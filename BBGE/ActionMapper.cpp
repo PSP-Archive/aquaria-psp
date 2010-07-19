@@ -377,7 +377,7 @@ void ActionMapper::onUpdate (float dt)
 	*/
 	if (cleared) cleared = false;
 	ActionDataSet::iterator i;
-	KeyDownMap deferedKeyDownMap = keyDownMap;
+	KeyDownMap oldKeyDownMap = keyDownMap;
 	for (i = actionData.begin(); i != actionData.end(); ++i)
 	{
 		ButtonList::iterator j;
@@ -390,9 +390,9 @@ void ActionMapper::onUpdate (float dt)
 
 			keyState = getKeyState(k);
 
-			if (keyState != keyDownMap[k])
+			if (keyState != oldKeyDownMap[k])
 			{				
-				deferedKeyDownMap[k] = keyState;
+				keyDownMap[k] = keyState;
 				if (inputEnabled)
 				{
 					ActionData *ad = &(*i);
@@ -412,7 +412,6 @@ void ActionMapper::onUpdate (float dt)
 			}
 		}
 	}
-	keyDownMap = deferedKeyDownMap;
 
 out:
 	inUpdate = false;

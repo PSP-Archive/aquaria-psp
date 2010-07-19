@@ -144,62 +144,67 @@ void Emitter::onUpdate(float dt)
 	}
 	*/
 
-	bool doSpawn = true;
 	if (pe->isRunning() && core->particlesPaused <= data.pauseLevel)
 	{
-		currentSpawn = getSpawnPosition();
-
-		if (lastSpawn.isZero())
-			lastSpawn = currentSpawn;
-
 		if (data.spawnTimeOffset > 0)
 		{
 			data.spawnTimeOffset -= dt;
 			if (data.spawnTimeOffset > 0)
-				doSpawn = false;
+				return;
 		}
 
-		if (doSpawn)
+		int spawnCount;
+		float spawnPerc;
+		if (data.justOne)
 		{
-			if (data.justOne)
+			if (data.didOne)
+				spawnCount = 0;
+			else
+				spawnCount = data.justOne;
+			spawnPerc = 1;
+			data.didOne = 1;
+		}
+		else if (data.useSpawnRate)
+		{
+			spawnCount = 0;
+			spawnPerc = 1;
+			data.counter += dt;
+			while (data.counter > data.spawnRate.x)  // Faster than division
 			{
-				if (!data.didOne)
-				{
-					for (int c = 0; c < data.justOne; c++)
-					{
-						spawnParticle();
-					}
-					data.didOne = 1;
-				}
+				data.counter -= data.spawnRate.x;
+				spawnCount++;
 			}
-			else if (!data.useSpawnRate && data.number.x > 0)
-			{
-				float num = data.number.x * dt;
-				num += data.lastDTDifference;
-				int prts = int(num);
-				data.lastDTDifference = num - float(prts);
+		}
+		else
+		{
+			float num = data.number.x * dt;
+			num += data.lastDTDifference;
+			spawnCount = int(num);
+			data.lastDTDifference = num - float(spawnCount);
+			if (spawnCount > 0)
+				spawnPerc = 1.0f / float(spawnCount);
+		}
 
-				for (int j = 0; j < prts; j++)
-				{
-					spawnParticle(float(j)/float(prts));
-				}
-			}
-			else if (data.useSpawnRate)
-			{
-				data.counter += dt;
-				while (data.counter > data.spawnRate.x)
-				{
-					data.counter -= data.spawnRate.x;
-					spawnParticle();
-				}
-			}
+		if (spawnCount > 0)
+		{
+			// Avoid calling this until we know we actually need it for
+			// generating a particle (it has to apply the matrix chain,
+			// which is slow).
+			currentSpawn = getSpawnPosition();
+			if (lastSpawn.isZero())
+				lastSpawn = currentSpawn;
 
-			data.number.update(dt);
-			data.velocityMagnitude.update(dt);
-			data.spawnOffset.update(dt);
+			for (; spawnCount > 0; spawnCount--)
+			{
+				spawnParticle(spawnPerc);
+			}
 
 			lastSpawn = currentSpawn;
 		}
+
+		data.number.update(dt);
+		data.velocityMagnitude.update(dt);
+		data.spawnOffset.update(dt);
 	}
 }
 
@@ -243,11 +248,6 @@ void Emitter::render()
 	Quad::render();
 }
 
-bool Emitter::isEmpty()
-{
-	return particles.empty();
-}
-
 void Emitter::onRender()
 {
 	BBGE_PROF(Emitter_onRender);
@@ -276,14 +276,10 @@ void Emitter::onRender()
 	float w2 = width*0.5f;
 	float h2 = height*0.5f;
 
-	float x, y;
-
 	if (texture)
 		texture->apply();
 
 
-
-	//glBegin(GL_QUADS);
 
 	if (hasRot)
 	{
@@ -292,8 +288,8 @@ void Emitter::onRender()
 			Particle *p = *i;
 			if (p->active)
 			{
-				x=0;
-				y=0;
+				const float dx = w2 * p->scale.x;
+				const float dy = h2 * p->scale.y;
 
 #ifdef BBGE_BUILD_OPENGL
 				glColor4f(p->color.x, p->color.y, p->color.z, p->alpha.x);
@@ -322,37 +318,37 @@ void Emitter::onRender()
 						
 						glBegin(GL_QUADS);
 							glTexCoord2f(0,1);
-							glVertex2f(x-w2*p->scale.x, y+h2*p->scale.y);
+							glVertex2f(-dx, +dy);
 
 							glTexCoord2f(1,1);
-							glVertex2f(x+w2*p->scale.x, y+h2*p->scale.y);
+							glVertex2f(+dx, +dy);
 
 							glTexCoord2f(1,0);
-							glVertex2f(x+w2*p->scale.x, y-h2*p->scale.y);
+							glVertex2f(+dx, -dy);
 						
 							glTexCoord2f(0,0);
-							glVertex2f(x-w2*p->scale.x, y-h2*p->scale.y);
+							glVertex2f(-dx, -dy);
 						glEnd();
 
 					glPopMatrix();
 				}
 				else
 				{
-					x = p->pos.x;
-					y = p->pos.y;
+					const float x = p->pos.x;
+					const float y = p->pos.y;
 
 					glBegin(GL_QUADS);
 						glTexCoord2f(0,1);
-						glVertex2f(x-w2*p->scale.x, y+h2*p->scale.y);
+						glVertex2f(x-dx, y+dy);
 
 						glTexCoord2f(1,1);
-						glVertex2f(x+w2*p->scale.x, y+h2*p->scale.y);
+						glVertex2f(x+dx, y+dy);
 
 						glTexCoord2f(1,0);
-						glVertex2f(x+w2*p->scale.x, y-h2*p->scale.y);
+						glVertex2f(x+dx, y-dy);
 					
 						glTexCoord2f(0,0);
-						glVertex2f(x-w2*p->scale.x, y-h2*p->scale.y);
+						glVertex2f(x-dx, y-dy);
 					glEnd();
 				}
 #endif
@@ -368,28 +364,29 @@ void Emitter::onRender()
 			Particle *p = *i;
 			if (p->active)
 			{
-				glColor4f(p->color.x, p->color.y, p->color.z, p->alpha.x);
+				const float x = p->pos.x;
+				const float y = p->pos.y;
+				const float dx = w2 * p->scale.x;
+				const float dy = h2 * p->scale.y;
 
-				x = p->pos.x;
-				y = p->pos.y;
+				glColor4f(p->color.x, p->color.y, p->color.z, p->alpha.x);
 	
 				glTexCoord2f(0,1);
-				glVertex2f(x-w2*p->scale.x, y+h2*p->scale.y);
+				glVertex2f(x-dx, y+dy);
 
 				glTexCoord2f(1,1);
-				glVertex2f(x+w2*p->scale.x, y+h2*p->scale.y);
+				glVertex2f(x+dx, y+dy);
 
 				glTexCoord2f(1,0);
-				glVertex2f(x+w2*p->scale.x, y-h2*p->scale.y);
+				glVertex2f(x+dx, y-dy);
 			
 				glTexCoord2f(0,0);
-				glVertex2f(x-w2*p->scale.x, y-h2*p->scale.y);
+				glVertex2f(x-dx, y-dy);
 			}
 		}
 		glEnd();
 #endif
 	}
-	//glEnd();
 
 
 
@@ -413,4 +410,3 @@ void Emitter::onRender()
 	glEnable(GL_TEXTURE_2D);
 	*/
 }
-

@@ -2821,7 +2821,7 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 
 		q->collisionMaskRadius = 0;
 
-		q->collisionMaskHalfVector = Vector(q->getWidth()/2, q->getHeight()/2);
+		Vector collisionMaskHalfVector = Vector(q->getWidth()/2, q->getHeight()/2);
 
 		for (int tx = 0; tx < (q->getWidth()*q->scale.x); tx+=TILE_SIZE)
 		{
@@ -2864,7 +2864,7 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 					obs.push_back(tile);
 
 					// + Vector(0,TILE_SIZE)
-					q->collisionMask.push_back(tile.worldVector() - q->collisionMaskHalfVector);
+					q->collisionMask.push_back(tile.worldVector() - collisionMaskHalfVector);
 				}
 			}
 		}
@@ -4783,12 +4783,11 @@ bool Game::loadSceneXML(std::string scene)
 
 		for (int i = 0; i < num; i++)
 		{
-			SchoolFish *s = new SchoolFish;
+			SchoolFish *s = new SchoolFish(texture);
 			{
 				s->position = Vector(x+i*5,y+i*5);
 				s->startPos = s->position;
 				s->flockID = id;
-				s->setTexture(texture);
 				if (range != 0)
 					s->range = range;
 				if (maxSpeed != 0)

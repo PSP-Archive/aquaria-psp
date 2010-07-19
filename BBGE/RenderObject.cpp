@@ -54,11 +54,6 @@ int RenderObject::getTopLayer()
 	return layer;
 }
 
-RenderObject *RenderObject::getParent()
-{
-	return parent;
-}
-
 void RenderObject::applyBlendType()
 {
 #ifdef BBGE_BUILD_OPENGL
@@ -185,7 +180,7 @@ RenderObject::RenderObject()
 	_fv = false;
 	_fh = false;
 	updateCull = -1;
-	rotateFirst = true;
+	//rotateFirst = true;
 	layer = LR_NONE;
 	cull = true;
 
@@ -193,22 +188,26 @@ RenderObject::RenderObject()
 
 	positionSnapTo = 0;
 
-	updateMultiplier = 1;
+	//updateMultiplier = 1;
 	blendEnabled = true;
-	texture = 0; scale = Vector(1,1,1); color=Vector(1,1,1); alpha.x=1; mode=0;
+	texture = 0;
+	scale = Vector(1,1,1);
+	color = Vector(1,1,1);
+	alpha.x = 1;
+	//mode = 0;
 	life = maxLife = 1;
 	decayRate = 0;
 	_dead = false;
 	fadeAlphaWithLife = false;
-	blendType = 0;
-	lifeAlphaFadeMultiplier = 1;
+	blendType = BLEND_DEFAULT;
+	//lifeAlphaFadeMultiplier = 1;
 	followCamera = 0;
 	stateData = 0;
 	parent = 0;
-	useColor = true;
+	//useColor = true;
 	renderBeforeParent = false;
-	followXOnly = false;
-	renderOrigin = false;
+	//followXOnly = false;
+	//renderOrigin = false;
 	colorIsSaved = false;
 	shareAlphaWithChildren = false;
 	shareColorWithChildren = false;
@@ -292,34 +291,20 @@ Vector RenderObject::getInvRotPosition(const Vector &vec)
 
 void RenderObject::matrixChain()
 {	
-	std::vector<RenderObject*>chain;
-	RenderObject *p = this;
-	while(p)
-	{
-		chain.push_back(p);
-		p = p->parent;
-	}
+	if (parent)
+		parent->matrixChain();
 	
 #ifdef BBGE_BUILD_OPENGL
-	for (int i = chain.size()-1; i >= 0; i--)
-	{		
-		glTranslatef(chain[i]->position.x, chain[i]->position.y, 0);
-		glTranslatef(chain[i]->offset.x, chain[i]->offset.y, 0);
-		glRotatef(chain[i]->rotation.z+chain[i]->rotationOffset.z, 0, 0, 1);
-		glTranslatef(chain[i]->beforeScaleOffset.x, chain[i]->beforeScaleOffset.y, 0);		
-		glScalef(chain[i]->scale.x, chain[i]->scale.y, 0);
-		
-		if (chain[i]->isfh())
-		{
-			//glDisable(GL_CULL_FACE);
-			glRotatef(180, 0, 1, 0);
-		}
-		glTranslatef(chain[i]->internalOffset.x, chain[i]->internalOffset.y, 0);
-		
+	glTranslatef(position.x+offset.x, position.y+offset.y, 0);
+	glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
+	glTranslatef(beforeScaleOffset.x, beforeScaleOffset.y, 0);
+	glScalef(scale.x, scale.y, 0);
+	if (isfh())
+	{
+		//glDisable(GL_CULL_FACE);
+		glRotatef(180, 0, 1, 0);
 	}
-
-	if (collidePosition.x != 0 || collidePosition.y != 0)
-		glTranslatef(collidePosition.x, collidePosition.y, 0);
+	glTranslatef(internalOffset.x, internalOffset.y, 0);
 #endif
 }
 
@@ -339,20 +324,15 @@ Vector RenderObject::getWorldCollidePosition(const Vector &vec)
 	glLoadIdentity();
 
 	matrixChain();
-
-	if (vec.x != 0 || vec.y != 0)
-	{
-		glTranslatef(vec.x, vec.y, 0);
-	}
+	glTranslatef(collidePosition.x+vec.x, collidePosition.y+vec.y, 0);
 
 	float m[16];
 	glGetFloatv(GL_MODELVIEW_MATRIX, m);
 	float x = m[12];
 	float y = m[13];
-	float z = m[14];
 
 	glPopMatrix();
-	return Vector(x,y,z);
+	return Vector(x,y,0);
 #elif BBGE_BUILD_DIRECTX
 	return vec;
 #endif
@@ -523,20 +503,48 @@ bool RenderObject::isfvr()
 		return this->isfv();
 }
 
+bool RenderObject::hasRenderPass(const int pass)
+{
+	if (pass == renderPass)
+		return true;
+	for (Children::iterator i = children.begin(); i != children.end(); i++)
+	{
+		if (!(*i)->isDead() && (*i)->hasRenderPass(pass))
+			return true;
+	}
+	return false;
+}
+
 void RenderObject::render()
 {
-	//HACK: possible optimization here: 
-	/*
-	if (layer != LR_NONE && children.empty() && renderPass != RENDER_ALL)
-	{
-		RenderObjectLayer *l = core->getRenderObjectLayer(this->layer);
-		if (l && l->currentPass != renderPass) return;
-	}
-	*/
-	
 	/// new (breaks anything?)
 	if (alpha.x == 0 || alphaMod == 0) return;
 
+	if (core->currentLayerPass != RENDER_ALL && renderPass != RENDER_ALL)
+	{
+		RenderObject *top = getTopParent();
+		if (top == NULL && this->overrideRenderPass != OVERRIDE_NONE)
+		{
+			// FIXME: overrideRenderPass is not applied to the
+			// node itself in the original check (below); is
+			// that intentional?  Doing the same thing here
+			// for the time being.  --achurch
+			if (core->currentLayerPass != this->renderPass
+			 && core->currentLayerPass != this->overrideRenderPass)
+				return;
+		}
+		else if (top != NULL && top->overrideRenderPass != OVERRIDE_NONE)
+		{
+			if (core->currentLayerPass != top->overrideRenderPass)
+				return;
+		}
+		else
+		{
+			if (!hasRenderPass(core->currentLayerPass))
+				return;
+		}
+	}
+	
 	if (motionBlur || motionBlurTransition)
 	{
 		Vector oldPos = position;
@@ -703,7 +711,7 @@ void RenderObject::renderCall()
 		{
 
 #ifdef BBGE_BUILD_OPENGL
-			glTranslatef(position.x, position.y, position.z);//position.z);
+			glTranslatef(position.x, position.y, position.z);
 #endif
 #ifdef BBGE_BUILD_DIRECTX
 			core->translateMatrixStack(position.x, position.y, 0);
@@ -785,6 +793,7 @@ void RenderObject::renderCall()
 
 
 		//glDisable(GL_CULL_FACE);
+		/* Never set anywhere.  --achurch
 		if (renderOrigin)
 		{
 #ifdef BBGE_BUILD_OPENGL
@@ -806,6 +815,7 @@ void RenderObject::renderCall()
 			glEnd();
 #endif
 		}
+		*/
 	}
 
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
@@ -815,10 +825,10 @@ void RenderObject::renderCall()
 	}
 
 
-	if (useColor)
+	//if (useColor)
 	{
 #ifdef BBGE_BUILD_OPENGL
-		if (rlayer && (rlayer->color.x != 1.0f || rlayer->color.y != 1.0f || rlayer->color.z != 1.0f))
+		if (rlayer)
 			glColor4f(color.x * rlayer->color.x, color.y * rlayer->color.y, color.z * rlayer->color.z, alpha.x*alphaMod);
 		else
 			glColor4f(color.x, color.y, color.z, alpha.x*alphaMod);
@@ -874,7 +884,48 @@ void RenderObject::renderCall()
 		doRender = (core->currentLayerPass == pass);
 	}
 
-	if (renderCollisionShape && !collisionRects.empty())
+	if (renderCollisionShape)
+		renderCollision();
+
+	if (doRender)
+		onRender();
+
+		//collisionShape.render();
+	if (!RENDEROBJECT_SHAREATTRIBUTES)
+	{
+		glPopAttrib();
+	}
+
+	for (Children::iterator i = children.begin(); i != children.end(); i++)
+	{
+		if (!(*i)->isDead() && !(*i)->renderBeforeParent)
+			(*i)->render();
+	}
+
+
+	if (!RENDEROBJECT_FASTTRANSFORM)
+	{
+#ifdef BBGE_BUILD_OPENGL
+		glPopMatrix();
+#endif
+#ifdef BBGE_BUILD_DIRECTX
+		core->getD3DMatrixStack()->Pop();
+		core->applyMatrixStackToWorld();
+#endif
+	}
+
+
+	position -= offset;
+
+	if (integerizePositionForRender)
+	{
+		position = savePosition;
+	}
+}
+
+void RenderObject::renderCollision()
+{
+	if (!collisionRects.empty())
 	{
 #ifdef BBGE_BUILD_OPENGL
 		glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -914,7 +965,7 @@ void RenderObject::renderCall()
 #endif
 	}
 
-	if (renderCollisionShape && !collisionMask.empty())
+	if (!collisionMask.empty())
 	{
 #ifdef BBGE_BUILD_OPENGL
 		glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -962,7 +1013,7 @@ void RenderObject::renderCall()
 		//glTranslatef(offset.x, offset.y,0);
 #endif
 	}
-	else if (renderCollisionShape && collideRadius > 0)
+	else if (collideRadius > 0)
 	{
 		/*
 		glPushMatrix();
@@ -980,41 +1031,6 @@ void RenderObject::renderCall()
 		glTranslatef(offset.x, offset.y,0);
 		glPopMatrix();
 		*/
-	}
-
-	if (doRender)
-		onRender();
-
-		//collisionShape.render();
-	if (!RENDEROBJECT_SHAREATTRIBUTES)
-	{
-		glPopAttrib();
-	}
-
-	for (Children::iterator i = children.begin(); i != children.end(); i++)
-	{
-		if (!(*i)->isDead() && !(*i)->renderBeforeParent)
-			(*i)->render();
-	}
-
-
-	if (!RENDEROBJECT_FASTTRANSFORM)
-	{
-#ifdef BBGE_BUILD_OPENGL
-		glPopMatrix();
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-		core->getD3DMatrixStack()->Pop();
-		core->applyMatrixStackToWorld();
-#endif
-	}
-
-
-	position -= offset;
-
-	if (integerizePositionForRender)
-	{
-		position = savePosition;
 	}
 }
 
@@ -1161,9 +1177,9 @@ void RenderObject::update(float dt)
 	{
 		dt = core->get_old_dt();
 	}
-	if (!_dead)
+	if (!isDead())
 	{
-		dt *= updateMultiplier;
+		//dt *= updateMultiplier;
 		onUpdate(dt);
 
 		for (Children::iterator i = children.begin(); i != children.end(); i++)
@@ -1200,7 +1216,7 @@ void RenderObject::safeKill()
 	alpha = 0;
 	life = 0;
 	onEndOfLife();
-	deathEvent.call();
+	//deathEvent.call();
 	for (RenderObjectList::iterator i = deathNotifications.begin(); i != deathNotifications.end(); i++)
 	{
 		(*i)->deathNotify(this);
@@ -1220,22 +1236,6 @@ void RenderObject::safeKill()
 			stateData->removeRenderObject(this);
 		else
 			core->enqueueRenderObjectDeletion(this);
-	}
-}
-
-void RenderObject::updateLife(float dt)
-{
-	if (decayRate > 0)
-	{
-		life -= decayRate*dt;
-		if (life<=0)
-		{
-			safeKill();
-		}
-	}
-	if (fadeAlphaWithLife && !alpha.interpolating)
-	{
-		alpha = ((life*lifeAlphaFadeMultiplier)/maxLife);
 	}
 }
 
@@ -1302,23 +1302,10 @@ void RenderObject::onUpdate(float dt)
 	}
 	*/
 
-	if (shareAlphaWithChildren && !children.empty())
-	{
-		for (Children::iterator i = children.begin(); i != children.end(); i++)
-		{
-			(*i)->alpha = this->alpha;
-		}
-	}
-
-	if (shareColorWithChildren && !children.empty())
-	{
-		for (Children::iterator i = children.begin(); i != children.end(); i++)
-		{
-			(*i)->color = this->color;
-		}
-	}
-	position += velocity * dt;
-	velocity += gravity * dt;
+	if (!velocity.isZero())
+		position += velocity * dt;
+	if (!gravity.isZero())
+		velocity += gravity * dt;
 	position.update(dt);
 	velocity.update(dt);
 	scale.update(dt);
@@ -1332,6 +1319,11 @@ void RenderObject::onUpdate(float dt)
 
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
 	{
+		if (shareAlphaWithChildren)
+			(*i)->alpha.x = this->alpha.x;
+		if (shareColorWithChildren)
+			(*i)->color = this->color;
+
 		if (!(*i)->updateAfterParent && (((*i)->pm == PM_POINTER) || ((*i)->pm == PM_STATIC)))
 		{
 			(*i)->update(dt);

@@ -37,7 +37,7 @@ float maxChange = maxSpeed*maxUrgency;
 
 float velocityScale = 1;
 
-SchoolFish::SchoolFish() : FlockEntity()
+SchoolFish::SchoolFish(const std::string &texname) : FlockEntity()
 {
 	burstDelay = 0;
 
@@ -73,7 +73,7 @@ SchoolFish::SchoolFish() : FlockEntity()
 	//scale = Vector(0.5, 0.5);
 	avoidTime=0;
 	vel = Vector(-minUrgency, 0);
-	setTexture("flock-0001");
+	setTexture(texname);
 	flockType = FLOCK_FISH;
 	//updateCull = -1;
 	updateCull = 4000;

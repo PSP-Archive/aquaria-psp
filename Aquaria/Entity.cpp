@@ -43,11 +43,6 @@ void Entity::setIngredientData(const std::string &name)
 	ingredientData = dsq->continuity.getIngredientDataByName(name);
 }
 
-bool Entity::isNormalLayer()
-{
-	return layer == LR_ENTITIES || layer == LR_ENTITIES0 || layer == LR_ENTITIES2 || layer == LR_ENTITIES_MINUS2 || layer == LR_ENTITIES_MINUS3;
-}
-
 void Entity::entityDied(Entity *e)
 {
 	for (int i = 0; i < targets.size(); i++)
@@ -62,11 +57,6 @@ void Entity::entityDied(Entity *e)
 			setBoneLock(BoneLock());
 		}
 	}
-}
-
-bool Entity::isPresent()
-{
-	return !isDead() && !isEntityDead() && life == 1 && alpha.x != 0;
 }
 
 // this function is only called if addDeathNotify is called first
@@ -1044,11 +1034,6 @@ bool Entity::clampToSurface(int tcheck, Vector usePos, TileVector hitTile)
 	}
 
 	return clamped;
-}
-
-bool Entity::isEntityDead()
-{
-	return entityDead;
 }
 
 void Entity::heal(float a, int type)
@@ -3285,15 +3270,13 @@ void Entity::render()
 	InterpolatedVector bcolor = color;
 	InterpolatedVector bscale = scale;
 
-	scale = scale * flipScale;
-
+	scale *= flipScale;
+	color *= dsq->game->sceneColor;
+	color *= dsq->game->sceneColor2;
+	color *= dsq->game->sceneColor3;
 	if (multColor.isInterpolating())
 	{
-		color = dsq->game->sceneColor * color * multColor * dsq->game->sceneColor2 * dsq->game->sceneColor3;
-	}
-	else
-	{
-		color = dsq->game->sceneColor * color * dsq->game->sceneColor2 * dsq->game->sceneColor3;
+		color *= multColor;
 	}
 
 	if (dsq->game->sceneEditor.isOn() && dsq->game->sceneEditor.editType == ET_ENTITIES)
@@ -3549,8 +3532,7 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, i
 	}
 	if (c > 0)
 	{
-		accum /= float(c);
-		accum /= totalDist/2;
+		accum /= float(c) * (totalDist/2);
 		accum.setLength2D(1.0f - accum.getLength2D());
 		if (onlyVP)
 		{

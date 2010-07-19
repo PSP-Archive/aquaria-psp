@@ -473,11 +473,6 @@ void ParticleEffect::stop()
 	}
 }
 
-bool ParticleEffect::isRunning()
-{
-	return running;
-}
-
 void ParticleEffect::onRender()
 {
 	BBGE_PROF(ParticleEffect_onRender);

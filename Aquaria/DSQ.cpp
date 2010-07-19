@@ -3896,18 +3896,21 @@ void DSQ::onMouseInput()
 	{
 		if (!dsq->game->isInGameMenu() && !dsq->game->sceneEditor.isOn() && !dsq->game->isPaused())
 		{
-			bool doIt = true;
-			Vector diff = core->mouse.position - core->center;
-			int range=300;
+			bool limitRange = true;
+			int range = 300;
 			if (dsq->game->avatar->singing)
 				range = 100;
 			else
-				doIt = false;
-				//doIt = core->mouse.buttons.left;
-			if (doIt && diff.getSquaredLength2D() > sqr(range))
+				limitRange = false;
+				//limitRange = core->mouse.buttons.left;
+			if (limitRange)
 			{
-				diff.setLength2D(range);
-				core->mouse.position = core->center + diff;
+				Vector diff = core->mouse.position - core->center;
+				if (diff.getSquaredLength2D() > sqr(range))
+				{
+					diff.setLength2D(range);
+					core->mouse.position = core->center + diff;
+				}
 			}
 		}
 	}

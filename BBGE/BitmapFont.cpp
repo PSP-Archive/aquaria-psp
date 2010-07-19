@@ -401,7 +401,7 @@ void BitmapText::render()
 			InterpolatedVector oldAlpha = alpha, oldPos = position;
 			Vector adjust(rand()%5-2, rand()%5-2+2);
 			position += adjust;
-			alpha = alpha * 0.4f;
+			alpha *= 0.4f;
 			bfePass = 1;
 			RenderObject::render();
 			alpha = oldAlpha;

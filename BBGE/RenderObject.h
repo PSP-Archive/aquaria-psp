@@ -99,18 +99,7 @@ public:
 	void matrixChain();
 
 	virtual void update(float dt);
-	bool isDead() {return _dead;}
-
-	InterpolatedVector position, scale, color, alpha, rotation;
-	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;
-	InterpolatedVector velocity, gravity;
-
-	Texture *texture;
-
-	int mode;
-
-	bool fadeAlphaWithLife;
-	bool blendEnabled;
+	bool isDead() const {return _dead;}
 
 	void setLife(float life)
 	{
@@ -128,81 +117,6 @@ public:
 	//enum DestroyType { RANDOM=0, REMOVE_STATE };
 	virtual void destroy();
 
-	int blendType;
-	float life;
-	float lifeAlphaFadeMultiplier;
-	enum BlendTypes { BLEND_DEFAULT = 0, BLEND_ADD, BLEND_SUB };
-	float followCamera;
-
-	void addChild(RenderObject *r, ParentManaged pm, RenderBeforeParent rbp = RBP_NONE, ChildOrder order = CHILD_BACK);
-	void removeChild(RenderObject *r);
-	void removeAllChildren();
-	void recursivelyRemoveEveryChild();
-
-	bool useColor;
-	bool renderBeforeParent;
-	bool updateAfterParent;
-
-	bool followXOnly;
-	bool renderOrigin;
-
-	Vector getRealPosition();
-	Vector getRealScale();
-
-	virtual float getSortDepth();
-
-	StateData *getStateData();
-
-	float updateMultiplier;
-	EventPtr deathEvent;
-
-	void setPositionSnapTo(InterpolatedVector *positionSnapTo);
-
-	static bool renderCollisionShape;
-	static bool integerizePositionForRender;
-
-	virtual bool isOnScreen();
-
-	bool colorIsSaved;  // Used for both color and alpha
-	Vector savedColor;  // Saved values from setColorMult()
-	float savedAlpha;
-
-	bool shareAlphaWithChildren;
-	bool shareColorWithChildren;
-
-	bool isCoordinateInRadius(const Vector &pos, float r);
-
-	void copyProperties(RenderObject *target);
-
-	const RenderObject &operator=(const RenderObject &r);
-
-	
-	void enableProjectCollision();
-	void disableProjectCollision();
-	InterpolatedVector *positionSnapTo;
-
-	//DestroyType destroyType;
-	typedef std::list<RenderObject*> Children;
-	Children children, childGarbage;
-
-	void toggleCull(bool value);
-	
-	int layer;
-	int updateCull;
-	bool cull;
-	void safeKill();
-
-	//Flags flags;
-
-	void enqueueChildDeletion(RenderObject *r);
-
-#ifdef BBGE_BUILD_DIRECTX
-	bool useDXTransform;
-	//D3DXMATRIX matrix;
-#endif
-
-	bool renderBorders;
-
 	virtual void flipHorizontal();
 	virtual void flipVertical();
 
@@ -210,7 +124,7 @@ public:
 	bool isfv() { return _fv; }
 
 	// recursive
-	bool isfhr();																	
+	bool isfhr();
 	bool isfvr();
 
 	int getIdx() { return idx; }
@@ -227,23 +141,44 @@ public:
 
 	void enableMotionBlur(int sz=10, int off=5);
 	void disableMotionBlur();
-	static bool renderPaths;
+
+	void addChild(RenderObject *r, ParentManaged pm, RenderBeforeParent rbp = RBP_NONE, ChildOrder order = CHILD_BACK);
+	void removeChild(RenderObject *r);
+	void removeAllChildren();
+	void recursivelyRemoveEveryChild();
+
+	Vector getRealPosition();
+	Vector getRealScale();
+
+	virtual float getSortDepth();
+
+	StateData *getStateData();
+
+	void setPositionSnapTo(InterpolatedVector *positionSnapTo);
+
+	virtual bool isOnScreen();
+
+	bool isCoordinateInRadius(const Vector &pos, float r);
+
+	void copyProperties(RenderObject *target);
+
+	const RenderObject &operator=(const RenderObject &r);
+
+	void enableProjectCollision();
+	void disableProjectCollision();
+
+	void toggleCull(bool value);
+	
+	void safeKill();
+
+	void enqueueChildDeletion(RenderObject *r);
+
 	Vector getWorldPosition();
-	int collideRadius;
-	Vector collidePosition;
 	Vector getWorldCollidePosition(const Vector &vec=Vector(0,0,0));
 	Vector getInvRotPosition(const Vector &vec);
-	bool useCollisionMask;
-	Vector collisionMaskHalfVector;
-	std::vector<Vector> collisionMask;
-	std::vector<Vector> transformedCollisionMask;
-
-	CollideRects collisionRects;
 	bool isPieceFlippedHorizontal();
 
 	RenderObject *getTopParent();
-	int collisionMaskRadius;
-	int touchDamage;
 
 	virtual void onAnimationKeyPassed(int key){}
 
@@ -251,7 +186,6 @@ public:
 	float getWorldRotation();
 	Vector getNormal();
 	Vector getFollowCameraPosition();
-	float alphaMod;
 	Vector getForward();
 	void setOverrideCullRadius(int ovr);
 	void setRenderPass(int pass) { renderPass = pass; }
@@ -261,8 +195,7 @@ public:
 	enum { RENDER_ALL=314, OVERRIDE_NONE=315 };
 
 	void lookAt(const Vector &pos, float t, float minAngle, float maxAngle, float offset=0);
-	bool ignoreUpdate;
-	RenderObject *getParent();
+	RenderObject *getParent() const {return parent;}
 	void applyBlendType();
 	void fhTo(bool fh);
 	void addDeathNotify(RenderObject *r);
@@ -271,11 +204,84 @@ public:
 
 	Vector getCollisionMaskNormal(int index);
 
-	bool useOldDT;
-	
+	//-------------------------------- Methods above, fields below
+
+	static bool renderCollisionShape;
+	static bool integerizePositionForRender;
+	static bool renderPaths;
 	static int lastTextureApplied;
 	static bool lastTextureRepeat;
 
+	InterpolatedVector position, scale, color, alpha, rotation;
+	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;
+	InterpolatedVector velocity, gravity;
+
+	Texture *texture;
+
+	//int mode;
+
+	bool fadeAlphaWithLife;
+
+	bool blendEnabled;
+	enum BlendTypes { BLEND_DEFAULT = 0, BLEND_ADD, BLEND_SUB };
+	unsigned char blendType;
+
+	float life;
+	//float lifeAlphaFadeMultiplier;
+	float followCamera;
+
+	//bool useColor;
+	bool renderBeforeParent;
+	bool updateAfterParent;
+
+	//bool followXOnly;
+	//bool renderOrigin;
+
+	//float updateMultiplier;
+	//EventPtr deathEvent;
+
+	bool colorIsSaved;  // Used for both color and alpha
+	Vector savedColor;  // Saved values from setColorMult()
+	float savedAlpha;
+
+	bool shareAlphaWithChildren;
+	bool shareColorWithChildren;
+
+	bool renderBorders;
+
+	bool cull;
+	int updateCull;
+	int layer;
+
+	InterpolatedVector *positionSnapTo;
+
+	//DestroyType destroyType;
+	typedef std::list<RenderObject*> Children;
+	Children children, childGarbage;
+
+	//Flags flags;
+
+#ifdef BBGE_BUILD_DIRECTX
+	bool useDXTransform;
+	//D3DXMATRIX matrix;
+#endif
+
+	int collideRadius;
+	Vector collidePosition;
+	bool useCollisionMask;
+	//Vector collisionMaskHalfVector;
+	std::vector<Vector> collisionMask;
+	std::vector<Vector> transformedCollisionMask;
+
+	CollideRects collisionRects;
+	int collisionMaskRadius;
+	int touchDamage;
+
+	float alphaMod;
+
+	bool ignoreUpdate;
+	bool useOldDT;
+	
 protected:
 	virtual void onFH(){}
 	virtual void onFV(){}
@@ -290,30 +296,52 @@ protected:
 	// spread parentManagedStatic flag to the entire child tree
 	void propogateParentManagedStatic();
 	void propogateAlpha();
-	void updateLife(float dt);
+
+	inline void updateLife(float dt)
+	{
+		if (decayRate > 0)
+		{
+			life -= decayRate*dt;
+			if (life<=0)
+			{
+				safeKill();
+			}
+		}
+		if (fadeAlphaWithLife && !alpha.isInterpolating())
+		{
+			//alpha = ((life*lifeAlphaFadeMultiplier)/maxLife);
+			alpha = life/maxLife;
+		}
+	}
+
+	// Is this object or any of its children rendered in pass "pass"?
+	bool hasRenderPass(const int pass);
 
 	inline void renderCall();
+	void renderCollision();
 
-	ParentManaged pm;
+	bool repeatTexture;
+	//ParentManaged pm;
+	unsigned char pm;  // unsigned char to save space
 	typedef std::list<RenderObject*> RenderObjectList;
 	RenderObjectList deathNotifications;
 	int overrideRenderPass;
 	int renderPass;
 	int overrideCullRadius;
-	bool repeatTexture;
 	float motionBlurTransitionTimer;
 	int motionBlurFrameOffsetCounter, motionBlurFrameOffset;
 	std::vector<MotionBlurFrame>motionBlurPositions;
 	bool motionBlur, motionBlurTransition;
 
 	int idx;
+	bool _dead;
 	bool _fv, _fh;
-	bool rotateFirst;
+	//bool rotateFirst;
 	RenderObject *parent;
 	StateData *stateData;
 	float decayRate;
 	float maxLife;
-	bool _dead;
+
 	static InterpolatedVector savePosition;
 };
 
