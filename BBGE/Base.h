@@ -217,7 +217,7 @@ char *readFile(std::string path, unsigned long *size_ret = 0);
 void forEachFile(std::string path, std::string type, void callback(const std::string &filename, intptr_t param), intptr_t param);
 std::string stripEndlineForUnix(const std::string &in);
 std::vector<std::string> getFileList(std::string path, std::string type, int param);
-#if defined(BBGE_BUILD_UNIX)
+#ifdef HAVE_STRCASECMP
 static inline int nocasecmp(const std::string &s1, const std::string &s2)
 	{ return strcasecmp(s1.c_str(), s2.c_str()); }
 static inline int nocasecmp(const std::string &s1, const char *s2)
