@@ -943,6 +943,7 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
 	afterEffectManagerLayer = 0;
 	renderObjectLayers.resize(1);
 	invGlobalScale = 1.0;
+	invGlobalScaleSqr = 1.0;
 	renderObjectCount = 0;
 	avgFPS.resize(1);
 	minimized = false;
@@ -1221,7 +1222,6 @@ void Core::initRenderObjectLayers(int num)
 	for (int i = 0; i < num; i++)
 	{
 		renderObjectLayerOrder[i] = i;
-		renderObjectLayers[i].index = i;
 	}
 }
 
@@ -3815,6 +3815,7 @@ void Core::updateCullData()
 	// update cull data
 	//this->cullRadius = int((getVirtualWidth())*invGlobalScale);
 	this->cullRadius = baseCullRadius * invGlobalScale;
+	this->cullRadiusSqr = (float)this->cullRadius * (float)this->cullRadius;
 	this->cullCenter = cameraPos + Vector(400.0f*invGlobalScale,300.0f*invGlobalScale);
 	screenCullX1 = cameraPos.x;
 	screenCullX2 = cameraPos.x + 800*invGlobalScale;
@@ -3843,6 +3844,7 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 	onRender();
 
 	invGlobalScale = 1.0f/globalScale.x;
+	invGlobalScaleSqr = invGlobalScale * invGlobalScale;
 
 	RenderObject::lastTextureApplied = 0;
 
@@ -3949,18 +3951,10 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 			postProcessingFx.render();
 		}
 
-		int scr=0, xmin=0, ymin=0, xmax=0, ymax=0;
 		RenderObjectLayer *r = &renderObjectLayers[i];
 		RenderObject::rlayer = r;
-		RenderObject *robj;
 		if (r->visible)
 		{
-			scr = r->fastCullDist*invGlobalScale;
-			xmin = screenCenter.x-scr;
-			ymin = screenCenter.y-scr;
-			xmax = screenCenter.x+scr;
-			ymax = screenCenter.y+scr;
-	
 			if (r->mode != mode)
 			{
 				switch(r->mode)
@@ -3975,117 +3969,15 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 				break;
 				}
 			}
-			for (r->currentPass = r->startPass; r->currentPass <= r->endPass; r->currentPass++)
+			if (r->startPass == r->endPass)
 			{
-				if (r->startPass == r->endPass)
+				r->renderPass(RenderObject::RENDER_ALL);
+			}
+			else
+			{
+				for (int pass = r->startPass; pass <= r->endPass; pass++)
 				{
-					currentLayerPass = RenderObject::RENDER_ALL;
-				}
-				else
-					currentLayerPass = r->currentPass;
-				/*
-				for (int i = 0; i < r->renderObjects.size(); i++)
-				{
-					robj = r->renderObjects[i];
-					if (!robj || robj->parent || robj->alpha.x == 0) continue;
-					//if (robj->isOnScreen())
-					{
-						robj->render();
-						renderObjectCount++;
-					}
-					processedRenderObjectCount++;
-				}
-				*/
-				
-				if (r->quickQuad)
-				{
-					glBegin(GL_QUADS);
-				}
-
-				if (r->fastCull)
-				{
-					for (robj = r->getFirst(); robj; robj = r->getNext())
-					{
-
-						totalRenderObjectCount++;
-						if (robj->parent || robj->alpha.x == 0)
-							continue;
-
-						if (r->cull && robj->cull && robj->followCamera != 1)
-						{
-							//HACK:
-							// best would be this:
-							//if (robj->getCullRadius()<1024)
-							// but that is slow
-							// so, check scale
-							if (robj->scale.x < 3)
-							{
-								if (robj->position.x < xmin ||
-									robj->position.y < ymin ||
-									robj->position.x > xmax ||
-									robj->position.y > ymax)
-								{
-									continue;
-								}
-							}
-						}
-						if (!r->cull || !robj->cull || robj->isOnScreen())
-						{
-							/*
-							if (r->quickQuad)
-							{
-								//if (robj->texture)
-								//	robj->texture->apply();
-									
-								float w2 = (robj->scale.x*64)/2;
-								float h2 = (robj->scale.y*64)/2;
-								
-								glRotatef(robj->rotation.z, 0, 0, 1);
-								
-								glTexCoord2f(0, 0);
-								glVertex2f(robj->position.x-w2, robj->position.y-h2);
-								glTexCoord2f(1, 0);
-								glVertex2f(robj->position.x+w2, robj->position.y-h2);
-								glTexCoord2f(1, 1);
-								glVertex2f(robj->position.x+w2, robj->position.y+h2);
-								glTexCoord2f(0, 1);
-								glVertex2f(robj->position.x-w2, robj->position.y+h2);
-								
-								glRotatef(-robj->rotation.z, 0, 0, 1);
-							}
-							else
-							{
-								robj->render();
-							}
-							*/
-							
-							robj->render();
-							
-							renderObjectCount++;
-						}
-						processedRenderObjectCount++;
-					}
-				}
-				else
-				{
-					for (robj = r->getFirst(); robj; robj = r->getNext())
-					{
-						totalRenderObjectCount++;
-						if (robj->parent || robj->alpha.x == 0)
-							continue;
-
-						if (!r->cull || !robj->cull || robj->isOnScreen())
-						{
-							robj->render();
-							renderObjectCount++;
-						}
-						processedRenderObjectCount++;
-					}
-				}
-
-				if (r->quickQuad)
-				{
-					glEnd();
+					r->renderPass(pass);
 				}
 			}
 		}

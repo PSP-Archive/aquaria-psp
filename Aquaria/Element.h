@@ -108,7 +108,7 @@ class BoxElement : public Element
 {
 public:
 	BoxElement(int width, int height);
-	bool isOnScreen();
+	//bool isOnScreen();
 protected:
 	int ww,hh;
 };

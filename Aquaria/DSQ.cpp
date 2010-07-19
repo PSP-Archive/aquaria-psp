@@ -243,45 +243,6 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	afterEffectManagerLayer = LR_AFTER_EFFECTS; // LR_AFTER_EFFECTS
 	renderObjectLayers.resize(LR_MAX);
 	
-	int parallaxFastCullDist = 9000;
-	int regularFastcullDist = 9000; //4000;   //3500
-	
-	for (int i = 0; i < renderObjectLayers.size(); i++)
-	{
-		renderObjectLayers[i].fastCull = true;
-		renderObjectLayers[i].fastCullDist = regularFastcullDist;
-	}
-	
-	// HACK: this is 9000
-	// so that the parallax layers can still get culled
-	// not the best it could be really
-	//renderObjectLayers[LR_ fastCullDist = 9000;
-	renderObjectLayers[LR_ELEMENTS10].fastCullDist					= parallaxFastCullDist;
-	renderObjectLayers[LR_ELEMENTS11].fastCullDist					= parallaxFastCullDist;
-	renderObjectLayers[LR_ENTITIES_MINUS4_PLACEHOLDER].fastCullDist = parallaxFastCullDist;
-	renderObjectLayers[LR_ENTITIES_MINUS4].fastCullDist				= parallaxFastCullDist;
-	renderObjectLayers[LR_ELEMENTS12].fastCullDist					= parallaxFastCullDist;
-	renderObjectLayers[LR_ELEMENTS14].fastCullDist					= parallaxFastCullDist;
-	renderObjectLayers[LR_ELEMENTS15].fastCullDist					= parallaxFastCullDist;
-	renderObjectLayers[LR_ELEMENTS16].fastCullDist					= parallaxFastCullDist;
-	/*
-	for (int i = LR_ELEMENTS4; i <= LR_ELEMENTS6; i++)
-	{
-		renderObjectLayers[i].quickQuad = true;
-	}
-	*/
-	
-	renderObjectLayers[LR_BLACKGROUND].fastCull = false;
-	renderObjectLayers[LR_LIGHTING].fastCull = false;
-	/*
-	fastCullLayers.resize(LR_MAX);
-	for (int i = 0; i < fastCullLayers.size(); i++)
-		fastCullLayers[i] = true;
-	fastCullLayers[LR_BLACKGROUND] = false;
-	fastCullLayers[LR_LIGHTING] = false;
-	*/
-
-	//fastCullDist = 10;
 	//Emitter::particleLayer = LR_PARTICLES;
 	sortEnabled = false;
 	shakeCameraTimer = shakeCameraMag = 0;

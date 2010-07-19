@@ -316,15 +316,6 @@ void Quad::destroy()
 	RenderObject::destroy();
 }
 
-int Quad::getCullRadius()
-{
-	if (overrideCullRadius)
-		return overrideCullRadius;
-	int w = int(width*scale.x)+1;
-	int h = int(height*scale.y)+1;
-	return w + h;
-}
-
 bool Quad::isCoordinateInside(Vector coord, int minSize)
 {
 	int hw = fabsf((width)*getRealScale().x)*0.5f;

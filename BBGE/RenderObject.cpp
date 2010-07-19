@@ -162,7 +162,7 @@ RenderObject::RenderObject()
 	ignoreUpdate = false;
 	overrideRenderPass = OVERRIDE_NONE;
 	renderPass = 0;
-	overrideCullRadius = 0;
+	overrideCullRadiusSqr = 0;
 	repeatTexture = false;
 	alphaMod = 1;
 	collisionMaskRadius = 0;
@@ -191,6 +191,8 @@ RenderObject::RenderObject()
 	//updateMultiplier = 1;
 	blendEnabled = true;
 	texture = 0;
+	width = 0;
+	height = 0;
 	scale = Vector(1,1,1);
 	color = Vector(1,1,1);
 	alpha.x = 1;
@@ -573,43 +575,6 @@ void RenderObject::render()
 	}
 	else
 		renderCall();
-}
-
-Vector RenderObject::getFollowCameraPosition()
-{
-	Vector pos = position;
-	float f = followCamera;
-	int fcl=0;
-	
-	if (layer != -1)
-	{
-		if (f == 0)	f = core->renderObjectLayers[layer].followCamera;
-		fcl = core->renderObjectLayers[layer].followCameraLock;
-	}
-
-
-	if (f > 0 && f < 1)
-	{
-		switch (fcl)
-		{
-		case FCL_HORZ:
-			pos.x = position.x - core->screenCenter.x;
-			pos.x *= f;
-			pos.x = core->screenCenter.x + pos.x;
-		break;
-		case FCL_VERT:
-			pos.y = position.y - core->screenCenter.y;
-			pos.y *= f;
-			pos.y = core->screenCenter.y + pos.y;
-		break;
-		default:
-			pos = position - core->screenCenter;
-			pos *= f;
-			pos = core->screenCenter + pos;
-		break;
-		}
-	}
-	return pos;
 }
 
 void RenderObject::renderCall()
@@ -1483,41 +1448,9 @@ void RenderObject::setPositionSnapTo(InterpolatedVector *positionSnapTo)
 	this->positionSnapTo = positionSnapTo;
 }
 
-void RenderObject::setOverrideCullRadius(int ovr)
+void RenderObject::setOverrideCullRadius(float ovr)
 {
-	overrideCullRadius = ovr;
-}
-
-int RenderObject::getCullRadius()
-{
-	// THIS WILL HARDLY EVER GET CALLED
-	// Quad::getCullRadius is what runs things majorly
-	if (overrideCullRadius)
-		return overrideCullRadius;
-
-	return 0;
-}
-
-#ifdef BBGE_BUILD_WINDOWS
-	inline bool RenderObject::isOnScreen()
-#else
-	bool RenderObject::isOnScreen()
-#endif
-{
-	if (alpha.x == 0) return false;
-	
-	// HACK: assume all children are visible
-	if (parent || !cull) return true;
-
-	if (followCamera == 1) return true;
-	//if (followCamera != 0) return true;
-
-	// note: radii are sqr-ed for speed
-	int checkRadius = getCullRadius();
-
-	if ((this->getFollowCameraPosition() - core->cullCenter).getSquaredLength2D() > ((checkRadius*checkRadius)*core->invGlobalScale + (core->cullRadius*core->cullRadius)))
-		return false;
-	return true;	
+	overrideCullRadiusSqr = ovr * ovr;
 }
 
 void RenderObject::propogateParentManagedStatic()

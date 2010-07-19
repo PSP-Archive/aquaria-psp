@@ -138,7 +138,16 @@ public:
 	void moveToFront();
 	void moveToBack();
 
-	virtual int getCullRadius();
+	inline float getCullRadiusSqr() const
+	{
+		if (overrideCullRadiusSqr)
+			return overrideCullRadiusSqr;
+		if (width == 0 || height == 0)
+			return 0;
+		const float w = width*scale.x;
+		const float h = height*scale.y;
+		return w*w + h*h;
+	}
 
 	int getTopLayer();
 
@@ -162,7 +171,9 @@ public:
 
 	void setPositionSnapTo(InterpolatedVector *positionSnapTo);
 
-	virtual bool isOnScreen();
+	// HACK: This is defined in RenderObject_inline.h because it needs
+	// the class Core definition.  --achurch
+	inline bool isOnScreen();
 
 	bool isCoordinateInRadius(const Vector &pos, float r);
 
@@ -191,14 +202,16 @@ public:
 	Vector getAbsoluteRotation();
 	float getWorldRotation();
 	Vector getNormal();
-	Vector getFollowCameraPosition();
 	Vector getForward();
-	void setOverrideCullRadius(int ovr);
+	void setOverrideCullRadius(float ovr);
 	void setRenderPass(int pass) { renderPass = pass; }
 	int getRenderPass() { return renderPass; }
 	void setOverrideRenderPass(int pass) { overrideRenderPass = pass; }
 	int getOverrideRenderPass() { return overrideRenderPass; }
 	enum { RENDER_ALL=314, OVERRIDE_NONE=315 };
+
+	// Defined in RenderObject_inline.h
+	inline Vector getFollowCameraPosition() const;
 
 	void lookAt(const Vector &pos, float t, float minAngle, float maxAngle, float offset=0);
 	RenderObject *getParent() const {return parent;}
@@ -218,6 +231,7 @@ public:
 	static int lastTextureApplied;
 	static bool lastTextureRepeat;
 
+	float width, height;  // Only used by Quads, but stored here for getCullRadius()
 	InterpolatedVector position, scale, color, alpha, rotation;
 	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;
 	InterpolatedVector velocity, gravity;
@@ -333,7 +347,7 @@ protected:
 	RenderObjectList deathNotifications;
 	int overrideRenderPass;
 	int renderPass;
-	int overrideCullRadius;
+	float overrideCullRadiusSqr;
 	float motionBlurTransitionTimer;
 	int motionBlurFrameOffsetCounter, motionBlurFrameOffset;
 	std::vector<MotionBlurFrame>motionBlurPositions;
