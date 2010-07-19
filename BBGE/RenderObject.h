@@ -157,12 +157,15 @@ public:
 	EventPtr deathEvent;
 
 	void setPositionSnapTo(InterpolatedVector *positionSnapTo);
-	InterpolatedVector *positionSnapTo;
 
 	static bool renderCollisionShape;
 	static bool integerizePositionForRender;
 
 	virtual bool isOnScreen();
+
+	bool colorIsSaved;  // Used for both color and alpha
+	Vector savedColor;  // Saved values from setColorMult()
+	float savedAlpha;
 
 	bool shareAlphaWithChildren;
 	bool shareColorWithChildren;
@@ -176,6 +179,8 @@ public:
 	
 	void enableProjectCollision();
 	void disableProjectCollision();
+	InterpolatedVector *positionSnapTo;
+
 	//DestroyType destroyType;
 	typedef std::list<RenderObject*> Children;
 	Children children, childGarbage;
@@ -217,9 +222,8 @@ public:
 
 	int getTopLayer();
 
-	void shareColor(const Vector &color);
-	void multiplyColor(const Vector &color, bool inv=false);
-	void multiplyAlpha(const Vector &alpha, bool inv=false);
+	void setColorMult(const Vector &color, const float alpha);
+	void clearColorMult();
 
 	void enableMotionBlur(int sz=10, int off=5);
 	void disableMotionBlur();

@@ -1157,7 +1157,9 @@ void Core::setInputGrab(bool on)
 {
 	if (isWindowFocus())
 	{
+#ifdef BBGE_BUILD_SDL
 		SDL_WM_GrabInput(on?SDL_GRAB_ON:SDL_GRAB_OFF);
+#endif
 	}
 }
 
@@ -1760,8 +1762,10 @@ void Core::setSDLGLAttributes()
 	os << "setting vsync: " << _vsync;
 	debugLog(os.str());
 
+#ifdef BBGE_BUILD_SDL
 	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, _vsync);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+#endif
 }
 
 
@@ -1983,6 +1987,8 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 void Core::enumerateScreenModes()
 {
 	screenModes.clear();
+
+#ifdef BBGE_BUILD_SDL
 	SDL_Rect **modes;
 	int i;
 
@@ -2009,6 +2015,7 @@ void Core::enumerateScreenModes()
 			}
 		}
 	}
+#endif
 }
 
 void Core::shutdownSoundLibrary()
@@ -2727,11 +2734,9 @@ void Core::updateRenderObjects(float dt)
 		if (!rl->update)
 			continue;
 
-		RenderObject *r = rl->getFirst();
-		while (r)
+		for (RenderObject *r = rl->getFirst(); r; r = rl->getNext())
 		{
 			r->update(dt);
-			r = rl->getNext();
 		}
 	}
 
@@ -2763,11 +2768,12 @@ std::string getScreenshotFilename()
 	}
 }
 
-Uint32 Core::getTicks()
+uint32 Core::getTicks()
 {
 #ifdef BBGE_BUILD_SDL
 	return SDL_GetTicks();
 #endif
+	return 0;
 }
 
 float Core::stopWatch(int d)
@@ -2787,7 +2793,10 @@ float Core::stopWatch(int d)
 
 bool Core::isWindowFocus()
 {
+#ifdef BBGE_BUILD_SDL
 	return ((SDL_GetAppState() & SDL_APPINPUTFOCUS) != 0);
+#endif
+	return true;
 }
 
 void Core::main(float runTime)
@@ -2802,7 +2811,7 @@ void Core::main(float runTime)
 	float dt;
 	float counter = 0;
 	int frames = 0;
-	double real_dt = 0;
+	float real_dt = 0;
 	//std::ofstream out("debug.log");
 
 #if (!defined(_DEBUG) || defined(BBGE_BUILD_UNIX)) && defined(BBGE_BUILD_SDL)
@@ -3124,6 +3133,7 @@ void Core::main(float runTime)
 			fpsDebugString = os.str();
 			*/
 
+#ifdef BBGE_BUILD_SDL
 			nowTicks = SDL_GetTicks();
 			
 			if (diff > 0)
@@ -3137,6 +3147,8 @@ void Core::main(float runTime)
 			}
 
 			//nowTicks = SDL_GetTicks();
+#endif
+
 		}	
 	}
 	if (verbose) debugLog("bottom of function");
@@ -3992,15 +4004,12 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 
 				if (r->fastCull)
 				{
-					robj = r->getFirst();
-					while (robj)
+					for (robj = r->getFirst(); robj; robj = r->getNext())
 					{
+
 						totalRenderObjectCount++;
 						if (robj->parent || robj->alpha.x == 0)
-						{
-							robj = r->getNext();
 							continue;
-						}
 
 						if (r->cull && robj->cull && robj->followCamera != 1)
 						{
@@ -4016,7 +4025,6 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 									robj->position.x > xmax ||
 									robj->position.y > ymax)
 								{
-									robj = r->getNext();
 									continue;
 								}
 							}
@@ -4056,21 +4064,15 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 							renderObjectCount++;
 						}
 						processedRenderObjectCount++;
-
-						robj = r->getNext();
 					}
 				}
 				else
 				{
-					robj = r->getFirst();
-					while (robj)
+					for (robj = r->getFirst(); robj; robj = r->getNext())
 					{
 						totalRenderObjectCount++;
 						if (robj->parent || robj->alpha.x == 0)
-						{
-							robj = r->getNext();
 							continue;
-						}
 
 						if (!r->cull || !robj->cull || robj->isOnScreen())
 						{
@@ -4078,8 +4080,6 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 							renderObjectCount++;
 						}
 						processedRenderObjectCount++;
-
-						robj = r->getNext();
 					}
 				}
 

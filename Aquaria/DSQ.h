@@ -384,7 +384,8 @@ struct ElementEffect
 {
 public:
 	int type;
-	float segsx, segsy, segs_dgox, segs_dgoy, segs_dgmx, segs_dgmy, segs_dgtm, segs_dgo;
+	int segsx, segsy;
+	float segs_dgox, segs_dgoy, segs_dgmx, segs_dgmy, segs_dgtm, segs_dgo;
 	float wavy_radius, wavy_min, wavy_max;
 	bool wavy_flip;
 	InterpolatedVector alpha;
@@ -1351,7 +1352,9 @@ public:
 
 	int getEntityTypeIndexByName(std::string s);
 	void screenMessage(const std::string &msg);
+#ifdef AQUARIA_BUILD_CONSOLE  // No need to override it otherwise.
 	void debugLog(const std::string &s);
+#endif
 	void toggleConsole();
 	void toggleEffects();
 	void debugMenu();
@@ -1435,7 +1438,10 @@ public:
 
 	Demo demo;
 
-	DebugFont *fpsText, *console, *cmDebug;
+	DebugFont *fpsText, *cmDebug;
+#ifdef AQUARIA_BUILD_CONSOLE
+	DebugFont *console;
+#endif
 	BitmapText *versionLabel;
 	ProfRender *profRender;
 	
@@ -1564,7 +1570,9 @@ protected:
 	void onMouseInput();
 	std::vector<std::string> voxQueue;
 
+#ifdef AQUARIA_BUILD_CONSOLE
 	std::vector<std::string> consoleLines;
+#endif
 
 	std::vector <AquariaSaveSlot*> saveSlots;
 

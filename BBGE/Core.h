@@ -983,7 +983,7 @@ public:
 
 	void updateCursorFromJoystick(float dt, int spd);
 
-	Uint32 getTicks();
+	uint32 getTicks();
 
 	float stopWatch(int d);
 

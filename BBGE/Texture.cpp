@@ -71,7 +71,7 @@ Texture::Texture() : Resource()
 	imageData = 0;
 	layer = 0;
 
-	ow=oh=-1;
+	ow = oh = -1;
 }
 
 Texture::~Texture()

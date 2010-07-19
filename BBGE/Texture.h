@@ -91,7 +91,7 @@ protected:
 	
 	void loadBMP(const std::string &file);
 
-	int ow,oh;
+	int ow, oh;
 	
 };
 

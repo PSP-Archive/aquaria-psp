@@ -2973,7 +2973,7 @@ Path *Game::getScriptedPathAtCursor(bool withAct)
 	return 0;
 }
 
-Path *Game::getNearestPath(const Vector &pos, const std::string &s)
+Path *Game::getNearestPath(const Vector &pos, const std::string &s, const Path *ignore)
 {
 	Path *closest = 0;
 	float smallestDist = HUGE_VALF;
@@ -2982,7 +2982,7 @@ Path *Game::getNearestPath(const Vector &pos, const std::string &s)
 	for (int i = 0; i < dsq->game->paths.size(); i++)
 	{
 		Path *cp = dsq->game->paths[i];
-		if (!cp->nodes.empty() && (st.empty() || st == cp->name))
+		if (cp != ignore && !cp->nodes.empty() && (st.empty() || st == cp->name))
 		{
 			const Vector v = cp->nodes[0].position - pos;
 			const float dist = v.getSquaredLength2D();
@@ -6337,7 +6337,6 @@ void Game::applyState()
 	cameraFollowEntity = 0;
 
 	shuttingDownGameState = false;
-	optionsMenu = false;
 	core->particlesPaused = false;
 	bNatural = false;
 	songLineRender = 0;
@@ -6479,6 +6478,7 @@ void Game::applyState()
 		controlHint_bg->alphaMod = 0.7;
 		//controlHint_bg->setTexture("HintBox");
 		controlHint_bg->setWidthHeight(core->getVirtualWidth(), 100);
+		controlHint_bg->autoWidth = AUTO_VIRTUALWIDTH;
 		controlHint_bg->alpha = 0;
 	}
 	addRenderObject(controlHint_bg, LR_HELP);
@@ -7090,7 +7090,7 @@ void Game::bindInput()
 
 	/*
 	addAction(ACTION_MENULEFT,	KEY_LEFT);
-	addAction(ACTION_MENURIGHT, KEY_RIGHT);
+	addAction(ACTION_MENURIGHT,	KEY_RIGHT);
 	addAction(ACTION_MENUUP,	KEY_UP);
 	addAction(ACTION_MENUDOWN,	KEY_DOWN);
 
@@ -7099,17 +7099,16 @@ void Game::bindInput()
 	dsq->user.control.actionSet.importAction(this, "SwimUp",		ACTION_MENUUP);
 	dsq->user.control.actionSet.importAction(this, "SwimDown",		ACTION_MENUDOWN);
 
-	addAction(ACTION_MENULEFT,	X360_DPAD_LEFT);
-	addAction(ACTION_MENURIGHT, X360_DPAD_RIGHT);
-	addAction(ACTION_MENUUP,	X360_DPAD_UP);
-	addAction(ACTION_MENUDOWN,	X360_DPAD_DOWN);
+	addAction(ACTION_MENULEFT,	JOY1_DPAD_LEFT);
+	addAction(ACTION_MENURIGHT,	JOY1_DPAD_RIGHT);
+	addAction(ACTION_MENUUP,	JOY1_DPAD_UP);
+	addAction(ACTION_MENUDOWN,	JOY1_DPAD_DOWN);
 	*/
 
 	addAction(ACTION_MENULEFT,	JOY1_STICK_LEFT);
-	addAction(ACTION_MENURIGHT, JOY1_STICK_RIGHT);
+	addAction(ACTION_MENURIGHT,	JOY1_STICK_RIGHT);
 	addAction(ACTION_MENUUP,	JOY1_STICK_UP);
 	addAction(ACTION_MENUDOWN,	JOY1_STICK_DOWN);
-
 
 
 	if (avatar)

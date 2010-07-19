@@ -6179,28 +6179,13 @@ luaFunc(node_getNearestNode)
 {
 	//Entity *me = entity(L);
 	Path *p = path(L);
-	Path *closest=0;
+	Path *closest = 0;
 	if (p && !p->nodes.empty())
 	{
-		Vector pos = p->nodes[0].position;
 		std::string name;
 		if (lua_isstring(L, 2))
 			name = lua_tostring(L, 2);
-
-		int smallestDist = -1;
-		for (int i = 0; i < dsq->game->paths.size(); i++)
-		{
-			Path *p = dsq->game->paths[i];
-			if ((name.empty() || p->name == name) && !p->nodes.empty())
-			{
-				int dist = (pos - p->nodes[0].position).getSquaredLength2D();
-				if (smallestDist == -1 || dist < smallestDist)
-				{
-					smallestDist = dist;
-					closest = p;
-				}
-			}
-		}
+		closest = dsq->game->getNearestPath(p->nodes[0].position, name);
 	}
 	luaReturnPtr(closest);
 }
@@ -6232,30 +6217,10 @@ luaFunc(entity_getNearestNode)
 	Entity *me = entity(L);
 	std::string name;
 	if (lua_isstring(L, 2))
-	{
 		name = lua_tostring(L, 2);
-		stringToLower(name);
-	}
-
 	Path *ignore = path(L, 3);
-	Path *closest=0;
-	int smallestDist = -1;
-	for (int i = 0; i < dsq->game->paths.size(); i++)
-	{
-		Path *p = dsq->game->paths[i];
-		if (p && p != ignore)
-		{
-			if (name.empty() || p->name == name)
-			{
-				int dist = (me->position - p->nodes[0].position).getSquaredLength2D();
-				if (smallestDist == -1 || dist < smallestDist)
-				{
-					smallestDist = dist;
-					closest = p;
-				}
-			}
-		}
-	}
+
+	Path *closest = dsq->game->getNearestPath(me->position, name, ignore);
 	luaReturnPtr(closest);
 }
 

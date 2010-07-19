@@ -115,8 +115,8 @@ void AquariaGuiElement::updateMovement(float dt)
 
 		if (guiMoveTimer==0)
 		{
-			Vector p = core->joystick.position;
 			Direction dir = DIR_NONE;
+			Vector p = core->joystick.position;
 			if (!p.isLength2DIn(0.4))
 			{
 				if (fabsf(p.x) > fabsf(p.y))
@@ -134,8 +134,7 @@ void AquariaGuiElement::updateMovement(float dt)
 						dir = DIR_UP;
 				}
 			}
-
-			if (p.isZero())
+			else
 			{
 				StateObject *obj = dsq->getTopStateObject();
 				if (obj)
@@ -147,7 +146,7 @@ void AquariaGuiElement::updateMovement(float dt)
 				}
 			}
 
-			if (p.isZero()) return;
+			if (dir == DIR_NONE) return;
 
 			const float moveDelay = 0.2;
 

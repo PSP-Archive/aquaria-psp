@@ -2461,7 +2461,9 @@ void Continuity::loadFile(int slot)
 	dsq->user.save();
 	this->reset();
 
-	bool tmp=false;
+	TiXmlDocument doc;
+
+	bool tmp = false;
 
 	std::string teh_file = dsq->continuity.getSaveFileName(slot, "aqs");
 
@@ -2490,8 +2492,6 @@ void Continuity::loadFile(int slot)
 		teh_file = dsq->getSaveDirectory() + "/poot.tmp";
 		tmp = true;
 	}
-
-	TiXmlDocument doc;
 
 	doc.LoadFile(teh_file);
 

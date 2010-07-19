@@ -347,19 +347,19 @@ bool ActionMapper::getKeyState(int k)
 	{
 		keyState = core->joystick.btnSelect;
 	}
-	else if (k == X360_DPAD_LEFT)
+	else if (k == JOY1_DPAD_LEFT)
 	{
 		keyState = core->joystick.dpadLeft;
 	}
-	else if (k == X360_DPAD_RIGHT)
+	else if (k == JOY1_DPAD_RIGHT)
 	{
 		keyState = core->joystick.dpadRight;
 	}
-	else if (k == X360_DPAD_UP)
+	else if (k == JOY1_DPAD_UP)
 	{
 		keyState = core->joystick.dpadUp;
 	}
-	else if (k == X360_DPAD_DOWN)
+	else if (k == JOY1_DPAD_DOWN)
 	{
 		keyState = core->joystick.dpadDown;
 	}
@@ -401,40 +401,14 @@ void ActionMapper::onUpdate (float dt)
 						if (ad->state==-1 || keyState == ad->state)
 						{
 							ad->event->act();
-							// NOTE: see below (about multiple actions per key)
 						}
 					}
 					else
 					{
 						action(ad->id, keyState);
-						if (core->loopDone) goto out;
-						// note: this will allow multiple actions per key
-						// it runs through the actions' buttons to see if another action has the same button
-						// NOTE: This needs to be added to work for events as well, at some point
-						ActionDataSet::iterator u;
-						for (u = actionData.begin(); u != actionData.end(); ++u)
-						{
-							if (u != i)
-							{
-								ButtonList::iterator l;
-								l = u->buttonList.begin();
-								for (; l != u->buttonList.end(); l++)
-								{
-									int key = (*l);
-									if (key == k)
-									{
-										action(u->id, u->state);
-										if (core->loopDone)
-										{
-											goto out;
-										}
-									}
-								}
-							}
-						}
 					}
+					if (core->loopDone) goto out;
 				}
-				if (cleared) { cleared = false; goto out; }
 			}
 		}
 	}

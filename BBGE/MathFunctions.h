@@ -33,16 +33,17 @@ namespace MathFunctions
 		Vector dist = vector1 - vector2;
 
 		// 0 is down
-		// 90 is left
+		// 90 is right
 		// 180 is up
-		// 270 is right
-		// 360 is down 
+		// 270 is left
+		// 360 is down
 		solutionAngle = atan2f(dist.y, fabsf(dist.x));
-		solutionAngle  = (solutionAngle /PI)*180;
+		solutionAngle = (solutionAngle/PI)*180;
 		if (dist.x < 0)
 			solutionAngle = 180-solutionAngle;
 		solutionAngle += 90;
 	}
+
 	UNUSED static float toRadians(float rot)
 	{
 		return PI-(rot*PI)/180.0f;
