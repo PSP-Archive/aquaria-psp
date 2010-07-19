@@ -745,7 +745,8 @@ void WorldMapRender::clearVis(WorldMapTile *tile)
 #ifdef AQUARIA_BUILD_MAPVIS
 	if (visMethod == VIS_VERTEX)
 	{
-		tile->q->deleteGrid();
+		if (tile->q)
+			tile->q->deleteGrid();
 	}
 	else if (visMethod == VIS_WRITE)
 	{
