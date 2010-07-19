@@ -2499,18 +2499,17 @@ std::string Continuity::getSaveFileName(int slot, const std::string &pfix)
 	return os.str();
 }
 
-void Continuity::loadFile(int slot)
+void Continuity::loadFileData(int slot, TiXmlDocument &doc
+#ifdef BBGE_BUILD_PSP
+                              , PSPTexture **screenshot_ret
+#endif
+)
 {
-	dsq->user.save();
-	this->reset();
-
-	TiXmlDocument doc;
-
 #ifdef BBGE_BUILD_PSP
 
 	const uint32_t size = 100000;  // Waaay more than enough.  Hopefully.
 	char *buffer = new char[size];
-	if (savefile_load(slot+1, buffer, size-1, NULL))
+	if (savefile_load(slot+1, buffer, size-1, screenshot_ret))
 	{
 		int32_t bytesRead;
 		while (!savefile_status(&bytesRead)) {
@@ -2559,13 +2558,19 @@ void Continuity::loadFile(int slot)
 	doc.LoadFile(teh_file);
 
 	if (tmp)
-	{
 		remove(teh_file.c_str());
-	
-	}
 
 #endif
-	
+}
+
+void Continuity::loadFile(int slot)
+{
+	dsq->user.save();
+	this->reset();
+
+	TiXmlDocument doc;
+	loadFileData(slot, doc);
+
 	int versionMajor=-1, versionMinor=-1, versionRevision=-1;
 	TiXmlElement *xmlVersion = doc.FirstChildElement("Version");
 	if (xmlVersion)

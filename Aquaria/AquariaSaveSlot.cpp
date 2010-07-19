@@ -58,75 +58,12 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 	glowText->position = text1->position = Vector(-175, -25);
 
 
-	/*
 	TiXmlDocument doc;
-	doc.LoadFile(dsq->continuity.getSaveFileName(slot, "xml"));
-	*/
-
-
-	// FIXME: Loading code here is duplicated from Continuity.cpp.
-	// Ideally, we should coalesce them into a single routine.  --achurch
-
-	TiXmlDocument doc;
-
 #ifdef BBGE_BUILD_PSP
-
-	const uint32_t size = 100000;  // Waaay more than enough.  Hopefully.
-	char *buffer = new char[size];
 	PSPTexture *texture;
-	if (savefile_load(slot+1, buffer, size-1, &texture))
-	{
-		int32_t bytesRead;
-		while (!savefile_status(&bytesRead)) {
-			sys_time_delay(0.01);
-		}
-		if (bytesRead > 0)
-		{
-			buffer[bytesRead] = 0;
-			doc.Parse(buffer);
-		}
-	}
-	delete[] buffer;
-
-#else  // !BBGE_BUILD_PSP
-
-	bool tmp = false;
-
-	std::string teh_file = dsq->continuity.getSaveFileName(slot, "aqs");
-
-	if (!exists(teh_file, false))
-	{
-		teh_file = dsq->continuity.getSaveFileName(slot, "sav");
-
-		if (!exists(teh_file, false))
-		{
-			teh_file = dsq->continuity.getSaveFileName(slot, "xml");
-		}
-		else
-		{
-			uncrunchFile(teh_file, dsq->getSaveDirectory() + "/poot2.tmp");
-			unpackFile(dsq->getSaveDirectory() + "/poot2.tmp", dsq->getSaveDirectory() + "/poot.tmp");
-			remove((dsq->getSaveDirectory() + "/poot2.tmp").c_str());
-
-			teh_file = dsq->getSaveDirectory() + "/poot.tmp";
-			tmp = true;
-		}
-	}
-	else
-	{
-		unpackFile(teh_file, dsq->getSaveDirectory() + "/poot.tmp");
-
-		teh_file = dsq->getSaveDirectory() + "/poot.tmp";
-		tmp = true;
-	}
-
-	doc.LoadFile(teh_file);
-
-	if (tmp)
-	{
-		remove(teh_file.c_str());
-	}
-
+	dsq->continuity.loadFileData(slot, doc, &texture);
+#else
+	dsq->continuity.loadFileData(slot, doc);
 #endif
 
 	std::string description = getSaveDescription(doc);
