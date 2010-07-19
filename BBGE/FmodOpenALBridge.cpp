@@ -636,6 +636,7 @@ OpenALChannel::OpenALChannel()
     , frequency(1.0f)
     , group(NULL)
     , sound(NULL)
+    , decoder(NULL)
     , inuse(false)
     , initial(true)
 {
