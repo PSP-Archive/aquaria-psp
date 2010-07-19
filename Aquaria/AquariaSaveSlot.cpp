@@ -58,53 +58,8 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 	glowText->position = text1->position = Vector(-175, -25);
 
 
-	/*
 	TiXmlDocument doc;
-	doc.LoadFile(dsq->continuity.getSaveFileName(slot, "xml"));
-	*/
-
-
-	// FIXME: Loading code here is duplicated from Continuity.cpp.
-	// Ideally, we should coalesce them into a single routine.  --achurch
-
-	TiXmlDocument doc;
-
-	bool tmp = false;
-
-	std::string teh_file = dsq->continuity.getSaveFileName(slot, "aqs");
-
-	if (!exists(teh_file, false))
-	{
-		teh_file = dsq->continuity.getSaveFileName(slot, "sav");
-
-		if (!exists(teh_file, false))
-		{
-			teh_file = dsq->continuity.getSaveFileName(slot, "xml");
-		}
-		else
-		{
-			uncrunchFile(teh_file, dsq->getSaveDirectory() + "/poot2.tmp");
-			unpackFile(dsq->getSaveDirectory() + "/poot2.tmp", dsq->getSaveDirectory() + "/poot.tmp");
-			remove((dsq->getSaveDirectory() + "/poot2.tmp").c_str());
-
-			teh_file = dsq->getSaveDirectory() + "/poot.tmp";
-			tmp = true;
-		}
-	}
-	else
-	{
-		unpackFile(teh_file, dsq->getSaveDirectory() + "/poot.tmp");
-
-		teh_file = dsq->getSaveDirectory() + "/poot.tmp";
-		tmp = true;
-	}
-
-	doc.LoadFile(teh_file);
-
-	if (tmp)
-	{
-		remove(teh_file.c_str());
-	}
+	dsq->continuity.loadFileData(slot, doc);
 
 	std::string description = getSaveDescription(doc);
 	if (description.length() > 0)
