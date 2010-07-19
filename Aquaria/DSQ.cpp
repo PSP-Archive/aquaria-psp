@@ -1438,6 +1438,18 @@ This build is not yet final, and as such there are a couple things lacking. They
 	}
 	addRenderObject(overlayRed, LR_OVERLAY);
 
+	sceneColorOverlay = new Quad;
+	{
+		sceneColorOverlay->position = Vector(400,300);
+		sceneColorOverlay->color = Vector(1,1,1);
+		sceneColorOverlay->alpha = 1;
+		sceneColorOverlay->setBlendType(RenderObject::BLEND_MULT);
+		sceneColorOverlay->autoWidth = AUTO_VIRTUALWIDTH;
+		sceneColorOverlay->autoHeight = AUTO_VIRTUALHEIGHT;
+		sceneColorOverlay->followCamera = 1;
+	}
+	addRenderObject(sceneColorOverlay, LR_SCENE_COLOR);
+
 	tfader = new Quad;
 	{
 		tfader->position = Vector(400,300,3);

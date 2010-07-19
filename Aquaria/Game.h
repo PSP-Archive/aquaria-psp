@@ -923,6 +923,7 @@ public:
 	void ensureLimit(Entity *e, int num, int state=0);
 
 	void rebuildElementUpdateList();
+	void setElementLayerFlags();
 
 	float getTimer(float mod=1);
 	float getHalfTimer(float mod=1);

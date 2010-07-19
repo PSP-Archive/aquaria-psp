@@ -504,6 +504,7 @@ enum Layers
 	LR_FOREGROUND_ELEMENTS2	,
 	LR_PARTICLES_TOP		,
 	LR_AFTER_EFFECTS		,
+	LR_SCENE_COLOR			,
 	LR_MENU					,
 	LR_MENU2				,
 	LR_HUD					,
@@ -1238,6 +1239,7 @@ public:
 
 	Quad *cursor, *cursorGlow, *cursorBlinker;
 	Quad *overlay, *tfader, *overlay2, *overlay3, *overlayRed;
+	Quad *sceneColorOverlay;
 	Quad *bar_left, *bar_right, *bar_up, *bar_down;
 	Quad *barFade_left, *barFade_right;
 

@@ -35,10 +35,13 @@ RenderObjectLayer::RenderObjectLayer()
 	followCameraLock = FCL_NONE;
 	cull = true;
 	update = true;
+	optimizeStatic = false;
 
 	mode = Core::MODE_2D;
 
 	color = Vector(1,1,1);
+
+	displayListValid = false;
 	
 #ifdef RLT_FIXED
 	const int size = renderObjects.size();
@@ -49,9 +52,20 @@ RenderObjectLayer::RenderObjectLayer()
 #endif
 }
 
-void RenderObjectLayer::setCull(bool v)
+RenderObjectLayer::~RenderObjectLayer()
 {
-	this->cull = v;
+	clearDisplayList();
+}
+
+void RenderObjectLayer::setCull(bool cull)
+{
+	this->cull = cull;
+}
+
+void RenderObjectLayer::setOptimizeStatic(bool opt)
+{
+	this->optimizeStatic = opt;
+	clearDisplayList();
 }
 
 #ifdef RLT_DYNAMIC
@@ -63,6 +77,9 @@ bool sortRenderObjectsByDepth(RenderObject *r1, RenderObject *r2)
 
 void RenderObjectLayer::sort()
 {
+	if (optimizeStatic && displayListValid)
+		return;  // Assume the order hasn't changed
+
 #ifdef RLT_FIXED
 	// Compress the list before sorting to boost speed.
 	const int size = renderObjects.size();
@@ -156,6 +173,8 @@ void RenderObjectLayer::add(RenderObject* r)
 #ifdef RLT_MAP
 	renderObjectMap[intptr_t(r)] = r;
 #endif
+
+	clearDisplayList();
 }
 
 void RenderObjectLayer::remove(RenderObject* r)
@@ -184,6 +203,8 @@ void RenderObjectLayer::remove(RenderObject* r)
 #ifdef RLT_MAP
 	renderObjectMap[intptr_t(r)] = 0;
 #endif
+
+	clearDisplayList();
 }
 
 void RenderObjectLayer::moveToFront(RenderObject *r)
@@ -250,6 +271,8 @@ void RenderObjectLayer::moveToFront(RenderObject *r)
 	renderObjectList.remove(r);
 	renderObjectList.push_back(r);
 #endif
+
+	clearDisplayList();
 }
 
 void RenderObjectLayer::moveToBack(RenderObject *r)
@@ -319,23 +342,158 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
         renderObjectList.remove(r);
 	renderObjectList.push_front(r);
 #endif
+
+	clearDisplayList();
 }
 
 void RenderObjectLayer::renderPass(int pass)
 {
 	core->currentLayerPass = pass;
 
+	if (optimizeStatic && (followCamera == 0 || followCamera == NO_FOLLOW_CAMERA))
+	{
+		if (!displayListValid)
+			generateDisplayList();
+
+		const int size = displayList.size();
+		for (int i = 0; i < size; i++)
+		{
+			if (displayList[i].isList)
+			{
+#ifdef BBGE_BUILD_OPENGL
+				glCallList(displayList[i].u.listID);
+#endif
+				RenderObject::lastTextureApplied = 0;
+			}
+			else
+				renderOneObject(displayList[i].u.robj);
+		}
+	}
+	else
+	{
+		for (RenderObject *robj = getFirst(); robj; robj = getNext())
+		{
+			renderOneObject(robj);
+		}
+	}
+}
+
+void RenderObjectLayer::reloadDevice()
+{
+	if (displayListValid)
+		clearDisplayList();
+}
+
+void RenderObjectLayer::clearDisplayList()
+{
+	if (!displayListValid)
+		return;
+
+	const int size = displayList.size();
+	for (int i = 0; i < size; i++)
+	{
+		if (displayList[i].isList)
+			glDeleteLists(displayList[i].u.listID, 1);
+	}
+
+	displayList.resize(0);
+	displayListValid = false;
+}
+
+void RenderObjectLayer::generateDisplayList()
+{
+	// Temporarily disable culling so all static objects are entered into
+	// the display list.
+	bool savedCull = this->cull;
+	this->cull = false;
+
+	int listSize = 0, listLength = 0;
+	bool lastWasStatic = false;
+
 	for (RenderObject *robj = getFirst(); robj; robj = getNext())
 	{
-		core->totalRenderObjectCount++;
-		if (robj->getParent() || robj->alpha.x == 0)
-			continue;
-
-		if (!this->cull || !robj->cull || robj->isOnScreen())
+		if (listLength >= listSize)
 		{
-			robj->render();
-			core->renderObjectCount++;
+			listSize += 100;
+			displayList.resize(listSize);
 		}
-		core->processedRenderObjectCount++;
+		bool addEntry = true;  // Add an entry for this robj?
+		if (robj->isStatic() && robj->followCamera == 0)
+		{
+			if (lastWasStatic)
+			{
+				addEntry = false;
+			}
+			else
+			{
+#ifdef BBGE_BUILD_OPENGL
+				int listID = glGenLists(1);
+				if (listID != 0)
+				{
+					(void) glGetError();  // Clear error state
+					glNewList(listID, GL_COMPILE);
+					if (glGetError() == GL_NO_ERROR)
+					{
+						displayList[listLength].isList = true;
+						displayList[listLength].u.listID = listID;
+						listLength++;
+						lastWasStatic = true;
+						addEntry = false;
+						RenderObject::lastTextureApplied = 0;
+					}
+					else
+						debugLog("glNewList failed");
+				}
+				else
+					debugLog("glGenLists failed");
+#endif
+			}
+		}
+		else
+		{
+			if (lastWasStatic)
+			{
+#ifdef BBGE_BUILD_OPENGL
+				glEndList();
+#endif
+				lastWasStatic = false;
+			}
+		}
+		if (addEntry)
+		{
+			displayList[listLength].isList = false;
+			displayList[listLength].u.robj = robj;
+			listLength++;
+		}
+		else
+		{
+			renderOneObject(robj);
+		}
 	}
+
+	if (lastWasStatic)
+	{
+#ifdef BBGE_BUILD_OPENGL
+		glEndList();
+#endif
+	}
+
+	displayList.resize(listLength);
+	displayListValid = true;
+
+	this->cull = savedCull;
+}
+
+inline void RenderObjectLayer::renderOneObject(RenderObject *robj)
+{
+	core->totalRenderObjectCount++;
+	if (robj->getParent() || robj->alpha.x == 0)
+		return;
+
+	if (!this->cull || !robj->cull || robj->isOnScreen())
+	{
+		robj->render();
+		core->renderObjectCount++;
+	}
+	core->processedRenderObjectCount++;
 }

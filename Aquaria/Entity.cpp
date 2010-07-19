@@ -3279,9 +3279,6 @@ void Entity::render()
 	InterpolatedVector bscale = scale;
 
 	scale *= flipScale;
-	color *= dsq->game->sceneColor;
-	color *= dsq->game->sceneColor2;
-	color *= dsq->game->sceneColor3;
 	if (multColor.isInterpolating())
 	{
 		color *= multColor;

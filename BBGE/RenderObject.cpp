@@ -71,6 +71,9 @@ void RenderObject::applyBlendType()
 		case BLEND_SUB:
 			glBlendFunc(GL_ZERO, GL_SRC_ALPHA);
 		break;
+		case BLEND_MULT:
+			glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+		break;
 		}
 	}
 	else
@@ -201,6 +204,7 @@ RenderObject::RenderObject()
 	decayRate = 0;
 	_dead = false;
 	_hidden = false;
+	_static = false;
 	fadeAlphaWithLife = false;
 	blendType = BLEND_DEFAULT;
 	//lifeAlphaFadeMultiplier = 1;

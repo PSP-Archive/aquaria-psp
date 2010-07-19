@@ -964,9 +964,9 @@ void Avatar::updateHair(float dt)
 	if (hair && b)
 	{
 		hair->alpha.x = alpha.x;
-		hair->color.x = color.x * multColor.x * dsq->game->sceneColor.x * dsq->game->sceneColor2.x * dsq->game->sceneColor3.x;
-		hair->color.y = color.y * multColor.y * dsq->game->sceneColor.y * dsq->game->sceneColor2.y * dsq->game->sceneColor3.y;
-		hair->color.z = color.z * multColor.z * dsq->game->sceneColor.z * dsq->game->sceneColor2.z * dsq->game->sceneColor3.z;
+		hair->color.x = color.x * multColor.x;
+		hair->color.y = color.y * multColor.y;
+		hair->color.z = color.z * multColor.z;
 		Vector headPos = b->getWorldCollidePosition(Vector(12,-32,0));
 
 		hair->setHeadPosition(headPos);
