@@ -24,6 +24,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/Particles.h"
 #include "ScriptInterface.h"
 
+#undef PATH_MAX  // May be set by a system header.
+
 class PathNode
 {
 public:
@@ -48,7 +50,8 @@ enum PathType
 	PATH_GEM			= 11,
 	PATH_SETING			= 12,
 	PATH_SETENT			= 13,
-	PATH_ZOOM			= 14
+	PATH_ZOOM			= 14,
+	PATH_MAX
 };
 
 enum LocalWarpType
@@ -119,6 +122,7 @@ public:
 	float animOffset;
 
 	PathType pathType;
+	Path *nextOfType;
 
 	int toFlip;
 

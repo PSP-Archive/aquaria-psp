@@ -1646,10 +1646,9 @@ bool Entity::updateCurrents(float dt)
 		//Path *p = dsq->game->getNearestPath(position, PATH_CURRENT);
 		if (dsq->continuity.getWorldType() != WT_SPIRIT)
 		{
-			for (int i = 0; i < dsq->game->paths.size(); i++)
+			for (Path *p = dsq->game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
 			{
-				Path *p = dsq->game->paths[i];
-				if (p && p->active && p->pathType == PATH_CURRENT)
+				if (p->active)
 				{
 					for (int n = 1; n < p->nodes.size(); n++)
 					{
@@ -3006,16 +3005,10 @@ void Entity::setInvincible(bool inv)
 
 bool Entity::isInDarkness()
 {
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (Element *e = dsq->getFirstElementOnLayer(12); e; e = e->bgLayerNext)
 	{
-		Element *e = dsq->elements[i];
-		if (e->bgLayer == 12)
-		{
-			if (e->isCoordinateInside(position))
-			{
-				return true;
-			}
-		}
+		if (e->isCoordinateInside(position))
+			return true;
 	}
 	return false;
 }
@@ -3047,10 +3040,9 @@ bool Entity::canSetState(int state)
 
 bool Entity::updateLocalWarpAreas(bool affectAvatar)
 {
-	int i = 0;
-	for (i = 0; i < dsq->game->paths.size(); i++)
+	for (int i = 0; i < dsq->game->getNumPaths(); i++)
 	{
-		Path *p = dsq->game->paths[i];
+		Path *p = dsq->game->getPath(i);
 		if (!p->nodes.empty())
 		{
 			PathNode *n = &p->nodes[0];

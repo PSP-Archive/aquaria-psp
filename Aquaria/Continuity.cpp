@@ -1531,10 +1531,10 @@ void Continuity::castSong(int num)
 			e->song((SongType)num);
 		}
 	}
-	for (int i = 0; i < dsq->game->paths.size(); i++)
+	for (int i = 0; i < dsq->game->getNumPaths(); i++)
 	{
 		//Entity *e = dsq->entities[i];
-		Path *p = dsq->game->paths[i];
+		Path *p = dsq->game->getPath(i);
 		if (p && !p->nodes.empty())
 		{
 			PathNode *n = &p->nodes[0];

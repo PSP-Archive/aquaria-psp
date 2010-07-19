@@ -1287,16 +1287,24 @@ public:
 	NagType nagType;
 
 	int getEntityLayerToLayer(int layer);
+	void removeEntity(Entity *e);
 
 	void addElement(Element *e);
+	int getNumElements() const {return elements.size();}
+	Element *getElement(int idx) const {return elements[idx];}
+	Element *getFirstElementOnLayer(int layer) const {return layer<0 || layer>15 ? 0 : firstElementOnLayer[layer];}
+	Element *getElementWithType(Element::Type type);
+	void clearElements();
+	// Used only by scene editor:
 	void removeElement(int idx);
 	void removeElement(Element *e);
-	void removeEntity(Entity *e);
-	void clearElements();
-	Element *getElementWithType(Element::Type type);
+	ElementContainer getElementsCopy() const {return elements;}
 
 	bool useFrameBuffer;
+protected:  // These should never be accessed from outside (use the functions above).
 	ElementContainer elements;
+	Element *firstElementOnLayer[16];
+public:
 	EntityList entities;
 	Continuity continuity;
 	GameplayVariables v;

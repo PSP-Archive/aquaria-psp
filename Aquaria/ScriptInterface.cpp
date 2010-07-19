@@ -6093,10 +6093,9 @@ luaFunc(node_setElementsInLayerActive)
 	Path *p = path(L);
 	int l = lua_tonumber(L, 2);
 	bool v = getBool(L, 3);
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (Element *e = dsq->getFirstElementOnLayer(l); e; e = e->bgLayerNext)
 	{
-		Element *e = dsq->elements[i];
-		if (e && p->isCoordinateInside(e->position) && e->bgLayer == l)
+		if (e && p->isCoordinateInside(e->position))
 		{
 			debugLog("setting an element to the value");
 			e->setElementActive(v);
@@ -6325,13 +6324,9 @@ luaFunc(isInCutscene)
 luaFunc(toggleSteam)
 {
 	bool on = getBool(L, 1);
-	for (int i = 0; i < dsq->game->paths.size(); i++)
+	for (Path *p = dsq->game->getFirstPathOfType(PATH_STEAM); p; p = p->nextOfType)
 	{
-		Path *p = dsq->game->paths[i];
-		if (p->pathType == PATH_STEAM)
-		{
-			p->setEffectOn(on);
-		}
+		p->setEffectOn(on);
 	}
 	luaReturnBool(on);
 }

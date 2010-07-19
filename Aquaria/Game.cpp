@@ -1075,18 +1075,6 @@ void Game::playSongInMenu(int songType, bool override)
 	}
 }
 
-void Game::removePath(int idx)
-{
-	if (idx >= 0 && idx < paths.size()) paths[idx]->destroy();
-	std::vector<Path*> copy = this->paths;
-	paths.clear();
-	for (int i = 0; i < copy.size(); i++)
-	{
-		if (i != idx)
-			paths.push_back(copy[i]);
-	}
-}
-
 void Game::flipRenderObjectVertical(RenderObject *r, int flipY)
 {
 	if (r->position.y < flipY)
@@ -1124,9 +1112,9 @@ void Game::flipSceneVertical(int flipY)
 		else
 			obsRows[i].ty = flipTY - (obsRows[i].ty - flipTY);
 	}
-	for (ElementContainer::iterator eit = dsq->elements.begin(); eit != dsq->elements.end(); eit++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = (*eit);
+		Element *e = dsq->getElement(i);
 		e->rotation.z = 180-e->rotation.z;
 		flipRenderObjectVertical(e, flipY);
 	}
@@ -1263,6 +1251,9 @@ Game::Game() : StateObject()
 	cameraFollow = 0;
 
 	worldMapRender = 0;
+
+	for (int i = 0; i < PATH_MAX; i++)
+		firstPathOfType[i] = 0;
 
 	loadEntityTypeList();
 
@@ -2231,12 +2222,12 @@ void Game::reconstructGrid(bool force)
 
 	clearGrid();
 	int i = 0;
-	for (i = 0; i < dsq->elements.size(); i++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		e->fillGrid();
 		/*
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (e->getElementType() == Element::BOX)
 		{
 			int w = e->getWidth()/TILE_SIZE;
@@ -2983,11 +2974,33 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 #endif
 }
 
-Path *Game::getPathByIndex(int idx)
+void Game::addPath(Path *p)
 {
-	if (idx >= 0 && idx < paths.size())
-		return paths[idx];
-	return 0;
+	paths.push_back(p);
+	if (p->pathType >= 0 && p->pathType < PATH_MAX)
+	{
+		p->nextOfType = firstPathOfType[p->pathType];
+		firstPathOfType[p->pathType] = p;
+	}
+}
+
+void Game::removePath(int idx)
+{
+	if (idx >= 0 && idx < paths.size()) paths[idx]->destroy();
+	std::vector<Path*> copy = this->paths;
+	clearPaths();
+	for (int i = 0; i < copy.size(); i++)
+	{
+		if (i != idx)
+			addPath(copy[i]);
+	}
+}
+
+void Game::clearPaths()
+{
+	paths.clear();
+	for (int i = 0; i < PATH_MAX; i++)
+		firstPathOfType[i] = 0;
 }
 
 int Game::getIndexOfPath(Path *p)
@@ -3077,10 +3090,9 @@ Path *Game::getNearestPath(const Vector &pos, PathType pathType)
 {
 	Path *closest = 0;
 	float smallestDist = HUGE_VALF;
-	for (int i = 0; i < dsq->game->paths.size(); i++)
+	for (Path *cp = dsq->game->getFirstPathOfType(pathType); cp; cp = cp->nextOfType)
 	{
-		Path *cp = dsq->game->paths[i];
-		if (cp->pathType == pathType && !cp->nodes.empty())
+		if (!cp->nodes.empty())
 		{
 			const Vector v = cp->nodes[0].position - pos;
 			const float dist = v.getSquaredLength2D();
@@ -3099,6 +3111,17 @@ Path *Game::getNearestPath(Path *p, std::string s)
 	if (p->nodes.empty()) return 0;
 
 	return getNearestPath(p->nodes[0].position, s);
+}
+
+Path *Game::getPathByName(std::string name)
+{
+	stringToLowerUserData(name);
+	for (int i = 0; i < paths.size(); i++)
+	{
+		if (paths[i]->name == name)
+			return paths[i];
+	}
+	return 0;
 }
 
 
@@ -4645,7 +4668,7 @@ bool Game::loadSceneXML(std::string scene)
 			nodeXml = nodeXml->NextSiblingElement("Node");
 		}
 		path->refreshScript();
-		paths.push_back(path);
+		addPath(path);
 		addProgress();
 		pathXml = pathXml->NextSiblingElement("Path");
 	}
@@ -4942,7 +4965,7 @@ bool Game::loadSceneXML(std::string scene)
 		b->position = Vector(atoi(boxElement->Attribute("x")), atoi(boxElement->Attribute("y")));
 		addRenderObject(b, LR_BLACKGROUND);
 		b->position.z = boxElementZ;
-		dsq->elements.push_back(b);
+		dsq->addElement(b);
 		boxElement = boxElement->NextSiblingElement("BoxElement");
 	}
 
@@ -5256,9 +5279,9 @@ bool Game::loadSceneXML(std::string scene)
 						{
 							int idx;
 							is >> idx;
-							if (Path *p = getPathByIndex(idx))
+							if (idx >= 0 && idx < getNumPaths())
 							{
-								nodeGroups[i].push_back(p);
+								nodeGroups[i].push_back(getPath(idx));
 							}
 						}
 					}
@@ -5349,9 +5372,9 @@ void Game::findMaxCameraValues()
 		}
 	}
 	/*
-	for (i = 0; i < dsq->elements.size(); i++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (e->position.x > cameraMax.x)
 			cameraMax.x = e->position.x;
 		if (e->position.y > cameraMax.y)
@@ -5472,17 +5495,6 @@ bool Game::loadScene(std::string scene)
 	*/
 }
 
-Path *Game::getPathByName(std::string name)
-{
-    stringToLowerUserData(name);
-	for(int i = 0; i < paths.size(); i++)
-	{
-		if (paths[i]->name == name)
-			return paths[i];
-	}
-	return 0;
-}
-
 void Game::saveScene(std::string scene)
 {
 	std::string fn = getSceneFilename(scene);
@@ -5554,10 +5566,10 @@ void Game::saveScene(std::string scene)
 	saveFile.InsertEndChild(obsXml);
 
 
-	for (i = 0; i < dsq->game->paths.size(); i++)
+	for (i = 0; i < dsq->game->getNumPaths(); i++)
 	{
 		TiXmlElement pathXml("Path");
-		Path *p = dsq->game->paths[i];
+		Path *p = dsq->game->getPath(i);
 		pathXml.SetAttribute("name", p->name);
 		//pathXml.SetAttribute("active", p->active);
 		for (int n = 0; n < p->nodes.size(); n++)
@@ -5606,9 +5618,9 @@ void Game::saveScene(std::string scene)
 	std::ostringstream simpleElements[LR_MAX];
 
 
-	for (i = 0; i < dsq->elements.size(); i++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (!e->dontSave)
 		{
 			if (e->getElementType() == Element::BOX) {}
@@ -5820,9 +5832,9 @@ void Game::colorTest()
 	/*
 	std::vector<QuadLight> quadLights;
 	quadLights.push_back(QuadLight(Vector(400, 300), Vector(1, 0, 0), 2000));
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (int i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		//e->color = Vector(rand()%100, rand()%100, rand()%100);
 		for (int i = 0; i < quadLights.size(); i++)
 		{
@@ -6084,11 +6096,11 @@ void Game::rebuildElementUpdateList()
 		dsq->getRenderObjectLayer(i)->update = false;
 
 	elementUpdateList.clear();
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (int i = 0; i < dsq->getNumElements(); i++)
 	//for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS8; i++)
 	{
 		//RenderObjectLayer *rl = dsq->getRenderObjectLayer(i);
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (e && e->layer >= LR_ELEMENTS1 && e->layer <= LR_ELEMENTS8)
 		{
 			if (e->getElementEffectIndex() != -1)
@@ -6844,9 +6856,9 @@ void Game::applyState()
 		Path *closest = 0;
 		Vector closestPushOut;
 		bool doFlip = false;
-		for (int i = 0; i < dsq->game->paths.size(); i++)
+		for (int i = 0; i < dsq->game->getNumPaths(); i++)
 		{
-			Path *p = dsq->game->paths[i];
+			Path *p = dsq->game->getPath(i);
 			Vector pos = p->nodes[0].position;
 			if (p && (nocasecmp(p->warpMap, fromScene)==0))
 			{
@@ -7064,10 +7076,10 @@ void Game::applyState()
 	core->resetTimer();
 
 	if (verbose) debugLog("paths init");
-	int pathSz = paths.size();
+	int pathSz = getNumPaths();
 	for (i = 0; i < pathSz; i++)
 	{
-		paths[i]->init();
+		getPath(i)->init();
 	}
 
 	debugLog("Updating bgSfxLoop");
@@ -8933,10 +8945,9 @@ void Game::updateCurrentVisuals(float dt)
 	delay += dt;
 	if (delay > 0.2f)
 	{
-		for (int i = 0; i < dsq->game->paths.size(); i++)
+		for (Path *p = dsq->game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
 		{
-			Path *p = dsq->game->paths[i];
-			if (p->pathType == PATH_CURRENT && p->active)
+			if (p->active)
 			{
 				for (int n = 1; n < p->nodes.size(); n++)
 				{
@@ -8955,11 +8966,11 @@ void Game::updateCurrentVisuals(float dt)
 	*/
 
 	/*
-    if (dsq->game->paths[i]->name == "CURRENT" && dsq->game->paths[i]->nodes.size() >= 2)
+    if (dsq->game->getPath(i)->name == "CURRENT" && dsq->game->getPath(i)->nodes.size() >= 2)
 	{
-		Vector dir = dsq->game->paths[i]->nodes[1].position - dsq->game->paths[i]->nodes[0].position;
+		Vector dir = dsq->game->getPath(i)->nodes[1].position - dsq->game->getPath(i)->nodes[0].position;
 		dir.setLength2D(800);
-		dsq->spawnBubble(dsq->game->paths[i]->nodes[0].position, dir);
+		dsq->spawnBubble(dsq->game->getPath(i)->nodes[0].position, dir);
 	}
 	*/
 }
@@ -10382,9 +10393,9 @@ void Game::update(float dt)
 
 
 	int i = 0;
-	for (i = 0; i < dsq->game->paths.size(); i++)
+	for (i = 0; i < dsq->game->getNumPaths(); i++)
 	{
-		dsq->game->paths[i]->update(dt);
+		dsq->game->getPath(i)->update(dt);
 	}
 
 	FOR_ENTITIES(j)
@@ -11106,12 +11117,13 @@ void Game::removeState()
 	dsq->game->avatar->myZoom = Vector(1,1);
 	dsq->globalScale = Vector(1,1);
 
-	for (int i = 0; i < paths.size(); i++)
+	for (int i = 0; i < getNumPaths(); i++)
 	{
-		paths[i]->destroy();
-		delete(paths[i]);
+		Path *p = getPath(i);
+		p->destroy();
+		delete p;
 	}
-	paths.clear();
+	clearPaths();
 
 	StateObject::removeState();
 	dsq->clearElements();

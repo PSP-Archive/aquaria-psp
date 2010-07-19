@@ -751,8 +751,24 @@ public:
 	Vector cameraMin, cameraMax;
 	bool removeEntity(Entity *e);
 
+protected:
 	std::vector<Path*> paths;
+	Path *firstPathOfType[PATH_MAX];
+public:
+	void addPath(Path *p);
+	void removePath(int idx);
+	void clearPaths();
+	int getNumPaths() const {return paths.size();}
+	Path *getPath(int idx) const {return paths[idx];}
+	Path *getFirstPathOfType(PathType type) const {return firstPathOfType[type];}
 	Path *getPathByName(std::string name);
+	int getIndexOfPath(Path *p);
+	Path *getPathAtCursor();
+	Path *getScriptedPathAtCursor(bool withAct=false);
+	Path *getNearestPath(const Vector &pos, const std::string &name="", const Path *ignore=0);
+	Path *getNearestPath(const Vector &pos, PathType pathType=PATH_NONE);
+	Path *getNearestPath(Path *p, std::string name);
+
 	std::string avatarTransit;
 	SceneEditor sceneEditor;
 
@@ -766,16 +782,10 @@ public:
 	void hideInGameMenu(bool effects=true);
 	void showInGameMenu(bool force=false, bool optionsOnly=false, MenuPage menuPage = MENUPAGE_NONE);
 	bool optionsOnly;
-	void removePath(int idx);
 
 	MenuPage currentMenuPage;
 
 	Precacher tileCache;
-	Path *getNearestPath(const Vector &pos, const std::string &name="", const Path *ignore=0);
-	Path *getNearestPath(const Vector &pos, PathType pathType=PATH_NONE);
-	Path *getNearestPath(Path *p, std::string name);
-	Path *getPathAtCursor();
-	Path *getScriptedPathAtCursor(bool withAct=false);
 
 	//void cameraPanToNode(Path *p, int speed=500);
 	//void cameraRestore();
@@ -854,8 +864,6 @@ public:
 
 	bool creatingSporeChildren;
 	bool loadingScene;
-	int getIndexOfPath(Path *p);
-	Path *getPathByIndex(int idx);
 
 	WaterSurfaceRender *waterSurfaceRender;
 	Quad *shapeDebug;
