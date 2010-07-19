@@ -101,7 +101,8 @@ void Emitter::spawnParticle(float perc)
 	if (data.randomRotationRange > 0)
 	{
 		p->rot.z = rand()%int(data.randomRotationRange);
-		p->rot.target.z += p->rot.z;
+		p->rot.ensureData();
+		p->rot.data->target.z += p->rot.z;
 	}
 
 	/*

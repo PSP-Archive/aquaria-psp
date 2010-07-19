@@ -465,9 +465,10 @@ void DSQ::centerMessage(const std::string &text, float y, int type)
 	else
 		t = new BitmapText(&smallFont);
 	t->position = pos;
-	t->alpha.path.addPathNode(1, 0);
-	t->alpha.path.addPathNode(1, 0.8);
-	t->alpha.path.addPathNode(0, 1);
+	t->alpha.ensureData();
+	t->alpha.data->path.addPathNode(1, 0);
+	t->alpha.data->path.addPathNode(1, 0.8);
+	t->alpha.data->path.addPathNode(0, 1);
 	t->alpha.startPath(time);
 	t->followCamera = 1;
 	t->setLife(time + 0.5f);
@@ -490,10 +491,11 @@ void DSQ::centerText(const std::string &text)
 	s->setLife(time + 0.5f);
 	s->setDecayRate(1);
 	s->followCamera = 1;
-	s->alpha.path.addPathNode(0, 0);
-	s->alpha.path.addPathNode(1, 0.1);
-	s->alpha.path.addPathNode(1, 0.8);
-	s->alpha.path.addPathNode(0, 1);
+	s->alpha.ensureData();
+	s->alpha.data->path.addPathNode(0, 0);
+	s->alpha.data->path.addPathNode(1, 0.1);
+	s->alpha.data->path.addPathNode(1, 0.8);
+	s->alpha.data->path.addPathNode(0, 1);
 	s->alpha.startPath(time);
 	getTopStateData()->addRenderObject(s, LR_HUD);
 
@@ -502,10 +504,11 @@ void DSQ::centerText(const std::string &text)
 	
 
 	t->position =pos;
-	t->alpha.path.addPathNode(0, 0);
-	t->alpha.path.addPathNode(1, 0.1);
-	t->alpha.path.addPathNode(1, 0.8);
-	t->alpha.path.addPathNode(0, 1);
+	t->alpha.ensureData();
+	t->alpha.data->path.addPathNode(0, 0);
+	t->alpha.data->path.addPathNode(1, 0.1);
+	t->alpha.data->path.addPathNode(1, 0.8);
+	t->alpha.data->path.addPathNode(0, 1);
 	t->alpha.startPath(time);
 	/*
 	t->scale = Vector(0.7, 0.7);
@@ -2450,10 +2453,11 @@ void DSQ::clickRingEffect(Vector pos, int type, Vector color, float ut)
 
 			q->setBlendType(RenderObject::BLEND_ADD);
 
-			q->alpha.path.addPathNode(0, 0);
-			q->alpha.path.addPathNode(0.5, 0.1);
-			q->alpha.path.addPathNode(0.5, 0.5);
-			q->alpha.path.addPathNode(0, 1);
+			q->alpha.ensureData();
+			q->alpha.data->path.addPathNode(0, 0);
+			q->alpha.data->path.addPathNode(0.5, 0.1);
+			q->alpha.data->path.addPathNode(0.5, 0.5);
+			q->alpha.data->path.addPathNode(0, 1);
 			q->alpha.startPath(t);
 
 			q->position = pos;
@@ -2479,10 +2483,11 @@ void DSQ::clickRingEffect(Vector pos, int type, Vector color, float ut)
 
 			q->color = color;
 
-			q->alpha.path.addPathNode(0, 0);
-			q->alpha.path.addPathNode(0.5, 0.1);
-			q->alpha.path.addPathNode(0.5, 0.5);
-			q->alpha.path.addPathNode(0, 1);
+			q->alpha.ensureData();
+			q->alpha.data->path.addPathNode(0, 0);
+			q->alpha.data->path.addPathNode(0.5, 0.1);
+			q->alpha.data->path.addPathNode(0.5, 0.5);
+			q->alpha.data->path.addPathNode(0, 1);
 			q->alpha.startPath(t);
 
 			q->position = pos;
@@ -4649,10 +4654,11 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 		q->color = Vector(1,1,1);
 		q->color.interpolateTo(Vector(1,0,0),t-t*0.05f);
 		*/
-		q->alpha.path.addPathNode(0, 0);
-		q->alpha.path.addPathNode(0.75, 0.25);
-		q->alpha.path.addPathNode(0.75, 0.75);
-		q->alpha.path.addPathNode(0, 1);
+		q->alpha.ensureData();
+		q->alpha.data->path.addPathNode(0, 0);
+		q->alpha.data->path.addPathNode(0.75, 0.25);
+		q->alpha.data->path.addPathNode(0.75, 0.75);
+		q->alpha.data->path.addPathNode(0, 1);
 		q->alpha.startPath(t);
 		q->setBlendType(RenderObject::BLEND_ADD);
 		q->setTexture("particles/EnergyRing");
@@ -4671,11 +4677,11 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 			q->position = position;
 			q->scale = Vector(0.5,0.5);
 			q->scale.interpolateTo(Vector(2,2),t);
-			q->alpha.path.addPathNode(0, 0);
-			q->alpha.path.addPathNode(0.75, 0.25);
-			q->alpha.path.addPathNode(0.75, 0.75);
-			//q->alpha.path.addPathNode(0.75, 0.75);
-			q->alpha.path.addPathNode(0, 1);
+			q->alpha.ensureData();
+			q->alpha.data->path.addPathNode(0, 0);
+			q->alpha.data->path.addPathNode(0.75, 0.25);
+			q->alpha.data->path.addPathNode(0.75, 0.75);
+			q->alpha.data->path.addPathNode(0, 1);
 			q->alpha.startPath(t);
 			q->setBlendType(RenderObject::BLEND_ADD);
 			q->setTexture("particles/EnergyPart");
@@ -4694,10 +4700,11 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 		q->position = position;
 		q->scale = Vector(1,1);
 		q->scale.interpolateTo(Vector(3,3),t);
-		q->alpha.path.addPathNode(0, 0);
-		q->alpha.path.addPathNode(1, 0.3);
-		//q->alpha.path.addPathNode(0.75, 0.75);
-		q->alpha.path.addPathNode(0, 1);
+		q->alpha.ensureData();
+		q->alpha.data->path.addPathNode(0, 0);
+		q->alpha.data->path.addPathNode(1, 0.3);
+		//q->alpha.data->path.addPathNode(0.75, 0.75);
+		q->alpha.data->path.addPathNode(0, 1);
 		q->alpha.startPath(t);
 		q->setBlendType(RenderObject::BLEND_ADD);
 		q->rotation.z = rand()%360;
@@ -4716,10 +4723,11 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 			q->position = position;
 			q->scale = Vector(1,1);
 			q->scale.interpolateTo(Vector(3,3),t);
-			q->alpha.path.addPathNode(0, 0);
-			q->alpha.path.addPathNode(0.8, 0.25);
-			//q->alpha.path.addPathNode(0.75, 0.75);
-			q->alpha.path.addPathNode(0, 1);
+			q->alpha.ensureData();
+			q->alpha.data->path.addPathNode(0, 0);
+			q->alpha.data->path.addPathNode(0.8, 0.25);
+			//q->alpha.data->path.addPathNode(0.75, 0.75);
+			q->alpha.data->path.addPathNode(0, 1);
 			q->alpha.startPath(t);
 			q->setBlendType(RenderObject::BLEND_ADD);
 			/*

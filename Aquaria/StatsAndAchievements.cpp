@@ -786,7 +786,7 @@ void StatsAndAchievements::update(float dt)
 
 #ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
 	// change no state if we're still fading in/out.
-	if (!dsq->achievement_box->alpha.interpolating)
+	if (!dsq->achievement_box->alpha.isInterpolating())
 	{
 		const float maxUnlockDisplayTime = 5.0f;
 		// still displaying an unlock notification?

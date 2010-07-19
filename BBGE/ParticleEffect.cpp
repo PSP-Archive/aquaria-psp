@@ -150,7 +150,8 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 			SimpleIStringStream is(token);
 			is >> t;
 			inf >> x >> y >> z;
-			currentEmitter->data.color.path.addPathNode(Vector(x,y,z), t);
+			currentEmitter->data.color.ensureData();
+			currentEmitter->data.color.data->path.addPathNode(Vector(x,y,z), t);
 			currentEmitter->data.color.startPath(currentEmitter->data.life);
 
 			/*
@@ -165,7 +166,8 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 			SimpleIStringStream is(token);
 			is >> t;
 			inf >> num;
-			currentEmitter->data.number.path.addPathNode(num, t);
+			currentEmitter->data.number.ensureData();
+			currentEmitter->data.number.data->path.addPathNode(num, t);
 			currentEmitter->data.number.startPath(currentEmitter->data.life);
 
 			/*
@@ -180,7 +182,8 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 			SimpleIStringStream is(token);
 			is >> t;
 			inf >> num;
-			currentEmitter->data.alpha.path.addPathNode(num, t);
+			currentEmitter->data.alpha.ensureData();
+			currentEmitter->data.alpha.data->path.addPathNode(num, t);
 			currentEmitter->data.alpha.startPath(currentEmitter->data.life);
 
 			/*
@@ -195,7 +198,8 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 			SimpleIStringStream is(token);
 			is >> t;
 			inf >> num;
-			currentEmitter->data.rotation.path.addPathNode(Vector(0,0,num), t);
+			currentEmitter->data.rotation.ensureData();
+			currentEmitter->data.rotation.data->path.addPathNode(Vector(0,0,num), t);
 			currentEmitter->data.rotation.startPath(currentEmitter->data.life);
 
 			/*
@@ -210,7 +214,8 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 			SimpleIStringStream is(token);
 			is >> t;
 			inf >> sx >> sy;
-			currentEmitter->data.scale.path.addPathNode(Vector(sx, sy), t);
+			currentEmitter->data.scale.ensureData();
+			currentEmitter->data.scale.data->path.addPathNode(Vector(sx, sy), t);
 			currentEmitter->data.scale.startPath(currentEmitter->data.life);
 
 			/*

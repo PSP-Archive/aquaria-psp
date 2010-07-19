@@ -37,14 +37,16 @@ namespace AQCredits
 		if (!(slide >= 0 && slide < slides.size())) return;
 
 		Quad *q = slides[slide];
-		
-		q->alpha.path.addPathNode(0, 0);
-		q->alpha.path.addPathNode(1, 0.5);
-		q->alpha.path.addPathNode(0, 1);
+
+		q->alpha.ensureData();
+		q->alpha.data->path.addPathNode(0, 0);
+		q->alpha.data->path.addPathNode(1, 0.5);
+		q->alpha.data->path.addPathNode(0, 1);
 		q->alpha.startPath(t);
 
-		q->scale.path.addPathNode(Vector(0.8, 0.8), 0);
-		q->scale.path.addPathNode(Vector(1.4, 1.4), 1);
+		q->scale.ensureData();
+		q->scale.data->path.addPathNode(Vector(0.8, 0.8), 0);
+		q->scale.data->path.addPathNode(Vector(1.4, 1.4), 1);
 		q->scale.startPath(t);
 
 		core->main(t);

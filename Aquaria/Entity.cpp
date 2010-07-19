@@ -115,10 +115,11 @@ void Entity::say(const std::string &dialogue, SayType st)
 	saytext->setText(dialogue);
 
 	float a = 0.5;
-	saytext->alpha.path.addPathNode(0, 0);
-	saytext->alpha.path.addPathNode(a, 0.2);
-	saytext->alpha.path.addPathNode(a, 0.8);
-	saytext->alpha.path.addPathNode(0, 1);
+	saytext->alpha.ensureData();
+	saytext->alpha.data->path.addPathNode(0, 0);
+	saytext->alpha.data->path.addPathNode(a, 0.2);
+	saytext->alpha.data->path.addPathNode(a, 0.8);
+	saytext->alpha.data->path.addPathNode(0, 1);
 	saytext->alpha.startPath(t);
 
 	saytext->setDecayRate(1.0f/t);
@@ -574,13 +575,14 @@ void Entity::followPath(Path *p, int speedType, int dir, bool deleteOnEnd)
 		deleteOnPathEnd = deleteOnEnd;
 
 		position.stopPath();
-		position.path.clear();
+		position.ensureData();
+		position.data->path.clear();
 		if (dir)
 		{
 			for (int i = p->nodes.size()-1; i >=0; i--)
 			{
 				PathNode pn = p->nodes[i];
-				position.path.addPathNode(pn.position, 1.0f-(float(i/float(p->nodes.size()))));
+				position.data->path.addPathNode(pn.position, 1.0f-(float(i/float(p->nodes.size()))));
 			}
 		}
 		else
@@ -588,13 +590,13 @@ void Entity::followPath(Path *p, int speedType, int dir, bool deleteOnEnd)
 			for (int i = 0; i < p->nodes.size(); i++)
 			{
 				PathNode pn = p->nodes[i];
-				position.path.addPathNode(pn.position, float(i/float(p->nodes.size())));
+				position.data->path.addPathNode(pn.position, float(i/float(p->nodes.size())));
 			}
 		}
 		debugLog("Calculating Time");
-		float time = position.path.getLength()/(float)dsq->continuity.getSpeedType(speedType);
+		float time = position.data->path.getLength()/(float)dsq->continuity.getSpeedType(speedType);
 		debugLog("Starting");
-		position.path.getPathNode(0)->value = position;
+		position.data->path.getPathNode(0)->value = position;
 		position.startPath(time);//, 1.0f/2.0f);
 		//swimPath = true;
 		/*
@@ -619,16 +621,17 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 	followEntity = 0;
 	//watchingEntity = 0;
 
-	position.path.clear();
+	position.ensureData();
+	position.data->path.clear();
 	position.stop();
 
 	ondulateTimer = 0;
 	swimPath = swim;
 	debugLog("Generating path to: " + path->name);
 	dsq->pathFinding.generatePath(this, TileVector(start), TileVector(dest));
-	int sz = position.path.getNumPathNodes();
-	position.path.addPathNode(path->nodes[0].position, 1);
-	VectorPath old = position.path;
+	int sz = position.data->path.getNumPathNodes();
+	position.data->path.addPathNode(path->nodes[0].position, 1);
+	VectorPath old = position.data->path;
 	std::ostringstream os;
 	os << "Path length: " << sz;
 	debugLog(os.str());
@@ -641,26 +644,26 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 	{
 		int node = sz/2;
 		dsq->pathFinding.generatePath(this, TileVector(position), TileVector(position.path.getPathNode(node)->value));
-		old.splice(position.path, node);
-		position.path = old;
+		old.splice(position.data->path, node);
+		position.data->path = old;
 	}
 	*/
 	this->vel = 0;
 
 	debugLog("Molesting Path");
 
-	dsq->pathFinding.molestPath(position.path);
-	//position.path.realPercentageCalc();
-	//position.path.cut(4);
+	dsq->pathFinding.molestPath(position.data->path);
+	//position.data->path.realPercentageCalc();
+	//position.data->path.cut(4);
 
 	debugLog("forcing path to minimum 2 nodes");
-	dsq->pathFinding.forceMinimumPath(position.path, start, dest);
+	dsq->pathFinding.forceMinimumPath(position.data->path, start, dest);
 	debugLog("Done");
 
 	debugLog("Calculating Time");
-	float time = position.path.getLength()/(float)dsq->continuity.getSpeedType(speedType);
+	float time = position.data->path.getLength()/(float)dsq->continuity.getSpeedType(speedType);
 	debugLog("Starting");
-	position.path.getPathNode(0)->value = position;
+	position.data->path.getPathNode(0)->value = position;
 	position.startPath(time);//, 1.0f/2.0f);
 
 	/*
@@ -674,7 +677,7 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 	debugLog("End of Generate Path");
 
 	//position.startSpeedPath(dsq->continuity.getSpeedType(speedType));
-	//position.startPath(((position.path.getNumPathNodes()*TILE_SIZE*4)-2)/dsq->continuity.getSpeedType(speedType));
+	//position.startPath(((position.data->path.getNumPathNodes()*TILE_SIZE*4)-2)/dsq->continuity.getSpeedType(speedType));
 }
 
 void Entity::addNodeToNodeGroup(int group, Path *p)
@@ -1508,10 +1511,11 @@ bool Entity::pathBurst(bool wallJump)
 	{
 		dsq->game->playBurstSound(wallJump);
 		skeletalSprite.animate("burst");
+		position.ensureData();
 		if (wallJump)
-			position.pathTimeMultiplier = 2;
+			position.data->pathTimeMultiplier = 2;
 		else
-			position.pathTimeMultiplier = 1.5;
+			position.data->pathTimeMultiplier = 1.5;
 		burstTimer.start(1);
 		//void pathBurst();r
 		return true;
@@ -1540,11 +1544,12 @@ void Entity::onPathEnd()
 			{
 				skeletalSprite.animate("idle", -1);
 			}
-			int num = position.path.getNumPathNodes();
+			position.ensureData();
+			int num = position.data->path.getNumPathNodes();
 			if (num >= 2)
 			{
-				Vector v2 = position.path.getPathNode(num-1)->value;
-				Vector v1 = position.path.getPathNode(num-2)->value;
+				Vector v2 = position.data->path.getPathNode(num-1)->value;
+				Vector v1 = position.data->path.getPathNode(num-2)->value;
 				Vector v = v2 - v1;
 
 				if (isv(EV_FLIPTOPATH, 1))
@@ -1983,10 +1988,11 @@ void Entity::onUpdate(float dt)
 		*/
 
 		slowingToStopPathTimer += dt;
+		position.ensureData();
 		if (slowingToStopPathTimer >= slowingToStopPath)
 		{
 			// done
-			position.pathTimeMultiplier = 1;
+			position.data->pathTimeMultiplier = 1;
 //			stopFollowingPath();
 			idle();
 			slowingToStopPath = 0;
@@ -1994,7 +2000,7 @@ void Entity::onUpdate(float dt)
 		}
 		else
 		{
-			position.pathTimeMultiplier = 1.0f - (slowingToStopPathTimer / slowingToStopPath);
+			position.data->pathTimeMultiplier = 1.0f - (slowingToStopPathTimer / slowingToStopPath);
 		}
 	}
 
@@ -2008,7 +2014,8 @@ void Entity::onUpdate(float dt)
 
 	if (burstTimer.updateCheck(dt))
 	{
-		position.pathTimeMultiplier = 1;
+		position.ensureData();
+		position.data->pathTimeMultiplier = 1;
 	}
 
 	if (poisonTimer.updateCheck(dt))
@@ -2883,9 +2890,10 @@ void Entity::freeze(float time)
 		bubble->position = this->position;
 		bubble->scale = Vector(0.2,0.2);
 		bubble->scale.interpolateTo(Vector(2,2), 0.5, 0, 0, 1);
-		bubble->alpha.path.addPathNode(0.5, 0);
-		bubble->alpha.path.addPathNode(0.5, 0.75);
-		bubble->alpha.path.addPathNode(0, 1);
+		bubble->alpha.ensureData();
+		bubble->alpha.data->path.addPathNode(0.5, 0);
+		bubble->alpha.data->path.addPathNode(0.5, 0.75);
+		bubble->alpha.data->path.addPathNode(0, 1);
 		bubble->alpha.startPath(time+time*0.25f);
 		core->getTopStateData()->addRenderObject(bubble, LR_PARTICLES);
 
@@ -3323,9 +3331,10 @@ void Entity::doGlint(const Vector &position, const Vector &scale, const std::str
 	glint->scale = Vector(0.5,0.5);
 	glint->position = position;
 	glint->scale.interpolateTo(scale, glintTime);
-	glint->alpha.path.addPathNode(1, 0);
-	glint->alpha.path.addPathNode(1, 0.7);
-	glint->alpha.path.addPathNode(0, 1);
+	glint->alpha.ensureData();
+	glint->alpha.data->path.addPathNode(1, 0);
+	glint->alpha.data->path.addPathNode(1, 0.7);
+	glint->alpha.data->path.addPathNode(0, 1);
 	glint->alpha.startPath(glintTime);
 	//glint->rotation.interpolateTo(Vector(0,0,360), glintTime);
 	glint->rotation.z = this->rotation.z;

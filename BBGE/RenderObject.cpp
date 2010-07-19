@@ -718,7 +718,7 @@ void RenderObject::renderCall()
 #endif
 
 #ifdef BBGE_BUILD_OPENGL
-			if (RenderObject::renderPaths && position.path.getNumPathNodes() > 0)
+			if (RenderObject::renderPaths && position.data && position.data->path.getNumPathNodes() > 0)
 			{
 				glLineWidth(4);
 				glEnable(GL_BLEND);
@@ -728,19 +728,19 @@ void RenderObject::renderCall()
 				glBindTexture(GL_TEXTURE_2D, 0);
 
 				glBegin(GL_LINES);
-				for (i = 0; i < position.path.getNumPathNodes()-1; i++)
+				for (i = 0; i < position.data->path.getNumPathNodes()-1; i++)
 				{
-					glVertex2f(position.path.getPathNode(i)->value.x-position.x, position.path.getPathNode(i)->value.y-position.y);
-					glVertex2f(position.path.getPathNode(i+1)->value.x-position.x, position.path.getPathNode(i+1)->value.y-position.y);
+					glVertex2f(position.data->path.getPathNode(i)->value.x-position.x, position.data->path.getPathNode(i)->value.y-position.y);
+					glVertex2f(position.data->path.getPathNode(i+1)->value.x-position.x, position.data->path.getPathNode(i+1)->value.y-position.y);
 				}
 				glEnd();
 
 				glPointSize(20);
 				glBegin(GL_POINTS);
 				glColor4f(0.5,0.5,1,1);
-				for (i = 0; i < position.path.getNumPathNodes(); i++)
+				for (i = 0; i < position.data->path.getNumPathNodes(); i++)
 				{
-					glVertex2f(position.path.getPathNode(i)->value.x-position.x, position.path.getPathNode(i)->value.y-position.y);
+					glVertex2f(position.data->path.getPathNode(i)->value.x-position.x, position.data->path.getPathNode(i)->value.y-position.y);
 				}
 				glEnd();
 			}

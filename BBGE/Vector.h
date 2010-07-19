@@ -440,68 +440,31 @@ protected:
 };
 
 
-class InterpolatedVector : public Vector
+class InterpolatedVector;
+struct InterpolatedVectorData
 {
-public:
-    InterpolatedVector(scalar_t a = 0, scalar_t b = 0, scalar_t c = 0) : Vector(a,b,c), interpolating(false) 
+	InterpolatedVectorData()
 	{
-		pathTimeMultiplier = 1;
-		timeSpeedEase = 0;
-		timeSpeedMultiplier = 1;
-		currentPathNode = 0;
-		speedPath = false;
-		pathSpeed = 1;
-		pathTime =0;
-		pathTimer = 0;
-		pingPong = false;
 		trigger = 0;
 		triggerFlag = false;
 		pendingInterpolation = false;
-		followingPath = false;
+		interpolating = false;
+		pingPong = false;
 		loopType = 0;
-		//fakeTimePassed = 0;
-		ease = false;
-		timePassed = timePeriod = 0;
-	}
-    InterpolatedVector(const Vector &vec) : Vector(vec), interpolating(false) 
-	{
-		pathTimeMultiplier = 1;
-		timeSpeedEase = 0;
-		timeSpeedMultiplier = 1;
-		currentPathNode = 0;		
-		speedPath = false;
-		pathSpeed = 1;
 		pathTimer = 0;
 		pathTime = 0;
-		pingPong = false;
-		trigger = 0;
-		triggerFlag = false;
-		pendingInterpolation = false;
-		followingPath = false;
-		loopType = 0;
+		pathSpeed = 1;
+		currentPathNode = 0;
+		pathTimeMultiplier = 1;
+		timePassed = 0;
+		timePeriod = 0;
+		timeSpeedMultiplier = 1;
+		timeSpeedEase = 0;
 		//fakeTimePassed = 0;
+		speedPath = false;
 		ease = false;
-		timePassed = timePeriod = 0;
+		followingPath = false;
 	}
-
-	void setInterpolationTrigger(InterpolatedVector *trigger, bool triggerFlag);
-	enum InterpolateToFlag { NONE=0, IS_LOOPING };
-	float interpolateTo (Vector vec, float timePeriod, int loopType = 0, bool pingPong = false, bool ease = false, InterpolateToFlag flag = NONE);
-	void update(float dt);
-
-	inline bool isInterpolating() const
-	{
-		return interpolating;
-	}
-
-	void startPath(float time, float ease=0);
-	void startSpeedPath(float speed);
-	void stopPath();
-	void resumePath();
-
-	void updatePath(float dt);
-
-	void stop();
 
 	InterpolatedVector *trigger;
 	bool triggerFlag;
@@ -525,11 +488,96 @@ public:
 	Vector target;
 	Vector from;
 
+	float timeSpeedMultiplier, timeSpeedEase;
+	//float fakeTimePassed;
+	bool speedPath;
+	bool ease;
+	bool followingPath;
+};
+
+
+// This struct is used to keep all of the interpolation-specific data out
+// of the global InterpolatedVector class, so that we don't waste memory on
+// non-interpolated vectors.
+class InterpolatedVector : public Vector
+{
+public:
+	InterpolatedVector(scalar_t a = 0, scalar_t b = 0, scalar_t c = 0) : Vector(a,b,c), data(NULL) {}
+	InterpolatedVector(const Vector &vec) : Vector(vec), data(NULL) {}
+	~InterpolatedVector() {delete data;}
+
+	InterpolatedVector(const InterpolatedVector &vec)
+	{
+		x = vec.x;
+		y = vec.y;
+		z = vec.z;
+		if (vec.data)
+			data = new InterpolatedVectorData(*vec.data);
+		else
+			data = NULL;
+	}
+	InterpolatedVector &operator=(const InterpolatedVector &vec)
+	{
+		x = vec.x;
+		y = vec.y;
+		z = vec.z;
+		delete data;
+		if (vec.data)
+			data = new InterpolatedVectorData(*vec.data);
+		else
+			data = NULL;
+		return *this;
+	}
+
+	void setInterpolationTrigger(InterpolatedVector *trigger, bool triggerFlag);
+	enum InterpolateToFlag { NONE=0, IS_LOOPING };
+	float interpolateTo (Vector vec, float timePeriod, int loopType = 0, bool pingPong = false, bool ease = false, InterpolateToFlag flag = NONE);
+	void inline update(float dt)
+	{
+		if (!data)
+			return;
+
+		if (data->pendingInterpolation && data->trigger)
+		{
+			if (data->trigger->isInterpolating() == data->triggerFlag)
+			{
+				data->interpolating = true;
+				data->pendingInterpolation = false;
+			}
+			else
+				return;
+		}
+		if (isFollowingPath())
+		{
+			updatePath(dt);
+		}
+		if (isInterpolating())
+		{
+			doInterpolate(dt);
+		}
+	}
+
+	void doInterpolate(float dt);
+
+	inline bool isInterpolating() const
+	{
+		return data && data->interpolating;
+	}
+
+	void startPath(float time, float ease=0);
+	void startSpeedPath(float speed);
+	void stopPath();
+	void resumePath();
+
+	void updatePath(float dt);
+
+	void stop();
+
 	float getPercentDone();
 
 	inline bool isFollowingPath() const
 	{
-		return followingPath;
+		return data && data->followingPath;
 	}
 
 	// for faking a single value
@@ -538,13 +586,17 @@ public:
 		return x;
 	}
 
-protected:
-	
-	float timeSpeedMultiplier, timeSpeedEase;
-	//float fakeTimePassed;
-	bool speedPath;
-	bool ease;
-	bool followingPath;
+
+	// We never allocate this if the vector isn't used for
+	// interpolation, which saves a _lot_ of memory.
+	InterpolatedVectorData *data;
+
+	inline InterpolatedVectorData *ensureData(void)
+	{
+		if (!data)
+			data = new InterpolatedVectorData;
+		return data;
+	}
 };
 
 Vector getRotatedVector(const Vector &vec, float rot);

@@ -55,12 +55,13 @@ SchoolFish::SchoolFish(const std::string &texname) : FlockEntity()
 	*/
 
 	//color.interpolateTo(Vector(0.5, 0.5, 0.5), 2, -1, 1);
-	color.path.addPathNode(Vector(1,1,1), 0);
-	color.path.addPathNode(Vector(1,1,1), 0.5);
-	color.path.addPathNode(Vector(0.8, 0.8, 0.8), 0.7);
-	color.path.addPathNode(Vector(1,1,1), 1.0);
+	color.ensureData();
+	color.data->path.addPathNode(Vector(1,1,1), 0);
+	color.data->path.addPathNode(Vector(1,1,1), 0.5);
+	color.data->path.addPathNode(Vector(0.8, 0.8, 0.8), 0.7);
+	color.data->path.addPathNode(Vector(1,1,1), 1.0);
 	color.startPath(2);
-	color.loopType = -1;
+	color.data->loopType = -1;
 	color.update((rand()%1000)/1000.0f);
 
 	flipDelay = 0;

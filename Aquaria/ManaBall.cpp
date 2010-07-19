@@ -72,9 +72,10 @@ void ManaBall::use(Entity *entity)
 {
 	core->sound->playSfx("CollectMana");
 	entity->heal(amount, 1);
-	scale.path.addPathNode(scale, 0);
-	scale.path.addPathNode(Vector(1.25, 1.25), 0.5);
-	scale.path.addPathNode(Vector(0,0), 1);
+	scale.ensureData();
+	scale.data->path.addPathNode(scale, 0);
+	scale.data->path.addPathNode(Vector(1.25, 1.25), 0.5);
+	scale.data->path.addPathNode(Vector(0,0), 1);
 	scale.startPath(1);
 	setLife(1.1);
 	used = true;

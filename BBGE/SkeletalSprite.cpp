@@ -1871,7 +1871,7 @@ Bone* SkeletalSprite::getSelectedBone(int ignore, bool mouseBased)
 		}
 		if (b)
 		{
-			b->color = Vector(1, 0,0);
+			b->color = Vector(1,0,0);
 		}
 		return b;
 	}

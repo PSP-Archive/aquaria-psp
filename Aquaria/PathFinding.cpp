@@ -710,7 +710,8 @@ void PathFinding::generatePath(RenderObject *ro, TileVector start, TileVector go
 	if (offy <= TILE_SIZE/2+1)
 		offy++;
 	*/
-	ro->position.path.clear();
+	ro->position.ensureData();
+	ro->position.data->path.clear();
 
 	PathFindingGlobals::render_object = ro;
 	AStarSearch astarsearch;
@@ -765,7 +766,7 @@ void PathFinding::generatePath(RenderObject *ro, TileVector start, TileVector go
 			int steps = 0;
 
 			//node->PrintNodeInfo();
-			ro->position.path.addPathNode(Vector((node->x*TILE_SIZE)+TILE_SIZE/2+offx, (node->y*TILE_SIZE)+TILE_SIZE/2)+offy, 0);
+			ro->position.data->path.addPathNode(Vector((node->x*TILE_SIZE)+TILE_SIZE/2+offx, (node->y*TILE_SIZE)+TILE_SIZE/2)+offy, 0);
 			for( ;; )
 			{
 				node = astarsearch.GetSolutionNext();
@@ -776,7 +777,7 @@ void PathFinding::generatePath(RenderObject *ro, TileVector start, TileVector go
 				}
 
 				//node->PrintNodeInfo();
-				ro->position.path.addPathNode(Vector((node->x*TILE_SIZE)+TILE_SIZE/2+offx, (node->y*TILE_SIZE)+TILE_SIZE/2)+offy, steps);
+				ro->position.data->path.addPathNode(Vector((node->x*TILE_SIZE)+TILE_SIZE/2+offx, (node->y*TILE_SIZE)+TILE_SIZE/2)+offy, steps);
 				steps ++;
 			};
 			//ro->position.path.addPathNode(Vector(goal.x*TILE_SIZE, goal.y*TILE_SIZE), steps);
