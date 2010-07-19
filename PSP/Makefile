@@ -228,7 +228,8 @@ BBGE_CXXFLAGS    = $(CXXFLAGS) -Wno-reorder -Wno-sign-compare \
                    $(-I_freetype) $(-I_libogg) $(-I_libvorbis) \
                    -Isrc $(-DCAN_OVERRIDE_STRTOF) \
                    -I$(BBGE_DIR) -I$(BBGE_DIR)/GL -I$(BBGE_DIR)/FTGL/include \
-                   -DTIXML_USE_STL=1 -DBBGE_BUILD_PSP=1 -DBBGE_BUILD_OPENGL=1 \
+                   -DHAVE_STRCASECMP=1 -DTIXML_USE_STL=1 \
+                   -DBBGE_BUILD_PSP=1 -DBBGE_BUILD_OPENGL=1 \
                    -DGL_GLEXT_LEGACY=1 -DBBGE_BUILD_WIDESCREEN=1 \
                    -DBBGE_BUILD_FMOD_PSP_BRIDGE=1 \
                    -DBBGE_BUILD_ACHIEVEMENTS_INTERNAL=1 \
