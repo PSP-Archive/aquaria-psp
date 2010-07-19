@@ -43,16 +43,18 @@ void spawnWaterFontParticle(RenderObject *me, Vector position, int size, float l
 
 	q->setBlendType(RenderObject::BLEND_ADD);
 
-	q->color.path.addPathNode(Vector(1,1,1),0);
-	q->color.path.addPathNode(Vector(0.1,0.75,1),0.3);
-	q->color.path.addPathNode(Vector(0.05,0.5,1),0.8);
-	q->color.path.addPathNode(Vector(0,0,1),1.0);
+	q->color.ensureData();
+	q->color.data->path.addPathNode(Vector(1,1,1),0);
+	q->color.data->path.addPathNode(Vector(0.1,0.75,1),0.3);
+	q->color.data->path.addPathNode(Vector(0.05,0.5,1),0.8);
+	q->color.data->path.addPathNode(Vector(0,0,1),1.0);
 	q->color.startPath(t);
 
 	//q->color = Vector(1, 0.5, 0);
-	q->alpha.path.addPathNode(0, 0);
-	q->alpha.path.addPathNode(0.2, 0.5);
-	q->alpha.path.addPathNode(0, 1.0);
+	q->alpha.ensureData();
+	q->alpha.data->path.addPathNode(0, 0);
+	q->alpha.data->path.addPathNode(0.2, 0.5);
+	q->alpha.data->path.addPathNode(0, 1.0);
 	q->alpha.startPath(t);
 	q->velocity = Vector(sinf(angle)*spd,cosf(angle)*spd);
 	//q->velocity += vel;

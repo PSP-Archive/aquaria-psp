@@ -40,20 +40,17 @@ public:
      Vector(const Vector &vec) : x(vec.x), y(vec.y), z(vec.z) {}
 
 
-     float *getv()
+     float inline *getv(float *v) const
 	 {
 		 v[0] = x; v[1] = y; v[2] = z;
 		 return v;
 	 }
 
-	 float *getv4(float param)
+	 float inline *getv4(float *v, float param) const
 	 {
-		 v4[0] = x; v4[1] = y; v4[2] = z; v4[3] = param;
-		 return v4;
+		 v[0] = x; v[1] = y; v[2] = z; v[3] = param;
+		 return v;
 	 }
-
-	 float v[3];
-	 float v4[4];
 		 
 	 // vector assignment
      const Vector &operator=(const Vector &vec)
@@ -187,8 +184,8 @@ public:
      {
           return Vector(vec.x*s, vec.y*s, vec.z*s);
      }
-
-*/   // divecide by scalar
+*/
+   // divecide by scalar
      const Vector operator/(scalar_t s) const
      {
           s = 1/s;
@@ -203,12 +200,12 @@ public:
           return Vector(y*vec.z - z*vec.y, z*vec.x - x*vec.z, x*vec.y - y*vec.x);
      }
 
-	 Vector getPerpendicularLeft()
+	 Vector inline getPerpendicularLeft()
 	 {
 		 return Vector(-y, x);
 	 }
 
- 	 Vector getPerpendicularRight()
+ 	 Vector inline getPerpendicularRight()
 	 {
 		 return Vector(y, -x);
 	 }
@@ -220,12 +217,12 @@ public:
      }
 
      // dot product
-     const scalar_t dot(const Vector &vec) const
+     const scalar_t inline dot(const Vector &vec) const
      {
           return x*vec.x + y*vec.y + z*vec.z;
      }
 
-	 const scalar_t dot2D(const Vector &vec) const
+	 const scalar_t inline dot2D(const Vector &vec) const
 	 {
 		 return x*vec.x + y*vec.y;
 	 }
@@ -238,15 +235,46 @@ public:
 
 
      // length of vector
-     const scalar_t getLength3D() const;
-     const scalar_t getLength2D() const;
+     const scalar_t inline getLength3D() const
+     {
+          return (scalar_t)sqrtf(x*x + y*y + z*z);
+     }
+     const scalar_t inline getLength2D() const
+     {
+          return (scalar_t)sqrtf(x*x + y*y);
+     }
 
      // return the unit vector
-	 const Vector unitVector3D() const;
+	 const Vector inline unitVector3D() const
+	 {
+		return (*this) * (1/getLength3D());
+	 }
 
      // normalize this vector
-     void normalize3D();
-	 void normalize2D();
+	 void inline normalize3D()
+	 {
+		if (x == 0 && y == 0 && z == 0)
+		{
+			//debugLog("Normalizing 0 vector");
+			x = y = z = 0;
+		}
+		else
+		{
+			(*this) *= 1/getLength3D();
+		}
+	 }
+	 void inline normalize2D()
+	 {
+		if (x == 0 && y == 0)
+		{
+			//debugLog("Normalizing 0 vector");
+			x = y = z= 0;
+		}
+		else
+		{
+			(*this) *= 1/getLength2D();
+		}
+	 }
 
      const scalar_t operator!() const
      {
@@ -268,29 +296,41 @@ public:
      }
 	 */
 
-	 void setLength3D(const float l);
-	 void setLength2D(const float l);
+	 void inline setLength3D(const float l)
+	 {
+		// IGNORE !!
+		if (l == 0)
+		{
+			//debugLog("setLength3D divide by 0");
+		}
+		else
+		{
+			float len = getLength3D();
+			this->x *= (l/len);
+			this->y *= (l/len);
+			this->z *= (l/len);
+		}
+	 }
+	 void inline setLength2D(const float l)
+	 {
+		float len = getLength2D();
+		if (len == 0)
+		{
+			//debugLog("divide by zero!");
+		}
+		else
+		{
+			this->x *= (l/len);
+			this->y *= (l/len);
+		}
+		//this->z = 0;
+	 }
 
      // return angle between two vectors
      const float inline Angle(const Vector& normal) const
      {
           return acosf(*this % normal);
      }
-
-	 /*
-	 const scalar_t inline getCheatLength3D() const;
-	 const scalar_t inline cheatLen2D() const;
-	 */
-	 const bool isLength2DIn(float radius) const;
-
-     // reflect this vector off surface with normal vector
-	 /*
-     const Vector inline Reflection(const Vector& normal) const
-     {    
-          const Vector vec(*this | 1);     // normalize this vector
-          return (vec - normal * 2.0f * (vec % normal)) * !*this;
-     }
-	 */
 
 	 /*
 	 const scalar_t inline cheatLen() const
@@ -301,16 +341,58 @@ public:
 	 {
 		 return (x*x + y*y);
 	 }
+	 const scalar_t inline getCheatLength3D() const;
 	 */
 
-	 const void setZero();
-	 const float getSquaredLength2D() const;
-	 const bool isZero() const;
+	 const bool inline isLength2DIn(float radius) const
+	 {
+		return (x*x + y*y) <= (radius*radius);
+	 }
 
-	 const bool isNan() const;
+     // reflect this vector off surface with normal vector
+	 /*
+     const Vector inline Reflection(const Vector& normal) const
+     {    
+          const Vector vec(*this | 1);     // normalize this vector
+          return (vec - normal * 2.0f * (vec % normal)) * !*this;
+     }
+	 */
 
-	 void capLength2D(const float l);
-	 void capRotZ360();
+	 const void inline setZero()
+	 {
+		this->x = this->y = this->z = 0;
+	 }
+	 const float inline getSquaredLength2D() const
+	 {
+		return (x*x) + (y*y);
+	 }
+	 const bool inline isZero() const
+	 {
+		return x==0 && y==0 && z==0;
+	 }
+
+	 const bool inline isNan() const
+	 {
+#ifdef BBGE_BUILD_WINDOWS
+		return _isnan(x) || _isnan(y) || _isnan(z);
+#elif defined(BBGE_BUILD_UNIX)
+		return isnan(x) || isnan(y) || isnan(z);
+#else
+		return false;
+#endif
+	 }
+
+	 void inline capLength2D(const float l)
+	 {
+		if (!isLength2DIn(l))	setLength2D(l);
+	 }
+	 void inline capRotZ360()
+	 {
+		while (z > 360)
+			z -= 360;
+		while (z < 0)
+			z += 360;
+	 }
 
 #ifdef BBGE_BUILD_DIRECTX
 	 const D3DCOLOR getD3DColor(float alpha)
@@ -322,11 +404,6 @@ public:
 	 void rotate2D360(int angle);
 };
 
-inline
-const float Vector::getSquaredLength2D() const
-{
-	return (x*x) + (y*y);
-}
 
 class VectorPathNode
 {
@@ -363,58 +440,128 @@ protected:
 };
 
 
+class InterpolatedVector;
+struct InterpolatedVectorData
+{
+	InterpolatedVectorData()
+	{
+		trigger = 0;
+		triggerFlag = false;
+		pendingInterpolation = false;
+		interpolating = false;
+		pingPong = false;
+		loopType = 0;
+		pathTimer = 0;
+		pathTime = 0;
+		pathSpeed = 1;
+		currentPathNode = 0;
+		pathTimeMultiplier = 1;
+		timePassed = 0;
+		timePeriod = 0;
+		timeSpeedMultiplier = 1;
+		timeSpeedEase = 0;
+		//fakeTimePassed = 0;
+		speedPath = false;
+		ease = false;
+		followingPath = false;
+	}
+
+	InterpolatedVector *trigger;
+	bool triggerFlag;
+	bool pendingInterpolation;
+
+	bool interpolating;
+	bool pingPong;
+	int loopType;
+
+	EventPtr endOfInterpolationEvent;
+	EventPtr startOfInterpolationEvent;
+	EventPtr endOfPathEvent;
+
+	VectorPath path;
+	float pathTimer, pathTime;
+	float pathSpeed;
+	int currentPathNode;
+	float pathTimeMultiplier;
+
+	float timePassed, timePeriod;
+	Vector target;
+	Vector from;
+
+	float timeSpeedMultiplier, timeSpeedEase;
+	//float fakeTimePassed;
+	bool speedPath;
+	bool ease;
+	bool followingPath;
+};
+
+
+// This struct is used to keep all of the interpolation-specific data out
+// of the global InterpolatedVector class, so that we don't waste memory on
+// non-interpolated vectors.
 class InterpolatedVector : public Vector
 {
 public:
-    InterpolatedVector(scalar_t a = 0, scalar_t b = 0, scalar_t c = 0) : Vector(a,b,c), interpolating(false) 
+	InterpolatedVector(scalar_t a = 0, scalar_t b = 0, scalar_t c = 0) : Vector(a,b,c), data(NULL) {}
+	InterpolatedVector(const Vector &vec) : Vector(vec), data(NULL) {}
+	~InterpolatedVector() {delete data;}
+
+	InterpolatedVector(const InterpolatedVector &vec)
 	{
-		pathTimeMultiplier = 1;
-		timeSpeedEase = 0;
-		timeSpeedMultiplier = 1;
-		currentPathNode = 0;
-		speedPath = false;
-		pathSpeed = 1;
-		pathTime =0;
-		pathTimer = 0;
-		pingPong = false;
-		trigger = 0;
-		triggerFlag = false;
-		pendingInterpolation = false;
-		followingPath = false;
-		loopType = 0;
-		fakeTimePassed = 0;
-		ease = false;
-		timePassed = timePeriod = 0;
+		x = vec.x;
+		y = vec.y;
+		z = vec.z;
+		if (vec.data)
+			data = new InterpolatedVectorData(*vec.data);
+		else
+			data = NULL;
 	}
-    InterpolatedVector(const Vector &vec) : Vector(vec), interpolating(false) 
+	InterpolatedVector &operator=(const InterpolatedVector &vec)
 	{
-		pathTimeMultiplier = 1;
-		timeSpeedEase = 0;
-		timeSpeedMultiplier = 1;
-		currentPathNode = 0;		
-		speedPath = false;
-		pathSpeed = 1;
-		pathTimer = 0;
-		pathTime = 0;
-		pingPong = false;
-		trigger = 0;
-		triggerFlag = false;
-		pendingInterpolation = false;
-		followingPath = false;
-		loopType = 0;
-		fakeTimePassed = 0;
-		ease = false;
-		timePassed = timePeriod = 0;
+		x = vec.x;
+		y = vec.y;
+		z = vec.z;
+		delete data;
+		if (vec.data)
+			data = new InterpolatedVectorData(*vec.data);
+		else
+			data = NULL;
+		return *this;
 	}
 
 	void setInterpolationTrigger(InterpolatedVector *trigger, bool triggerFlag);
 	enum InterpolateToFlag { NONE=0, IS_LOOPING };
 	float interpolateTo (Vector vec, float timePeriod, int loopType = 0, bool pingPong = false, bool ease = false, InterpolateToFlag flag = NONE);
-	void update(float dt);
-
-	inline bool isInterpolating()
+	void inline update(float dt)
 	{
-		return interpolating;
+		if (!data)
+			return;
+
+		if (data->pendingInterpolation && data->trigger)
+		{
+			if (data->trigger->isInterpolating() == data->triggerFlag)
+			{
+				data->interpolating = true;
+				data->pendingInterpolation = false;
+			}
+			else
+				return;
+		}
+		if (isFollowingPath())
+		{
+			updatePath(dt);
+		}
+		if (isInterpolating())
+		{
+			doInterpolate(dt);
+		}
+	}
+
+	void doInterpolate(float dt);
+
+	inline bool isInterpolating() const
+	{
+		return data && data->interpolating;
 	}
 
 	void startPath(float time, float ease=0);
@@ -426,49 +573,30 @@ public:
 
 	void stop();
 
-	InterpolatedVector *trigger;
-	bool triggerFlag;
-	bool pendingInterpolation;
-
-
-	EventPtr endOfInterpolationEvent;
-	EventPtr startOfInterpolationEvent;
-	EventPtr endOfPathEvent;
-
-	VectorPath path;
-
-	bool interpolating;
-	int loopType;
-	bool pingPong;
-
-	float pathTimer, pathTime;
-	float timePassed, timePeriod;
-	Vector target;
-	Vector from;
-
 	float getPercentDone();
 
-	bool isFollowingPath()
+	inline bool isFollowingPath() const
 	{
-		return followingPath;
+		return data && data->followingPath;
 	}
 
 	// for faking a single value
-	float getValue()
+	inline float getValue() const
 	{
 		return x;
 	}
 
-	float pathSpeed;
-	bool speedPath;
-	int currentPathNode;
-	float pathTimeMultiplier;
-protected:
-	
-	float timeSpeedMultiplier, timeSpeedEase;
-	bool ease;
-	float fakeTimePassed;
-	bool followingPath;
+
+	// We never allocate this if the vector isn't used for
+	// interpolation, which saves a _lot_ of memory.
+	InterpolatedVectorData *data;
+
+	inline InterpolatedVectorData *ensureData(void)
+	{
+		if (!data)
+			data = new InterpolatedVectorData;
+		return data;
+	}
 };
 
 Vector getRotatedVector(const Vector &vec, float rot);

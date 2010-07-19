@@ -172,8 +172,7 @@ const EditorLock editorLock = EDITORLOCK_USER;
 typedef std::list<Entity*> EntityList;
 typedef std::vector<Entity*> EntityContainer;
 
-#define FOR_ENTITIES(i) for (EntityList::iterator i = dsq->entities.begin(); i != dsq->entities.end(); i++)
-#define FOR_ENTITIES_EXTERN(i) EntityList::iterator i = dsq->entities.begin(); for (; i != dsq->entities.end(); i++)
+#define FOR_ENTITIES(i) for (Entity **i = &dsq->entities[0]; *i != 0; i++)
 
 
 enum MenuPage
@@ -384,7 +383,8 @@ struct ElementEffect
 {
 public:
 	int type;
-	float segsx, segsy, segs_dgox, segs_dgoy, segs_dgmx, segs_dgmy, segs_dgtm, segs_dgo;
+	int segsx, segsy;
+	float segs_dgox, segs_dgoy, segs_dgmx, segs_dgmy, segs_dgtm, segs_dgo;
 	float wavy_radius, wavy_min, wavy_max;
 	bool wavy_flip;
 	InterpolatedVector alpha;
@@ -503,6 +503,7 @@ enum Layers
 	LR_FOREGROUND_ELEMENTS2	,
 	LR_PARTICLES_TOP		,
 	LR_AFTER_EFFECTS		,
+	LR_SCENE_COLOR			,
 	LR_MENU					,
 	LR_MENU2				,
 	LR_HUD					,
@@ -1237,6 +1238,7 @@ public:
 
 	Quad *cursor, *cursorGlow, *cursorBlinker;
 	Quad *overlay, *tfader, *overlay2, *overlay3, *overlayRed;
+	Quad *sceneColorOverlay;
 	Quad *bar_left, *bar_right, *bar_up, *bar_down;
 	Quad *barFade_left, *barFade_right;
 
@@ -1286,15 +1288,28 @@ public:
 	int getEntityLayerToLayer(int layer);
 
 	void addElement(Element *e);
+	int getNumElements() const {return elements.size();}
+	Element *getElement(int idx) const {return elements[idx];}
+	Element *getFirstElementOnLayer(int layer) const {return layer<0 || layer>15 ? 0 : firstElementOnLayer[layer];}
+	Element *getElementWithType(Element::Type type);
+	void clearElements();
+	// Used only by scene editor:
 	void removeElement(int idx);
 	void removeElement(Element *e);
+	ElementContainer getElementsCopy() const {return elements;}
+
+protected:  // These should never be accessed from outside (use the functions above).
+	ElementContainer elements;
+	Element *firstElementOnLayer[16];
+public:
+
+	void addEntity(Entity *entity);
 	void removeEntity(Entity *e);
-	void clearElements();
-	Element *getElementWithType(Element::Type type);
+	void clearEntities();
+
+	EntityContainer entities;
 
 	bool useFrameBuffer;
-	ElementContainer elements;
-	EntityList entities;
 	Continuity continuity;
 	GameplayVariables v;
 	Emote emote;
@@ -1351,7 +1366,9 @@ public:
 
 	int getEntityTypeIndexByName(std::string s);
 	void screenMessage(const std::string &msg);
+#ifdef AQUARIA_BUILD_CONSOLE  // No need to override it otherwise.
 	void debugLog(const std::string &s);
+#endif
 	void toggleConsole();
 	void toggleEffects();
 	void debugMenu();
@@ -1435,7 +1452,10 @@ public:
 
 	Demo demo;
 
-	DebugFont *fpsText, *console, *cmDebug;
+	DebugFont *fpsText, *cmDebug;
+#ifdef AQUARIA_BUILD_CONSOLE
+	DebugFont *console;
+#endif
 	BitmapText *versionLabel;
 	ProfRender *profRender;
 	
@@ -1467,6 +1487,8 @@ public:
 
 	BmpFont font, smallFont, subsFont, goldFont, smallFontRed;
 	TTFFont fontArialSmall, fontArialBig, fontArialSmallest;
+	unsigned char *arialFontData;
+	unsigned long arialFontDataSize;
 
 	void loadFonts();
 
@@ -1555,7 +1577,7 @@ protected:
 	void onPlayVoice();
 	void onStopVoice();
 
-	EntityList::iterator iter;
+	Entity **iter;
 	Quad *blackout;
 	void updatepecue(float dt);
 	std::vector<PECue> pecue;
@@ -1564,7 +1586,9 @@ protected:
 	void onMouseInput();
 	std::vector<std::string> voxQueue;
 
+#ifdef AQUARIA_BUILD_CONSOLE
 	std::vector<std::string> consoleLines;
+#endif
 
 	std::vector <AquariaSaveSlot*> saveSlots;
 

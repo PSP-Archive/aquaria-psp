@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Core.h"
 #include "Particles.h"
 #include "MathFunctions.h"
+#include "SimpleIStringStream.h"
 
 std::string SkeletalSprite::animationPath				= "data/animations/";
 std::string SkeletalSprite::skinPath					= "skins/";
@@ -284,7 +285,7 @@ void Bone::updateSegments()
 	}
 }
 
-void BoneCommand::parse(Bone *b, std::istringstream &is)
+void BoneCommand::parse(Bone *b, SimpleIStringStream &is)
 {
 	std::string type;
 	is >> type;
@@ -1215,7 +1216,7 @@ void SkeletalSprite::loadSkin(const std::string &fn)
 				if (boneXml->Attribute("sz"))
 				{
 					float v1, v2;
-					std::istringstream is(boneXml->Attribute("sz"));
+					SimpleIStringStream is(boneXml->Attribute("sz"));
 					is >> v1 >> v2;
 					b->scale = Vector(v1,v2);
 					b->originalScale = b->scale;
@@ -1296,7 +1297,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 	{
 		if (bones->Attribute("scale"))
 		{
-			std::istringstream is(bones->Attribute("scale"));
+			SimpleIStringStream is(bones->Attribute("scale"));
 			is >> scale.x >> scale.y;
 		}
 
@@ -1323,7 +1324,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				fv = atoi(bone->Attribute("fv"));
 			if (bone->Attribute("cp"))
 			{
-				std::istringstream is(bone->Attribute("cp"));
+				SimpleIStringStream is(bone->Attribute("cp"));
 				is >> cp.x >> cp.y;
 			}
 
@@ -1340,7 +1341,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 
 			if (bone->Attribute("crects"))
 			{
-				std::istringstream is(bone->Attribute("crects"));
+				SimpleIStringStream is(bone->Attribute("crects"));
 				int num = 0;
 				is >> num;
 				for (int i = 0; i < num; i++)
@@ -1357,7 +1358,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			if (bone->Attribute("prt"))
 			{
 				newb->prt = bone->Attribute("prt");
-				std::istringstream is(newb->prt);
+				SimpleIStringStream is(newb->prt);
 				int slot;
 				while (is >> slot)
 				{
@@ -1412,13 +1413,13 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			}
 			if (bone->Attribute("io"))
 			{
-				std::istringstream is(bone->Attribute("io"));
+				SimpleIStringStream is(bone->Attribute("io"));
 				is >> newb->internalOffset.x >> newb->internalOffset.y;
 			}
 
 			if (bone->Attribute("strip"))
 			{
-				std::istringstream is(bone->Attribute("strip"));
+				SimpleIStringStream is(bone->Attribute("strip"));
 				bool vert;
 				int num;
 				is >> vert >> num;
@@ -1427,7 +1428,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			if (bone->Attribute("sz"))
 			{
 				float sx, sy;
-				std::istringstream is(bone->Attribute("sz"));
+				SimpleIStringStream is(bone->Attribute("sz"));
 				is >> sx >> sy;
 
 				newb->scale = newb->originalScale = Vector(sx,sy);
@@ -1446,7 +1447,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			if (bone->Attribute("alpha"))
 			{
 				float a=1.0;
-				std::istringstream is(bone->Attribute("alpha"));
+				SimpleIStringStream is(bone->Attribute("alpha"));
 				is >> a;
 				newb->alpha = a;
 			}
@@ -1454,7 +1455,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			if (bone->Attribute("alphaMod"))
 			{
 				float a=1.0;
-				std::istringstream is(bone->Attribute("alphaMod"));
+				SimpleIStringStream is(bone->Attribute("alphaMod"));
 				is >> a;
 				newb->alphaMod = a;
 			}
@@ -1464,14 +1465,14 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				int x, y;
 				float dgox, dgoy, dgmx, dgmy, dgtm;
 				bool dgo;
-				std::istringstream is(bone->Attribute("segs"));
+				SimpleIStringStream is(bone->Attribute("segs"));
 				is >> x >> y >> dgox >> dgoy >> dgmx >> dgmy >> dgtm >> dgo;
 				newb->setSegs(x, y, dgox, dgoy, dgmx, dgmy, dgtm, dgo);
 			}
 
 			if (bone->Attribute("color"))
 			{
-				std::istringstream in(bone->Attribute("color"));
+				SimpleIStringStream in(bone->Attribute("color"));
 				in >> newb->color.x >> newb->color.y >> newb->color.z;
 			}
 			bone = bone->NextSiblingElement("Bone");
@@ -1509,7 +1510,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			AnimationLayer newAnimationLayer;
 			if (animationLayer->Attribute("ignore"))
 			{
-				std::istringstream is(animationLayer->Attribute("ignore"));
+				SimpleIStringStream is(animationLayer->Attribute("ignore"));
 				int t;
 				while (is >> t)
 				{
@@ -1518,7 +1519,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			}
 			if (animationLayer->Attribute("include"))
 			{
-				std::istringstream is(animationLayer->Attribute("include"));
+				SimpleIStringStream is(animationLayer->Attribute("include"));
 				int t;
 				while (is >> t)
 				{
@@ -1553,7 +1554,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				if (key->Attribute("e"))
 				{
 					float time;
-					std::istringstream is(key->Attribute("e"));
+					SimpleIStringStream is(key->Attribute("e"));
 					is >> time;
 					int idx, x, y, rot, strip;
 					newSkeletalKeyframe.t = time;
@@ -1584,7 +1585,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 						}
 						if (key->Attribute("sz"))
 						{
-							std::istringstream is2(key->Attribute("sz"));
+							SimpleIStringStream is2(key->Attribute("sz"));
 							int midx;
 							float bsx, bsy;
 							while (is2 >> midx)
@@ -1606,7 +1607,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				if (key->Attribute("d"))
 				{
 					float time;
-					std::istringstream is(key->Attribute("d"));
+					SimpleIStringStream is(key->Attribute("d"));
 					is >> time;
 					int idx, x, y, rot;
 
@@ -1629,7 +1630,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				if (key->Attribute("cmd"))
 				{
 					newSkeletalKeyframe.cmd = key->Attribute("cmd");
-					std::istringstream is(newSkeletalKeyframe.cmd);
+					SimpleIStringStream is(newSkeletalKeyframe.cmd);
 					int bidx;
 					while (is >> bidx)
 					{
@@ -1870,7 +1871,7 @@ Bone* SkeletalSprite::getSelectedBone(int ignore, bool mouseBased)
 		}
 		if (b)
 		{
-			b->color = Vector(1, 0,0);
+			b->color = Vector(1,0,0);
 		}
 		return b;
 	}

@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/DebugFont.h"
 #include "../BBGE/LensFlare.h"
 #include "../BBGE/RoundedRect.h"
+#include "../BBGE/SimpleIStringStream.h"
 
 #include "Game.h"
 #include "GridRender.h"
@@ -256,10 +257,11 @@ void FoodHolder::setIngredient(IngredientData *i, bool effects)
 		ing->renderQuad = true;
 		//renderQuad = true;
 
-		ing->scale.path.clear();
-		ing->scale.path.addPathNode(Vector(1,1),0);
-		ing->scale.path.addPathNode(Vector(1.25,1.25), 0.2);
-		ing->scale.path.addPathNode(Vector(1,1),1);
+		ing->scale.ensureData();
+		ing->scale.data->path.clear();
+		ing->scale.data->path.addPathNode(Vector(1,1),0);
+		ing->scale.data->path.addPathNode(Vector(1.25,1.25), 0.2);
+		ing->scale.data->path.addPathNode(Vector(1,1),1);
 		ing->scale.startPath(0.5);
 
 		game->enqueuePreviewRecipe();
@@ -431,10 +433,11 @@ void FoodSlot::refresh(bool effects)
 	{
 		if (effects)
 		{
-			scale.path.clear();
-			scale.path.addPathNode(Vector(1,1)*scaleFactor,0);
-			scale.path.addPathNode(Vector(1.5,1.5)*scaleFactor, 0.2);
-			scale.path.addPathNode(Vector(1,1)*scaleFactor,1);
+			scale.ensureData();
+			scale.data->path.clear();
+			scale.data->path.addPathNode(Vector(1,1)*scaleFactor,0);
+			scale.data->path.addPathNode(Vector(1.5,1.5)*scaleFactor, 0.2);
+			scale.data->path.addPathNode(Vector(1,1)*scaleFactor,1);
 			scale.startPath(0.5);
 		}
 	}
@@ -1072,18 +1075,6 @@ void Game::playSongInMenu(int songType, bool override)
 	}
 }
 
-void Game::removePath(int idx)
-{
-	if (idx >= 0 && idx < paths.size()) paths[idx]->destroy();
-	std::vector<Path*> copy = this->paths;
-	paths.clear();
-	for (int i = 0; i < copy.size(); i++)
-	{
-		if (i != idx)
-			paths.push_back(copy[i]);
-	}
-}
-
 void Game::flipRenderObjectVertical(RenderObject *r, int flipY)
 {
 	if (r->position.y < flipY)
@@ -1121,9 +1112,9 @@ void Game::flipSceneVertical(int flipY)
 		else
 			obsRows[i].ty = flipTY - (obsRows[i].ty - flipTY);
 	}
-	for (ElementContainer::iterator eit = dsq->elements.begin(); eit != dsq->elements.end(); eit++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = (*eit);
+		Element *e = dsq->getElement(i);
 		e->rotation.z = 180-e->rotation.z;
 		flipRenderObjectVertical(e, flipY);
 	}
@@ -1260,6 +1251,9 @@ Game::Game() : StateObject()
 	cameraFollow = 0;
 
 	worldMapRender = 0;
+
+	for (int i = 0; i < PATH_MAX; i++)
+		firstPathOfType[i] = 0;
 
 	loadEntityTypeList();
 
@@ -1411,6 +1405,44 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 		menuBg->scale = menuBgScale*0.5f;
 		menuBg->scale.interpolateTo(menuBgScale, t);
 		menuBg->alpha.interpolateTo(1, t*0.5f);
+		menuBg->setHidden(false);
+
+		// FIXME: This gets a little verbose because of all the
+		// individual non-child objects.  Is there a reason they
+		// can't all be children of menuBg?  --achurch
+		opt_save->setHidden(false);
+		opt_cancel->setHidden(false);
+		options->setHidden(false);
+		keyConfigButton->setHidden(false);
+		cook->setHidden(false);
+		foodSort->setHidden(false);
+		recipes->setHidden(false);
+		use->setHidden(false);
+		prevFood->setHidden(false);
+		nextFood->setHidden(false);
+		prevTreasure->setHidden(false);
+		nextTreasure->setHidden(false);
+		circlePageNum->setHidden(false);
+		previewRecipe->setHidden(false);
+		showRecipe->setHidden(false);
+		recipeMenu.scroll->setHidden(false);
+		recipeMenu.scrollEnd->setHidden(false);
+		recipeMenu.header->setHidden(false);
+		recipeMenu.page->setHidden(false);
+		recipeMenu.prevPage->setHidden(false);
+		recipeMenu.nextPage->setHidden(false);
+		menuDescription->setHidden(false);
+		eAre->setHidden(false);
+		eYes->setHidden(false);
+		eNo->setHidden(false);
+		menuIconGlow->setHidden(false);
+		for (int i = 0; i < menu.size(); i++)
+			menu[i]->setHidden(false);
+		for (int i = 0; i < treasureSlots.size(); i++)
+			treasureSlots[i]->setHidden(false);
+		treasureDescription->setHidden(false);
+		for (int i = 0; i < foodSlots.size(); i++)
+			foodSlots[i]->setHidden(false);
 
 
 		if (dsq->game->miniMapRender)
@@ -1520,9 +1552,10 @@ void Game::pickupIngredientEffects(IngredientData *data)
 	Quad *q = new Quad("gfx/ingredients/" + data->gfx, Vector(800-20 + core->getVirtualOffX(), (570-2*(100*miniMapRender->scale.y))+ingOffY));
 	q->scale = Vector(0.8, 0.8);
 	q->followCamera = 1;
-	q->alpha.path.addPathNode(0, 0);
-	q->alpha.path.addPathNode(1.0, 0.1);
-	q->alpha.path.addPathNode(0, 1.0);
+	q->alpha.ensureData();
+	q->alpha.data->path.addPathNode(0, 0);
+	q->alpha.data->path.addPathNode(1.0, 0.1);
+	q->alpha.data->path.addPathNode(0, 1.0);
 	q->alpha.startPath(2);
 	q->setLife(1);
 	q->setDecayRate(0.5);
@@ -1647,6 +1680,41 @@ void Game::hideInGameMenu(bool effects)
 
 		dsq->routeShoulder = true;
 	}
+
+	menuBg->setHidden(true);
+	opt_save->setHidden(true);
+	opt_cancel->setHidden(true);
+	options->setHidden(true);
+	keyConfigButton->setHidden(true);
+	cook->setHidden(true);
+	foodSort->setHidden(true);
+	recipes->setHidden(true);
+	use->setHidden(true);
+	prevFood->setHidden(true);
+	nextFood->setHidden(true);
+	prevTreasure->setHidden(true);
+	nextTreasure->setHidden(true);
+	circlePageNum->setHidden(true);
+	previewRecipe->setHidden(true);
+	showRecipe->setHidden(true);
+	recipeMenu.scroll->setHidden(true);
+	recipeMenu.scrollEnd->setHidden(true);
+	recipeMenu.header->setHidden(true);
+	recipeMenu.page->setHidden(true);
+	recipeMenu.prevPage->setHidden(true);
+	recipeMenu.nextPage->setHidden(true);
+	menuDescription->setHidden(true);
+	eAre->setHidden(true);
+	eYes->setHidden(true);
+	eNo->setHidden(true);
+	menuIconGlow->setHidden(true);
+	for (int i = 0; i < menu.size(); i++)
+		menu[i]->setHidden(true);
+	for (int i = 0; i < treasureSlots.size(); i++)
+		treasureSlots[i]->setHidden(true);
+	treasureDescription->setHidden(true);
+	for (int i = 0; i < foodSlots.size(); i++)
+		foodSlots[i]->setHidden(true);
 }
 
 void Game::onLeftMouseButton()
@@ -2154,12 +2222,12 @@ void Game::reconstructGrid(bool force)
 
 	clearGrid();
 	int i = 0;
-	for (i = 0; i < dsq->elements.size(); i++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		e->fillGrid();
 		/*
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (e->getElementType() == Element::BOX)
 		{
 			int w = e->getWidth()/TILE_SIZE;
@@ -2821,7 +2889,7 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 
 		q->collisionMaskRadius = 0;
 
-		q->collisionMaskHalfVector = Vector(q->getWidth()/2, q->getHeight()/2);
+		Vector collisionMaskHalfVector = Vector(q->getWidth()/2, q->getHeight()/2);
 
 		for (int tx = 0; tx < (q->getWidth()*q->scale.x); tx+=TILE_SIZE)
 		{
@@ -2864,7 +2932,7 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 					obs.push_back(tile);
 
 					// + Vector(0,TILE_SIZE)
-					q->collisionMask.push_back(tile.worldVector() - q->collisionMaskHalfVector);
+					q->collisionMask.push_back(tile.worldVector() - collisionMaskHalfVector);
 				}
 			}
 		}
@@ -2906,11 +2974,33 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 #endif
 }
 
-Path *Game::getPathByIndex(int idx)
+void Game::addPath(Path *p)
 {
-	if (idx >= 0 && idx < paths.size())
-		return paths[idx];
-	return 0;
+	paths.push_back(p);
+	if (p->pathType >= 0 && p->pathType < PATH_MAX)
+	{
+		p->nextOfType = firstPathOfType[p->pathType];
+		firstPathOfType[p->pathType] = p;
+	}
+}
+
+void Game::removePath(int idx)
+{
+	if (idx >= 0 && idx < paths.size()) paths[idx]->destroy();
+	std::vector<Path*> copy = this->paths;
+	clearPaths();
+	for (int i = 0; i < copy.size(); i++)
+	{
+		if (i != idx)
+			addPath(copy[i]);
+	}
+}
+
+void Game::clearPaths()
+{
+	paths.clear();
+	for (int i = 0; i < PATH_MAX; i++)
+		firstPathOfType[i] = 0;
 }
 
 int Game::getIndexOfPath(Path *p)
@@ -2973,7 +3063,7 @@ Path *Game::getScriptedPathAtCursor(bool withAct)
 	return 0;
 }
 
-Path *Game::getNearestPath(const Vector &pos, const std::string &s)
+Path *Game::getNearestPath(const Vector &pos, const std::string &s, const Path *ignore)
 {
 	Path *closest = 0;
 	float smallestDist = HUGE_VALF;
@@ -2982,7 +3072,7 @@ Path *Game::getNearestPath(const Vector &pos, const std::string &s)
 	for (int i = 0; i < dsq->game->paths.size(); i++)
 	{
 		Path *cp = dsq->game->paths[i];
-		if (!cp->nodes.empty() && (st.empty() || st == cp->name))
+		if (cp != ignore && !cp->nodes.empty() && (st.empty() || st == cp->name))
 		{
 			const Vector v = cp->nodes[0].position - pos;
 			const float dist = v.getSquaredLength2D();
@@ -3000,10 +3090,9 @@ Path *Game::getNearestPath(const Vector &pos, PathType pathType)
 {
 	Path *closest = 0;
 	float smallestDist = HUGE_VALF;
-	for (int i = 0; i < dsq->game->paths.size(); i++)
+	for (Path *cp = dsq->game->getFirstPathOfType(pathType); cp; cp = cp->nextOfType)
 	{
-		Path *cp = dsq->game->paths[i];
-		if (cp->pathType == pathType && !cp->nodes.empty())
+		if (!cp->nodes.empty())
 		{
 			const Vector v = cp->nodes[0].position - pos;
 			const float dist = v.getSquaredLength2D();
@@ -3022,6 +3111,17 @@ Path *Game::getNearestPath(Path *p, std::string s)
 	if (p->nodes.empty()) return 0;
 
 	return getNearestPath(p->nodes[0].position, s);
+}
+
+Path *Game::getPathByName(std::string name)
+{
+	stringToLowerUserData(name);
+	for (int i = 0; i < paths.size(); i++)
+	{
+		if (paths[i]->name == name)
+			return paths[i];
+	}
+	return 0;
 }
 
 
@@ -3649,6 +3749,7 @@ void Game::createInGameMenu()
 	group_keyConfig->shareAlphaWithChildren = 1;
 	group_keyConfig->followCamera = 1;
 	group_keyConfig->alpha = 0;
+	group_keyConfig->setHidden(true);
 
 	group_keyConfig->position = Vector(0, -40);
 
@@ -4204,7 +4305,7 @@ bool Game::loadSceneXML(std::string scene)
 	while (lensFlare)
 	{
 		LensFlare *l = new LensFlare;
-		std::istringstream is(lensFlare->Attribute("tex"));
+		SimpleIStringStream is(lensFlare->Attribute("tex"));
 		int w = -1, h=-1;
 		w = atoi(lensFlare->Attribute("w"));
 		h = atoi(lensFlare->Attribute("h"));
@@ -4215,7 +4316,7 @@ bool Game::loadSceneXML(std::string scene)
 			if (!tex.empty())
 				l->addFlare(tex, Vector(1,1,1), w, h);
 		}
-		std::istringstream is2(lensFlare->Attribute("inc"));
+		SimpleIStringStream is2(lensFlare->Attribute("inc"));
 		is2 >> l->inc;
 		l->maxLen = atoi(lensFlare->Attribute("maxLen"));
 		/*
@@ -4303,13 +4404,13 @@ bool Game::loadSceneXML(std::string scene)
 
 		if (level->Attribute("bgRepeat"))
 		{
-			std::istringstream is(level->Attribute("bgRepeat"));
+			SimpleIStringStream is(level->Attribute("bgRepeat"));
 			is >> backgroundImageRepeat;
 			levelSF.SetAttribute("bgRepeat", level->Attribute("bgRepeat"));
 		}
 		if (level->Attribute("cameraConstrained"))
 		{
-			std::istringstream is(level->Attribute("cameraConstrained"));
+			SimpleIStringStream is(level->Attribute("cameraConstrained"));
 			is >> cameraConstrained;
 			levelSF.SetAttribute("cameraConstrained", cameraConstrained);
 			std::ostringstream os;
@@ -4359,13 +4460,13 @@ bool Game::loadSceneXML(std::string scene)
 		{
 			if (level->Attribute("gradTop"))
 			{
-				std::istringstream is(level->Attribute("gradTop"));
+				SimpleIStringStream is(level->Attribute("gradTop"));
 				is >> gradTop.x >> gradTop.y >> gradTop.z;
 				levelSF.SetAttribute("gradTop", level->Attribute("gradTop"));
 			}
 			if (level->Attribute("gradBtm"))
 			{
-				std::istringstream is(level->Attribute("gradBtm"));
+				SimpleIStringStream is(level->Attribute("gradBtm"));
 				is >> gradBtm.x >> gradBtm.y >> gradBtm.z;
 				levelSF.SetAttribute("gradBtm", level->Attribute("gradBtm"));
 			}
@@ -4375,7 +4476,7 @@ bool Game::loadSceneXML(std::string scene)
 
 		if (level->Attribute("parallax"))
 		{
-			std::istringstream is(level->Attribute("parallax"));
+			SimpleIStringStream is(level->Attribute("parallax"));
 			float x,y,z,r,g,b;
 			is >> x >> y >> z >> r >> g >> b;
 			RenderObjectLayer *l = 0;
@@ -4401,7 +4502,7 @@ bool Game::loadSceneXML(std::string scene)
 		if (level->Attribute("parallaxLock"))
 		{
 			int x, y, z, r, g, b;
-			std::istringstream is(level->Attribute("parallaxLock"));
+			SimpleIStringStream is(level->Attribute("parallaxLock"));
 			is >> x >> y >> z >> r >> g >> b;
 
 			RenderObjectLayer *l = 0;
@@ -4502,7 +4603,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (level->Attribute("sceneColor"))
 		{
-			std::istringstream in(level->Attribute("sceneColor"));
+			SimpleIStringStream in(level->Attribute("sceneColor"));
 			in >> sceneColor.x >> sceneColor.y >> sceneColor.z;
 			levelSF.SetAttribute("sceneColor", level->Attribute("sceneColor"));
 		}
@@ -4516,7 +4617,7 @@ bool Game::loadSceneXML(std::string scene)
 	if (obs)
 	{
 		int tx, ty, len;
-		std::istringstream is(obs->Attribute("d"));
+		SimpleIStringStream is(obs->Attribute("d"));
 		while (is >> tx)
 		{
 			is >> ty >> len;
@@ -4541,7 +4642,7 @@ bool Game::loadSceneXML(std::string scene)
 		while (nodeXml)
 		{
 			PathNode node;
-			std::istringstream is(nodeXml->Attribute("pos"));
+			SimpleIStringStream is(nodeXml->Attribute("pos"));
 			is >> node.position.x >> node.position.y;
 
 			if (nodeXml->Attribute("ms"))
@@ -4551,7 +4652,7 @@ bool Game::loadSceneXML(std::string scene)
 
 			if (nodeXml->Attribute("rect"))
 			{
-				std::istringstream is(nodeXml->Attribute("rect"));
+				SimpleIStringStream is(nodeXml->Attribute("rect"));
 				int w,h;
 				is >> w >> h;
 				path->rect.setWidth(w);
@@ -4567,7 +4668,7 @@ bool Game::loadSceneXML(std::string scene)
 			nodeXml = nodeXml->NextSiblingElement("Node");
 		}
 		path->refreshScript();
-		paths.push_back(path);
+		addPath(path);
 		addProgress();
 		pathXml = pathXml->NextSiblingElement("Path");
 	}
@@ -4713,7 +4814,7 @@ bool Game::loadSceneXML(std::string scene)
 		waSF.SetAttribute("ay", a.avatarPosition.y = atoi(warpArea->Attribute("ay")));
 		*/
 
-		std::istringstream is(sceneString);
+		SimpleIStringStream is(sceneString);
 		std::string sceneName, warpAreaType, side;
 		is >> sceneName >> warpAreaType >> a.spawnOffset.x >> a.spawnOffset.y;
 		a.spawnOffset.normalize2D();
@@ -4769,7 +4870,7 @@ bool Game::loadSceneXML(std::string scene)
 		float size = 1;
 		if (schoolFish->Attribute("size"))
 		{
-			std::istringstream is(schoolFish->Attribute("size"));
+			SimpleIStringStream is(schoolFish->Attribute("size"));
 			is >> size;
 		}
 
@@ -4783,12 +4884,11 @@ bool Game::loadSceneXML(std::string scene)
 
 		for (int i = 0; i < num; i++)
 		{
-			SchoolFish *s = new SchoolFish;
+			SchoolFish *s = new SchoolFish(texture);
 			{
 				s->position = Vector(x+i*5,y+i*5);
 				s->startPos = s->position;
-				s->flockID = id;
-				s->setTexture(texture);
+				s->addToFlock(id);
 				if (range != 0)
 					s->range = range;
 				if (maxSpeed != 0)
@@ -4865,7 +4965,7 @@ bool Game::loadSceneXML(std::string scene)
 		b->position = Vector(atoi(boxElement->Attribute("x")), atoi(boxElement->Attribute("y")));
 		addRenderObject(b, LR_BLACKGROUND);
 		b->position.z = boxElementZ;
-		dsq->elements.push_back(b);
+		dsq->addElement(b);
 		boxElement = boxElement->NextSiblingElement("BoxElement");
 	}
 
@@ -4876,7 +4976,7 @@ bool Game::loadSceneXML(std::string scene)
 		float sz,sz2;
 		if (simpleElements->Attribute("d"))
 		{
-			std::istringstream is(simpleElements->Attribute("d"));
+			SimpleIStringStream is(simpleElements->Attribute("d"));
 			while (is >> idx)
 			{
 				is >> x >> y >> rot;
@@ -4886,7 +4986,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("e"))
 		{
-			std::istringstream is2(simpleElements->Attribute("e"));
+			SimpleIStringStream is2(simpleElements->Attribute("e"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4897,7 +4997,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("f"))
 		{
-			std::istringstream is2(simpleElements->Attribute("f"));
+			SimpleIStringStream is2(simpleElements->Attribute("f"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4909,7 +5009,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("g"))
 		{
-			std::istringstream is2(simpleElements->Attribute("g"));
+			SimpleIStringStream is2(simpleElements->Attribute("g"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4926,7 +5026,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("h"))
 		{
-			std::istringstream is2(simpleElements->Attribute("h"));
+			SimpleIStringStream is2(simpleElements->Attribute("h"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4947,7 +5047,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("i"))
 		{
-			std::istringstream is2(simpleElements->Attribute("i"));
+			SimpleIStringStream is2(simpleElements->Attribute("i"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4971,7 +5071,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("j"))
 		{
-			std::istringstream is2(simpleElements->Attribute("j"));
+			SimpleIStringStream is2(simpleElements->Attribute("j"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4998,7 +5098,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("k"))
 		{
-			std::istringstream is2(simpleElements->Attribute("k"));
+			SimpleIStringStream is2(simpleElements->Attribute("k"));
 			int l = atoi(simpleElements->Attribute("l"));
 			int c = 0;
 			while(is2 >> idx)
@@ -5070,7 +5170,7 @@ bool Game::loadSceneXML(std::string scene)
 
 				if (element->Attribute("sz"))
 				{
-					std::istringstream is(element->Attribute("sz"));
+					SimpleIStringStream is(element->Attribute("sz"));
 					is >> e->scale.x >> e->scale.y;
 				}
 			}
@@ -5108,7 +5208,7 @@ bool Game::loadSceneXML(std::string scene)
 	{
 		if (entitiesNode->Attribute("d"))
 		{
-			std::istringstream is(entitiesNode->Attribute("d"));
+			SimpleIStringStream is(entitiesNode->Attribute("d"));
 			int idx, x, y;
 			while (is >> idx)
 			{
@@ -5118,7 +5218,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (entitiesNode->Attribute("e"))
 		{
-			std::istringstream is(entitiesNode->Attribute("e"));
+			SimpleIStringStream is(entitiesNode->Attribute("e"));
 			int idx, x, y, rot;
 			while (is >> idx)
 			{
@@ -5134,7 +5234,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (entitiesNode->Attribute("f"))
 		{
-			std::istringstream is(entitiesNode->Attribute("f"));
+			SimpleIStringStream is(entitiesNode->Attribute("f"));
 			int idx, x, y, rot, group;
 			while (is >> idx)
 			{
@@ -5145,7 +5245,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (entitiesNode->Attribute("g"))
 		{
-			std::istringstream is(entitiesNode->Attribute("g"));
+			SimpleIStringStream is(entitiesNode->Attribute("g"));
 			int idx, x, y, rot, group, id;
 			while (is >> idx)
 			{
@@ -5156,7 +5256,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (entitiesNode->Attribute("h"))
 		{
-			std::istringstream is(entitiesNode->Attribute("h"));
+			SimpleIStringStream is(entitiesNode->Attribute("h"));
 			int idx, x, y, rot, groupID, id;
 			Entity::NodeGroups *ng;
 			Entity::NodeGroups nodeGroups;
@@ -5179,9 +5279,9 @@ bool Game::loadSceneXML(std::string scene)
 						{
 							int idx;
 							is >> idx;
-							if (Path *p = getPathByIndex(idx))
+							if (idx >= 0 && idx < getNumPaths())
 							{
-								nodeGroups[i].push_back(p);
+								nodeGroups[i].push_back(getPath(idx));
 							}
 						}
 					}
@@ -5193,7 +5293,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (entitiesNode->Attribute("i"))
 		{
-			std::istringstream is(entitiesNode->Attribute("i"));
+			SimpleIStringStream is(entitiesNode->Attribute("i"));
 			int idx, x, y, rot, groupID, id;
 			Entity::NodeGroups nodeGroups;
 			while (is >> idx)
@@ -5206,7 +5306,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (entitiesNode->Attribute("j"))
 		{
-			std::istringstream is(entitiesNode->Attribute("j"));
+			SimpleIStringStream is(entitiesNode->Attribute("j"));
 			int idx, x, y, rot, groupID, id;
 			std::string name;
 			Entity::NodeGroups nodeGroups;
@@ -5235,6 +5335,7 @@ bool Game::loadSceneXML(std::string scene)
 	}
 	this->reconstructGrid(true);
 	rebuildElementUpdateList();
+	setElementLayerFlags();
 
 	findMaxCameraValues();
 
@@ -5271,9 +5372,9 @@ void Game::findMaxCameraValues()
 		}
 	}
 	/*
-	for (i = 0; i < dsq->elements.size(); i++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (e->position.x > cameraMax.x)
 			cameraMax.x = e->position.x;
 		if (e->position.y > cameraMax.y)
@@ -5394,17 +5495,6 @@ bool Game::loadScene(std::string scene)
 	*/
 }
 
-Path *Game::getPathByName(std::string name)
-{
-    stringToLowerUserData(name);
-	for(int i = 0; i < paths.size(); i++)
-	{
-		if (paths[i]->name == name)
-			return paths[i];
-	}
-	return 0;
-}
-
 void Game::saveScene(std::string scene)
 {
 	std::string fn = getSceneFilename(scene);
@@ -5476,10 +5566,10 @@ void Game::saveScene(std::string scene)
 	saveFile.InsertEndChild(obsXml);
 
 
-	for (i = 0; i < dsq->game->paths.size(); i++)
+	for (i = 0; i < dsq->game->getNumPaths(); i++)
 	{
 		TiXmlElement pathXml("Path");
-		Path *p = dsq->game->paths[i];
+		Path *p = dsq->game->getPath(i);
 		pathXml.SetAttribute("name", p->name);
 		//pathXml.SetAttribute("active", p->active);
 		for (int n = 0; n < p->nodes.size(); n++)
@@ -5528,9 +5618,9 @@ void Game::saveScene(std::string scene)
 	std::ostringstream simpleElements[LR_MAX];
 
 
-	for (i = 0; i < dsq->elements.size(); i++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (!e->dontSave)
 		{
 			if (e->getElementType() == Element::BOX) {}
@@ -5742,9 +5832,9 @@ void Game::colorTest()
 	/*
 	std::vector<QuadLight> quadLights;
 	quadLights.push_back(QuadLight(Vector(400, 300), Vector(1, 0, 0), 2000));
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (int i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		//e->color = Vector(rand()%100, rand()%100, rand()%100);
 		for (int i = 0; i < quadLights.size(); i++)
 		{
@@ -5755,7 +5845,7 @@ void Game::colorTest()
 				float fract = float(dist.getLength2D())/float(quadLights[i].dist);
 				float amb = fract;
 				fract = 1.0f - fract;
-				e->color = sceneColor*amb + q->color*fract;
+				e->color = Vector(1,1,1)*amb + q->color*fract;
 			}
 			else
 			{
@@ -6006,11 +6096,11 @@ void Game::rebuildElementUpdateList()
 		dsq->getRenderObjectLayer(i)->update = false;
 
 	elementUpdateList.clear();
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (int i = 0; i < dsq->getNumElements(); i++)
 	//for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS8; i++)
 	{
 		//RenderObjectLayer *rl = dsq->getRenderObjectLayer(i);
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (e && e->layer >= LR_ELEMENTS1 && e->layer <= LR_ELEMENTS8)
 		{
 			if (e->getElementEffectIndex() != -1)
@@ -6018,6 +6108,19 @@ void Game::rebuildElementUpdateList()
 				elementUpdateList.push_back(e);
 			}
 		}
+	}
+}
+
+void Game::setElementLayerFlags()
+{
+	for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS16; i++)
+	{
+		// FIXME: Background SchoolFish get added to ELEMENTS11, so
+		// we can't optimize that layer.  (Maybe create a new layer?)
+		if (i == LR_ELEMENTS11)
+			continue;
+
+		dsq->getRenderObjectLayer(i)->setOptimizeStatic(!sceneEditor.isOn());
 	}
 }
 
@@ -6337,7 +6440,6 @@ void Game::applyState()
 	cameraFollowEntity = 0;
 
 	shuttingDownGameState = false;
-	optionsMenu = false;
 	core->particlesPaused = false;
 	bNatural = false;
 	songLineRender = 0;
@@ -6415,7 +6517,7 @@ void Game::applyState()
 	StateObject::applyState();
 	//core->enable2D(800);
 
-	dsq->entities.clear();
+	dsq->clearEntities();
 	dsq->clearElements();
 	elementWithMenu = 0;
 	//dsq->gui.menu.clearEntries();
@@ -6479,6 +6581,7 @@ void Game::applyState()
 		controlHint_bg->alphaMod = 0.7;
 		//controlHint_bg->setTexture("HintBox");
 		controlHint_bg->setWidthHeight(core->getVirtualWidth(), 100);
+		controlHint_bg->autoWidth = AUTO_VIRTUALWIDTH;
 		controlHint_bg->alpha = 0;
 	}
 	addRenderObject(controlHint_bg, LR_HELP);
@@ -6753,9 +6856,9 @@ void Game::applyState()
 		Path *closest = 0;
 		Vector closestPushOut;
 		bool doFlip = false;
-		for (int i = 0; i < dsq->game->paths.size(); i++)
+		for (int i = 0; i < dsq->game->getNumPaths(); i++)
 		{
-			Path *p = dsq->game->paths[i];
+			Path *p = dsq->game->getPath(i);
 			Vector pos = p->nodes[0].position;
 			if (p && (nocasecmp(p->warpMap, fromScene)==0))
 			{
@@ -6973,10 +7076,10 @@ void Game::applyState()
 	core->resetTimer();
 
 	if (verbose) debugLog("paths init");
-	int pathSz = paths.size();
+	int pathSz = getNumPaths();
 	for (i = 0; i < pathSz; i++)
 	{
-		paths[i]->init();
+		getPath(i)->init();
 	}
 
 	debugLog("Updating bgSfxLoop");
@@ -7090,7 +7193,7 @@ void Game::bindInput()
 
 	/*
 	addAction(ACTION_MENULEFT,	KEY_LEFT);
-	addAction(ACTION_MENURIGHT, KEY_RIGHT);
+	addAction(ACTION_MENURIGHT,	KEY_RIGHT);
 	addAction(ACTION_MENUUP,	KEY_UP);
 	addAction(ACTION_MENUDOWN,	KEY_DOWN);
 
@@ -7099,17 +7202,16 @@ void Game::bindInput()
 	dsq->user.control.actionSet.importAction(this, "SwimUp",		ACTION_MENUUP);
 	dsq->user.control.actionSet.importAction(this, "SwimDown",		ACTION_MENUDOWN);
 
-	addAction(ACTION_MENULEFT,	X360_DPAD_LEFT);
-	addAction(ACTION_MENURIGHT, X360_DPAD_RIGHT);
-	addAction(ACTION_MENUUP,	X360_DPAD_UP);
-	addAction(ACTION_MENUDOWN,	X360_DPAD_DOWN);
+	addAction(ACTION_MENULEFT,	JOY1_DPAD_LEFT);
+	addAction(ACTION_MENURIGHT,	JOY1_DPAD_RIGHT);
+	addAction(ACTION_MENUUP,	JOY1_DPAD_UP);
+	addAction(ACTION_MENUDOWN,	JOY1_DPAD_DOWN);
 	*/
 
 	addAction(ACTION_MENULEFT,	JOY1_STICK_LEFT);
-	addAction(ACTION_MENURIGHT, JOY1_STICK_RIGHT);
+	addAction(ACTION_MENURIGHT,	JOY1_STICK_RIGHT);
 	addAction(ACTION_MENUUP,	JOY1_STICK_UP);
 	addAction(ACTION_MENUDOWN,	JOY1_STICK_DOWN);
-
 
 
 	if (avatar)
@@ -7552,11 +7654,12 @@ void Game::onCook()
 			showRecipe->setTexture(n);
 			showRecipe->scale = Vector(0.5, 0.5);
 			showRecipe->scale.interpolateTo(Vector(1.2, 1.2), t);
-			showRecipe->alpha.path.clear();
-			showRecipe->alpha.path.addPathNode(0, 0);
-			showRecipe->alpha.path.addPathNode(1, 0.1);
-			showRecipe->alpha.path.addPathNode(1, 0.6);
-			showRecipe->alpha.path.addPathNode(0, 1);
+			showRecipe->alpha.ensureData();
+			showRecipe->alpha.data->path.clear();
+			showRecipe->alpha.data->path.addPathNode(0, 0);
+			showRecipe->alpha.data->path.addPathNode(1, 0.1);
+			showRecipe->alpha.data->path.addPathNode(1, 0.6);
+			showRecipe->alpha.data->path.addPathNode(0, 1);
 			showRecipe->alpha.startPath(t);
 		}
 
@@ -7800,10 +7903,11 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 	controlHint_ignoreClear = ignoreClear;
 
 
-	controlHint_shine->alpha.path.clear();
-	controlHint_shine->alpha.path.addPathNode(0.001, 0.0);
-	controlHint_shine->alpha.path.addPathNode(1.000, 0.3);
-	controlHint_shine->alpha.path.addPathNode(0.001, 1.0);
+	controlHint_shine->alpha.ensureData();
+	controlHint_shine->alpha.data->path.clear();
+	controlHint_shine->alpha.data->path.addPathNode(0.001, 0.0);
+	controlHint_shine->alpha.data->path.addPathNode(1.000, 0.3);
+	controlHint_shine->alpha.data->path.addPathNode(0.001, 1.0);
 	controlHint_shine->alpha.startPath(0.4);
 }
 
@@ -8738,7 +8842,10 @@ CollideData Game::collideCircleWithAllEntities(Vector pos, float r, Entity *me, 
 void Game::toggleSceneEditor()
 {
 	if (!core->getAltState())
+	{
 		sceneEditor.toggle();
+		setElementLayerFlags();
+	}
 }
 
 void Game::toggleMiniMapRender()
@@ -8838,10 +8945,9 @@ void Game::updateCurrentVisuals(float dt)
 	delay += dt;
 	if (delay > 0.2f)
 	{
-		for (int i = 0; i < dsq->game->paths.size(); i++)
+		for (Path *p = dsq->game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
 		{
-			Path *p = dsq->game->paths[i];
-			if (p->pathType == PATH_CURRENT && p->active)
+			if (p->active)
 			{
 				for (int n = 1; n < p->nodes.size(); n++)
 				{
@@ -8860,11 +8966,11 @@ void Game::updateCurrentVisuals(float dt)
 	*/
 
 	/*
-    if (dsq->game->paths[i]->name == "CURRENT" && dsq->game->paths[i]->nodes.size() >= 2)
+    if (dsq->game->getPath(i)->name == "CURRENT" && dsq->game->getPath(i)->nodes.size() >= 2)
 	{
-		Vector dir = dsq->game->paths[i]->nodes[1].position - dsq->game->paths[i]->nodes[0].position;
+		Vector dir = dsq->game->getPath(i)->nodes[1].position - dsq->game->getPath(i)->nodes[0].position;
 		dir.setLength2D(800);
-		dsq->spawnBubble(dsq->game->paths[i]->nodes[0].position, dir);
+		dsq->spawnBubble(dsq->game->getPath(i)->nodes[0].position, dir);
 	}
 	*/
 }
@@ -9453,6 +9559,7 @@ void Game::toggleKeyConfigMenu(bool f)
 
 		keyConfigMenu = true;
 
+		group_keyConfig->setHidden(false);
 		group_keyConfig->alpha = 1;
 
 		dsq->user_bcontrol = dsq->user;
@@ -9492,6 +9599,7 @@ void Game::toggleKeyConfigMenu(bool f)
 		keyConfigMenu = false;
 
 		group_keyConfig->alpha = 0;
+		group_keyConfig->setHidden(true);
 
 		opt_cancel->alpha = 0;
 		opt_save->alpha = 0;
@@ -9815,10 +9923,11 @@ void Game::updateInGameMenu(float dt)
 						Quad *q = new Quad("particles/glow", Vector(400+237*menuBg->scale.x,300-52*menuBg->scale.x)+notePos);
 						q->setBlendType(RenderObject::BLEND_ADD);
 						q->scale = Vector(5,5);
-						q->alpha.path.addPathNode(0, 0);
-						q->alpha.path.addPathNode(0.75, 0.5);
-						q->alpha.path.addPathNode(0.75, 0.5);
-						q->alpha.path.addPathNode(0, 1);
+						q->alpha.ensureData();
+						q->alpha.data->path.addPathNode(0, 0);
+						q->alpha.data->path.addPathNode(0.75, 0.5);
+						q->alpha.data->path.addPathNode(0.75, 0.5);
+						q->alpha.data->path.addPathNode(0, 1);
 						q->alpha.startPath(t);
 						q->followCamera = 1;
 						q->setLife(t);
@@ -10251,9 +10360,9 @@ void Game::update(float dt)
 		}
 		*/
 		/*
-		for (int i = 0; i < dsq->entities.size(); i++)
+		FOR_ENTITIES (i)
 		{
-			Entity *e = dsq->entities[i];
+			Entity *e = *i;
 			if (e->getEntityType() != ET_AVATAR && e->collideRadius > 0)
 			{
 				Emitter::addInfluence(ParticleInfluence(e->position, 200, e->collideRadius, false));
@@ -10284,15 +10393,17 @@ void Game::update(float dt)
 
 
 	int i = 0;
-	for (i = 0; i < dsq->game->paths.size(); i++)
+	for (i = 0; i < dsq->game->getNumPaths(); i++)
 	{
-		dsq->game->paths[i]->update(dt);
+		dsq->game->getPath(i)->update(dt);
 	}
 
 	FOR_ENTITIES(j)
 	{
 		(*j)->postUpdate(dt);
 	}
+
+	FlockEntity::updateFlockData();
 
 	updateCurrentVisuals(dt);
 	updateCursor(dt);
@@ -10336,19 +10447,14 @@ void Game::update(float dt)
 	sceneColor.update(dt);
 	sceneColor2.update(dt);
 	sceneColor3.update(dt);
+	dsq->sceneColorOverlay->color = sceneColor * sceneColor2 * sceneColor3;
 	if (bg)
 	{
-		bg->color = sceneColor * sceneColor2 * sceneColor3;
 		setParallaxTextureCoordinates(bg, 0.3);
 	}
 	if (bg2)
 	{
-		bg2->color = sceneColor * sceneColor2 * sceneColor3;
 		setParallaxTextureCoordinates(bg2, 0.1);
-	}
-	if (grad)
-	{
-		grad->color = sceneColor*sceneColor2*sceneColor3;
 	}
 	updateInGameMenu(dt);
 	if (avatar && grad && bg && bg2)
@@ -11013,16 +11119,17 @@ void Game::removeState()
 	dsq->game->avatar->myZoom = Vector(1,1);
 	dsq->globalScale = Vector(1,1);
 
-	for (int i = 0; i < paths.size(); i++)
+	for (int i = 0; i < getNumPaths(); i++)
 	{
-		paths[i]->destroy();
-		delete(paths[i]);
+		Path *p = getPath(i);
+		p->destroy();
+		delete p;
 	}
-	paths.clear();
+	clearPaths();
 
 	StateObject::removeState();
 	dsq->clearElements();
-	dsq->entities.clear();
+	dsq->clearEntities();
 	avatar = 0;
 	//items.clear();
 #ifdef BUILD_SCENEEDITOR

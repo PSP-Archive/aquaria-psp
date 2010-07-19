@@ -91,11 +91,13 @@ protected:
 	float inputDelay;
 	BitmapText *areaLabel, *areaLabel2, *areaLabel3;
 	WorldMapTile *originalActiveTile;
-	void setVis(Quad *q);
+	void setVis(WorldMapTile *tile);
+	void clearVis(WorldMapTile *tile);
 	bool on;
 	void onUpdate(float dt);
 	void onRender();
 	Quad *bg;
+	unsigned char *savedTexData;
 	bool mb;
 	Vector lastMousePosition; // See FIXME in WorldMapRender.cpp  --achurch
 };

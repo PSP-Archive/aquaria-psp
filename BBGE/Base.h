@@ -213,10 +213,22 @@ float sqr(float x);
 bool exists(const std::string &f, bool makeFatal = false);
 void errorLog(const std::string &s);
 void debugLog(const std::string &s);
+char *readFile(std::string path, unsigned long *size_ret = 0);
 void forEachFile(std::string path, std::string type, void callback(const std::string &filename, intptr_t param), intptr_t param);
 std::string stripEndlineForUnix(const std::string &in);
 std::vector<std::string> getFileList(std::string path, std::string type, int param);
-int nocasecmp(const std::string & s1, const std::string& s2);
+#if defined(BBGE_BUILD_UNIX)
+static inline int nocasecmp(const std::string &s1, const std::string &s2)
+	{ return strcasecmp(s1.c_str(), s2.c_str()); }
+static inline int nocasecmp(const std::string &s1, const char *s2)
+	{ return strcasecmp(s1.c_str(), s2); }
+static inline int nocasecmp(const char *s1, const std::string &s2)
+	{ return strcasecmp(s1, s2.c_str()); }
+static inline int nocasecmp(const char *s1, const char *s2)
+	{ return strcasecmp(s1, s2); }
+#else
+int nocasecmp(const std::string &s1, const std::string &s2);
+#endif
 std::string upperCase(const std::string &s1);
 Vector getNearestPointOnLine(Vector start, Vector end, Vector point);
 bool isTouchingLine(Vector lineStart, Vector lineEnd, Vector point, int radius=1, Vector* closest=0);

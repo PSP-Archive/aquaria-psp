@@ -179,28 +179,28 @@ void StatsAndAchievements::RunFrame()
 
 		// Get generic achievement data...
 		io = fopen("data/achievements.txt", "r");
-		char buf[1024];
+		char line[1024];
 		for (size_t i = 0; i < max_achievements; i++)
 		{
-			if (!io || (fgets(buf, sizeof (buf), io) == NULL))
-				snprintf(buf, sizeof (buf), "Achievement #%d", (int) i);
+			if (!io || (fgets(line, sizeof (line), io) == NULL))
+				snprintf(line, sizeof (line), "Achievement #%d", (int) i);
 			else
 			{
-				for (char *ptr = (buf + strlen(buf)) - 1; (ptr >= buf) && ((*ptr == '\r') || (*ptr == '\n')); ptr--)
+				for (char *ptr = (line + strlen(line)) - 1; (ptr >= line) && ((*ptr == '\r') || (*ptr == '\n')); ptr--)
 					*ptr = '\0';
 			}
-			buf[sizeof (g_rgAchievements[i].name) - 1] = '\0';  // just in case.
-			strcpy(g_rgAchievements[i].name, buf);
+			line[sizeof (g_rgAchievements[i].name) - 1] = '\0';  // just in case.
+			strcpy(g_rgAchievements[i].name, line);
 
-			if (!io || (fgets(buf, sizeof (buf), io) == NULL))
-				snprintf(buf, sizeof (buf), "[Description of Achievement #%d is missing!]", (int) i);
+			if (!io || (fgets(line, sizeof (line), io) == NULL))
+				snprintf(line, sizeof (line), "[Description of Achievement #%d is missing!]", (int) i);
 			else
 			{
-				for (char *ptr = (buf + strlen(buf)) - 1; (ptr >= buf) && ((*ptr == '\r') || (*ptr == '\n')); ptr--)
+				for (char *ptr = (line + strlen(line)) - 1; (ptr >= line) && ((*ptr == '\r') || (*ptr == '\n')); ptr--)
 					*ptr = '\0';
 			}
-			buf[sizeof (g_rgAchievements[i].desc) - 1] = '\0';  // just in case.
-			strcpy(g_rgAchievements[i].desc, buf);
+			line[sizeof (g_rgAchievements[i].desc) - 1] = '\0';  // just in case.
+			strcpy(g_rgAchievements[i].desc, line);
 
 			// unsupported at the moment.
 			g_rgAchievements[i].iconImage = 0;
@@ -210,28 +210,30 @@ void StatsAndAchievements::RunFrame()
 			fclose(io);
 
 		// See what this specific player has achieved...
+
+		unsigned char *buf = new unsigned char[max_achievements];
+		size_t br = 0;
 		const std::string fname(core->getUserDataFolder() + "/achievements.bin");
 		io = fopen(fname.c_str(), "rb");
 		if (io == NULL)
 			statsValid = true;  // nothing to report.
 		else
 		{
-			unsigned char *buf = new unsigned char[max_achievements];
-			const size_t br = fread(buf, sizeof (buf[0]), max_achievements, io);
+			br = fread(buf, sizeof (buf[0]), max_achievements, io);
 			fclose(io);
-
-			if (br == max_achievements)
-			{
-				statsValid = true;  // but we'll reset if there's a problem.
-				for (size_t i = 0; statsValid && (i < max_achievements); i++)
-				{
-					const int val = ((int) (buf[i] ^ 0xFF)) - ((int)i);
-					statsValid = ((val == 0) || (val == 1));
-					g_rgAchievements[i].achieved = (val == 1);
-				}
-			}
-			delete[] buf;
 		}
+
+		if (br == max_achievements)
+		{
+			statsValid = true;  // but we'll reset if there's a problem.
+			for (size_t i = 0; statsValid && (i < max_achievements); i++)
+			{
+				const int val = ((int) (buf[i] ^ 0xFF)) - ((int)i);
+				statsValid = ((val == 0) || (val == 1));
+				g_rgAchievements[i].achieved = (val == 1);
+			}
+		}
+		delete[] buf;
 	}
 #endif
 
@@ -784,7 +786,7 @@ void StatsAndAchievements::update(float dt)
 
 #ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
 	// change no state if we're still fading in/out.
-	if (!dsq->achievement_box->alpha.interpolating)
+	if (!dsq->achievement_box->alpha.isInterpolating())
 	{
 		const float maxUnlockDisplayTime = 5.0f;
 		// still displaying an unlock notification?

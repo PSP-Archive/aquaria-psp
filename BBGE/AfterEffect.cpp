@@ -51,7 +51,7 @@ AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 	this->yDivs = yDivs;
 	//cameraPointer = nCameraPointer;
 
-	//Asssuming the resolutions values are > 512 and < 2048
+	//Asssuming the resolutions values are > 256 and < 2048
 	//Set the texture heights and widths
 	if (core->frameBuffer.isInited())
 	{
@@ -60,11 +60,15 @@ AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 	}
 	else
 	{
-		if (screenWidth <= 1024)
+		if (screenWidth <= 512)
+			textureWidth = 512;
+		else if (screenWidth <= 1024)
 			textureWidth = 1024;
 		else
 			textureWidth = 2048;
-		if (screenHeight <= 1024)
+		if (screenHeight <= 512)
+			textureHeight = 512;
+		else if (screenHeight <= 1024)
 			textureHeight = 1024;
 		else
 			textureHeight = 2048;

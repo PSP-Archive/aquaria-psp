@@ -37,6 +37,7 @@ BoxElement::BoxElement(int width, int height) : Element(BOX)
 	//cull = false;
 }
 
+/*
 bool BoxElement::isOnScreen()
 {
 	// HACK: biased towards being fast for rows
@@ -55,4 +56,4 @@ bool BoxElement::isOnScreen()
 
 	return false;
 }
-
+*/

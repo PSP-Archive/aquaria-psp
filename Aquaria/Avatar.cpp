@@ -297,15 +297,17 @@ SongIconParticle::SongIconParticle(Vector color, Vector pos, int note)
 	this->color = color;
 	position = pos;
 
-	alpha.path.addPathNode(0, 0);
-	alpha.path.addPathNode(0.4, 0.2); // .8
-	alpha.path.addPathNode(0.2, 0.8); // .4
-	alpha.path.addPathNode(0, 1);
+	alpha.ensureData();
+	alpha.data->path.addPathNode(0, 0);
+	alpha.data->path.addPathNode(0.4, 0.2); // .8
+	alpha.data->path.addPathNode(0.2, 0.8); // .4
+	alpha.data->path.addPathNode(0, 1);
 	alpha.startPath(life);
 
-	scale.path.addPathNode(Vector(0.5,0.5), 0);
-	scale.path.addPathNode(Vector(1,1), 0.5);
-	scale.path.addPathNode(Vector(0.5,0.5), 1);
+	scale.ensureData();
+	scale.data->path.addPathNode(Vector(0.5,0.5), 0);
+	scale.data->path.addPathNode(Vector(1,1), 0.5);
+	scale.data->path.addPathNode(Vector(0.5,0.5), 1);
 	scale.startPath(life);
 
 	setLife(life);
@@ -563,9 +565,10 @@ void SongIcon::openNote()
 
 	Quad *q = new Quad("particles/glow", position);
 	q->scale.interpolateTo(Vector(10, 10), glowLife+0.1f);
-	q->alpha.path.addPathNode(0,0);
-	q->alpha.path.addPathNode(0.75,0.2);
-	q->alpha.path.addPathNode(0,1);
+	q->alpha.ensureData();
+	q->alpha.data->path.addPathNode(0,0);
+	q->alpha.data->path.addPathNode(0.75,0.2);
+	q->alpha.data->path.addPathNode(0,1);
 	q->alpha.startPath(glowLife);
 	q->color = dsq->getNoteColor(note); //*0.5f + Vector(0.5, 0.5, 0.5)
 	q->setBlendType(RenderObject::BLEND_ADD);
@@ -581,9 +584,10 @@ void SongIcon::openNote()
 	q->scale = Vector(0.5,0.5);
 	q->scale.interpolateTo(Vector(2, 2), glowLife+0.1f);
 	//q->scale.interpolateTo(Vector(10, 10), glowLife+0.1f);
-	q->alpha.path.addPathNode(0,0);
-	q->alpha.path.addPathNode(0.5,0.2);
-	q->alpha.path.addPathNode(0,1);
+	q->alpha.ensureData();
+	q->alpha.data->path.addPathNode(0,0);
+	q->alpha.data->path.addPathNode(0.5,0.2);
+	q->alpha.data->path.addPathNode(0,1);
 	q->alpha.startPath(glowLife);
 	//q->setBlendType(RenderObject::BLEND_ADD);
 	q->followCamera = 1;
@@ -610,9 +614,9 @@ void SongIcon::openNote()
 				e->songNote(note);
 			}
 		}
-		for (int i = 0; i < dsq->game->paths.size(); i++)
+		for (int i = 0; i < dsq->game->getNumPaths(); i++)
 		{
-			Path *p = dsq->game->paths[i];
+			Path *p = dsq->game->getPath(i);
 			if (!p->nodes.empty())
 			{
 				if ((p->nodes[0].position - dsq->game->avatar->position).getSquaredLength2D() < sqr(1000))
@@ -661,9 +665,9 @@ void SongIcon::closeNote()
 				e->songNoteDone(note, len);
 			}
 		}
-		for (int i = 0; i < dsq->game->paths.size(); i++)
+		for (int i = 0; i < dsq->game->getNumPaths(); i++)
 		{
-			Path *p = dsq->game->paths[i];
+			Path *p = dsq->game->getPath(i);
 			if (!p->nodes.empty())
 			{
 				if ((p->nodes[0].position - dsq->game->avatar->position).getSquaredLength2D() < sqr(1000))
@@ -960,9 +964,9 @@ void Avatar::updateHair(float dt)
 	if (hair && b)
 	{
 		hair->alpha.x = alpha.x;
-		hair->color.x = color.x * multColor.x * dsq->game->sceneColor.x * dsq->game->sceneColor2.x * dsq->game->sceneColor3.x;
-		hair->color.y = color.y * multColor.y * dsq->game->sceneColor.y * dsq->game->sceneColor2.y * dsq->game->sceneColor3.y;
-		hair->color.z = color.z * multColor.z * dsq->game->sceneColor.z * dsq->game->sceneColor2.z * dsq->game->sceneColor3.z;
+		hair->color.x = color.x * multColor.x;
+		hair->color.y = color.y * multColor.y;
+		hair->color.z = color.z * multColor.z;
 		Vector headPos = b->getWorldCollidePosition(Vector(12,-32,0));
 
 		hair->setHeadPosition(headPos);
@@ -1202,10 +1206,11 @@ void Avatar::onDamage(DamageData &d)
 						dsq->gameSpeed.stopPath();
 						dsq->gameSpeed.x = 1;
 
-						dsq->overlayRed->alpha.path.clear();
-						dsq->overlayRed->alpha.path.addPathNode(0, 0);
-						dsq->overlayRed->alpha.path.addPathNode(1.0, 0.1);
-						dsq->overlayRed->alpha.path.addPathNode(0, 1.0);
+						dsq->overlayRed->alpha.ensureData();
+						dsq->overlayRed->alpha.data->path.clear();
+						dsq->overlayRed->alpha.data->path.addPathNode(0, 0);
+						dsq->overlayRed->alpha.data->path.addPathNode(1.0, 0.1);
+						dsq->overlayRed->alpha.data->path.addPathNode(0, 1.0);
 						dsq->overlayRed->alpha.startPath(1);
 
 						dsq->sound->playSfx("heartbeat");
@@ -1217,13 +1222,12 @@ void Avatar::onDamage(DamageData &d)
 						}
 						
 
-						dsq->gameSpeed.path.clear();
-						
-						dsq->gameSpeed.path.clear();
-						dsq->gameSpeed.path.addPathNode(1, 0);
-						dsq->gameSpeed.path.addPathNode(0.25, 0.1);
-						dsq->gameSpeed.path.addPathNode(0.25, 0.4);
-						dsq->gameSpeed.path.addPathNode(1.0, 1.0);
+						dsq->gameSpeed.ensureData();
+						dsq->gameSpeed.data->path.clear();
+						dsq->gameSpeed.data->path.addPathNode(1, 0);
+						dsq->gameSpeed.data->path.addPathNode(0.25, 0.1);
+						dsq->gameSpeed.data->path.addPathNode(0.25, 0.4);
+						dsq->gameSpeed.data->path.addPathNode(1.0, 1.0);
 
 						dsq->gameSpeed.startPath(2);
 
@@ -2189,11 +2193,9 @@ void Avatar::setSongIconPositions()
 
 const int chkDist = 2500*2500;
 
-Target Avatar::getNearestTarget(const Vector &checkPos, const Vector &distPos, Entity *source, DamageType dt, bool override, std::vector<Target> *ignore, EntityList *entityList)
+Target Avatar::getNearestTarget(const Vector &checkPos, const Vector &distPos, Entity *source, DamageType dt, bool override, std::vector<Target> *ignore, /*FIXME:unused*/ EntityList *entityList)
 {
 	BBGE_PROF(Avatar_getNearestTarget);
-	if (!entityList)
-		entityList = &dsq->entities;
 	Target t;
 
 	Vector targetPosition;
@@ -2997,9 +2999,9 @@ void Avatar::formAbility(int ability)
 					// attack = charge1
 					// something = charge2
 					/*
-					for (int i = 0; i < dsq->entities.size(); i++)
+					FOR_ENTITIES (i)
 					{
-						Entity *e = dsq->entities[i];
+						Entity *e = *i;
 						if (e && e->getEntityType() == ET_ENEMY && e->isDamageTarget(DT_AVATAR_NATURE))
 						{
 							if ((e->position - pos).isLength2DIn(128))
@@ -3122,10 +3124,9 @@ void Avatar::formAbility(int ability)
 				offset.setLength2D(128);
 				bitePos += offset;
 
-				for (int i = 0; i < dsq->entities.size(); i++)
+				FOR_ENTITIES (i)
 				{
-					Entity *e = dsq->entities[i];
-
+					Entity *e = *i;
 					if (e && (e->position - bitePos).getSquaredLength2D() < sqr(64))
 					{
 						DamageData d;
@@ -3533,9 +3534,9 @@ void Avatar::formAbilityUpdate(float dt)
 
 
 			int maxHit = 2 + dsq->continuity.getSpellLevel(SPELL_SHOCK)*2;
-			for (int i = 0; i < dsq->entities.size(); i++)
+			FOR_ENTITIES (i)
 			{
-				Entity *e = dsq->entities[i];
+				Entity *e = *i;
 				Vector d = e->position - this->position;
 				if (e != this && !e->isEntityDead() && e->isAffectedBySpell(SPELL_SHOCK) && d.getSquaredLength2D() < sqr(400+(dsq->continuity.getSpellLevel(SPELL_SHOCK)-1)*100))
 				{
@@ -6282,10 +6283,11 @@ void Avatar::chargeVisualEffect(const std::string &tex)
 	float time = 0.4;
 	Quad *chargeEffect = new Quad;
 	chargeEffect->setBlendType(BLEND_ADD);
-	chargeEffect->alpha.path.addPathNode(0, 0);
-	chargeEffect->alpha.path.addPathNode(0.6, 0.1);
-	chargeEffect->alpha.path.addPathNode(0.6, 0.9);
-	chargeEffect->alpha.path.addPathNode(0, 1.0);
+	chargeEffect->alpha.ensureData();
+	chargeEffect->alpha.data->path.addPathNode(0, 0);
+	chargeEffect->alpha.data->path.addPathNode(0.6, 0.1);
+	chargeEffect->alpha.data->path.addPathNode(0.6, 0.9);
+	chargeEffect->alpha.data->path.addPathNode(0, 1.0);
 	chargeEffect->alpha.startPath(time);
 	chargeEffect->setTexture(tex);
 	//chargeEffect->positionSnapTo = &this->position;
@@ -6561,9 +6563,9 @@ void Avatar::updateRoll(float dt)
 	if (rolling)
 	{
 		/*
-		for (int i = 0; i < dsq->entities.size(); i++)
+		FOR_ENTITIES (i)
 		{
-			Entity *e = dsq->entities[i];
+			Entity *e = *i;
 			if (e->getEntityType() == ET_ENEMY && (e->position - this->position).isLength2DIn(350))
 			{
 				//e->move(dt, 500, 1, this);
@@ -7900,9 +7902,9 @@ void Avatar::onUpdate(float dt)
 			if (charging && !targets.empty() && targets[0] == 0 && state.spellCharge > 0.2f
 				&& dsq->continuity.form == FORM_ENERGY)
 			{
-				for (int i = 0; i < dsq->entities.size(); i++)
+				FOR_ENTITIES (i)
 				{
-					Entity *e = dsq->entities[i];
+					Entity *e = *i;
 					if (e && e != this && e->isAvatarAttackTarget() && !e->isEntityDead() && e->isAffectedBySpell(SPELL_ENERGYBLAST))
 					{
 						ScriptedEntity *se = (ScriptedEntity*)e;
@@ -8903,7 +8905,7 @@ void Avatar::onUpdate(float dt)
 			if (dsq->game->waterLevel.x > 0 && fabsf(avatar->position.y - dsq->game->waterLevel.x) < 800)
 			{
 				float time = 0.5;
-				if (!myZoom.interpolating || (core->globalScale.target != zoomSurface && myZoom.timePeriod != time))
+				if (!myZoom.isInterpolating() || ((!core->globalScale.data || core->globalScale.data->target != zoomSurface) && myZoom.data->timePeriod != time))
 				{
 					myZoom.interpolateTo(zoomSurface, time, 0, 0, 1);
 				}
@@ -8911,7 +8913,7 @@ void Avatar::onUpdate(float dt)
 			else if (avatar->looking == 2)
 			{
 				float time = 1.0;
-				if (!myZoom.interpolating || (core->globalScale.target != zoomNaija && myZoom.timePeriod != time))
+				if (!myZoom.isInterpolating() || ((!core->globalScale.data || core->globalScale.data->target != zoomNaija) && myZoom.data->timePeriod != time))
 				{
 					/*
 					std::ostringstream os;
@@ -8928,19 +8930,19 @@ void Avatar::onUpdate(float dt)
 				{
 					time = 1.0;
 				}
-				if (!myZoom.interpolating || (core->globalScale.target != zoomMove && myZoom.timePeriod != time))
+				if (!myZoom.isInterpolating() || ((!core->globalScale.data || core->globalScale.data->target != zoomMove) && myZoom.data->timePeriod != time))
 					myZoom.interpolateTo(zoomMove, time, 0, 0, 1);
 			}
 			else if (cheatLen < sqr(210) && !state.lockedToWall && stillTimer.getValue() > 4 && !isSinging())
 			{
 				float time = 10;
-				if (!myZoom.interpolating || (myZoom.target != zoomStop && myZoom.timePeriod != time))
+				if (!myZoom.isInterpolating() || (myZoom.data->target != zoomStop && myZoom.data->timePeriod != time))
 					myZoom.interpolateTo(zoomStop, time, 0, 0, 1);
 			}
 			else if (cheatLen >= sqr(1000))
 			{
 				float time = 1.6;
-				if (!myZoom.interpolating || (myZoom.target != zoomMove && myZoom.timePeriod != time))
+				if (!myZoom.isInterpolating() || (myZoom.data->target != zoomMove && myZoom.data->timePeriod != time))
 					myZoom.interpolateTo(zoomMove, time, 0, 0, 1);
 			}
 
@@ -9350,9 +9352,9 @@ void Avatar::checkSpecial()
 	if (dsq->continuity.getFlag("VedhaFollow1") == 7)
 	{
 		int total = 0, c = 0;
-		for (int i = 0; i < dsq->entities.size(); i++)
+		FOR_ENTITIES (i)
 		{
-			Entity *e = dsq->entities[i];
+			Entity *e = *i;
 			if (e->name == "PracticeEnemy")
 			{
 				total++;
@@ -9379,10 +9381,10 @@ void Avatar::onWarp()
 bool Avatar::checkWarpAreas()
 {
 	int i = 0;
-	for (i = 0; i < dsq->game->paths.size(); i++)
+	for (i = 0; i < dsq->game->getNumPaths(); i++)
 	{
 		bool warp = false;
-		Path *p = dsq->game->paths[i];
+		Path *p = dsq->game->getPath(i);
 		if (!p->nodes.empty())
 		{
 			PathNode *n = &p->nodes[0];

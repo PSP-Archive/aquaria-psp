@@ -36,7 +36,8 @@ struct TTFFont
 
 	void destroy();
 	void load(const std::string &str, int sz=24);
-	
+	void create(const unsigned char *data, unsigned long datalen, int sz=24);
+
 
 	FTGLTextureFont *font;
 };

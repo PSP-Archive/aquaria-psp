@@ -97,7 +97,6 @@ void ScreenTransition::reloadDevice()
 void ScreenTransition::capture()
 {	
 	core->render();
-	core->showBuffer();
 
 	/*
 	std::ostringstream os;
@@ -113,6 +112,8 @@ void ScreenTransition::capture()
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 #endif
+
+	core->showBuffer();
 }
 
 void ScreenTransition::go(float time)
@@ -138,8 +139,8 @@ void ScreenTransition::onRender()
 	if (alpha.x == 0) return;
 	
 #ifdef BBGE_BUILD_OPENGL
-	int width2 = width/2;
-	int height2 = height/2;
+	float width2 = float(width)/2;
+	float height2 = float(height)/2;
 	
 	const float pw = float(windowWidth)/float(textureWidth);
 	const float ph = float(windowHeight)/float(textureHeight);
@@ -167,7 +168,7 @@ void ScreenTransition::onRender()
 		glTranslatef(0.5f,0.0f,0.0f);
 	}
 #endif
-	
+
 	glBegin(GL_QUADS);
 		//glNormal3f( 0.0f, 0.0f, 1.0f);
 		//glColor4f(color.x, color.y, color.z, alpha.getValue());

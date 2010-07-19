@@ -236,7 +236,8 @@ void stringToLowerUserData(std::string &s)
 	}
 }
 
-int nocasecmp(const std::string & s1, const std::string& s2)
+#if !defined(BBGE_BUILD_UNIX)
+int nocasecmp(const std::string &s1, const std::string &s2)
 {
 	std::string::const_iterator it1=s1.begin();
 	std::string::const_iterator it2=s2.begin();
@@ -257,6 +258,7 @@ int nocasecmp(const std::string & s1, const std::string& s2)
       return 0;
     return (size1<size2) ? -1 : 1;
 }
+#endif  // #if !BBGE_BUILD_UNIX
 
 std::string upperCase(const std::string &s1)
 {
@@ -438,6 +440,56 @@ void debugLog(const std::string &s)
 	}
 }
 
+
+// Read the given file into memory and return a pointer to the allocated
+// buffer.  The buffer will be null-terminated, like a C string; you can
+// also obtain the data length by passing a pointer to an unsigned long
+// as the (optional) second parameter.  The buffer should be freed with
+// delete[] when no longer needed.
+char *readFile(std::string path, unsigned long *size_ret)
+{
+	FILE *f = fopen(path.c_str(), "rb");
+	if (!f)
+		return NULL;
+
+	long fileSize;
+	if (fseek(f, 0, SEEK_END) != 0
+	 || (fileSize = ftell(f)) < 0
+	 || fseek(f, 0, SEEK_SET) != 0)
+	{
+		debugLog(path + ": Failed to get file size");
+		fclose(f);
+		return NULL;
+	}
+
+	char *buffer = new char[fileSize + 1];
+	if (!buffer)
+	{
+		std::ostringstream os;
+		os << path << ": Not enough memory for file ("
+		   << (fileSize+1) << " bytes)";
+		debugLog(os.str());
+		fclose(f);
+		return NULL;
+	}
+
+	long bytesRead = fread(buffer, 1, fileSize, f);
+	if (bytesRead != fileSize)
+	{
+		std::ostringstream os;
+		os << path << ": Failed to read file (only got "
+		   << bytesRead << " of " << fileSize << " bytes)";
+		debugLog(os.str());
+		fclose(f);
+		return NULL;
+	}
+
+	fclose(f);
+	if (size_ret)
+		*size_ret = fileSize;
+	buffer[fileSize] = 0;
+	return buffer;
+}
 
 /*
 void pForEachFile(std::string path, std::string type, void callback(const std::string &filename, int param), int param)

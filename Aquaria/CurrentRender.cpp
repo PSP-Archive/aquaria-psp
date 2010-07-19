@@ -64,10 +64,9 @@ void CurrentRender::onRender()
 	// note: Leave cull_face disabled!?
 	glDisable(GL_CULL_FACE);
 	//int qs = 0;
-	for (int i = 0; i < dsq->game->paths.size(); i++)
+	for (Path *p = dsq->game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
 	{
-		Path *p = dsq->game->paths[i];
-		if (p->pathType == PATH_CURRENT && p->active)
+		if (p->active)
 		{
 
 			/*

@@ -78,6 +78,7 @@ public:
 	//InteractionContainer interactions;
 	int templateIdx;
 	int bgLayer;
+	Element *bgLayerNext;
 	float getSortDepth();
 	bool dontSave;
 	void render();
@@ -108,7 +109,7 @@ class BoxElement : public Element
 {
 public:
 	BoxElement(int width, int height);
-	bool isOnScreen();
+	//bool isOnScreen();
 protected:
 	int ww,hh;
 };

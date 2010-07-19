@@ -256,7 +256,7 @@ public:
 	};
 	void destroy();
 	//void damage(int amount, Spell *spell=0, Entity *attacker=0);
-	bool isEntityDead();
+	bool isEntityDead() const {return entityDead;}
 	std::string name;
 	Vector vel;
 	InterpolatedVector vel2;
@@ -297,7 +297,10 @@ public:
 
 	bool isInDarkness();
 
-	bool isPresent();
+	bool isPresent() const
+	{
+		return !isDead() && !isEntityDead() && life == 1 && alpha.x != 0;
+	}
 
 	void frozenUpdate(float dt);
 	void rotateToSurfaceNormal(float t, int n=0, int rot=0);
@@ -420,7 +423,10 @@ public:
 	void doFriction(float dt);
 	void doFriction(float dt, int len);
 
-	bool isNormalLayer();
+	bool isNormalLayer() const
+	{
+		return layer == LR_ENTITIES || layer == LR_ENTITIES0 || layer == LR_ENTITIES2 || layer == LR_ENTITIES_MINUS2 || layer == LR_ENTITIES_MINUS3;
+	}
 	void watchEntity(Entity *e);
 	void idle();
 	int followPos;
@@ -673,7 +679,6 @@ protected:
 	void onUpdate(float dt);
 
 	Vector pushVec;
-	Vector lastVel;
 	float pushDamage;
 
 

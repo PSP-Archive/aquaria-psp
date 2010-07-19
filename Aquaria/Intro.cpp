@@ -39,7 +39,7 @@ class Mappy : public RenderObject, public ActionMapper
 public:
 	Mappy() : RenderObject(), ActionMapper() {}
 	void render() {}
-	bool isOnScreen() { return false; }
+	//bool isOnScreen() { return false; }
 	void action(int id, int state)
 	{
 		ActionMapper::action(id, state);
@@ -360,14 +360,15 @@ void Intro::update(float dt)
 		bbp->followCamera = 1;
 		bbp->scale = Vector(0.5, 0.5);
 		bbp->scale.interpolateTo(Vector(0.8, 0.8), bt);
-		bbp->color.path.addPathNode(Vector(1,1,1), 0);
-		bbp->color.path.addPathNode(Vector(0.5,0.5,0.5), 0.1);
-		bbp->color.path.addPathNode(Vector(1,1,1), 0.2);
-		bbp->color.path.addPathNode(Vector(0.5,0.5,0.5), 0.9);
-		bbp->color.path.addPathNode(Vector(1,1,1), 0.95);
-		bbp->color.path.addPathNode(Vector(0.5,0.5,0.5), 1.0);
+		bbp->color.ensureData();
+		bbp->color.data->path.addPathNode(Vector(1,1,1), 0);
+		bbp->color.data->path.addPathNode(Vector(0.5,0.5,0.5), 0.1);
+		bbp->color.data->path.addPathNode(Vector(1,1,1), 0.2);
+		bbp->color.data->path.addPathNode(Vector(0.5,0.5,0.5), 0.9);
+		bbp->color.data->path.addPathNode(Vector(1,1,1), 0.95);
+		bbp->color.data->path.addPathNode(Vector(0.5,0.5,0.5), 1.0);
 		bbp->color.startPath(2.5);
-		bbp->color.loopType = -1;
+		bbp->color.data->loopType = -1;
 		addRenderObject(bbp, LR_HUD);
 
 

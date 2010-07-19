@@ -129,7 +129,9 @@ float titTimer = 0;
 
 const int saveSlotPageSize = 4;
 int maxPages = 7;
+#ifdef AQUARIA_BUILD_CONSOLE
 const int MAX_CONSOLELINES	= 14;
+#endif
 
 DSQ *dsq = 0;
 
@@ -199,8 +201,6 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 		difficulty = DIFF_EASY;//DIFF_NORMAL;
 	*/
 
-	console = 0;
-
 	watchQuitFlag = false;
 	watchForQuit = false;
 
@@ -224,6 +224,7 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	inputMode = INPUT_MOUSE;
 	overlay = 0;
 	recentSaveSlot = -1;
+	arialFontData = 0;
 
 #ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
 	achievement_text = 0;
@@ -233,57 +234,26 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	vars = &v;
 	v.load();
 
-	console = cmDebug = 0;
+#ifdef AQUARIA_BUILD_CONSOLE
+	console = 0;
+#endif
+	cmDebug = 0;
 	languagePack = "english";
 	saveSlotMode = SSM_NONE;
 	afterEffectManagerLayer = LR_AFTER_EFFECTS; // LR_AFTER_EFFECTS
 	renderObjectLayers.resize(LR_MAX);
-	
-	int parallaxFastCullDist = 9000;
-	int regularFastcullDist = 9000; //4000;   //3500
-	
-	for (int i = 0; i < renderObjectLayers.size(); i++)
-	{
-		renderObjectLayers[i].fastCull = true;
-		renderObjectLayers[i].fastCullDist = regularFastcullDist;
-	}
-	
-	// HACK: this is 9000
-	// so that the parallax layers can still get culled
-	// not the best it could be really
-	//renderObjectLayers[LR_ fastCullDist = 9000;
-	renderObjectLayers[LR_ELEMENTS10].fastCullDist					= parallaxFastCullDist;
-	renderObjectLayers[LR_ELEMENTS11].fastCullDist					= parallaxFastCullDist;
-	renderObjectLayers[LR_ENTITIES_MINUS4_PLACEHOLDER].fastCullDist = parallaxFastCullDist;
-	renderObjectLayers[LR_ENTITIES_MINUS4].fastCullDist				= parallaxFastCullDist;
-	renderObjectLayers[LR_ELEMENTS12].fastCullDist					= parallaxFastCullDist;
-	renderObjectLayers[LR_ELEMENTS14].fastCullDist					= parallaxFastCullDist;
-	renderObjectLayers[LR_ELEMENTS15].fastCullDist					= parallaxFastCullDist;
-	renderObjectLayers[LR_ELEMENTS16].fastCullDist					= parallaxFastCullDist;
-	/*
-	for (int i = LR_ELEMENTS4; i <= LR_ELEMENTS6; i++)
-	{
-		renderObjectLayers[i].quickQuad = true;
-	}
-	*/
-	
-	renderObjectLayers[LR_BLACKGROUND].fastCull = false;
-	renderObjectLayers[LR_LIGHTING].fastCull = false;
-	/*
-	fastCullLayers.resize(LR_MAX);
-	for (int i = 0; i < fastCullLayers.size(); i++)
-		fastCullLayers[i] = true;
-	fastCullLayers[LR_BLACKGROUND] = false;
-	fastCullLayers[LR_LIGHTING] = false;
-	*/
 
-	//fastCullDist = 10;
+	entities.resize(64, 0);
+	
 	//Emitter::particleLayer = LR_PARTICLES;
 	sortEnabled = false;
 	shakeCameraTimer = shakeCameraMag = 0;
 	avgFPS.resize(dsq->user.video.fpsSmoothing);
 
 	cursor = cursorGlow = 0;
+
+	for (int i = 0; i < 16; i++)
+		firstElementOnLayer[i] = 0;
 
 	addStateInstance(game = new Game);
 	addStateInstance(new GameOver);
@@ -344,7 +314,9 @@ void DSQ::forceInputGrabOff()
 {
 	toggleInputGrabPlat(false);
 	setInpGrab = 0;
+#ifdef BBGE_BUILD_SDL
 	SDL_ShowCursor(SDL_DISABLE);
+#endif
 }
 
 void DSQ::rumble(float leftMotor, float rightMotor, float time)
@@ -416,9 +388,9 @@ Element *DSQ::getSolidElementNear(Vector pos, int rad)
 {
 	Element *closestE = 0;
 	int closestDist = -1;
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (int i = 0; i < elements.size(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = elements[i];
 		int dist = (e->position - pos).getSquaredLength2D();
 		if (e->isElementActive() && e->elementFlag == EF_SOLID && dist < sqr(rad) && (dist < closestDist || closestDist==-1))
 		{
@@ -459,9 +431,10 @@ void DSQ::centerMessage(const std::string &text, float y, int type)
 	else
 		t = new BitmapText(&smallFont);
 	t->position = pos;
-	t->alpha.path.addPathNode(1, 0);
-	t->alpha.path.addPathNode(1, 0.8);
-	t->alpha.path.addPathNode(0, 1);
+	t->alpha.ensureData();
+	t->alpha.data->path.addPathNode(1, 0);
+	t->alpha.data->path.addPathNode(1, 0.8);
+	t->alpha.data->path.addPathNode(0, 1);
 	t->alpha.startPath(time);
 	t->followCamera = 1;
 	t->setLife(time + 0.5f);
@@ -484,10 +457,11 @@ void DSQ::centerText(const std::string &text)
 	s->setLife(time + 0.5f);
 	s->setDecayRate(1);
 	s->followCamera = 1;
-	s->alpha.path.addPathNode(0, 0);
-	s->alpha.path.addPathNode(1, 0.1);
-	s->alpha.path.addPathNode(1, 0.8);
-	s->alpha.path.addPathNode(0, 1);
+	s->alpha.ensureData();
+	s->alpha.data->path.addPathNode(0, 0);
+	s->alpha.data->path.addPathNode(1, 0.1);
+	s->alpha.data->path.addPathNode(1, 0.8);
+	s->alpha.data->path.addPathNode(0, 1);
 	s->alpha.startPath(time);
 	getTopStateData()->addRenderObject(s, LR_HUD);
 
@@ -496,10 +470,11 @@ void DSQ::centerText(const std::string &text)
 	
 
 	t->position =pos;
-	t->alpha.path.addPathNode(0, 0);
-	t->alpha.path.addPathNode(1, 0.1);
-	t->alpha.path.addPathNode(1, 0.8);
-	t->alpha.path.addPathNode(0, 1);
+	t->alpha.ensureData();
+	t->alpha.data->path.addPathNode(0, 0);
+	t->alpha.data->path.addPathNode(1, 0.1);
+	t->alpha.data->path.addPathNode(1, 0.8);
+	t->alpha.data->path.addPathNode(0, 1);
 	t->alpha.startPath(time);
 	/*
 	t->scale = Vector(0.7, 0.7);
@@ -532,6 +507,8 @@ void DSQ::destroyFonts()
 	fontArialBig.destroy();
 	fontArialSmall.destroy();
 	fontArialSmallest.destroy();
+	delete[] arialFontData;
+	arialFontData = 0;
 
 	debugLog("done destroyFonts");
 }
@@ -568,9 +545,13 @@ void DSQ::loadFonts()
 	goldFont.overrideTexture = core->addTexture("font");
 
 	debugLog("ttf...");
-		fontArialSmall.load("data/font.ttf",		12);
-		fontArialBig.load("data/font.ttf",			18);
-		fontArialSmallest.load("data/font.ttf",		10);
+	arialFontData = (unsigned char *)readFile("data/font.ttf", &arialFontDataSize);
+	if (arialFontData)
+	{
+		fontArialSmall   .create(arialFontData, arialFontDataSize, 12);
+		fontArialBig     .create(arialFontData, arialFontDataSize, 18);
+		fontArialSmallest.create(arialFontData, arialFontDataSize, 10);
+	}
 	debugLog("done loadFonts");
 
 	/*
@@ -1266,6 +1247,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	debugLog("done");
 
 
+#ifdef AQUARIA_BUILD_CONSOLE
 	debugLog("Creating console");
 	console = new DebugFont;
 	//(&dsq->smallFont);
@@ -1279,6 +1261,9 @@ This build is not yet final, and as such there are a couple things lacking. They
 		console->setFontSize(6);
 	}
 	addRenderObject(console, LR_DEBUG_TEXT);
+#else
+	debugLog("NOT creating console (disabled in this build)");
+#endif
 
 	debugLog("1");
 
@@ -1293,7 +1278,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 			cmDebug->followCamera = 1;
 			cmDebug->alpha = 0;
 			//cmDebug->setAlign(ALIGN_LEFT);
-			//console->setWidth(12);
+			//cmDebug->setWidth(12);
 			//cmDebug->setFontSize(18);
 			cmDebug->setFontSize(6);
 		}
@@ -1457,6 +1442,18 @@ This build is not yet final, and as such there are a couple things lacking. They
 		overlayRed->followCamera = 1;
 	}
 	addRenderObject(overlayRed, LR_OVERLAY);
+
+	sceneColorOverlay = new Quad;
+	{
+		sceneColorOverlay->position = Vector(400,300);
+		sceneColorOverlay->color = Vector(1,1,1);
+		sceneColorOverlay->alpha = 1;
+		sceneColorOverlay->setBlendType(RenderObject::BLEND_MULT);
+		sceneColorOverlay->autoWidth = AUTO_VIRTUALWIDTH;
+		sceneColorOverlay->autoHeight = AUTO_VIRTUALHEIGHT;
+		sceneColorOverlay->followCamera = 1;
+	}
+	addRenderObject(sceneColorOverlay, LR_SCENE_COLOR);
 
 	tfader = new Quad;
 	{
@@ -2026,6 +2023,7 @@ void DSQ::reloadDevice()
 	recreateBlackBars();
 }
 
+#ifdef AQUARIA_BUILD_CONSOLE
 void DSQ::toggleConsole()
 {
 	if (console)
@@ -2072,6 +2070,7 @@ void DSQ::debugLog(const std::string &s)
 	}
 	Core::debugLog(s);
 }
+#endif  // AQUARIA_BUILD_CONSOLE
 
 int DSQ::getEntityTypeIndexByName(std::string s)
 {
@@ -2257,9 +2256,10 @@ void DSQ::shutdown()
 	UNREFTEX(texCursorSing);
 	UNREFTEX(texCursorLook);
 
+#ifdef AQUARIA_BUILD_CONSOLE
 	removeRenderObject(console);
-
 	console = 0;
+#endif
 	removeRenderObject(cmDebug);
 	cmDebug = 0;
 	removeRenderObject(subtext);
@@ -2431,10 +2431,11 @@ void DSQ::clickRingEffect(Vector pos, int type, Vector color, float ut)
 
 			q->setBlendType(RenderObject::BLEND_ADD);
 
-			q->alpha.path.addPathNode(0, 0);
-			q->alpha.path.addPathNode(0.5, 0.1);
-			q->alpha.path.addPathNode(0.5, 0.5);
-			q->alpha.path.addPathNode(0, 1);
+			q->alpha.ensureData();
+			q->alpha.data->path.addPathNode(0, 0);
+			q->alpha.data->path.addPathNode(0.5, 0.1);
+			q->alpha.data->path.addPathNode(0.5, 0.5);
+			q->alpha.data->path.addPathNode(0, 1);
 			q->alpha.startPath(t);
 
 			q->position = pos;
@@ -2460,10 +2461,11 @@ void DSQ::clickRingEffect(Vector pos, int type, Vector color, float ut)
 
 			q->color = color;
 
-			q->alpha.path.addPathNode(0, 0);
-			q->alpha.path.addPathNode(0.5, 0.1);
-			q->alpha.path.addPathNode(0.5, 0.5);
-			q->alpha.path.addPathNode(0, 1);
+			q->alpha.ensureData();
+			q->alpha.data->path.addPathNode(0, 0);
+			q->alpha.data->path.addPathNode(0.5, 0.1);
+			q->alpha.data->path.addPathNode(0.5, 0.5);
+			q->alpha.data->path.addPathNode(0, 1);
 			q->alpha.startPath(t);
 
 			q->position = pos;
@@ -3722,18 +3724,15 @@ void DSQ::onPlayedVoice(const std::string &name)
 
 Entity *DSQ::getFirstEntity()
 {
-	if (entities.empty())
-		return 0;
-	iter = entities.begin();
-	return *iter;
+	iter = &entities[0];
+	return getNextEntity();
 }
 
 Entity *DSQ::getNextEntity()
 {
-	if (iter == entities.end())	return 0;
-	iter++;
-	if (iter == entities.end())	return 0;
-	return *iter;
+	if (*iter == 0)
+		return 0;
+	return *(iter++);
 }
 
 Vector DSQ::getUserInputDirection(std::string labelText)
@@ -3884,18 +3883,21 @@ void DSQ::onMouseInput()
 	{
 		if (!dsq->game->isInGameMenu() && !dsq->game->sceneEditor.isOn() && !dsq->game->isPaused())
 		{
-			bool doIt = true;
-			Vector diff = core->mouse.position - core->center;
-			int range=300;
+			bool limitRange = true;
+			int range = 300;
 			if (dsq->game->avatar->singing)
 				range = 100;
 			else
-				doIt = false;
-				//doIt = core->mouse.buttons.left;
-			if (doIt && diff.getSquaredLength2D() > sqr(range))
+				limitRange = false;
+				//limitRange = core->mouse.buttons.left;
+			if (limitRange)
 			{
-				diff.setLength2D(range);
-				core->mouse.position = core->center + diff;
+				Vector diff = core->mouse.position - core->center;
+				if (diff.getSquaredLength2D() > sqr(range))
+				{
+					diff.setLength2D(range);
+					core->mouse.position = core->center + diff;
+				}
 			}
 		}
 	}
@@ -4129,7 +4131,9 @@ void DSQ::bindInput()
 	{
 #if defined(BBGE_BUILD_WINDOWS) || defined(BBGE_BUILD_UNIX)
 		addAction(MakeFunctionEvent(DSQ, instantQuit), KEY_Q, 1);
+#ifdef AQUARIA_BUILD_CONSOLE
 		addAction(MakeFunctionEvent(DSQ, toggleConsole), KEY_TILDE, 0);
+#endif
 #endif
 		addAction(MakeFunctionEvent(DSQ, toggleRenderCollisionShapes), KEY_CAPSLOCK, 0);
 	}
@@ -4142,9 +4146,11 @@ void DSQ::bindInput()
 
 void DSQ::jiggleCursor()
 {
+#ifdef BBGE_BUILD_SDL
 	// hacky
 	SDL_ShowCursor(SDL_ENABLE);
 	SDL_ShowCursor(SDL_DISABLE);
+#endif
 }
 
 float skipSfxVol = 1.0;
@@ -4178,12 +4184,14 @@ void DSQ::onUpdate(float dt)
 		if (isCutscenePaused())
 		{
 			sound->pause();
-			float ms = 1.0f/60.0f;
+			float sec = 1.0f/60.0f;
 			while (isCutscenePaused())
 			{
 				pollEvents();
-				ActionMapper::onUpdate(ms);
-				SDL_Delay(int(ms*1000));
+				ActionMapper::onUpdate(sec);
+#ifdef BBGE_BUILD_SDL
+				SDL_Delay(int(sec*1000));
+#endif
 				render();
 				showBuffer();
 				resetTimer();
@@ -4252,36 +4260,20 @@ void DSQ::onUpdate(float dt)
 	
 	if (inputMode != INPUT_KEYBOARD && game->isActive())
 	{
-		if (!mouse.buttons.left && almb)
-		{
-			if (ActionMapper::getKeyState(almb->key[0]))
-				mouse.buttons.left = DOWN;
-			else if (ActionMapper::getKeyState(almb->key[1]))
-				mouse.buttons.left = DOWN;
-		}
+		if (almb && (ActionMapper::getKeyState(almb->key[0]) || ActionMapper::getKeyState(almb->key[1])))
+			mouse.buttons.left = DOWN;
 
-		if (!mouse.buttons.right && armb)
-		{
-			if (ActionMapper::getKeyState(armb->key[0]))
-				mouse.buttons.right = DOWN;
-			else if (ActionMapper::getKeyState(armb->key[1]))
-				mouse.buttons.right = DOWN;
-		}
+		if (armb && (ActionMapper::getKeyState(armb->key[0]) || ActionMapper::getKeyState(armb->key[1])))
+			mouse.buttons.right = DOWN;
 	}
 
 	if (joystickAsMouse)
 	{
-		if (!mouse.buttons.left)
-		{
-			if (almb && ActionMapper::getKeyState(almb->joy[0]))
-				mouse.buttons.left = DOWN;
-		}
+		if (almb && ActionMapper::getKeyState(almb->joy[0]))
+			mouse.buttons.left = DOWN;
 
-		if (!mouse.buttons.right)
-		{
-			if (armb && ActionMapper::getKeyState(armb->joy[0]))
-				mouse.buttons.right = DOWN;
-		}
+		if (armb && ActionMapper::getKeyState(armb->joy[0]))
+			mouse.buttons.right = DOWN;
 
 		/*
 		if (routeShoulder)
@@ -4637,10 +4629,11 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 		q->color = Vector(1,1,1);
 		q->color.interpolateTo(Vector(1,0,0),t-t*0.05f);
 		*/
-		q->alpha.path.addPathNode(0, 0);
-		q->alpha.path.addPathNode(0.75, 0.25);
-		q->alpha.path.addPathNode(0.75, 0.75);
-		q->alpha.path.addPathNode(0, 1);
+		q->alpha.ensureData();
+		q->alpha.data->path.addPathNode(0, 0);
+		q->alpha.data->path.addPathNode(0.75, 0.25);
+		q->alpha.data->path.addPathNode(0.75, 0.75);
+		q->alpha.data->path.addPathNode(0, 1);
 		q->alpha.startPath(t);
 		q->setBlendType(RenderObject::BLEND_ADD);
 		q->setTexture("particles/EnergyRing");
@@ -4659,11 +4652,11 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 			q->position = position;
 			q->scale = Vector(0.5,0.5);
 			q->scale.interpolateTo(Vector(2,2),t);
-			q->alpha.path.addPathNode(0, 0);
-			q->alpha.path.addPathNode(0.75, 0.25);
-			q->alpha.path.addPathNode(0.75, 0.75);
-			//q->alpha.path.addPathNode(0.75, 0.75);
-			q->alpha.path.addPathNode(0, 1);
+			q->alpha.ensureData();
+			q->alpha.data->path.addPathNode(0, 0);
+			q->alpha.data->path.addPathNode(0.75, 0.25);
+			q->alpha.data->path.addPathNode(0.75, 0.75);
+			q->alpha.data->path.addPathNode(0, 1);
 			q->alpha.startPath(t);
 			q->setBlendType(RenderObject::BLEND_ADD);
 			q->setTexture("particles/EnergyPart");
@@ -4682,10 +4675,11 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 		q->position = position;
 		q->scale = Vector(1,1);
 		q->scale.interpolateTo(Vector(3,3),t);
-		q->alpha.path.addPathNode(0, 0);
-		q->alpha.path.addPathNode(1, 0.3);
-		//q->alpha.path.addPathNode(0.75, 0.75);
-		q->alpha.path.addPathNode(0, 1);
+		q->alpha.ensureData();
+		q->alpha.data->path.addPathNode(0, 0);
+		q->alpha.data->path.addPathNode(1, 0.3);
+		//q->alpha.data->path.addPathNode(0.75, 0.75);
+		q->alpha.data->path.addPathNode(0, 1);
 		q->alpha.startPath(t);
 		q->setBlendType(RenderObject::BLEND_ADD);
 		q->rotation.z = rand()%360;
@@ -4704,10 +4698,11 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 			q->position = position;
 			q->scale = Vector(1,1);
 			q->scale.interpolateTo(Vector(3,3),t);
-			q->alpha.path.addPathNode(0, 0);
-			q->alpha.path.addPathNode(0.8, 0.25);
-			//q->alpha.path.addPathNode(0.75, 0.75);
-			q->alpha.path.addPathNode(0, 1);
+			q->alpha.ensureData();
+			q->alpha.data->path.addPathNode(0, 0);
+			q->alpha.data->path.addPathNode(0.8, 0.25);
+			//q->alpha.data->path.addPathNode(0.75, 0.75);
+			q->alpha.data->path.addPathNode(0, 1);
 			q->alpha.startPath(t);
 			q->setBlendType(RenderObject::BLEND_ADD);
 			/*
@@ -4790,6 +4785,15 @@ Element *DSQ::getClosestElementWithType(Element::Type type, Element *e)
 void DSQ::addElement(Element *e)
 {
 	elements.push_back(e);
+	if (e->bgLayer >= 0 && e->bgLayer < 16)
+	{
+		e->bgLayerNext = firstElementOnLayer[e->bgLayer];
+		firstElementOnLayer[e->bgLayer] = e;
+	}
+	else
+	{
+		e->bgLayerNext = 0;
+	}
 }
 
 void DSQ::modifyDt(float &dt)
@@ -4848,19 +4852,18 @@ void DSQ::removeElement(Element *element)
 
 }
 // only happens in editor, no need to optimize
-// ABOVE is no longer TRUE
 void DSQ::removeElement(int idx)
 {
 	ElementContainer copy = elements;
-	elements.clear();
+	clearElements();
 	int i = 0;
 	for (i = 0; i < idx; i++)
 	{
-		elements.push_back (copy[i]);
+		addElement(copy[i]);
 	}
 	for (i = idx+1; i < copy.size(); i++)
 	{
-		elements.push_back(copy[i]);
+		addElement(copy[i]);
 	}
 	copy.clear();
 
@@ -4868,24 +4871,46 @@ void DSQ::removeElement(int idx)
 		dsq->game->rebuildElementUpdateList();
 }
 
-void DSQ::removeEntity(Entity *entity)
-{
-	entities.remove(entity);
-	/*
-	EntityContainer copy = entities;
-	entities.clear();
-	for (int i = 0; i < copy.size(); i++)
-	{
-		if (copy[i] != entity)
-			entities.push_back (copy[i]);
-	}
-	copy.clear();
-	*/
-}
-
 void DSQ::clearElements()
 {
 	elements.clear();
+	for (int i = 0; i < 16; i++)
+		firstElementOnLayer[i] = 0;
+}
+
+
+void DSQ::addEntity(Entity *entity)
+{
+	int i;
+	for (i = 0; entities[i] != 0; i++) {}
+	if (i+1 >= entities.size())
+		entities.resize(entities.size()*2, 0);
+	entities[i] = entity;
+	entities[i+1] = 0;
+}
+
+void DSQ::removeEntity(Entity *entity)
+{
+	int i;
+	for (i = 0; entities[i] != 0; i++)
+	{
+		if (entities[i] == entity)
+			break;
+	}
+	for (; entities[i] != 0; i++)
+	{
+		entities[i] = entities[i+1];
+	}
+}
+
+void DSQ::clearEntities()
+{
+	const int size = entities.size();
+	int i;
+	for (i = 0; i < size; i++)
+	{
+		entities[i] = 0;
+	}
 }
 
 

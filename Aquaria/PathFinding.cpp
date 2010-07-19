@@ -30,7 +30,9 @@ const int cutOff = int((divs*divs)*0.75f);
 
 namespace PathFindingGlobals
 {
-	int zones[MAX_ZONES][MAX_ZONES];
+	// This isn't used by the current code, so I've commented it out to
+	// save 4MB of RAM.  --achurch
+	//int zones[MAX_ZONES][MAX_ZONES];
 
 	MapSearchNode node_goal;
 	MapSearchNode node_start;
@@ -708,7 +710,8 @@ void PathFinding::generatePath(RenderObject *ro, TileVector start, TileVector go
 	if (offy <= TILE_SIZE/2+1)
 		offy++;
 	*/
-	ro->position.path.clear();
+	ro->position.ensureData();
+	ro->position.data->path.clear();
 
 	PathFindingGlobals::render_object = ro;
 	AStarSearch astarsearch;
@@ -763,7 +766,7 @@ void PathFinding::generatePath(RenderObject *ro, TileVector start, TileVector go
 			int steps = 0;
 
 			//node->PrintNodeInfo();
-			ro->position.path.addPathNode(Vector((node->x*TILE_SIZE)+TILE_SIZE/2+offx, (node->y*TILE_SIZE)+TILE_SIZE/2)+offy, 0);
+			ro->position.data->path.addPathNode(Vector((node->x*TILE_SIZE)+TILE_SIZE/2+offx, (node->y*TILE_SIZE)+TILE_SIZE/2)+offy, 0);
 			for( ;; )
 			{
 				node = astarsearch.GetSolutionNext();
@@ -774,7 +777,7 @@ void PathFinding::generatePath(RenderObject *ro, TileVector start, TileVector go
 				}
 
 				//node->PrintNodeInfo();
-				ro->position.path.addPathNode(Vector((node->x*TILE_SIZE)+TILE_SIZE/2+offx, (node->y*TILE_SIZE)+TILE_SIZE/2)+offy, steps);
+				ro->position.data->path.addPathNode(Vector((node->x*TILE_SIZE)+TILE_SIZE/2+offx, (node->y*TILE_SIZE)+TILE_SIZE/2)+offy, steps);
 				steps ++;
 			};
 			//ro->position.path.addPathNode(Vector(goal.x*TILE_SIZE, goal.y*TILE_SIZE), steps);

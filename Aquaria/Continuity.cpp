@@ -611,10 +611,11 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 				core->sound->playSfx("CollectMana");
 
 				dsq->overlay2->color = Vector(0.5, 0.5, 1);
-				dsq->overlay2->alpha.path.clear();
-				dsq->overlay2->alpha.path.addPathNode(0, 0);
-				dsq->overlay2->alpha.path.addPathNode(0.5, 0.5);
-				dsq->overlay2->alpha.path.addPathNode(0, 1);
+				dsq->overlay2->alpha.ensureData();
+				dsq->overlay2->alpha.data->path.clear();
+				dsq->overlay2->alpha.data->path.addPathNode(0, 0);
+				dsq->overlay2->alpha.data->path.addPathNode(0.5, 0.5);
+				dsq->overlay2->alpha.data->path.addPathNode(0, 1);
 				dsq->overlay2->alpha.startPath(1);
 			}
 			else
@@ -632,10 +633,11 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 			core->sound->playSfx("CollectMana");
 
 			dsq->overlay2->color = Vector(0.5, 0.5, 1);
-			dsq->overlay2->alpha.path.clear();
-			dsq->overlay2->alpha.path.addPathNode(0, 0);
-			dsq->overlay2->alpha.path.addPathNode(0.5, 0.5);
-			dsq->overlay2->alpha.path.addPathNode(0, 1);
+			dsq->overlay2->alpha.ensureData();
+			dsq->overlay2->alpha.data->path.clear();
+			dsq->overlay2->alpha.data->path.addPathNode(0, 0);
+			dsq->overlay2->alpha.data->path.addPathNode(0.5, 0.5);
+			dsq->overlay2->alpha.data->path.addPathNode(0, 1);
 			dsq->overlay2->alpha.startPath(2);
 
 			dsq->centerMessage(getIEString(data, i), y);
@@ -1342,11 +1344,12 @@ void Continuity::castSong(int num)
 	effect->position = selected->position + selected->offset;
 	effect->scale.interpolateTo(Vector(3,3), et);
 	//effect->setBlendType(RenderObject::BLEND_ADD);
-	effect->alpha.path.addPathNode(0, 0);
-	effect->alpha.path.addPathNode(0.5, 0.1);
-	effect->alpha.path.addPathNode(1, 0.5);
-	effect->alpha.path.addPathNode(0, 0.9);
-	effect->alpha.path.addPathNode(0, 1);
+	effect->alpha.ensureData();
+	effect->alpha.data->path.addPathNode(0, 0);
+	effect->alpha.data->path.addPathNode(0.5, 0.1);
+	effect->alpha.data->path.addPathNode(1, 0.5);
+	effect->alpha.data->path.addPathNode(0, 0.9);
+	effect->alpha.data->path.addPathNode(0, 1);
 	effect->alpha.startPath(et);
 	effect->setLife(et+0.1f);
 	effect->setDecayRate(1);
@@ -1426,11 +1429,12 @@ void Continuity::castSong(int num)
 		case SONG_TIME:
 		{
 			float v = 0.3;
-			dsq->gameSpeed.path.clear();
-			dsq->gameSpeed.path.addPathNode(0,0);
-			dsq->gameSpeed.path.addPathNode(v,0.05);
-			dsq->gameSpeed.path.addPathNode(v,0.95);
-			dsq->gameSpeed.path.addPathNode(1,1.0);
+			dsq->gameSpeed.ensureData();
+			dsq->gameSpeed.data->path.clear();
+			dsq->gameSpeed.data->path.addPathNode(0,0);
+			dsq->gameSpeed.data->path.addPathNode(v,0.05);
+			dsq->gameSpeed.data->path.addPathNode(v,0.95);
+			dsq->gameSpeed.data->path.addPathNode(1,1.0);
 			dsq->gameSpeed.startPath(10);
 		}
 		break;
@@ -1527,10 +1531,9 @@ void Continuity::castSong(int num)
 			e->song((SongType)num);
 		}
 	}
-	for (int i = 0; i < dsq->game->paths.size(); i++)
+	for (int i = 0; i < dsq->game->getNumPaths(); i++)
 	{
-		//Entity *e = dsq->entities[i];
-		Path *p = dsq->game->paths[i];
+		Path *p = dsq->game->getPath(i);
 		if (p && !p->nodes.empty())
 		{
 			PathNode *n = &p->nodes[0];
@@ -2461,7 +2464,9 @@ void Continuity::loadFile(int slot)
 	dsq->user.save();
 	this->reset();
 
-	bool tmp=false;
+	TiXmlDocument doc;
+
+	bool tmp = false;
 
 	std::string teh_file = dsq->continuity.getSaveFileName(slot, "aqs");
 
@@ -2490,8 +2495,6 @@ void Continuity::loadFile(int slot)
 		teh_file = dsq->getSaveDirectory() + "/poot.tmp";
 		tmp = true;
 	}
-
-	TiXmlDocument doc;
 
 	doc.LoadFile(teh_file);
 
@@ -2987,11 +2990,12 @@ public:
 		followCamera = 1;
 
 		scale = Vector(0, 0);
-		scale.path.addPathNode(Vector(0,0), 0);
-		scale.path.addPathNode(Vector(1,1), 0.3);
-		scale.path.addPathNode(Vector(1,1), 0.6);
-		scale.path.addPathNode(Vector(0.5,0.5), 0.9);
-		scale.path.addPathNode(Vector(0.1,0.1), 1);
+		scale.ensureData();
+		scale.data->path.addPathNode(Vector(0,0), 0);
+		scale.data->path.addPathNode(Vector(1,1), 0.3);
+		scale.data->path.addPathNode(Vector(1,1), 0.6);
+		scale.data->path.addPathNode(Vector(0.5,0.5), 0.9);
+		scale.data->path.addPathNode(Vector(0.1,0.1), 1);
 		scale.startPath(timeScale);
 
 		position = Vector(400,400);

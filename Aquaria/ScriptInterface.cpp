@@ -6039,7 +6039,7 @@ luaFunc(getEntityByID)
 		std::ostringstream os;
 		os << "searching for entity with id: " << v;
 		debugLog(os.str());
-		FOR_ENTITIES_EXTERN(i)
+		FOR_ENTITIES(i)
 		{
 			Entity *e = *i;
 			if (e->getID() == v)
@@ -6048,7 +6048,7 @@ luaFunc(getEntityByID)
 				break;
 			}
 		}
-		if (i == dsq->entities.end())
+		if (!found)
 		{
 			std::ostringstream os;
 			os << "entity with id: " << v << " not found!";
@@ -6093,10 +6093,9 @@ luaFunc(node_setElementsInLayerActive)
 	Path *p = path(L);
 	int l = lua_tonumber(L, 2);
 	bool v = getBool(L, 3);
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (Element *e = dsq->getFirstElementOnLayer(l); e; e = e->bgLayerNext)
 	{
-		Element *e = dsq->elements[i];
-		if (e && p->isCoordinateInside(e->position) && e->bgLayer == l)
+		if (e && p->isCoordinateInside(e->position))
 		{
 			debugLog("setting an element to the value");
 			e->setElementActive(v);
@@ -6179,28 +6178,13 @@ luaFunc(node_getNearestNode)
 {
 	//Entity *me = entity(L);
 	Path *p = path(L);
-	Path *closest=0;
+	Path *closest = 0;
 	if (p && !p->nodes.empty())
 	{
-		Vector pos = p->nodes[0].position;
 		std::string name;
 		if (lua_isstring(L, 2))
 			name = lua_tostring(L, 2);
-
-		int smallestDist = -1;
-		for (int i = 0; i < dsq->game->paths.size(); i++)
-		{
-			Path *p = dsq->game->paths[i];
-			if ((name.empty() || p->name == name) && !p->nodes.empty())
-			{
-				int dist = (pos - p->nodes[0].position).getSquaredLength2D();
-				if (smallestDist == -1 || dist < smallestDist)
-				{
-					smallestDist = dist;
-					closest = p;
-				}
-			}
-		}
+		closest = dsq->game->getNearestPath(p->nodes[0].position, name);
 	}
 	luaReturnPtr(closest);
 }
@@ -6232,30 +6216,10 @@ luaFunc(entity_getNearestNode)
 	Entity *me = entity(L);
 	std::string name;
 	if (lua_isstring(L, 2))
-	{
 		name = lua_tostring(L, 2);
-		stringToLower(name);
-	}
-
 	Path *ignore = path(L, 3);
-	Path *closest=0;
-	int smallestDist = -1;
-	for (int i = 0; i < dsq->game->paths.size(); i++)
-	{
-		Path *p = dsq->game->paths[i];
-		if (p && p != ignore)
-		{
-			if (name.empty() || p->name == name)
-			{
-				int dist = (me->position - p->nodes[0].position).getSquaredLength2D();
-				if (smallestDist == -1 || dist < smallestDist)
-				{
-					smallestDist = dist;
-					closest = p;
-				}
-			}
-		}
-	}
+
+	Path *closest = dsq->game->getNearestPath(me->position, name, ignore);
 	luaReturnPtr(closest);
 }
 
@@ -6269,45 +6233,38 @@ luaFunc(ing_hasIET)
 luaFunc(entity_getNearestEntity)
 {
 	Entity *me = entity(L);
-	std::string name;
+	const char *name = 0;
 	if (lua_isstring(L, 2))
-	{
 		name = lua_tostring(L, 2);
-		stringToLower(name);
-	}
 
 	bool nameCheck = true;
-	if (!name.empty() && (name[0] == '!' || name[0] == '~'))
+	if (name && (name[0] == '!' || name[0] == '~'))
 	{
-		name = name.substr(1, name.size());
+		name++;
 		nameCheck = false;
 	}
 
 	int range = lua_tointeger(L, 3);
 	int type = lua_tointeger(L, 4);
 	int damageTarget = lua_tointeger(L, 5);
-	range = sqr(range);
-	Entity *closest=0;
-	float smallestDist = HUGE_VALF;
+	Entity *closest = 0;
+	float smallestDist = range ? sqr(range) : HUGE_VALF;
 	FOR_ENTITIES(i)
 	{
 		Entity *e = *i;
-		if (e != me && e->isPresent())
+		if (e != me && e->isPresent() && e->isNormalLayer())
 		{
-			if (e->isNormalLayer())
+			if (!name || ((nocasecmp(e->name, name)==0) == nameCheck))
 			{
-				if (name.empty() || ((nocasecmp(e->name, name)==0) == nameCheck))
+				if (type == 0 || e->getEntityType() == type)
 				{
-					if (type == 0 || e->getEntityType() == type)
+					if (damageTarget == 0 || e->isDamageTarget((DamageType)damageTarget))
 					{
-						if (damageTarget == 0 || e->isDamageTarget((DamageType)damageTarget))
+						float dist = (me->position - e->position).getSquaredLength2D();
+						if (dist < smallestDist)
 						{
-							float dist = (me->position - e->position).getSquaredLength2D();
-							if ((range == 0 || dist < range) && dist < smallestDist)
-							{
-								smallestDist = dist;
-								closest = e;
-							}
+							smallestDist = dist;
+							closest = e;
 						}
 					}
 				}
@@ -6367,13 +6324,9 @@ luaFunc(isInCutscene)
 luaFunc(toggleSteam)
 {
 	bool on = getBool(L, 1);
-	for (int i = 0; i < dsq->game->paths.size(); i++)
+	for (Path *p = dsq->game->getFirstPathOfType(PATH_STEAM); p; p = p->nextOfType)
 	{
-		Path *p = dsq->game->paths[i];
-		if (p->pathType == PATH_STEAM)
-		{
-			p->setEffectOn(on);
-		}
+		p->setEffectOn(on);
 	}
 	luaReturnBool(on);
 }
@@ -7347,10 +7300,11 @@ luaFunc(showControls)
 		keyboard->followCamera = 1;
 		keyboard->setTexture("controls/" + mousegfx);
 		keyboard->alpha = 0;
-		keyboard->alpha.path.addPathNode(0, 0);
-		keyboard->alpha.path.addPathNode(0.5, .1);
-		keyboard->alpha.path.addPathNode(0.5, .9);
-		keyboard->alpha.path.addPathNode(0, 1);
+		keyboard->alpha.ensureData();
+		keyboard->alpha.data->path.addPathNode(0, 0);
+		keyboard->alpha.data->path.addPathNode(0.5, .1);
+		keyboard->alpha.data->path.addPathNode(0.5, .9);
+		keyboard->alpha.data->path.addPathNode(0, 1);
 		keyboard->alpha.startPath(t);
 		//keyboard->alpha.interpolateTo(0.5, 4, 1, 1);
 		keyboard->scale.interpolateTo(Vector(0.9, 0.9), t+0.5f);

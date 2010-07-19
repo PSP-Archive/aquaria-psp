@@ -115,12 +115,10 @@ void Mod::load(const std::string &p)
 		}
 	}
 
-#ifdef BBGE_BUILD_WINDOWS
-	dsq->secondaryTexturePath = "./" + path + "graphics/";
-#elif defined(BBGE_BUILD_UNIX)
+#if defined(BBGE_BUILD_UNIX)
 	dsq->secondaryTexturePath = path + "graphics/";
 #else
-	errorLog("secondary texture path code not defined for this platform");
+	dsq->secondaryTexturePath = "./" + path + "graphics/";
 #endif
 
 	dsq->sound->audioPath2 = path + "audio/";
