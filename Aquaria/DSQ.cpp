@@ -242,6 +242,8 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	saveSlotMode = SSM_NONE;
 	afterEffectManagerLayer = LR_AFTER_EFFECTS; // LR_AFTER_EFFECTS
 	renderObjectLayers.resize(LR_MAX);
+
+	entities.resize(64, 0);
 	
 	//Emitter::particleLayer = LR_PARTICLES;
 	sortEnabled = false;
@@ -3722,18 +3724,15 @@ void DSQ::onPlayedVoice(const std::string &name)
 
 Entity *DSQ::getFirstEntity()
 {
-	if (entities.empty())
-		return 0;
-	iter = entities.begin();
-	return *iter;
+	iter = &entities[0];
+	return getNextEntity();
 }
 
 Entity *DSQ::getNextEntity()
 {
-	if (iter == entities.end())	return 0;
-	iter++;
-	if (iter == entities.end())	return 0;
-	return *iter;
+	if (*iter == 0)
+		return 0;
+	return *(iter++);
 }
 
 Vector DSQ::getUserInputDirection(std::string labelText)
@@ -4872,26 +4871,46 @@ void DSQ::removeElement(int idx)
 		dsq->game->rebuildElementUpdateList();
 }
 
-void DSQ::removeEntity(Entity *entity)
-{
-	entities.remove(entity);
-	/*
-	EntityContainer copy = entities;
-	entities.clear();
-	for (int i = 0; i < copy.size(); i++)
-	{
-		if (copy[i] != entity)
-			entities.push_back (copy[i]);
-	}
-	copy.clear();
-	*/
-}
-
 void DSQ::clearElements()
 {
 	elements.clear();
 	for (int i = 0; i < 16; i++)
 		firstElementOnLayer[i] = 0;
+}
+
+
+void DSQ::addEntity(Entity *entity)
+{
+	int i;
+	for (i = 0; entities[i] != 0; i++) {}
+	if (i+1 >= entities.size())
+		entities.resize(entities.size()*2, 0);
+	entities[i] = entity;
+	entities[i+1] = 0;
+}
+
+void DSQ::removeEntity(Entity *entity)
+{
+	int i;
+	for (i = 0; entities[i] != 0; i++)
+	{
+		if (entities[i] == entity)
+			break;
+	}
+	for (; entities[i] != 0; i++)
+	{
+		entities[i] = entities[i+1];
+	}
+}
+
+void DSQ::clearEntities()
+{
+	const int size = entities.size();
+	int i;
+	for (i = 0; i < size; i++)
+	{
+		entities[i] = 0;
+	}
 }
 
 

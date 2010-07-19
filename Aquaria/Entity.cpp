@@ -346,9 +346,9 @@ Entity::Entity() : StateMachine(), DFSprite()
 	canStickInStream = false;
 	pushDamage = 0;
 
-	//debugLog("dsq->entities.push_back()");
+	//debugLog("dsq->addEntity()");
 
-	dsq->entities.push_back(this);
+	dsq->addEntity(this);
 	maxSpeed = oldMaxSpeed = 300;
 	entityDead = false;
 	takeDamage = true;
@@ -3403,25 +3403,29 @@ void Entity::fillGrid()
 
 void Entity::assignUniqueID()
 {
-	int c=1;
+	int id = 1;
 	while (1)
 	{
-		FOR_ENTITIES_EXTERN(i)
+		bool isFree = true;
+		FOR_ENTITIES(i)
 		{
 			Entity *e = *i;
 			if (e != this)
 			{
-				if (e->getID() == c)
+				if (e->getID() == id)
+				{
+					isFree = false;
 					break;
+				}
 			}
 		}
-		if (i == dsq->entities.end())
+		if (isFree)
 		{
 			break;
 		}
-		c++;
+		id++;
 	}
-	entityID = c;
+	entityID = id;
 }
 
 void Entity::setID(int id)
