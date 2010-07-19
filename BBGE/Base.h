@@ -213,6 +213,7 @@ float sqr(float x);
 bool exists(const std::string &f, bool makeFatal = false);
 void errorLog(const std::string &s);
 void debugLog(const std::string &s);
+char *readFile(std::string path, unsigned long *size_ret = 0);
 void forEachFile(std::string path, std::string type, void callback(const std::string &filename, intptr_t param), intptr_t param);
 std::string stripEndlineForUnix(const std::string &in);
 std::vector<std::string> getFileList(std::string path, std::string type, int param);
