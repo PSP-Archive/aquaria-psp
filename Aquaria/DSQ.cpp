@@ -252,6 +252,9 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 
 	cursor = cursorGlow = 0;
 
+	for (int i = 0; i < 16; i++)
+		firstElementOnLayer[i] = 0;
+
 	addStateInstance(game = new Game);
 	addStateInstance(new GameOver);
 	addStateInstance(new AnimationEditor);

@@ -3119,8 +3119,8 @@ Path *Game::getNearestPath(Path *p, std::string s)
 
 Path *Game::getPathByName(std::string name)
 {
-    stringToLowerUserData(name);
-	for(int i = 0; i < paths.size(); i++)
+	stringToLowerUserData(name);
+	for (int i = 0; i < paths.size(); i++)
 	{
 		if (paths[i]->name == name)
 			return paths[i];
@@ -7251,7 +7251,6 @@ void Game::bindInput()
 	addAction(ACTION_MENUUP,	JOY1_STICK_UP);
 	addAction(ACTION_MENUDOWN,	JOY1_STICK_DOWN);
 #endif
-
 
 	if (avatar)
 		avatar->bindInput();

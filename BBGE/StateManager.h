@@ -107,8 +107,8 @@ protected:
 	void registerStateObject(StateObject *stateObject, const std::string &name="");
 	virtual void onUpdate(float dt);
 
-	// std::stack is horrendously overweight (and too slow on the PSP),
-	// so switching to a simple stack implementation.  --achurch
+	// std::stack is horrendously overweight, so we use a simple stack
+	// implementation instead.
 	#define STATE_STACK_SIZE 64
 	StateData *states[STATE_STACK_SIZE];
 	int statesTopIndex;

@@ -3040,8 +3040,7 @@ bool Entity::canSetState(int state)
 
 bool Entity::updateLocalWarpAreas(bool affectAvatar)
 {
-	int i = 0;
-	for (i = 0; i < dsq->game->getNumPaths(); i++)
+	for (int i = 0; i < dsq->game->getNumPaths(); i++)
 	{
 		Path *p = dsq->game->getPath(i);
 		if (!p->nodes.empty())

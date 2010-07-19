@@ -137,7 +137,7 @@ public:
 	bool isfv() { return _fv; }
 
 	// recursive
-	bool isfhr();																	
+	bool isfhr();
 	bool isfvr();
 
 	int getIdx() const { return idx; }

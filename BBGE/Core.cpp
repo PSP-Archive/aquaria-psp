@@ -3241,7 +3241,6 @@ void Core::main(float runTime)
 #ifdef BBGE_BUILD_PSP
 			sys_time_delay(diff);
 #endif
-
 		}	
 	}
 	if (verbose) debugLog("bottom of function");

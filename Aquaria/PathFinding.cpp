@@ -30,8 +30,8 @@ const int cutOff = int((divs*divs)*0.75f);
 
 namespace PathFindingGlobals
 {
-	// This isn't being used in the current code, so I've commented it
-	// out to recover the precious 4MB for PSP.  --achurch
+	// This isn't used by the current code, so I've commented it out to
+	// save 4MB of RAM.  --achurch
 	//int zones[MAX_ZONES][MAX_ZONES];
 
 	MapSearchNode node_goal;
