@@ -37,6 +37,7 @@ float maxChange = maxSpeed*maxUrgency;
 
 float velocityScale = 1;
 
+
 SchoolFish::SchoolFish(const std::string &texname) : FlockEntity()
 {
 	burstDelay = 0;
@@ -113,8 +114,8 @@ void SchoolFish::onEnterState(int action)
 		//rotation.interpolateTo(Vector(0,0,180), 2);
 		vel.setLength2D(vel.getLength2D()*-1);
 
-		oldFlockID = flockID;
-		flockID = -1;
+		oldFlockID = flock ? flock->flockID : -1;
+		removeFromFlock();
 
 		doDeathEffects(0,0,0);
 
@@ -163,7 +164,7 @@ void SchoolFish::onEnterState(int action)
 		alpha.interpolateTo(1, 1);
 		alphaMod = 1;
 		if (oldFlockID != -1)
-			flockID = oldFlockID;
+			addToFlock(oldFlockID);
 	}
 }
 
@@ -171,8 +172,8 @@ void SchoolFish::updateVelocity(Vector &accumulator)
 {
 	// Ok, now limit speeds
 	accumulator.capLength2D(maxChange);
-	// Save old velocity
-	lastVel = vel;
+	// Save old speed
+	lastSpeed = vel.getLength2D();
 
 	// Calculate new velocity and constrain it
 	vel += accumulator;
@@ -259,58 +260,38 @@ void SchoolFish::applyAvoidance(Vector &accumulator)
 
 	if (avoidTime>0) return;
 
-	VectorSet closestObs;
-	VectorSet obsPos;
-	//Vector closestObs;
-	int range = 10;
+	const int range = 10;
+	const int step = 1;
 	int radius = range*TILE_SIZE;
-	Vector p;
-	TileVector t0(position);
+	int obsSumX = 0, obsSumY = 0;  // Not a Vector (avoid using floats)
+	int obsCount = 0;
+	const TileVector t0(position);
 	TileVector t;
-	for (int x = -range; x <= range; x++)
+	for (t.x = t0.x-range; t.x <= t0.x+range; t.x += step)
 	{
-		for (int y = -range; y <= range; y++)
+		for (t.y = t0.y-range; t.y <= t0.y+range; t.y += step)
 		{
-			TileVector t = t0;
-			t.x+=x;
-			t.y+=y;
 			if (dsq->game->isObstructed(t))
 			{
-				p = t.worldVector();
-
-				closestObs.push_back(this->position - p);
-				obsPos.push_back(p);
-				/*
-				std::ostringstream os;
-				os << "tile(" << t.x << ", " << t.y << ") p(" << p.x << ", " << p.y << ")";
-				debugLog(os.str());
-				*/
-
-				/*
-				int len = (p - this->position).getSquaredLength2D();
-				if (len < sqr(radius))
-				{
-					closestObs.push_back(this->position - p);
-					obsPos.push_back(p);
-				}
-				*/
+				obsSumX += t0.x - t.x;
+				obsSumY += t0.y - t.y;
+				obsCount++;
 			}
 		}
 	}
 
-	if (!closestObs.empty())
+	if (obsCount > 0)
 	{
-		//avoid (accumulator, this->averageVectors(closestObs));
-		//accumulator = Vector(0,0,0);
-		Vector change;
-		change = averageVectors(closestObs);
+		const float tileMult = (float)TILE_SIZE / (float)obsCount;
+		Vector change(obsSumX*tileMult, obsSumY*tileMult);
+		change += position - t0.worldVector();
 		//change |= 200;
 
-		float dist = (this->position - averageVectors(obsPos)).getLength2D();
+		float dist = change.getLength2D();
 		float ratio = dist / radius;
 		if (ratio < minUrgency) ratio = minUrgency;
 		else if (ratio > maxUrgency) ratio = maxUrgency;
-		change.setLength2D(ratio + lastVel.getLength2D()/10);
+		change *= (ratio + lastSpeed*0.1f) / dist;
 
 		accumulator += change;
 	}
@@ -320,12 +301,10 @@ void SchoolFish::applyAvoidance(Vector &accumulator)
 		if (!((position - startPos).isLength2DIn(this->range)))
 		{
 			Vector diff = startPos - position;
-			diff.setLength2D(lastVel.getLength2D());
+			diff.setLength2D(lastSpeed);
 			accumulator += diff;
 		}
 	}
-
-
 }
 
 inline
@@ -378,34 +357,25 @@ void SchoolFish::applySeparation(Vector &accumulator)
 	FlockEntity *e = getNearestFlockEntity();
 	if (e)
 	{
-		Vector change;
-		float ratio;
-		change = e->position - this->position;
-		float nearestFlockEntityDist = change.getLength2D();
-		ratio = nearestFlockEntityDist / separationDistance;
-		if (ratio < minUrgency) ratio = minUrgency;
-		else if (ratio > maxUrgency) ratio = maxUrgency;
-		ratio *= strengthSeparation;
-
-		if (nearestFlockEntityDist < separationDistance)
+		const float dist = getNearestFlockEntityDist();
+		if (dist < separationDistance)
 		{
+			float ratio = dist / separationDistance;
+			if (ratio < minUrgency) ratio = minUrgency;
+			else if (ratio > maxUrgency) ratio = maxUrgency;
+			ratio *= strengthSeparation;
+			Vector change(e->position - this->position);
 			if (!change.isZero())
+			{
 				change.setLength2D(-ratio);
-           //Change.SetMagnitudeOfVector(-Ratio)
-        // Are we too far from nearest flockmate?  Then Move Closer
-		/*
-        else if (nearestFlockEntityDist > separationDistance)
-			change |= ratio;
-			*/
+		        	accumulator += change;
+			}
 		}
-        else
-            change = Vector(0,0,0);
-        // Add Change to Accumulator
+	        // Are we too far from nearest flockmate?  Then Move Closer
 		/*
-        if Flock <> nil then
-           Flock.BoidApplyRule( Self, fbSeparation, Accumulator, Change );
+        	else if (dist > separationDistance)
+			change |= ratio;
 		*/
-        accumulator += change;
 	}
 }
 
@@ -575,13 +545,13 @@ void SchoolFish::onUpdate(float dt)
 
 
 			Vector lastPosition = position;
-			Vector newPosition = position + (vel*velocityScale*dt) + vel2*dt;
-			position = newPosition;
+			position += (vel*velocityScale + vel2) * dt;
 
 			if (dsq->game->isObstructed(position))
 			{
 				position = lastPosition;
 				/*
+				Vector newPosition = position;
 				position = Vector(newPosition.x, lastPosition.y);
 				if (dsq->game->isObstructed(position))
 				{
@@ -644,10 +614,6 @@ void SchoolFish::onUpdate(float dt)
 
 			//rotateToVec(accumulator, 5, 90);
 
-			// FIXME: Changed to atan2f() to avoid potential
-			// division by zero, but kept X positive to keep
-			// the angle within [-90,90].  Can the logic change
-			// to deal with angles in [-180,180]?  --achurch
 			float angle = atan2f(dir.x<0 ? -dir.y : dir.y, fabsf(dir.x));
 			angle = ((angle*180)/PI);
 
