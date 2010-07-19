@@ -20,7 +20,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Core.h"
 
+#ifdef RLT_FIXED
+	#define BASE_ARRAY_SIZE 100  // Size of an object array in a new layer
+#endif
+
 RenderObjectLayer::RenderObjectLayer()
+#ifdef RLT_FIXED
+	: renderObjects(BASE_ARRAY_SIZE)
+#endif
 {	
 	followCamera = NO_FOLLOW_CAMERA;
 	visible = true;
@@ -34,10 +41,11 @@ RenderObjectLayer::RenderObjectLayer()
 	color = Vector(1,1,1);
 	
 #ifdef RLT_FIXED
-	renderObjects.clear();
-	currentSize = 0;
-	freeIdx = 0;
-	setSize(64);
+	const int size = renderObjects.size();
+	for (int i = 0; i < size; i++)
+		renderObjects[i] = 0;
+	objectCount = 0;
+	firstFreeIdx = 0;
 #endif
 }
 
@@ -46,54 +54,75 @@ void RenderObjectLayer::setCull(bool v)
 	this->cull = v;
 }
 
-void RenderObjectLayer::setSize(int sz)
-{
-#ifdef RLT_FIXED
-	debugLog("setting fixed size");
-	int oldSz = renderObjects.size();
-	renderObjects.resize(sz);
-	for (int i = oldSz; i < sz; i++)
-	{
-		renderObjects[i] = 0;
-	}
-#endif
 #ifdef RLT_DYNAMIC
-	//debugLog("Cannot set RenderObjectLayer size when RLT_DYNAMIC");
-#endif
-}
-
 bool sortRenderObjectsByDepth(RenderObject *r1, RenderObject *r2)
 {
 	return r1->getSortDepth() < r2->getSortDepth();
 }
+#endif
 
 void RenderObjectLayer::sort()
 {
 #ifdef RLT_FIXED
-	for (int i = renderObjects.size()-1; i >= 0; i--)
-	{
-		bool flipped = false;
-		if (!renderObjects[i]) continue;
-		for (int j = 0; j < i; j++)
+	// Compress the list before sorting to boost speed.
+	const int size = renderObjects.size();
+	int from, to;
+	for (to = 0; to < size; to++) {
+		if (!renderObjects[to])
+			break;
+	}
+	for (from = to+1; from < size; from++) {
+		if (renderObjects[from])
 		{
-			if (!renderObjects[j]) continue;
-			if (!renderObjects[j+1]) continue;
-			//position.z 
-			//position.z
-			//!renderObjects[j]->parent && !renderObjects[j+1]->parent && 
-			if (renderObjects[j]->getSortDepth() > renderObjects[j+1]->getSortDepth())
+			renderObjects[to] = renderObjects[from];
+			renderObjects[to]->setIdx(to);
+			to++;
+		}
+	}
+	if (to < size)
+		renderObjects[to] = 0;
+	if (to != objectCount)
+	{
+		std::ostringstream os;
+		os << "Objects lost in sort! (" << to << " != " << objectCount << ")";
+		errorLog(os.str());
+		objectCount = to;
+	}
+	const int count = objectCount;
+
+	// Save a copy of all objects' depths so we don't have to call
+	// getSortDepth() in a greater-order loop.
+	std::vector<float> sortDepths(count);
+	for (int i = 0; i < count; i++)
+	{
+		sortDepths[i] = renderObjects[i]->getSortDepth();
+	}
+
+	// FIXME: Just a simple selection sort for now.  Is this fast enough?
+	// Might need to use quicksort instead.
+	for (int i = 0; i < count-1; i++)
+	{
+		int best = i;
+		float bestDepth = sortDepths[i];
+		for (int j = i+1; j < count; j++)
+		{
+			if (sortDepths[j] < bestDepth)
 			{
-				RenderObject *temp;
-				temp = renderObjects[j];
-				int temp2 = renderObjects[j]->getIdx();
-				renderObjects[j] = renderObjects[j+1];
-				renderObjects[j+1] = temp;
-					renderObjects[j]->setIdx(j);
-				renderObjects[j+1]->setIdx(j+1);
-					flipped = true;
+				best = j;
+				bestDepth = sortDepths[j];
 			}
 		}
-		if (!flipped) break;
+		if (best != i)
+		{
+			RenderObject *r = renderObjects[i];
+			renderObjects[i] = renderObjects[best];
+			renderObjects[i]->setIdx(i);
+			renderObjects[best] = r;
+			renderObjects[best]->setIdx(best);
+			float d = sortDepths[i];
+			sortDepths[i] = sortDepths[best];
+			sortDepths[best] = d;
+		}
 	}
 #endif
 #ifdef RLT_DYNAMIC
@@ -101,56 +130,25 @@ void RenderObjectLayer::sort()
 #endif
 }
 
-#ifdef RLT_FIXED
-void RenderObjectLayer::findNextFreeIdx()
-{
-	int c = 0;
-	int sz = renderObjects.size();
-	//freeIdx++;
-	while (renderObjects[freeIdx] != 0)
-	{
-		freeIdx ++;
-		if (freeIdx >= sz)
-			freeIdx = 0;
-		c++;
-		if (c > sz)
-		{
-			std::ostringstream os;
-			os << "exceeded max renderobject count max[" << sz << "]";
-			debugLog(os.str());
-			return;
-		}
-	}
-	if (freeIdx > currentSize)
-	{
-		currentSize = freeIdx+1;
-		if (currentSize > sz)
-		{
-			currentSize = sz;
-		}
-		/*
-		std::ostringstream os;
-		os << "CurrentSize: " << currentSize;
-		debugLog(os.str());
-		*/
-	}
-	/*
-	std::ostringstream os;
-	os << "layer: " << index << " freeIdx: " << freeIdx;
-	debugLog(os.str());
-	*/
-}
-#endif  // RLT_FIXED
-
 void RenderObjectLayer::add(RenderObject* r)
 {
 #ifdef RLT_FIXED
-	renderObjects[freeIdx] = r;
-	r->setIdx(freeIdx);
-	
-	findNextFreeIdx();
+	int size = renderObjects.size();
+	if (firstFreeIdx >= size)
+	{
+		size += size/2;  // Increase size by 50% each time we fill up.
+		renderObjects.resize(size);
+	}
 
-	//renderObjects[freeIdx] = r;
+	renderObjects[firstFreeIdx] = r;
+	objectCount++;
+	r->setIdx(firstFreeIdx);
+
+	for (; firstFreeIdx < size; firstFreeIdx++)
+	{
+		if (!renderObjects[firstFreeIdx])
+			break;
+	}
 #endif
 #ifdef RLT_DYNAMIC
 	renderObjectList.push_back(r);
@@ -163,26 +161,22 @@ void RenderObjectLayer::add(RenderObject* r)
 void RenderObjectLayer::remove(RenderObject* r)
 {
 #ifdef RLT_FIXED
-	if (r->getIdx() <= -1 || r->getIdx() >= renderObjects.size())
-		errorLog("trying to remove renderobject with invalid idx");
-	renderObjects[r->getIdx()] = 0;
-	if (r->getIdx() < freeIdx)
-		freeIdx = r->getIdx();
-
-	int c = currentSize; 
-	while (renderObjects[c] == 0 && c >= 0)
-	{			
-		c--;
+	const int idx = r->getIdx();
+	if (idx < 0 || idx >= renderObjects.size())
+	{
+		errorLog("Trying to remove RenderObject with invalid index");
+		return;
 	}
-	currentSize = c+1;
-	if (currentSize > renderObjects.size())
-		currentSize = renderObjects.size();
-
-	/*
-	std::ostringstream os;
-	os << "CurrentSize: " << currentSize;
-	debugLog(os.str());
-	*/
+	if (renderObjects[idx] != r)
+	{
+		errorLog("RenderObject pointer doesn't match array");
+		return;
+	}
+	renderObjects[idx] = 0;
+	objectCount--;
+	if (idx < firstFreeIdx)
+		firstFreeIdx = idx;
+	r->setIdx(-1);
 #endif
 #ifdef RLT_DYNAMIC
 	renderObjectList.remove(r);
@@ -195,28 +189,63 @@ void RenderObjectLayer::remove(RenderObject* r)
 void RenderObjectLayer::moveToFront(RenderObject *r)
 {
 #ifdef RLT_FIXED
-	int idx = r->getIdx();
-	int last = renderObjects.size()-1;
-	int i = 0;
-	for (i = renderObjects.size()-1; i >=0; i--)
+	const int size = renderObjects.size();
+	const int curIdx = r->getIdx();
+	int lastUsed;
+	for (lastUsed = size-1; lastUsed > curIdx; lastUsed--)
 	{
-		if (renderObjects[i] == 0)
-			last = i;
-		else
-			break; 
+		if (renderObjects[lastUsed])
+			break;
 	}
-	if (idx == last) return;
-	for (i = idx; i < last; i++)
-	{
-		renderObjects[i] = renderObjects[i+1];
-		if (renderObjects[i])
-			renderObjects[i]->setIdx(i);
-	}
-	renderObjects[last] = r;
-	r->setIdx(last);
 
-	findNextFreeIdx();
-#endif
+	if (curIdx == lastUsed)
+	{
+		// Already at the front, so nothing to do.
+	}
+	else if (lastUsed < size-1)
+	{
+		const int newIdx = lastUsed + 1;
+		renderObjects[curIdx] = 0;
+		renderObjects[newIdx] = r;
+		r->setIdx(newIdx);
+		if (firstFreeIdx == newIdx)
+			firstFreeIdx++;
+	}
+	else if (objectCount == size)
+	{
+		// Expand the array so future calls have a bit of breathing room.
+		const int newSize = size + 10;
+		renderObjects.resize(newSize);
+		renderObjects[curIdx] = 0;
+		renderObjects[size] = r;
+		r->setIdx(size);
+		for (int i = size+1; i < newSize; i++)
+			renderObjects[i] = 0;
+		firstFreeIdx = size+1;
+	}
+	else
+	{
+		// Need to shift elements downward to make room for the new one.
+		renderObjects[curIdx] = 0;
+		int lastFree;
+		for (lastFree = lastUsed-1; lastFree > curIdx; lastFree--)
+		{
+			if (!renderObjects[lastFree])
+				break;
+		}
+
+		for (int i = lastFree + 1; i <= lastUsed; i++)
+		{
+			renderObjects[i-1] = renderObjects[i];
+			renderObjects[i-1]->setIdx(i-1);
+		}
+
+		renderObjects[lastUsed] = r;
+		r->setIdx(lastUsed);
+		if (firstFreeIdx == lastFree)
+			firstFreeIdx = lastUsed + 1;
+	}
+#endif  // RLT_FIXED
 #ifdef RLT_DYNAMIC
 	renderObjectList.remove(r);
 	renderObjectList.push_back(r);
@@ -226,19 +255,66 @@ void RenderObjectLayer::moveToFront(RenderObject *r)
 void RenderObjectLayer::moveToBack(RenderObject *r)
 {
 #ifdef RLT_FIXED
-	int idx = r->getIdx();
-	if (idx == 0) return;
-	for (int i = idx; i >= 1; i--)
+	const int size = renderObjects.size();
+	const int curIdx = r->getIdx();
+	int firstUsed;
+	for (firstUsed = 0; firstUsed < curIdx; firstUsed++)
 	{
-		renderObjects[i] = renderObjects[i-1];
-		if (renderObjects[i])
-			renderObjects[i]->setIdx(i);
+		if (renderObjects[firstUsed])
+			break;
 	}
-	renderObjects[0] = r;
-	r->setIdx(0);
 
-	findNextFreeIdx();
-#endif
+	if (curIdx == firstUsed)
+	{
+		// Already at the back, so nothing to do.
+	}
+	else if (firstUsed > 0)
+	{
+		const int newIdx = firstUsed - 1;
+		renderObjects[curIdx] = 0;
+		renderObjects[newIdx] = r;
+		r->setIdx(newIdx);
+		if (firstFreeIdx == newIdx)
+			firstFreeIdx++;
+	}
+	else if (objectCount == size)
+	{
+		const int newSize = size + 10;
+		const int sizeDiff = newSize - size;
+		const int newIdx = sizeDiff - 1;
+
+		renderObjects.resize(newSize);
+		renderObjects[curIdx] = 0;
+		for (int i = newSize - 1; i >= sizeDiff; i--)
+		{
+			renderObjects[i] = renderObjects[i - sizeDiff];
+			renderObjects[i]->setIdx(i);
+		}
+		for (int i = 0; i < newIdx; i++)
+			renderObjects[i] = 0;
+		renderObjects[newIdx] = r;
+		r->setIdx(newIdx);
+		firstFreeIdx = 0;
+	}
+	else
+	{
+		renderObjects[curIdx] = 0;
+		if (curIdx < firstFreeIdx)
+			firstFreeIdx = curIdx;
+		for (int i = firstFreeIdx; i > 0; i--)
+		{
+			renderObjects[i] = renderObjects[i-1];
+			renderObjects[i]->setIdx(i);
+		}
+		renderObjects[0] = r;
+		r->setIdx(0);
+		for (firstFreeIdx++; firstFreeIdx < size; firstFreeIdx++)
+		{
+			if (!renderObjects[firstFreeIdx])
+				break;
+		}
+	}
+#endif  // RLT_FIXED
 #ifdef RLT_DYNAMIC
         renderObjectList.remove(r);
 	renderObjectList.push_front(r);

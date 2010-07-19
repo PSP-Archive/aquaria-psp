@@ -133,7 +133,7 @@ public:
 	bool isfhr();
 	bool isfvr();
 
-	int getIdx() { return idx; }
+	int getIdx() const { return idx; }
 	void setIdx(int idx) { this->idx = idx; }
 	void moveToFront();
 	void moveToBack();

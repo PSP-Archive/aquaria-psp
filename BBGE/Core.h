@@ -824,8 +824,8 @@ enum FollowCameraLock
 };
 
 //RenderObject Layer Type (enable only one)
-#define RLT_DYNAMIC		// Dynamic list
-//#define RLT_FIXED		// Static array
+//#define RLT_DYNAMIC		// Dynamic list
+#define RLT_FIXED		// Static array
 //#define RLT_MAP		// Mapping
 
 typedef std::vector <RenderObject*> RenderObjects;
@@ -836,7 +836,6 @@ class RenderObjectLayer
 {
 public:
 	RenderObjectLayer();
-	void setSize(int sz);
 	void add(RenderObject* r);
 	void remove(RenderObject* r);
 	void moveToFront(RenderObject *r);
@@ -848,7 +847,7 @@ public:
 	inline bool empty()
 	{
 	#ifdef RLT_FIXED
-		return renderObjects.empty();
+		return objectCount == 0;
 	#endif
 	#ifdef RLT_DYNAMIC
 		return renderObjectList.empty();
@@ -860,97 +859,52 @@ public:
 	{
 	#ifdef RLT_DYNAMIC
 		if (renderObjectList.empty()) return 0;
-		dynamic_iter = renderObjectList.begin();
-		return *dynamic_iter;
+		iter = renderObjectList.begin();
+		return *iter;
 	#endif
 	#ifdef RLT_MAP
 		if (renderObjectMap.empty()) return 0;
-		map_iter = renderObjectMap.begin();
-		return (*map_iter).second;
+		iter = renderObjectMap.begin();
+		return (*iter).second;
 	#endif
 	#ifdef RLT_FIXED
-		/*
-		if (renderObjects.empty()) return 0;
-		fixed_iter = renderObjects.begin();
-		while ((*fixed_iter)==0 && fixed_iter != renderObjects.end())
-		{
-			fixed_iter++;
-		}
-		if (fixed_iter != renderObjects.end())
-			return *fixed_iter;
-		*/
-		int sz = renderObjects.size();
-		fixed_iter = 0;
-		for (; fixed_iter < currentSize && fixed_iter < sz; fixed_iter++)
-		{
-			if (renderObjects[fixed_iter] != 0)
-			{
-				return renderObjects[fixed_iter];
-			}
-		}
-		/*
-		while (renderObjects[fixed_iter]==0 && fixed_iter < sz)
-		{
-			fixed_iter++;
-		}
-		if (fixed_iter >= sz)						return 0;
-		return renderObjects[fixed_iter];
-		*/
-		return 0;
+		iter = 0;
+		return getNext();
 	#endif
-		return 0;
 	}
 
 	RenderObject *getNext()
 	{
 	#ifdef RLT_DYNAMIC
-		if (dynamic_iter == renderObjectList.end()) return 0;
-		dynamic_iter++;
-		if (dynamic_iter == renderObjectList.end()) return 0;
-		return *dynamic_iter;
+		if (iter == renderObjectList.end()) return 0;
+		iter++;
+		if (iter == renderObjectList.end()) return 0;
+		return *iter;
 	#endif
 	#ifdef RLT_MAP
-		if (map_iter == renderObjectMap.end()) return 0;
-		map_iter++;
-		if (map_iter == renderObjectMap.end()) return 0;
-		return (*map_iter).second;
+		if (iter == renderObjectMap.end()) return 0;
+		iter++;
+		if (iter == renderObjectMap.end()) return 0;
+		return (*iter).second;
 	#endif
 	#ifdef RLT_FIXED
-		int sz = renderObjects.size();
-		fixed_iter++;
-		if (fixed_iter < currentSize && fixed_iter < sz)
+		const int size = renderObjects.size();
+		int i;
+		for (i = iter; i < size; i++)
 		{
-			if (renderObjects[fixed_iter]==0)
-			{
-				for (; fixed_iter < currentSize && fixed_iter < sz; fixed_iter++)
-				{
-					if (renderObjects[fixed_iter] != 0)
-					{
-						return renderObjects[fixed_iter];
-					}
-				}
-			}
-			else
-			{
-				return renderObjects[fixed_iter];
-			}
+			if (renderObjects[i] != 0)
+				break;
 		}
-		return 0;
-		/*
-		while (renderObjects[fixed_iter]==0 && fixed_iter < sz && )
+		if (i < size)
 		{
-			fixed_iter++;
+			iter = i+1;
+			return renderObjects[i];
 		}
-		if (fixed_iter >= sz)						return 0;
-		return renderObjects[fixed_iter];
-		*/
-		
-		/*
-		if (fixed_iter == renderObjects.end())		return 0;
-		fixed_iter++;
-		if (fixed_iter == renderObjects.end())		return 0;
-		return *fixed_iter;
-		*/
+		else
+		{
+			iter = i;
+			return 0;
+		}
 	#endif
 		return 0;
 	}
@@ -970,23 +924,19 @@ public:
 
 protected:
 
-#ifdef RLT_FIXED
-	void findNextFreeIdx();
-#endif
-	
 #ifdef RLT_DYNAMIC
 	RenderObjectList renderObjectList;
-	RenderObjectList::iterator dynamic_iter;
+	RenderObjectList::iterator iter;
 #endif
 #ifdef RLT_MAP
 	RenderObjectMap renderObjectMap;
-	RenderObjectMap::iterator map_iter;
+	RenderObjectMap::iterator iter;
 #endif
 #ifdef RLT_FIXED
-	int freeIdx;
 	RenderObjects renderObjects;
-	unsigned int fixed_iter;
-	unsigned int currentSize;
+	int objectCount;
+	int firstFreeIdx;
+	int iter;
 #endif
 };
 
