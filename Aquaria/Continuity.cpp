@@ -2459,13 +2459,8 @@ std::string Continuity::getSaveFileName(int slot, const std::string &pfix)
 	return os.str();
 }
 
-void Continuity::loadFile(int slot)
+void Continuity::loadFileData(int slot, TiXmlDocument &doc)
 {
-	dsq->user.save();
-	this->reset();
-
-	TiXmlDocument doc;
-
 	bool tmp = false;
 
 	std::string teh_file = dsq->continuity.getSaveFileName(slot, "aqs");
@@ -2499,11 +2494,17 @@ void Continuity::loadFile(int slot)
 	doc.LoadFile(teh_file);
 
 	if (tmp)
-	{
 		remove(teh_file.c_str());
-	
-	}
-	
+}
+
+void Continuity::loadFile(int slot)
+{
+	dsq->user.save();
+	this->reset();
+
+	TiXmlDocument doc;
+	loadFileData(slot, doc);
+
 	int versionMajor=-1, versionMinor=-1, versionRevision=-1;
 	TiXmlElement *xmlVersion = doc.FirstChildElement("Version");
 	if (xmlVersion)
