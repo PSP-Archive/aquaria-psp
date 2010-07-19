@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/DebugFont.h"
 #include "../BBGE/LensFlare.h"
 #include "../BBGE/RoundedRect.h"
+#include "../BBGE/SimpleIStringStream.h"
 
 #include "Game.h"
 #include "GridRender.h"
@@ -4204,7 +4205,7 @@ bool Game::loadSceneXML(std::string scene)
 	while (lensFlare)
 	{
 		LensFlare *l = new LensFlare;
-		std::istringstream is(lensFlare->Attribute("tex"));
+		SimpleIStringStream is(lensFlare->Attribute("tex"));
 		int w = -1, h=-1;
 		w = atoi(lensFlare->Attribute("w"));
 		h = atoi(lensFlare->Attribute("h"));
@@ -4215,7 +4216,7 @@ bool Game::loadSceneXML(std::string scene)
 			if (!tex.empty())
 				l->addFlare(tex, Vector(1,1,1), w, h);
 		}
-		std::istringstream is2(lensFlare->Attribute("inc"));
+		SimpleIStringStream is2(lensFlare->Attribute("inc"));
 		is2 >> l->inc;
 		l->maxLen = atoi(lensFlare->Attribute("maxLen"));
 		/*
@@ -4303,13 +4304,13 @@ bool Game::loadSceneXML(std::string scene)
 
 		if (level->Attribute("bgRepeat"))
 		{
-			std::istringstream is(level->Attribute("bgRepeat"));
+			SimpleIStringStream is(level->Attribute("bgRepeat"));
 			is >> backgroundImageRepeat;
 			levelSF.SetAttribute("bgRepeat", level->Attribute("bgRepeat"));
 		}
 		if (level->Attribute("cameraConstrained"))
 		{
-			std::istringstream is(level->Attribute("cameraConstrained"));
+			SimpleIStringStream is(level->Attribute("cameraConstrained"));
 			is >> cameraConstrained;
 			levelSF.SetAttribute("cameraConstrained", cameraConstrained);
 			std::ostringstream os;
@@ -4359,13 +4360,13 @@ bool Game::loadSceneXML(std::string scene)
 		{
 			if (level->Attribute("gradTop"))
 			{
-				std::istringstream is(level->Attribute("gradTop"));
+				SimpleIStringStream is(level->Attribute("gradTop"));
 				is >> gradTop.x >> gradTop.y >> gradTop.z;
 				levelSF.SetAttribute("gradTop", level->Attribute("gradTop"));
 			}
 			if (level->Attribute("gradBtm"))
 			{
-				std::istringstream is(level->Attribute("gradBtm"));
+				SimpleIStringStream is(level->Attribute("gradBtm"));
 				is >> gradBtm.x >> gradBtm.y >> gradBtm.z;
 				levelSF.SetAttribute("gradBtm", level->Attribute("gradBtm"));
 			}
@@ -4375,7 +4376,7 @@ bool Game::loadSceneXML(std::string scene)
 
 		if (level->Attribute("parallax"))
 		{
-			std::istringstream is(level->Attribute("parallax"));
+			SimpleIStringStream is(level->Attribute("parallax"));
 			float x,y,z,r,g,b;
 			is >> x >> y >> z >> r >> g >> b;
 			RenderObjectLayer *l = 0;
@@ -4401,7 +4402,7 @@ bool Game::loadSceneXML(std::string scene)
 		if (level->Attribute("parallaxLock"))
 		{
 			int x, y, z, r, g, b;
-			std::istringstream is(level->Attribute("parallaxLock"));
+			SimpleIStringStream is(level->Attribute("parallaxLock"));
 			is >> x >> y >> z >> r >> g >> b;
 
 			RenderObjectLayer *l = 0;
@@ -4502,7 +4503,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (level->Attribute("sceneColor"))
 		{
-			std::istringstream in(level->Attribute("sceneColor"));
+			SimpleIStringStream in(level->Attribute("sceneColor"));
 			in >> sceneColor.x >> sceneColor.y >> sceneColor.z;
 			levelSF.SetAttribute("sceneColor", level->Attribute("sceneColor"));
 		}
@@ -4516,7 +4517,7 @@ bool Game::loadSceneXML(std::string scene)
 	if (obs)
 	{
 		int tx, ty, len;
-		std::istringstream is(obs->Attribute("d"));
+		SimpleIStringStream is(obs->Attribute("d"));
 		while (is >> tx)
 		{
 			is >> ty >> len;
@@ -4541,7 +4542,7 @@ bool Game::loadSceneXML(std::string scene)
 		while (nodeXml)
 		{
 			PathNode node;
-			std::istringstream is(nodeXml->Attribute("pos"));
+			SimpleIStringStream is(nodeXml->Attribute("pos"));
 			is >> node.position.x >> node.position.y;
 
 			if (nodeXml->Attribute("ms"))
@@ -4551,7 +4552,7 @@ bool Game::loadSceneXML(std::string scene)
 
 			if (nodeXml->Attribute("rect"))
 			{
-				std::istringstream is(nodeXml->Attribute("rect"));
+				SimpleIStringStream is(nodeXml->Attribute("rect"));
 				int w,h;
 				is >> w >> h;
 				path->rect.setWidth(w);
@@ -4713,7 +4714,7 @@ bool Game::loadSceneXML(std::string scene)
 		waSF.SetAttribute("ay", a.avatarPosition.y = atoi(warpArea->Attribute("ay")));
 		*/
 
-		std::istringstream is(sceneString);
+		SimpleIStringStream is(sceneString);
 		std::string sceneName, warpAreaType, side;
 		is >> sceneName >> warpAreaType >> a.spawnOffset.x >> a.spawnOffset.y;
 		a.spawnOffset.normalize2D();
@@ -4769,7 +4770,7 @@ bool Game::loadSceneXML(std::string scene)
 		float size = 1;
 		if (schoolFish->Attribute("size"))
 		{
-			std::istringstream is(schoolFish->Attribute("size"));
+			SimpleIStringStream is(schoolFish->Attribute("size"));
 			is >> size;
 		}
 
@@ -4875,7 +4876,7 @@ bool Game::loadSceneXML(std::string scene)
 		float sz,sz2;
 		if (simpleElements->Attribute("d"))
 		{
-			std::istringstream is(simpleElements->Attribute("d"));
+			SimpleIStringStream is(simpleElements->Attribute("d"));
 			while (is >> idx)
 			{
 				is >> x >> y >> rot;
@@ -4885,7 +4886,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("e"))
 		{
-			std::istringstream is2(simpleElements->Attribute("e"));
+			SimpleIStringStream is2(simpleElements->Attribute("e"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4896,7 +4897,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("f"))
 		{
-			std::istringstream is2(simpleElements->Attribute("f"));
+			SimpleIStringStream is2(simpleElements->Attribute("f"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4908,7 +4909,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("g"))
 		{
-			std::istringstream is2(simpleElements->Attribute("g"));
+			SimpleIStringStream is2(simpleElements->Attribute("g"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4925,7 +4926,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("h"))
 		{
-			std::istringstream is2(simpleElements->Attribute("h"));
+			SimpleIStringStream is2(simpleElements->Attribute("h"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4946,7 +4947,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("i"))
 		{
-			std::istringstream is2(simpleElements->Attribute("i"));
+			SimpleIStringStream is2(simpleElements->Attribute("i"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4970,7 +4971,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("j"))
 		{
-			std::istringstream is2(simpleElements->Attribute("j"));
+			SimpleIStringStream is2(simpleElements->Attribute("j"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4997,7 +4998,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("k"))
 		{
-			std::istringstream is2(simpleElements->Attribute("k"));
+			SimpleIStringStream is2(simpleElements->Attribute("k"));
 			int l = atoi(simpleElements->Attribute("l"));
 			int c = 0;
 			while(is2 >> idx)
@@ -5069,7 +5070,7 @@ bool Game::loadSceneXML(std::string scene)
 
 				if (element->Attribute("sz"))
 				{
-					std::istringstream is(element->Attribute("sz"));
+					SimpleIStringStream is(element->Attribute("sz"));
 					is >> e->scale.x >> e->scale.y;
 				}
 			}
@@ -5107,7 +5108,7 @@ bool Game::loadSceneXML(std::string scene)
 	{
 		if (entitiesNode->Attribute("d"))
 		{
-			std::istringstream is(entitiesNode->Attribute("d"));
+			SimpleIStringStream is(entitiesNode->Attribute("d"));
 			int idx, x, y;
 			while (is >> idx)
 			{
@@ -5117,7 +5118,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (entitiesNode->Attribute("e"))
 		{
-			std::istringstream is(entitiesNode->Attribute("e"));
+			SimpleIStringStream is(entitiesNode->Attribute("e"));
 			int idx, x, y, rot;
 			while (is >> idx)
 			{
@@ -5133,7 +5134,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (entitiesNode->Attribute("f"))
 		{
-			std::istringstream is(entitiesNode->Attribute("f"));
+			SimpleIStringStream is(entitiesNode->Attribute("f"));
 			int idx, x, y, rot, group;
 			while (is >> idx)
 			{
@@ -5144,7 +5145,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (entitiesNode->Attribute("g"))
 		{
-			std::istringstream is(entitiesNode->Attribute("g"));
+			SimpleIStringStream is(entitiesNode->Attribute("g"));
 			int idx, x, y, rot, group, id;
 			while (is >> idx)
 			{
@@ -5155,7 +5156,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (entitiesNode->Attribute("h"))
 		{
-			std::istringstream is(entitiesNode->Attribute("h"));
+			SimpleIStringStream is(entitiesNode->Attribute("h"));
 			int idx, x, y, rot, groupID, id;
 			Entity::NodeGroups *ng;
 			Entity::NodeGroups nodeGroups;
@@ -5192,7 +5193,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (entitiesNode->Attribute("i"))
 		{
-			std::istringstream is(entitiesNode->Attribute("i"));
+			SimpleIStringStream is(entitiesNode->Attribute("i"));
 			int idx, x, y, rot, groupID, id;
 			Entity::NodeGroups nodeGroups;
 			while (is >> idx)
@@ -5205,7 +5206,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (entitiesNode->Attribute("j"))
 		{
-			std::istringstream is(entitiesNode->Attribute("j"));
+			SimpleIStringStream is(entitiesNode->Attribute("j"));
 			int idx, x, y, rot, groupID, id;
 			std::string name;
 			Entity::NodeGroups nodeGroups;

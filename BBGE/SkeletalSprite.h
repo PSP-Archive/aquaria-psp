@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #pragma once
 #include "Quad.h"
+#include "SimpleIStringStream.h"
 // for 2d system only
 
 enum AnimationCommand
@@ -87,7 +88,7 @@ protected:
 class BoneCommand
 {
 public:
-	void parse(Bone *b, std::istringstream &is);
+	void parse(Bone *b, SimpleIStringStream &is);
 	void run();
 	AnimationCommand command;
 	Bone *b;
