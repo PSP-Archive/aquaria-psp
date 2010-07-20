@@ -40,96 +40,88 @@ void GridRender::onUpdate(float dt)
 }
 
 void GridRender::onRender()
-{	
-	float width2 = float(TILE_SIZE)/2.0f;
-	float height2 = float(TILE_SIZE)/2.0f;
-	int skip = 1;
-	
-	if (width2 < 5)
-		skip = 2;
-	
-	/*
-	int obsType2 = obsType;	
-	if (obsType == OT_INVISIBLEIN)
-		obsType2 = OT_HURT;
-	*/
-	float drawx1, drawx2, drawy;
-	int startRow = -1;
-	int endRow;
+{
+	switch(obsType)
+	{
+	case OT_INVISIBLE:
+		core->setColor(1, 0, 0, alpha.getValue());
+	break;
+	case OT_INVISIBLEIN:
+		core->setColor(1, 0.5, 0, alpha.getValue());
+	break;
+	case OT_BLACK:
+		core->setColor(0, 0, 0, 1);
+	break;
+	case OT_HURT:
+		core->setColor(1, 1, 0, alpha.getValue());
+	break;
+	default:
+	break;
+	}
+
+	const int obsType = int(this->obsType);
 	Vector camPos = core->cameraPos;
 	camPos.x -= core->getVirtualOffX() * (core->invGlobalScale);
-	TileVector ct(camPos);
+	const TileVector ct(camPos);
 
-	int width = (core->getVirtualWidth() * (core->invGlobalScale))/TILE_SIZE + 1;
-	int height = (600 * (core->invGlobalScale))/TILE_SIZE + 1;
+	const int width = int((core->getVirtualWidth() * (core->invGlobalScale))/TILE_SIZE) + 1;
+	const int height = int((600 * (core->invGlobalScale))/TILE_SIZE) + 1;
 
-	for (int y = ct.y; y < ct.y+height+1; y+=skip)
-	{			
-		if (y<0) continue;
-		startRow = -1;
-		int endX = ct.x+width+3; // +1
-		for (int x = ct.x-3; x <= endX; x++)
+	int startX = ct.x-1, endX = ct.x+width+1;
+	int startY = ct.y-1, endY = ct.y+height+1;
+	if (startX < 0)
+		startX = 0;
+	if (endX >= MAX_GRID)
+		endX = MAX_GRID-1;
+	if (startY < 0)
+		startY = 0;
+	if (endY >= MAX_GRID)
+		endY = MAX_GRID-1;
+	for (int x = startX; x <= endX; x++)
+	{
+		const signed char *gridColumn = dsq->game->getGridColumn(x);
+		int startCol = -1, endCol;
+		for (int y = startY; y <= endY; y++)
 		{
-			if (x < 0) continue;
-			int v = dsq->game->getGrid(TileVector(x, y));
-			if (v && v == int(obsType) && startRow == -1)
-			{
-				startRow = x;
-			}
-			else if ((!v || v != int(obsType) || x == endX) && startRow != -1)
-			{				
-				float oldHeight2 = height2;
-				if (skip > 1)
-					height2 *= skip;
-				endRow = x-1;
-				switch(obsType)
-				{
-				case OT_INVISIBLE:
-					core->setColor(1,0,0,alpha.getValue());
-				break;
-				case OT_INVISIBLEIN:
-					core->setColor(1, 0.5, 0, alpha.getValue());
-				break;
-				case OT_BLACK:
-					core->setColor(0, 0, 0, 1); 
-					startRow++;
-					endRow--;
-				break;
-				case OT_HURT:
-					core->setColor(1,1,0,alpha.getValue());
-				break;
-				default:
-				break;
-				}
+			int v = gridColumn[y];
+			// HACK: Don't draw the leftmost or rightmost column of
+			// black tiles (otherwise they "leak out" around the
+			// edges of the Sun Temple).  --achurch
+			if (v == OT_BLACK && ((dsq->game->getGridColumn(x-1))[y] != OT_BLACK || (dsq->game->getGridColumn(x+1))[y] != OT_BLACK))
+				v = OT_EMPTY;
 
-				drawx1 = (startRow*TILE_SIZE+width2);
-				drawx2 = (endRow*TILE_SIZE+width2);
-				drawy = (y*TILE_SIZE+height2);
-				/*
-				if (drawx1 > ((dsq->cameraPos.x - width/2)+40))
-					drawx1 += 20;
-				if (drawx2 < ((dsq->cameraPos.x + width/2)-20))
-					drawx2 -= 20;
-				*/
+			if (v == obsType && startCol == -1)
+			{
+				startCol = y;
+			}
+			else if ((v != obsType || y == endY) && startCol != -1)
+			{
+				endCol = y;
+				if (v != obsType)
+					endCol--;
+
+				const float drawx1 = x*TILE_SIZE;
+				const float drawx2 = (x+1)*TILE_SIZE;
+				const float drawy1 = startCol*TILE_SIZE;
+				const float drawy2 = (endCol+1)*TILE_SIZE;
 
 #ifdef BBGE_BUILD_OPENGL
 				glBegin(GL_QUADS);
-					glVertex3f(drawx1-width2, drawy+height2,  0.0f);
-					glVertex3f(drawx2+width2, drawy+height2,  0.0f);
-					glVertex3f(drawx2+width2, drawy-height2,  0.0f);
-					glVertex3f(drawx1-width2, drawy-height2,  0.0f);
+					glVertex3f(drawx1, drawy2, 0.0f);
+					glVertex3f(drawx2, drawy2, 0.0f);
+					glVertex3f(drawx2, drawy1, 0.0f);
+					glVertex3f(drawx1, drawy1, 0.0f);
 				glEnd();
 #endif
 
 #ifdef BBGE_BUILD_DIRECTX
 				core->blitD3DVerts(0,
-					drawx1-width2, drawy-height2,
-					drawx2+width2, drawy-height2,
-					drawx2+width2, drawy+height2,
-					drawx1-width2, drawy+height2);
+					drawx1, drawy1,
+					drawx2, drawy1,
+					drawx2, drawy2,
+					drawx1, drawy2);
 #endif
-				height2 = oldHeight2;
-				startRow = -1;
+				startCol = -1;
 			}
 		}
 	}
