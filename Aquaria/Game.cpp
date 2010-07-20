@@ -7627,9 +7627,36 @@ void Game::onCook()
 		else
 			dsq->main(0.2);
 
+		bool haveLeftovers = true;
 		for (int i = 0; i < foodHolders.size(); i++)
 		{
-			foodHolders[i]->setIngredient(0, false);
+			if (!foodHolders[i]->isEmpty()) {
+				IngredientData *ing = foodHolders[i]->getIngredient();
+				// FIXME: It _looks_ like *ing should be the actual inventory
+				// object, but playing it safe because I'm not sure.  --achurch
+				IngredientData *heldIng = dsq->continuity.getIngredientHeldByName(ing->name);
+				if (!heldIng || heldIng->amount < heldIng->held)
+				{
+					haveLeftovers = false;
+					break;
+				}
+			}
+		}
+		for (int i = 0; i < foodHolders.size(); i++)
+		{
+			if (haveLeftovers)
+			{
+				IngredientData *ing = foodHolders[i]->getIngredient();
+				if (ing)
+				{
+					IngredientData *heldIng = dsq->continuity.getIngredientHeldByName(ing->name);
+					heldIng->amount--;
+				}
+			}
+			else
+			{
+				foodHolders[i]->setIngredient(0, false);
+			}
 		}
 
 		dsq->sound->playSfx("Cook");
