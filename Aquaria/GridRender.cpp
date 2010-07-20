@@ -84,6 +84,12 @@ void GridRender::onRender()
 		for (int y = startY; y <= endY; y++)
 		{
 			int v = gridColumn[y];
+			// HACK: Don't draw the leftmost or rightmost column of
+			// black tiles (otherwise they "leak out" around the
+			// edges of the Sun Temple).  --achurch
+			if (v == OT_BLACK && ((dsq->game->getGridColumn(x-1))[y] != OT_BLACK || (dsq->game->getGridColumn(x+1))[y] != OT_BLACK))
+				v = OT_EMPTY;
+
 			if (v == obsType && startCol == -1)
 			{
 				startCol = y;
