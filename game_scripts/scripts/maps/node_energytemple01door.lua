@@ -22,8 +22,8 @@ v = getVars()
 function init(me)
 	node_setCursorActivation(me, false)
 	local orbHolder = node_getNearestEntity(me)
-	local energyOrb = entity_getNearestEntity(me, "EnergyOrb")
-	if energyOrb ~=0 and orbHolder ~=0 then	
+	local energyOrb = entity_getNearestEntity(orbHolder, "EnergyOrb")
+	if energyOrb ~= 0 and orbHolder ~= 0 then
 		entity_setPosition(energyOrb, entity_x(orbHolder), entity_y(orbHolder))
 		entity_setState(energyOrb, STATE_CHARGED)
 	else
@@ -34,11 +34,10 @@ function init(me)
 		--debugLog("setting door to open")
 		entity_setState(door, STATE_OPENED)
 	end
-	--end
 end
 
 function activate(me)
---[[
+	--[[
 	if getFlag(FLAG_ENERGYTEMPLE01DOOR)==0 then
 		local energyOrb = node_getNearestEntity(me, "EnergyOrb")
 		msg ("HERE")
