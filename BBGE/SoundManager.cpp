@@ -1110,9 +1110,12 @@ void *SoundManager::playSfx(const PlaySfx &play)
 	else if (!play.name.empty())
 		sound = (FMOD::Sound*)getBuffer(play.name);
 #ifdef BBGE_DISABLE_SOUND_CACHE
-	SoundInfo *info = (SoundInfo*)sound;
-	sound = 0;
-	SoundCore::system->createStream(info->file.c_str(), info->mode, 0, &sound);
+	if (sound)
+	{
+		SoundInfo *info = (SoundInfo*)sound;
+		sound = 0;
+		SoundCore::system->createStream(info->file.c_str(), info->mode, 0, &sound);
+	}
 #endif
 
 	if (!sound) return 0;
