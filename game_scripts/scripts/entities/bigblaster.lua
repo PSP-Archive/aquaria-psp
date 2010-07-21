@@ -117,7 +117,8 @@ function update(me, dt)
 			end
 			v.soundDelay = v.soundDelay - dt
 			if v.soundDelay < 0 then
-				entity_playSfx(me, "BlasterIdle")
+				-- Sound doesn't exist, so commenting out.  --achurch
+				--entity_playSfx(me, "BlasterIdle")
 				v.soundDelay = math.random(3)+1
 			end
 		end
