@@ -73,9 +73,7 @@ function doScene(me)
 	watch(1)	
 	cam_toEntity(me)
 	voice("Naija_See13")
-	watch(2)
-	--entity_say(me, "naija...")
-	watch(4)
+	watch(6)
 	--fade(1, 1)
 	
 	--watch(1)
@@ -227,7 +225,6 @@ function update(me, dt)
 			else
 				v.lastNode = getNode(string.format("13_%d", v.curNode))
 				entity_setPosition(me, node_x(v.lastNode), node_y(v.lastNode), -400, 0, 0, 0)
-				--entity_say(me, "follow...")
 			end
 		end
 		if not v.over then
@@ -236,7 +233,6 @@ function update(me, dt)
 			end
 		end
 	end
-	entity_setSayPosition(me, entity_x(me), entity_y(me)-160)
 end
 
 

@@ -28,7 +28,6 @@ public:
 	SchoolFish();
 	int range;
 	std::string swimSound;
-	void activate();
 	void applyLayer(int layer);
 protected:
 	float burstDelay;

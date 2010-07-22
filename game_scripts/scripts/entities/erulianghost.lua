@@ -46,12 +46,6 @@ function init(me)
 	bone_alpha(entity_getBoneByName(me, "Glow"), 0)
 end
 
-function update(me, dt)
-	if isForm(FORM_SPIRIT) then
-		--entity_say(me, "...naija...")
-	end
-end
-
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_animate(me, "idle", LOOP_INF)

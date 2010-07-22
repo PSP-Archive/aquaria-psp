@@ -60,11 +60,11 @@ function update(me, dt)
 	
 	v.delay = v.delay + dt
 	if v.delay > 10 then	
-		entity_say(me, "Where are you going?", SAY_QUEUE)
-		entity_say(me, "Hellooo?", SAY_QUEUE)
-		entity_say(me, "Are you listening to me?!?", SAY_QUEUE)
-		entity_say(me, "...", SAY_QUEUE)
-		entity_say(me, "Fine, then.", SAY_QUEUE)
+		--entity_say(me, "Where are you going?", SAY_QUEUE)
+		--entity_say(me, "Hellooo?", SAY_QUEUE)
+		--entity_say(me, "Are you listening to me?!?", SAY_QUEUE)
+		--entity_say(me, "...", SAY_QUEUE)
+		--entity_say(me, "Fine, then.", SAY_QUEUE)
 		v.delay = 0
 	end
 	--[[
@@ -119,6 +119,6 @@ end
 
 function activate(me)
 	debugLog("activate")
-	entity_say(me, "Get it out!")
+	--entity_say(me, "Get it out!")
 end
 

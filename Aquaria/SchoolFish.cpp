@@ -408,14 +408,6 @@ void SchoolFish::applySeparation(Vector &accumulator)
 	}
 }
 
-void SchoolFish::activate()
-{
-	if (dsq->game->sceneName.find("VEIL") != std::string::npos)
-	{
-		say("Yay, its the Veil!");
-	}
-}
-
 void SchoolFish::onUpdate(float dt)
 {
 	BBGE_PROF(SchoolFish_onUpdate);

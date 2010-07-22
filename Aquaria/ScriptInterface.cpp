@@ -5717,36 +5717,6 @@ luaFunc(entity_setActivation)
 	luaReturnNum(0);
 }
 
-luaFunc(entity_say)
-{
-	Entity *e = entity(L);
-	int n = lua_tonumber(L, 3);
-	if (e)
-	{
-		e->say(getString(L, 2), (SayType)n);
-	}
-	luaReturnNum(0);
-}
-
-luaFunc(entity_isSaying)
-{
-	Entity *e = entity(L);
-	bool b=false;
-	if (e)
-	{
-		b = e->isSaying();
-	}
-	luaReturnBool(b);
-}
-
-luaFunc(entity_setSayPosition)
-{
-	Entity *e = entity(L);
-	if (e)
-		e->sayPosition = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
-	luaReturnNum(0);
-}
-
 luaFunc(entity_setCullRadius)
 {
 	Entity *e = entity(L);
@@ -7459,9 +7429,6 @@ static const struct {
 	luaRegister(entity_setBoneLock),
 	luaRegister(entity_setIngredient),
 	luaRegister(entity_setDeathScene),
-	luaRegister(entity_say),
-	luaRegister(entity_isSaying),
-	luaRegister(entity_setSayPosition),
 
 
 	luaRegister(entity_setClampOnSwitchDir),
@@ -8697,10 +8664,6 @@ static const struct {
 	luaConstantFromClass(BLEND_DEFAULT,	RenderObject),
 	luaConstantFromClass(BLEND_ADD,		RenderObject),
 	{"BLEND_ADDITIVE",					RenderObject::BLEND_ADD},
-
-	luaConstant(SAY_NORMAL),
-	luaConstant(SAY_QUEUE),
-	luaConstant(SAY_INTERUPT),
 
 	{"ENDING_NAIJACAVE",				10},
 	{"ENDING_NAIJACAVEDONE",			11},
