@@ -27,7 +27,8 @@ ADD_DEFINITIONS(-DBBGE_BUILD_ACHIEVEMENTS_INTERNAL=1)
 
 SET(BBGEDIR ${CMAKE_CURRENT_SOURCE_DIR}/BBGE)
 SET(SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/Aquaria)
-SET(LUADIR ${CMAKE_CURRENT_SOURCE_DIR}/Aquaria/lua-5.1.4)
+SET(EXTLIBDIR ${CMAKE_CURRENT_SOURCE_DIR}/ExternalLibs)
+SET(LUADIR ${EXTLIBDIR}/lua-5.1.4)
 SET(LUASRCDIR ${LUADIR}/src)
 
 # Find SDL or use the included library if applicable
@@ -37,13 +38,13 @@ if(NOT AQUARIA_INTERNAL_SDL)
 endif(NOT AQUARIA_INTERNAL_SDL)
 if (NOT SDL_FOUND)
     if(MACOSX)
-        set(SDLDIR "${BBGEDIR}/SDL12")
+        set(SDLDIR "${EXTLIBDIR}/SDL12")
         set(SDL_INCLUDE_DIR "${SDLDIR}/include")
         message(STATUS "Using internal copy of SDL")
         set(SDL_LIBRARY "${SDLDIR}/lib/macosx/libSDL-1.2.0.dylib;${SDLDIR}/lib/macosx/libSDLmain.a")
     elseif(WIN32)
         if(MSVC)
-            set(SDLDIR "${BBGEDIR}/SDL12")
+            set(SDLDIR "${EXTLIBDIR}/SDL12")
             set(SDL_INCLUDE_DIR "${SDLDIR}/include" CACHE PATH "SDL include directory" FORCE)
             message(STATUS "Using internal copy of SDL")
             set(SDLMAIN_LIBRARY "${SDLDIR}/lib/win32/SDLmain.lib" CACHE INTERNAL "")
@@ -65,7 +66,7 @@ endif(NOT AQUARIA_INTERNAL_OPENAL)
 if (NOT OPENAL_FOUND)
     if(WIN32)
         if(MSVC)
-            set(OPENALDIR "${BBGEDIR}/AL")
+            set(OPENALDIR "${EXTLIBDIR}/AL")
             set(OPENAL_INCLUDE_DIR "${OPENALDIR}/include" CACHE PATH "OpenAL include directory" FORCE)
             message(STATUS "Using internal copy of OpenAL")
             set(OPENAL_LIBRARY "${OPENALDIR}/lib/win32/OpenAL32.lib" CACHE FILEPATH "Where the OpenAL library can be found" FORCE)
@@ -77,16 +78,16 @@ if (NOT OPENAL_FOUND)
     endif(WIN32)
 endif (NOT OPENAL_FOUND)
 
-SET(FTGLDIR ${BBGEDIR}/FTGL)
+SET(FTGLDIR ${EXTLIBDIR}/FTGL)
 SET(FTGLSRCDIR ${FTGLDIR}/src)
-SET(FREETYPE2DIR ${BBGEDIR}/freetype2)
+SET(FREETYPE2DIR ${EXTLIBDIR}/freetype2)
 SET(FREETYPE2SRCDIR ${FREETYPE2DIR}/src)
-SET(LIBOGGDIR ${BBGEDIR}/libogg-1.1.3)
-SET(LIBVORBISDIR ${BBGEDIR}/libvorbis-1.1.2)
+SET(LIBOGGDIR ${EXTLIBDIR}/libogg-1.1.3)
+SET(LIBVORBISDIR ${EXTLIBDIR}/libvorbis-1.1.2)
 
 INCLUDE_DIRECTORIES(${BBGEDIR})
 INCLUDE_DIRECTORIES(${BBGEDIR}/GL)
-INCLUDE_DIRECTORIES(${BBGEDIR}/glpng/zlib)
+INCLUDE_DIRECTORIES(${EXTLIBDIR}/glpng/zlib)
 INCLUDE_DIRECTORIES(${SRCDIR})
 INCLUDE_DIRECTORIES(${SDL_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${LUASRCDIR})
@@ -228,29 +229,6 @@ ENDIF(MACOSX)
 
 # Bit Blot Game Engine sources...
 SET(BBGE_SRCS
-    ${BBGEDIR}/glfont2/glfont2.cpp
-    ${BBGEDIR}/glpng/glpng.c
-    ${BBGEDIR}/glpng/png/png.c
-    ${BBGEDIR}/glpng/png/pngerror.c
-    ${BBGEDIR}/glpng/png/pngget.c
-    ${BBGEDIR}/glpng/png/pngmem.c
-    ${BBGEDIR}/glpng/png/pngpread.c
-    ${BBGEDIR}/glpng/png/pngread.c
-    ${BBGEDIR}/glpng/png/pngrio.c
-    ${BBGEDIR}/glpng/png/pngrtran.c
-    ${BBGEDIR}/glpng/png/pngrutil.c
-    ${BBGEDIR}/glpng/png/pngset.c
-    ${BBGEDIR}/glpng/png/pngtrans.c
-    ${BBGEDIR}/glpng/zlib/adler32.c
-    ${BBGEDIR}/glpng/zlib/crc32.c
-    ${BBGEDIR}/glpng/zlib/compress.c
-    ${BBGEDIR}/glpng/zlib/deflate.c
-    ${BBGEDIR}/glpng/zlib/inffast.c
-    ${BBGEDIR}/glpng/zlib/inflate.c
-    ${BBGEDIR}/glpng/zlib/inftrees.c
-    ${BBGEDIR}/glpng/zlib/trees.c
-    ${BBGEDIR}/glpng/zlib/uncompr.c
-    ${BBGEDIR}/glpng/zlib/zutil.c
     ${BBGEDIR}/ActionInput.cpp
     ${BBGEDIR}/ActionMapper.cpp
     ${BBGEDIR}/ActionSet.cpp
@@ -300,13 +278,36 @@ SET(BBGE_SRCS
     ${BBGEDIR}/StateManager.cpp
     ${BBGEDIR}/Strings.cpp
     ${BBGEDIR}/Texture.cpp
-    ${BBGEDIR}/tinyxml.cpp
-    ${BBGEDIR}/tinyxmlerror.cpp
-    ${BBGEDIR}/tinyxmlparser.cpp
     ${BBGEDIR}/TTFFont.cpp
     ${BBGEDIR}/Vector.cpp
     ${BBGEDIR}/FmodOpenALBridge.cpp
     ${COCOA_SRCS}
+    ${EXTLIBDIR}/glfont2/glfont2.cpp
+    ${EXTLIBDIR}/glpng/glpng.c
+    ${EXTLIBDIR}/glpng/png/png.c
+    ${EXTLIBDIR}/glpng/png/pngerror.c
+    ${EXTLIBDIR}/glpng/png/pngget.c
+    ${EXTLIBDIR}/glpng/png/pngmem.c
+    ${EXTLIBDIR}/glpng/png/pngpread.c
+    ${EXTLIBDIR}/glpng/png/pngread.c
+    ${EXTLIBDIR}/glpng/png/pngrio.c
+    ${EXTLIBDIR}/glpng/png/pngrtran.c
+    ${EXTLIBDIR}/glpng/png/pngrutil.c
+    ${EXTLIBDIR}/glpng/png/pngset.c
+    ${EXTLIBDIR}/glpng/png/pngtrans.c
+    ${EXTLIBDIR}/glpng/zlib/adler32.c
+    ${EXTLIBDIR}/glpng/zlib/crc32.c
+    ${EXTLIBDIR}/glpng/zlib/compress.c
+    ${EXTLIBDIR}/glpng/zlib/deflate.c
+    ${EXTLIBDIR}/glpng/zlib/inffast.c
+    ${EXTLIBDIR}/glpng/zlib/inflate.c
+    ${EXTLIBDIR}/glpng/zlib/inftrees.c
+    ${EXTLIBDIR}/glpng/zlib/trees.c
+    ${EXTLIBDIR}/glpng/zlib/uncompr.c
+    ${EXTLIBDIR}/glpng/zlib/zutil.c
+    ${EXTLIBDIR}/tinyxml.cpp
+    ${EXTLIBDIR}/tinyxmlerror.cpp
+    ${EXTLIBDIR}/tinyxmlparser.cpp
 )
 
 # Apparently not used at the moment. Listed here just for completeness.
