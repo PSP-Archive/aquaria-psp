@@ -40,6 +40,12 @@ static jmp_buf png_jmpbuf;
 
 #define VERSION_STRING  VERSION " (r" HG_REVISION ")"
 
+/* Data version, used to warn users if they need to regenerate the PSP data. */
+#define DATA_VERSION  2
+
+/* File into which the data version is written. */
+#define DATA_VERSION_FILE  "data-version.txt"
+
 /*************************************************************************/
 
 /* Pregenerated/preloaded data (built by the Makefile). */
@@ -465,6 +471,20 @@ static void uicb_button_pspin(void)
          || (snprintf(buf,sizeof(buf),"%s/vox",    path), g_access(buf,0) != 0)
         ) {
             ui_show_message("message_bad_sourcedir", dialog);
+            g_free(path);
+            continue;
+        }
+
+        int ok = 0;
+        snprintf(buf, sizeof(buf), "%s/%s", path, DATA_VERSION_FILE);
+        FILE *f = fopen(buf, "r");
+        if (f) {
+            int version = 0;
+            ok = (fscanf(f, "%i", &version) == 1 && version == DATA_VERSION);
+            fclose(f);
+        }
+        if (!ok) {
+            ui_show_message("message_psp_out_of_date", dialog);
             g_free(path);
             continue;
         }
@@ -968,6 +988,14 @@ static void generate_data(const char *in_path, const char *out_path,
     }
 
     free(filelist);
+
+    char buf[16];
+    if (snprintf(buf, sizeof(buf), "%d", DATA_VERSION) >= sizeof(buf)) {
+        ui_show_error("Internal error: buffer overflow!\n"
+                      "Aborting the program.");
+        exit(1);
+    }
+    build_write_file(out_path, DATA_VERSION_FILE, buf, strlen(buf));
 
     #undef CALC_PROGRESS
 }

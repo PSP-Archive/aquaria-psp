@@ -1581,4 +1581,41 @@ Released under the &lt;a href="http://www.gnu.org/licenses/old-licenses/gpl-2.0.
     <property name="visible">True</property>
     <property name="stock">gtk-redo</property>
   </object>
+  <object class="GtkMessageDialog" id="message_psp_out_of_date">
+    <property name="border_width">5</property>
+    <property name="modal">True</property>
+    <property name="window_position">center-on-parent</property>
+    <property name="destroy_with_parent">True</property>
+    <property name="type_hint">dialog</property>
+    <property name="skip_taskbar_hint">True</property>
+    <property name="message_type">error</property>
+    <property name="buttons">ok</property>
+    <property name="text" translatable="yes">This PSP data folder is out of date.</property>
+    <property name="secondary_text" translatable="yes">The data in the PSP data folder you selected seems to have been generated using an old version of the Aquaria PSP Builder, and will not work properly with the current version of the game. You'll need to generate a new PSP data folder from the original game data in order to complete the build. &lt;i&gt;(Note: You may also see this error if the build that created this folder was aborted before it finished.)&lt;/i&gt;</property>
+    <property name="secondary_use_markup">True</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox26">
+        <property name="visible">True</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area26">
+            <property name="visible">True</property>
+            <property name="layout_style">end</property>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
 </interface>
