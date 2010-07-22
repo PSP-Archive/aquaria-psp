@@ -38,9 +38,11 @@ void PathRender::onRender()
 	for (int i = 0; i < pathcount; i++)
 	{
 		Path *p = dsq->game->getPath(i);
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 		if (dsq->game->sceneEditor.selectedIdx == i)
 			glColor4f(1, 1, 1, 0.75);
 		else
+#endif
 			glColor4f(1, 0.5, 0.5, 0.75);
 
 		glBegin(GL_LINES);
@@ -94,9 +96,11 @@ void PathRender::onRender()
 			if (!p->active)
 				a = 0.3;
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 			if (dsq->game->sceneEditor.selectedIdx == i)
 				glColor4f(1, 1, 1, a);
 			else
+#endif
 				glColor4f(1, 0.5, 0.5, a);
 
 			glPushMatrix();

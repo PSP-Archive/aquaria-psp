@@ -2218,7 +2218,7 @@ void Game::reconstructEntityGrid()
 
 void Game::reconstructGrid(bool force)
 {
-	if (!force && sceneEditor.isOn()) return;
+	if (!force && isSceneEditorActive()) return;
 
 	clearGrid();
 	int i = 0;
@@ -2579,8 +2579,10 @@ void Game::loadEntityTypeList()
 	}
 	in2.close();
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	game->sceneEditor.entityPageNum = 0;
 	//game->sceneEditor.page = entityGroups.begin();
+#endif
 }
 
 EntityClass *Game::getEntityClassForEntityType(const std::string &type)
@@ -6120,7 +6122,7 @@ void Game::setElementLayerFlags()
 		if (i == LR_ELEMENTS11)
 			continue;
 
-		dsq->getRenderObjectLayer(i)->setOptimizeStatic(!sceneEditor.isOn());
+		dsq->getRenderObjectLayer(i)->setOptimizeStatic(!isSceneEditorActive());
 	}
 }
 
@@ -6208,9 +6210,11 @@ void Game::action(int id, int state)
 		}
 	}
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (id == ACTION_TOGGLESCENEEDITOR && !state)		toggleSceneEditor();
+#endif
 
-	if (dsq->isDeveloperKeys() || sceneEditor.isOn())
+	if (dsq->isDeveloperKeys() || isSceneEditorActive())
 	{
 		if (id == ACTION_TOGGLEGRID && !state)			toggleGridRender();
 	}
@@ -6660,7 +6664,7 @@ void Game::applyState()
 	li = 0;
 
 
-#ifdef BUILD_SCENEEDITOR
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (dsq->isDeveloperKeys() || dsq->mod.isActive())
 	{
 		sceneEditor.init();
@@ -7140,7 +7144,7 @@ void Game::bindInput()
 	//ActionMapper::clearCreatedEvents();
 
 
-#ifdef BUILD_SCENEEDITOR
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (dsq->isDeveloperKeys() || dsq->mod.isActive())
 	{
 		//addAction(MakeFunctionEvent(Game, toggleSceneEditor), KEY_TAB, 0);
@@ -8001,7 +8005,7 @@ void Game::onToggleHelpScreen()
 
 void Game::toggleHelpScreen(bool on, const std::string &label)
 {
-	if (dsq->game->sceneEditor.isOn()) return;
+	if (dsq->game->isSceneEditorActive()) return;
 
 	if (inHelpScreen == on) return;
 	if (core->getShiftState()) return;
@@ -8866,6 +8870,7 @@ CollideData Game::collideCircleWithAllEntities(Vector pos, float r, Entity *me, 
 	return c;
 }
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 void Game::toggleSceneEditor()
 {
 	if (!core->getAltState())
@@ -8874,6 +8879,7 @@ void Game::toggleSceneEditor()
 		setElementLayerFlags();
 	}
 }
+#endif
 
 void Game::toggleMiniMapRender()
 {
@@ -10023,7 +10029,7 @@ void Game::updateCursor(float dt)
 		}
 	}
 
-	if (sceneEditor.isOn() || dsq->game->isPaused() || (!avatar || !avatar->isInputEnabled()) ||
+	if (isSceneEditorActive() || dsq->game->isPaused() || (!avatar || !avatar->isInputEnabled()) ||
 		(dsq->game->miniMapRender && dsq->game->miniMapRender->isCursorIn())
 		)
 	{
@@ -10031,7 +10037,7 @@ void Game::updateCursor(float dt)
 		// Don't show the cursor in keyboard/joystick mode if it's not
 		// already visible (this keeps the cursor from appearing for an
 		// instant during map fadeout).
-		if (dsq->inputMode == INPUT_MOUSE || sceneEditor.isOn() || dsq->game->isPaused())
+		if (dsq->inputMode == INPUT_MOUSE || isSceneEditorActive() || dsq->game->isPaused())
 			dsq->cursor->alphaMod = 0.5;
 		
 		/*
@@ -10528,7 +10534,7 @@ void Game::update(float dt)
 
 	}
 
-#ifdef BUILD_SCENEEDITOR
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	{
 		sceneEditor.update(dt);
 	}
@@ -10664,7 +10670,7 @@ void Game::update(float dt)
 		dsq->cursorBlinker->alpha.interpolateTo(0, 0.1);
 	}
 
-	if (!this->sceneEditor.isOn())
+	if (!isSceneEditorActive())
 	{
 		if (!isPaused())
 			waterLevel.update(dt);
@@ -11061,9 +11067,11 @@ void Game::removeState()
 		avatar->endOfGameState();
 	}
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	debugLog("toggle sceneEditor");
 	if (sceneEditor.isOn())
 		sceneEditor.toggle(false);
+#endif
 
 	debugLog("gameSpeed");
 	dsq->gameSpeed.interpolateTo(1, 0);
@@ -11159,7 +11167,7 @@ void Game::removeState()
 	dsq->clearEntities();
 	avatar = 0;
 	//items.clear();
-#ifdef BUILD_SCENEEDITOR
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	sceneEditor.shutdown();
 #endif
 

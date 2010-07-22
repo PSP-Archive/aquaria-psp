@@ -29,6 +29,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "GridRender.h"
 
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR  // Through end of file
+
+
 #ifdef BBGE_BUILD_WINDOWS
 	#include <shellapi.h>
 #endif
@@ -3853,3 +3856,5 @@ void SceneEditor::prevEntityType()
 	}
 }
 
+
+#endif  // AQUARIA_BUILD_SCENEEDITOR
