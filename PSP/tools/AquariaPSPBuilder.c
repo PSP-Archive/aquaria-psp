@@ -32,7 +32,7 @@ static jmp_buf png_jmpbuf;
  * current Mercurial revision, which should be defined on the compilation
  * command line with e.g. -DHG_REVISION=\"revision\" (for GCC -- note the
  * backslashes!), to form the final version string. */
-#define VERSION  "1.1"
+#define VERSION  "1.2"
 
 #ifndef HG_REVISION
 # error Define HG_REVISION on the compilation command line.
@@ -1197,9 +1197,9 @@ static Texture *parse_png(const uint8_t *data, uint32_t size)
     }
     if (png_get_valid(png, info, PNG_INFO_tRNS)) {
         png_set_tRNS_to_alpha(png);
-    }
-    if (color_type == PNG_COLOR_TYPE_RGB
-     || color_type == PNG_COLOR_TYPE_GRAY
+    } else if (color_type == PNG_COLOR_TYPE_RGB
+            || color_type == PNG_COLOR_TYPE_PALETTE
+            || color_type == PNG_COLOR_TYPE_GRAY
     ) {
         png_set_add_alpha(png, 0xFF, PNG_FILLER_AFTER);
     }
