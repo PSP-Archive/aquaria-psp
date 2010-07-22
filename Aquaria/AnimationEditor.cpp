@@ -24,6 +24,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/DebugFont.h"
 #include "Game.h"
 
+
+#ifdef AQUARIA_BUILD_SCENEEDITOR  // Through end of file
+
+
 const int TIMELINE_GRIDSIZE		= 10;
 const float TIMELINE_UNIT		= 0.1;
 
@@ -1179,3 +1183,6 @@ void AnimationEditor::moveNextWidgets(float dt)
 	}
 	
 }
+
+
+#endif  // AQUARIA_BUILD_SCENEEDITOR

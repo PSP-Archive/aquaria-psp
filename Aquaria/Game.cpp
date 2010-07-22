@@ -2139,7 +2139,7 @@ void Game::reconstructEntityGrid()
 
 void Game::reconstructGrid(bool force)
 {
-	if (!force && sceneEditor.isOn()) return;
+	if (!force && isSceneEditorActive()) return;
 
 	clearGrid();
 	int i = 0;
@@ -2500,8 +2500,10 @@ void Game::loadEntityTypeList()
 	}
 	in2.close();
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	game->sceneEditor.entityPageNum = 0;
 	//game->sceneEditor.page = entityGroups.begin();
+#endif
 }
 
 EntityClass *Game::getEntityClassForEntityType(const std::string &type)
@@ -6103,9 +6105,11 @@ void Game::action(int id, int state)
 		}
 	}
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (id == ACTION_TOGGLESCENEEDITOR && !state)		toggleSceneEditor();
+#endif
 
-	if (dsq->isDeveloperKeys() || sceneEditor.isOn())
+	if (dsq->isDeveloperKeys() || isSceneEditorActive())
 	{
 		if (id == ACTION_TOGGLEGRID && !state)			toggleGridRender();
 	}
@@ -7831,7 +7835,7 @@ void Game::onToggleHelpScreen()
 
 void Game::toggleHelpScreen(bool on, const std::string &label)
 {
-	if (dsq->game->sceneEditor.isOn()) return;
+	if (dsq->game->isSceneEditorActive()) return;
 
 	if (inHelpScreen == on) return;
 	if (core->getShiftState()) return;
@@ -8697,11 +8701,13 @@ CollideData Game::collideCircleWithAllEntities(Vector pos, int r, Entity *me, in
 	return c;
 }
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 void Game::toggleSceneEditor()
 {
 	if (!core->getAltState())
 		sceneEditor.toggle();
 }
+#endif
 
 void Game::toggleMiniMapRender()
 {
@@ -9855,7 +9861,7 @@ void Game::updateCursor(float dt)
 	}
 
 	bool inMiniMap = (dsq->game->miniMapRender && (dsq->game->miniMapRender->getWorldPosition() - core->mouse.position).isLength2DIn(64));
-	if (sceneEditor.isOn() || dsq->game->isPaused() || (!avatar || !avatar->isInputEnabled()) ||
+	if (isSceneEditorActive() || dsq->game->isPaused() || (!avatar || !avatar->isInputEnabled()) ||
 		(dsq->game->miniMapRender && dsq->game->miniMapRender->isCursorIn())
 		)
 	{
@@ -10497,7 +10503,7 @@ void Game::update(float dt)
 		dsq->cursorBlinker->alpha.interpolateTo(0, 0.1);
 	}
 
-	if (!this->sceneEditor.isOn())
+	if (!isSceneEditorActive())
 	{
 		if (!isPaused())
 			waterLevel.update(dt);
@@ -10894,9 +10900,11 @@ void Game::removeState()
 		avatar->endOfGameState();
 	}
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	debugLog("toggle sceneEditor");
 	if (sceneEditor.isOn())
 		sceneEditor.toggle(false);
+#endif
 
 	debugLog("gameSpeed");
 	dsq->gameSpeed.interpolateTo(1, 0);

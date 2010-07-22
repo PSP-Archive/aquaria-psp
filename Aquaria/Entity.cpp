@@ -3309,7 +3309,8 @@ void Entity::render()
 		color = dsq->game->sceneColor * color * dsq->game->sceneColor2 * dsq->game->sceneColor3;
 	}
 
-	if (dsq->game->sceneEditor.isOn() && dsq->game->sceneEditor.editType == ET_ENTITIES)
+#ifdef AQUARIA_BUILD_SCENEEDITOR
+	if (dsq->game->isSceneEditorActive() && dsq->game->sceneEditor.editType == ET_ENTITIES)
 	{
 		if (dsq->game->sceneEditor.editingEntity == this)
 			renderBorderColor = Vector(1,1,1);
@@ -3318,6 +3319,8 @@ void Entity::render()
 		renderBorder = true;
 		//errorLog("!^!^$");
 	}
+#endif
+
 	// HACK: need to multiply base + etc
 	//skeletalSprite.shareColor(this->color);
 	skeletalSprite.multiplyColor(this->color);
