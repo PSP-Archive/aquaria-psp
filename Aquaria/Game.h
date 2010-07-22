@@ -94,8 +94,8 @@ const char CHAR_RIGHT		= 'r';
 
 const float MIN_SIZE = 0.1;
 
-#ifndef AQUARIA_DEMO
-	#define AQUARIA_BUILD_SCENEEDITOR	1
+#ifdef AQUARIA_DEMO
+	#undef AQUARIA_BUILD_SCENEEDITOR
 #endif
 
 //#include "GridRender.h"
