@@ -849,7 +849,7 @@ Released under the &lt;a href="http://www.gnu.org/licenses/old-licenses/gpl-2.0.
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkLabel" id="label1">
+                              <object class="GtkLabel" id="label_hide_filenames">
                                 <property name="visible">True</property>
                                 <property name="xalign">0</property>
                                 <property name="label" translatable="yes">      (The data filenames can spoil parts of the game's
@@ -1488,7 +1488,7 @@ Released under the &lt;a href="http://www.gnu.org/licenses/old-licenses/gpl-2.0.
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="image">image_quit</property>
+                <property name="image">image_quit2</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -1542,6 +1542,7 @@ Released under the &lt;a href="http://www.gnu.org/licenses/old-licenses/gpl-2.0.
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="image">image_quit</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -1617,5 +1618,9 @@ Released under the &lt;a href="http://www.gnu.org/licenses/old-licenses/gpl-2.0.
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkImage" id="image_quit2">
+    <property name="visible">True</property>
+    <property name="stock">gtk-quit</property>
   </object>
 </interface>

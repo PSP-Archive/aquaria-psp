@@ -680,6 +680,7 @@ static void uicb_button_build_gendata(void)
         GTK_PROGRESS_BAR(ui_get_widget("progress_build")), "Finished!"
     );
     gtk_widget_set_sensitive(ui_get_widget("check_hide_filenames"), FALSE);
+    gtk_widget_set_sensitive(ui_get_widget("label_hide_filenames"), FALSE);
     gtk_toggle_button_set_active(
         GTK_TOGGLE_BUTTON(ui_get_widget("button_build_pause")), FALSE
     );
@@ -731,6 +732,7 @@ static void uicb_button_build_reuse(void)
         GTK_PROGRESS_BAR(ui_get_widget("progress_build")), "Finished!"
     );
     gtk_widget_set_sensitive(ui_get_widget("check_hide_filenames"), FALSE);
+    gtk_widget_set_sensitive(ui_get_widget("label_hide_filenames"), FALSE);
     gtk_toggle_button_set_active(
         GTK_TOGGLE_BUTTON(ui_get_widget("button_build_pause")), FALSE
     );
