@@ -6518,7 +6518,7 @@ void Game::applyState()
 	li = 0;
 
 
-#ifdef BUILD_SCENEEDITOR
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (dsq->isDeveloperKeys() || dsq->mod.isActive())
 	{
 		sceneEditor.init();
@@ -6999,7 +6999,7 @@ void Game::bindInput()
 	//ActionMapper::clearCreatedEvents();
 
 
-#ifdef BUILD_SCENEEDITOR
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (dsq->isDeveloperKeys() || dsq->mod.isActive())
 	{
 		//addAction(MakeFunctionEvent(Game, toggleSceneEditor), KEY_TAB, 0);
@@ -10359,7 +10359,7 @@ void Game::update(float dt)
 
 	}
 
-#ifdef BUILD_SCENEEDITOR
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	{
 		sceneEditor.update(dt);
 	}
@@ -10998,7 +10998,7 @@ void Game::removeState()
 	dsq->entities.clear();
 	avatar = 0;
 	//items.clear();
-#ifdef BUILD_SCENEEDITOR
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	sceneEditor.shutdown();
 #endif
 
