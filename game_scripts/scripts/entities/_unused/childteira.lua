@@ -29,7 +29,6 @@ function init(me)
 	entity_animate(me, "idle", LOOP_INF)
 	entity_scale(me, 0.6, 0.6)
 	entity_setActivation(me, AT_CLICK, 80, 256)
-	entity_setAffectedBySpells(me, 0)
 end
 
 function update(me, dt)

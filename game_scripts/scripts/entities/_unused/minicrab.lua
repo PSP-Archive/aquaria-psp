@@ -100,8 +100,9 @@ function update(dt)
 		if v.fireDelay > 0 then
 			v.fireDelay = v.fireDelay - dt
 			if v.fireDelay < 0 then
+				-- FIXME: obsolete function
 				-- dmg, mxspd, homing, numsegs, out
-				entity_fireAtTarget(1, 1000, 200, 3, 64)
+				--entity_fireAtTarget(1, 1000, 200, 3, 64)
 				v.fireDelay = 5
 			end
 		end

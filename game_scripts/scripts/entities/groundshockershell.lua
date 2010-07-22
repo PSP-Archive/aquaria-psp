@@ -39,7 +39,6 @@ function init(me)
 	2000							-- updateCull -1: disabled, default: 4000
 	)
 
-	entity_setAffectedBySpells(me, 1)
 	entity_setBounce(me, 0.2)	
 	entity_setCanLeaveWater(me, true)
 	

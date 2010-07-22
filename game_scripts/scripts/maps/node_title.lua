@@ -95,7 +95,6 @@ function update(me, dt)
 		v.mbDown = false
 		local node = getNodeToActivate()
 		setNodeToActivate(0)
-		stopCursorGlow()
 		if node ~= 0 then
 			node_activate(node, 0)
 		end
