@@ -28,7 +28,6 @@ public:
 	SchoolFish(const std::string &texname = "flock-0001");
 	int range;
 	std::string swimSound;
-	void activate();
 	void applyLayer(int layer);
 protected:
 	float burstDelay;

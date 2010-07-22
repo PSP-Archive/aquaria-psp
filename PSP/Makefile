@@ -154,9 +154,10 @@ endif
 
 # Source sets and set-specific flags.
 
+EXTLIB_DIR       = ../ExternalLibs
+
 BBGE_DIR         = ../BBGE
-BBGE_SOURCES     = $(BBGE_DIR)/glfont2/glfont2.cpp \
-                   $(BBGE_DIR)/ActionInput.cpp \
+BBGE_SOURCES     = $(BBGE_DIR)/ActionInput.cpp \
                    $(BBGE_DIR)/ActionMapper.cpp \
                    $(BBGE_DIR)/ActionSet.cpp \
                    $(BBGE_DIR)/AfterEffect.cpp \
@@ -205,29 +206,31 @@ BBGE_SOURCES     = $(BBGE_DIR)/glfont2/glfont2.cpp \
                    $(BBGE_DIR)/StateManager.cpp \
                    $(BBGE_DIR)/Strings.cpp \
                    $(BBGE_DIR)/Texture.cpp \
-                   $(BBGE_DIR)/tinyxml.cpp \
-                   $(BBGE_DIR)/tinyxmlerror.cpp \
-                   $(BBGE_DIR)/tinyxmlparser.cpp \
                    $(BBGE_DIR)/TTFFont.cpp \
                    $(BBGE_DIR)/Vector.cpp \
                    $(BBGE_DIR)/FmodPSPBridge.cpp \
-                   ${BBGE_DIR}/FTGL/src/FTCharmap.cpp \
-                   ${BBGE_DIR}/FTGL/src/FTContour.cpp \
-                   ${BBGE_DIR}/FTGL/src/FTFace.cpp \
-                   ${BBGE_DIR}/FTGL/src/FTFont.cpp \
-                   ${BBGE_DIR}/FTGL/src/FTGLTextureFont.cpp \
-                   ${BBGE_DIR}/FTGL/src/FTGlyph.cpp \
-                   ${BBGE_DIR}/FTGL/src/FTGlyphContainer.cpp \
-                   ${BBGE_DIR}/FTGL/src/FTLibrary.cpp \
-                   ${BBGE_DIR}/FTGL/src/FTPoint.cpp \
-                   ${BBGE_DIR}/FTGL/src/FTSize.cpp \
-                   ${BBGE_DIR}/FTGL/src/FTTextureGlyph.cpp
+                   $(EXTLIB_DIR)/FTGL/src/FTCharmap.cpp \
+                   $(EXTLIB_DIR)/FTGL/src/FTContour.cpp \
+                   $(EXTLIB_DIR)/FTGL/src/FTFace.cpp \
+                   $(EXTLIB_DIR)/FTGL/src/FTFont.cpp \
+                   $(EXTLIB_DIR)/FTGL/src/FTGLTextureFont.cpp \
+                   $(EXTLIB_DIR)/FTGL/src/FTGlyph.cpp \
+                   $(EXTLIB_DIR)/FTGL/src/FTGlyphContainer.cpp \
+                   $(EXTLIB_DIR)/FTGL/src/FTLibrary.cpp \
+                   $(EXTLIB_DIR)/FTGL/src/FTPoint.cpp \
+                   $(EXTLIB_DIR)/FTGL/src/FTSize.cpp \
+                   $(EXTLIB_DIR)/FTGL/src/FTTextureGlyph.cpp \
+                   $(EXTLIB_DIR)/glfont2/glfont2.cpp \
+                   $(EXTLIB_DIR)/tinyxml.cpp \
+                   $(EXTLIB_DIR)/tinyxmlerror.cpp \
+                   $(EXTLIB_DIR)/tinyxmlparser.cpp
 BBGE_OBJECTS    := $(BBGE_SOURCES:%.cpp=%.o)
 BBGE_CXXFLAGS    = $(CXXFLAGS) -Wno-reorder -Wno-sign-compare \
                    -Wno-strict-overflow -Wno-switch \
                    $(-I_freetype) $(-I_libogg) $(-I_libvorbis) \
                    -Isrc $(-DCAN_OVERRIDE_STRTOF) \
-                   -I$(BBGE_DIR) -I$(BBGE_DIR)/GL -I$(BBGE_DIR)/FTGL/include \
+                   -I$(BBGE_DIR) -I$(BBGE_DIR)/GL \
+                   -I$(EXTLIB_DIR)/FTGL/include \
                    -DHAVE_STRCASECMP=1 -DTIXML_USE_STL=1 \
                    -DBBGE_BUILD_PSP=1 -DBBGE_BUILD_OPENGL=1 \
                    -DGL_GLEXT_LEGACY=1 -DBBGE_BUILD_WIDESCREEN=1 \
@@ -324,7 +327,7 @@ PACKAGE_OBJECTS :=
 
 #-------------------------------------
 
-freetype_DIR       = ../BBGE/freetype2
+freetype_DIR       = $(EXTLIB_DIR)/freetype2
 freetype_SOURCES   = $(freetype_DIR)/src/base/ftsystem.c \
                      $(freetype_DIR)/src/base/ftdebug.c \
                      $(freetype_DIR)/src/base/ftinit.c \
@@ -388,7 +391,7 @@ endif
 
 #-------------------------------------
 
-libogg_DIR         = ../BBGE/libogg-1.1.3
+libogg_DIR         = $(EXTLIB_DIR)/libogg-1.1.3
 libogg_SOURCES     = $(libogg_DIR)/src/bitwise.c \
                      $(libogg_DIR)/src/framing.c
 libogg_OBJECTS    := $(libogg_SOURCES:%.c=%.o)
@@ -405,7 +408,7 @@ endif
 
 #-------------------------------------
 
-libvorbis_DIR      = ../BBGE/libvorbis-1.1.2
+libvorbis_DIR      = $(EXTLIB_DIR)/libvorbis-1.1.2
 libvorbis_SOURCES  = $(libvorbis_DIR)/lib/analysis.c \
                      $(libvorbis_DIR)/lib/bitrate.c \
                      $(libvorbis_DIR)/lib/block.c \
@@ -441,7 +444,7 @@ endif
 
 #-------------------------------------
 
-lua_DIR            = ../Aquaria/lua-5.1.4
+lua_DIR            = $(EXTLIB_DIR)/lua-5.1.4
 lua_SOURCES        = $(lua_DIR)/src/lapi.c \
                      $(lua_DIR)/src/ldebug.c \
                      $(lua_DIR)/src/ldo.c \

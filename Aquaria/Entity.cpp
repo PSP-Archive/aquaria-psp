@@ -26,7 +26,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Avatar.h"
 #include "ScriptedEntity.h"
 #include "Shot.h"
-#include "WaterFont.h"
 
 Shader Entity::blurShader;
 
@@ -57,78 +56,6 @@ void Entity::entityDied(Entity *e)
 			setBoneLock(BoneLock());
 		}
 	}
-}
-
-// this function is only called if addDeathNotify is called first
-void Entity::deathNotify(RenderObject *r)
-{
-	DFSprite::deathNotify(r);
-	if ((RenderObject*)saytext == r)
-	{
-		saytext = 0;
-		debugLog("playing queued say");
-		if (!sayQueue.empty())
-		{
-			say(sayQueue.front());
-			sayQueue.pop();
-		}
-	}
-}
-
-bool Entity::isSaying()
-{
-	return saytext != 0;
-}
-
-void Entity::say(const std::string &dialogue, SayType st)
-{
-	std::ostringstream os;
-	os << "say(" << dialogue << ", " << (int)st << ")";
-	debugLog(os.str());
-
-	if (st == SAY_QUEUE && isSaying())
-	{
-		sayQueue.push(dialogue);
-		return;
-	}
-
-	if (st == SAY_INTERUPT)
-	{
-		while (!sayQueue.empty())
-			sayQueue.pop();
-	}
-
-	if (saytext)
-	{
-		saytext->setDecayRate(2);
-		saytext->setLife(1);
-		saytext->fadeAlphaWithLife = 1;
-		saytext = 0;
-	}
-
-	float t = 6;
-
-	saytext = new WaterFont;
-	dsq->game->addRenderObject(saytext, LR_PARTICLES);
-
-	//saytext->scrollText(dialogue, 0.1);
-	saytext->setText(dialogue);
-
-	float a = 0.5;
-	saytext->alpha.ensureData();
-	saytext->alpha.data->path.addPathNode(0, 0);
-	saytext->alpha.data->path.addPathNode(a, 0.2);
-	saytext->alpha.data->path.addPathNode(a, 0.8);
-	saytext->alpha.data->path.addPathNode(0, 1);
-	saytext->alpha.startPath(t);
-
-	saytext->setDecayRate(1.0f/t);
-	saytext->setLife(1);
-
-	saytext->scale = Vector(0.8, 0.8);
-	saytext->scale.interpolateTo(Vector(1,1),t,0,0,1);
-	//saytext->fadeAlphaWithLife = 1;
-	saytext->addDeathNotify(this);
 }
 
 void Entity::setBounceType(BounceType bt)
@@ -262,7 +189,6 @@ Entity::Entity() : StateMachine(), DFSprite()
 	setv(EV_BEASTBURST, 1);
 	setv(EV_WEBSLOW, 100);
 	//debugLog("Entity::Entity()");
-	sayOffset = Vector(0,-80);
 	//clampOnSwitchDir = true;
 	//registerEntityDied = false;
 	invincible = false;
@@ -380,14 +306,6 @@ Entity::Entity() : StateMachine(), DFSprite()
 
 	setDamageTarget(DT_AVATAR_BUBBLE, false);
 	setDamageTarget(DT_AVATAR_SEED, false);
-
-
-	/*
-	saytext = new BitmapText(&dsq->font);
-	saytext->alpha = 0;
-	dsq->game->addRenderObject(saytext, LR_PARTICLES);
-	*/
-	saytext = 0;
 
 
 	//debugLog("End Entity::Entity()");
@@ -1920,14 +1838,6 @@ void Entity::onUpdate(float dt)
 	}
 	vel2.update(dt);
 
-	if (saytext)
-	{
-		if (sayPosition.isZero())
-			saytext->position = position + sayOffset;
-		else
-			saytext->position = sayPosition;
-	}
-
 	if (boneLockDelay > 0)
 	{
 		boneLockDelay -= dt;
@@ -3276,7 +3186,8 @@ void Entity::render()
 		color *= multColor;
 	}
 
-	if (dsq->game->sceneEditor.isOn() && dsq->game->sceneEditor.editType == ET_ENTITIES)
+#ifdef AQUARIA_BUILD_SCENEEDITOR
+	if (dsq->game->isSceneEditorActive() && dsq->game->sceneEditor.editType == ET_ENTITIES)
 	{
 		if (dsq->game->sceneEditor.editingEntity == this)
 			renderBorderColor = Vector(1,1,1);
@@ -3285,6 +3196,8 @@ void Entity::render()
 		renderBorder = true;
 		//errorLog("!^!^$");
 	}
+#endif
+
 	// HACK: need to multiply base + etc
 	skeletalSprite.setColorMult(this->color, this->alpha.x);
 	bool set=false;

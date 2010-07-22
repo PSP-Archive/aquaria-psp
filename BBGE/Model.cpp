@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "cal3d/cal3d.h"
 
-#include "glpng.h"
+#include "../ExternalLibs/glpng.h"
 
 const std::string modelPath = "models/";
 

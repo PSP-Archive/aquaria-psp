@@ -20,9 +20,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #pragma once
 
-#include "../BBGE/tinyxml.h"
+#include "../ExternalLibs/tinyxml.h"
 #include "../BBGE/DebugFont.h"
-#include "../BBGE/glpng.h"
+#include "../ExternalLibs/glpng.h"
 
 #include "DSQ.h"
 #include "AquariaMenuItem.h"
@@ -98,10 +98,8 @@ const char CHAR_RIGHT		= 'r';
 
 const float MIN_SIZE = 0.1;
 
-#ifndef BBGE_BUILD_PSP
-#ifndef AQUARIA_DEMO
-	#define BUILD_SCENEEDITOR	1
-#endif
+#ifdef AQUARIA_DEMO
+	#undef AQUARIA_BUILD_SCENEEDITOR
 #endif
 
 //#include "GridRender.h"
@@ -128,6 +126,7 @@ struct EntityGroup
 
 typedef std::vector<EntityGroup> EntityGroups;
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 enum EditTypes
 {
 	ET_NONE			=-1,
@@ -137,6 +136,7 @@ enum EditTypes
 	ET_SELECTENTITY =4,
 	ET_MAX
 };
+#endif
 
 class FollowSym : public Quad
 {
@@ -344,6 +344,7 @@ enum FlagCheckType
 	OR		=1
 };
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 enum EditorStates
 {
 	ES_SELECTING	=0,
@@ -359,6 +360,7 @@ enum SelectionType
 	ST_MULTIPLE		,
 	ST_MAX
 };
+#endif
 
 class EntityClass
 {
@@ -371,6 +373,8 @@ public:
 	bool script;
 	int idx;
 };
+
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 
 class SceneEditorMenuReceiver : public DebugButtonReceiver
 {
@@ -584,6 +588,9 @@ protected:
 	DebugFont *text;
 	bool on;
 };
+
+#endif  // AQUARIA_BUILD_SCENEEDITOR
+
 typedef std::vector<Quad*> QuadList;
 typedef std::vector<QuadList> QuadArray;
 
@@ -777,7 +784,12 @@ public:
 	Path *getNearestPath(Path *p, std::string name);
 
 	std::string avatarTransit;
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	SceneEditor sceneEditor;
+	bool isSceneEditorActive() {return sceneEditor.isOn();}
+#else
+	bool isSceneEditorActive() const {return false;}
+#endif
 
 	bool isInGameMenu();
 
@@ -1164,7 +1176,9 @@ protected:
 	Entity *cameraFollowEntity;
 	bool loadSceneXML(std::string scene);
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	void toggleSceneEditor();
+#endif
 
 
 

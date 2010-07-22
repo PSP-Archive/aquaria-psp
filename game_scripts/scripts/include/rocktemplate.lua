@@ -32,7 +32,6 @@ function commonInit(me, gfx, r)
 	entity_setProperty(me, EP_BLOCKER, true)
 	v.myWeight = 400
 	entity_setCollideRadius(me, r)
-	entity_setAffectedBySpells(me, 1)
 	entity_setBounce(me, 0.2)	
 	entity_setCanLeaveWater(me, true)
 	

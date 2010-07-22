@@ -34,7 +34,6 @@ function init(me)
 	entity_setProperty(me, EP_MOVABLE, true)
 	entity_setWeight(me, 100)
 	entity_setCollideRadius(me, 32)
-	entity_setAffectedBySpells(me, 1)
 	
 	--entity_setProperty(me, EP_BATTERY, true)
 end

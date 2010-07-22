@@ -19,7 +19,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "../BBGE/MathFunctions.h"
-#include "../BBGE/glpng.h"
+#include "../ExternalLibs/glpng.h"
 #include "../BBGE/Gradient.h"
 #include "../BBGE/DebugFont.h"
 
@@ -33,6 +33,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // dependency on glpng.
 # define pngLoadRaw(path,info) false
 #endif
+
+
+#ifdef AQUARIA_BUILD_SCENEEDITOR  // Through end of file
 
 
 #ifdef BBGE_BUILD_WINDOWS
@@ -3859,3 +3862,5 @@ void SceneEditor::prevEntityType()
 	}
 }
 
+
+#endif  // AQUARIA_BUILD_SCENEEDITOR

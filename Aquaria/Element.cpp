@@ -354,7 +354,8 @@ void Element::setElementEffectByIndex(int eidx)
 void Element::render()
 {
 	if (!elementActive) return;
-	if (dsq->game->sceneEditor.isOn() && this->bgLayer == dsq->game->sceneEditor.bgLayer
+#ifdef AQUARIA_BUILD_SCENEEDITOR
+	if (dsq->game->isSceneEditorActive() && this->bgLayer == dsq->game->sceneEditor.bgLayer
 		&& dsq->game->sceneEditor.editType == ET_ELEMENTS)
 	{
 		renderBorderColor = Vector(0.5,0.5,0.5);
@@ -374,6 +375,7 @@ void Element::render()
 		renderBorder = true;
 		//errorLog("!^!^$");
 	}
+#endif
 	
 	if (this->elementEffectType == EFX_WAVY)
 	{

@@ -19,7 +19,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "../BBGE/DebugFont.h"
-#include "../BBGE/glpng.h"
+#include "../ExternalLibs/glpng.h"
 #include "../BBGE/AfterEffect.h"
 #include "../BBGE/ProfRender.h"
 
@@ -257,10 +257,14 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 
 	addStateInstance(game = new Game);
 	addStateInstance(new GameOver);
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	addStateInstance(new AnimationEditor);
+#endif
 	addStateInstance(new Intro2);
 	addStateInstance(new BitBlotLogo);
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	addStateInstance(new ParticleEditor);
+#endif
 	addStateInstance(new Credits);
 	addStateInstance(new Intro);
 	addStateInstance(new Nag);
@@ -620,7 +624,7 @@ void DSQ::debugMenu()
 			*/
 
 
-			if (!dsq->game->sceneEditor.isOn())
+			if (!dsq->game->isSceneEditorActive())
 				dsq->game->togglePause(false);
 			if (!s.empty())
 			{
@@ -3948,7 +3952,7 @@ void DSQ::onMouseInput()
 {
 	if (dsq->game && dsq->game->avatar)
 	{
-		if (!dsq->game->isInGameMenu() && !dsq->game->sceneEditor.isOn() && !dsq->game->isPaused())
+		if (!dsq->game->isInGameMenu() && !dsq->game->isSceneEditorActive() && !dsq->game->isPaused())
 		{
 			bool limitRange = true;
 			int range = 300;

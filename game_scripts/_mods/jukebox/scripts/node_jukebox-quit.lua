@@ -60,7 +60,6 @@ function activate(me)
 	end
 
 	setNodeToActivate(0)
-	stopCursorGlow()
 	
 	if doQuit then
 		fadeOutMusic(2)

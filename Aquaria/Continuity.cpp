@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "AutoMap.h"
 #include "GridRender.h"
 
-#include "../BBGE/tinyxml.h"
+#include "../ExternalLibs/tinyxml.h"
 
 #ifdef BBGE_BUILD_PSP
 #include "../PSP/src/quickpng.h"

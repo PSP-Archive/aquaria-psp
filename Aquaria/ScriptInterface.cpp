@@ -527,15 +527,6 @@ luaFunc(setGameOver)
 	luaReturnNum(0);
 }
 
-luaFunc(reloadTextures)
-{
-	dsq->precacher.clean();
-	dsq->precacher.precacheList("data/precache.txt");
-	dsq->reloadResources();
-
-	luaReturnNum(0);
-}
-
 luaFunc(setStory)
 {
 	dsq->continuity.setStory(lua_tonumber(L, 1));
@@ -950,19 +941,6 @@ luaFunc(entity_setTargetPriority)
 	luaReturnNum(0);
 }
 
-luaFunc(entity_setNodeGroupActive)
-{
-	errorLog("setNodeGroup unsupported!");
-	Entity *e = entity(L);
-	int group = lua_tonumber(L, 2);
-	bool v = getBool(L, 3);
-	if (e)
-	{
-		e->setNodeGroupActive(group, v);
-	}
-	luaReturnNum(0);
-}
-
 luaFunc(isQuitFlag)
 {
 	luaReturnBool(dsq->isQuitFlag());
@@ -999,12 +977,6 @@ luaFunc(isWithin)
 		v = true;
 	}
 	luaReturnBool(v);
-}
-
-luaFunc(stopCursorGlow)
-{
-	//dsq->stopCursorGlow();
-	luaReturnNum(0);
 }
 
 luaFunc(toggleDamageSprite)
@@ -1057,18 +1029,6 @@ luaFunc(getNearestNodeByType)
 	luaReturnPtr(dsq->game->getNearestPath(Vector(x,y), (PathType)type));
 }
 
-luaFunc(getNearestNode)
-{
-	//Entity *e = entity(L);
-	std::string s;
-	if (lua_isstring(L, 2))
-	{
-		s = lua_tostring(L, 2);
-	}
-	Path *p = path(L);
-	luaReturnPtr(dsq->game->getNearestPath(p, s));
-}
-
 luaFunc(fadeOutMusic)
 {
 	dsq->sound->fadeMusic(SFT_OUT, lua_tonumber(L, 1));
@@ -1095,13 +1055,6 @@ luaFunc(setActivation)
 {
 	dsq->game->activation = getBool(L, 1);
 	luaReturnInt(0);
-}
-
-luaFunc(setNaijaModel)
-{
-	std::string s = lua_tostring(L, 1);
-	dsq->continuity.setNaijaModel(s);
-	luaReturnNum(0);
 }
 
 luaFunc(debugLog)
@@ -1379,19 +1332,6 @@ luaFunc(entity_setDropChance)
 	luaReturnNum(0);
 }
 
-luaFunc(entity_setAffectedBySpells)
-{
-	/*
-	Entity *e = entity(L);
-	if (e)
-	{
-		e->setAffectedBySpells(lua_tointeger(L, 2));
-	}
-	*/
-	debugLog("entity_setAffectedBySpells is deprecated");
-	luaReturnNum(0);
-}
-
 luaFunc(entity_warpToNode)
 {
 	Entity *e = entity(L);
@@ -1476,13 +1416,6 @@ luaFunc(avatar_setCanDie)
 	luaReturnNum(0);
 }
 
-luaFunc(setGLNearest)
-{
-	Texture::filter = GL_NEAREST;
-
-	luaReturnNum(0);
-}
-
 luaFunc(avatar_toggleCape)
 {
 	dsq->game->avatar->toggleCape(getBool(L,1));
@@ -1563,12 +1496,6 @@ luaFunc(goToTitle)
 luaFunc(getEnqueuedState)
 {
 	luaReturnStr(dsq->getEnqueuedJumpState().c_str());
-}
-
-luaFunc(learnSpell)
-{
-	//dsq->continuity.learnSpell((SpellType)lua_tointeger(L, 1));
-	luaReturnNum(0);
 }
 
 luaFunc(learnSong)
@@ -2654,40 +2581,6 @@ luaFunc(isPlat)
 	v = (plat == 1000);
 #endif
 	luaReturnBool(v);
-}
-
-luaFunc(getAngleBetweenEntities)
-{
-	Entity *e1 = entity(L, 1);
-	Entity *e2 = entity(L, 2);
-	float angle=0;
-	if (e1 && e2)
-	{
-		MathFunctions::calculateAngleBetweenVectorsInRadians(e1->position, e2->position, angle);
-	}
-	luaReturnNum(angle);
-}
-
-// in radians
-luaFunc(getAngleBetween)
-{
-	Vector p1(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	Vector p2(lua_tonumber(L, 3), lua_tonumber(L, 4));
-	float angle = 0;
-	MathFunctions::calculateAngleBetweenVectorsInRadians(p1, p2, angle);
-	angle = 2*PI - angle;
-	angle -= PI/2;
-	while (angle > 2*PI)
-		angle -= 2*PI;
-	while (angle < 0)
-		angle += 2*PI;
-
-	//angle = (angle/PI)*180;
-	/*
-	angle += PI/2;
-	angle = PI-(2*PI-angle);
-	*/
-	luaReturnNum(angle);
 }
 
 luaFunc(createEntity)
@@ -4123,21 +4016,6 @@ luaFunc(entity_addRandomVel)
 	luaReturnInt(0);
 }
 
-luaFunc(entity_addGroupVel)
-{
-	Entity *e = entity(L);
-	if (e)
-	{
-		FOR_ENTITIES(i)
-		{
-			Entity *e2 = *i;
-			if (e2->getGroupID() == e->getGroupID())
-				e2->vel += Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
-		}
-	}
-	luaReturnInt(0);
-}
-
 luaFunc(entity_isValidTarget)
 {
 	Entity *e = entity(L);
@@ -4211,17 +4089,6 @@ luaFunc(entity_clearVel2)
 luaFunc(getScreenCenter)
 {
 	luaReturnVec2(core->screenCenter.x, core->screenCenter.y);
-}
-
-luaFunc(getNodeFromEntity)
-{
-	Path *nodePtr = 0;
-	Entity *e = entity(L);
-	if (e)
-	{
-		nodePtr = e->getNode();
-	}
-	luaReturnPtr(nodePtr);
 }
 
 luaFunc(entity_rotate)
@@ -4402,83 +4269,6 @@ luaFunc(entity_setState)
 		me->setState(state, time, force);
 		//}
 	}
-	luaReturnNum(0);
-}
-
-luaFunc(entity_fireAtTarget)
-{
-	/*
-	Entity *e = entity(L);
-	Shot *shot = 0;
-	if (e)
-	{
-		if (!e->getTargetEntity())
-		{
-			luaReturnPtr(NULL);
-		}
-		std::string pe = lua_tostring(L, 2);
-		float damage = lua_tonumber(L, 3);
-		int maxSpeed = lua_tointeger(L, 4);
-		int homingness = lua_tointeger(L, 5);
-		int numSegs = lua_tointeger(L, 6);
-		int out = lua_tointeger(L, 7);
-		int target = e->currentEntityTarget;
-		float offx = lua_tonumber(L, 8);
-		float offy = lua_tonumber(L, 9);
-		float velx = lua_tonumber(L, 10);
-		float vely = lua_tonumber(L, 11);
-		float x = lua_tonumber(L, 12);
-		float y = lua_tonumber(L, 13);
-		Vector off(offx, offy);
-		//x' = cos(theta)*x - sin(theta)*y
-		//y' = sin(theta)*x + cos(theta)*y
-
-		if (!off.isZero())
-			off.rotate2D(e->getAbsoluteRotation().z);
-
-
-		Vector pos;
-		if (x == 0 && y == 0)
-			pos = e->position + off;
-		else
-			pos = Vector(x,y) + off;
-		std::string tex;
-		if (e->getEntityType() == ET_PET)
-			tex="shot-green";
-		//new Shot(
-		//new Shot(pos, 0, texture, homingness, maxSpeed, segments, segmin, segmax, damage);
-		DamageType dt;
-		if (e->getEntityType() == ET_ENEMY)
-			dt = DT_ENEMY_ENERGYBLAST;
-		else if (e->getEntityType() == ET_AVATAR)
-			dt = DT_AVATAR_ENERGYBLAST;
-		else
-			errorLog("undefined shot type in entity_fireAtTarget");
-		shot = new Shot(dt, e, pos, e->getTargetEntity(target),
-			tex, homingness, maxSpeed, numSegs, 0.1, 5, damage);
-		shot->setParticleEffect(pe);
-		if (velx != 0 || vely != 0)
-		{
-			shot->velocity = Vector(velx, vely);
-		}
-		else
-		{
-			shot->velocity = e->getTargetEntity()->position - pos;
-		}
-		shot->velocity.setLength2D(maxSpeed);
-		if (out > 0)
-		{
-			Vector mov = shot->velocity;
-			mov.setLength2D(out);
-			shot->position += mov;
-		}
-		dsq->game->addRenderObject(shot, LR_PROJECTILES);
-		//addRenderObject(shot);
-	}
-	luaReturnPtr(shot);
-	*/
-
-	debugLog("entity_fireAtTarget is deprecated");
 	luaReturnNum(0);
 }
 
@@ -4867,24 +4657,6 @@ luaFunc(toggleInput)
 		dsq->game->avatar->enableInput();
 	else
 		dsq->game->avatar->disableInput();
-	luaReturnNum(0);
-}
-
-luaFunc(toggleTransitFishRide)
-{
-	Entity *t = entity(L);
-	if (t)
-	{
-		if (!dsq->game->avatar->attachedTo)
-			t->attachEntity(dsq->game->avatar, Vector(0,0));
-		else
-		{
-			//TransitFish *t = dynamic_cast<TransitFish*>(dsq->game->avatar->attachedTo);
-			Entity *t = dsq->game->avatar->attachedTo;
-			if (t)
-				t->detachEntity(dsq->game->avatar);
-		}
-	}
 	luaReturnNum(0);
 }
 
@@ -5361,15 +5133,6 @@ luaFunc(entity_moveAlongSurface)
 	luaReturnNum(0);
 }
 
-luaFunc(entity_flipHToAvatar)
-{
-	Entity *e = entity(L);
-	if (e)
-		e->flipToTarget(dsq->game->avatar->position);
-
-	luaReturnInt(0);
-}
-
 luaFunc(entity_rotateToSurfaceNormal)
 {
 	//ScriptedEntity *e = scriptedEntity(L);
@@ -5559,24 +5322,6 @@ luaFunc(wait)
 	luaReturnNum(0);
 }
 
-luaFunc(healEntity)
-{
-	Entity *e = dsq->getEntityByName(lua_tostring(L, 1));
-	if (e)
-	{
-		e->heal(lua_tonumber(L, 2));
-	}
-	luaReturnNum(0);
-}
-
-luaFunc(killEntity)
-{
-	Entity *e = dsq->getEntityByName(lua_tostring(L, 1));
-	if (e)
-		e->safeKill();
-	luaReturnNum(0);
-}
-
 luaFunc(warpNaijaToEntity)
 {
 	Entity *e = dsq->getEntityByName(lua_tostring(L, 1));
@@ -5737,36 +5482,6 @@ luaFunc(entity_setActivation)
 	luaReturnNum(0);
 }
 
-luaFunc(entity_say)
-{
-	Entity *e = entity(L);
-	int n = lua_tonumber(L, 3);
-	if (e)
-	{
-		e->say(getString(L, 2), (SayType)n);
-	}
-	luaReturnNum(0);
-}
-
-luaFunc(entity_isSaying)
-{
-	Entity *e = entity(L);
-	bool b=false;
-	if (e)
-	{
-		b = e->isSaying();
-	}
-	luaReturnBool(b);
-}
-
-luaFunc(entity_setSayPosition)
-{
-	Entity *e = entity(L);
-	if (e)
-		e->sayPosition = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
-	luaReturnNum(0);
-}
-
 luaFunc(entity_setCullRadius)
 {
 	Entity *e = entity(L);
@@ -5920,27 +5635,6 @@ luaFunc(entity_moveTowardsTarget)
 	luaReturnNum(0);
 }
 
-luaFunc(entity_moveTowardsGroupCenter)
-{
-	Entity *e = entity(L);
-	if (e)
-	{
-		e->moveTowardsGroupCenter(lua_tonumber(L, 2), lua_tonumber(L, 3));
-	}
-	luaReturnNum(0);
-}
-
-luaFunc(entity_avgVel)
-{
-	Entity *e = entity(L);
-	float div = lua_tonumber(L, 2);
-	if (e && div != 0)
-	{
-		e->vel /= div;
-	}
-	luaReturnNum(0);
-}
-
 luaFunc(entity_setVelLen)
 {
 	Entity *e = entity(L);
@@ -5948,16 +5642,6 @@ luaFunc(entity_setVelLen)
 	if (e)
 	{
 		e->vel.setLength2D(len);
-	}
-	luaReturnNum(0);
-}
-
-luaFunc(entity_moveTowardsGroupHeading)
-{
-	Entity *e = entity(L);
-	if (e)
-	{
-		e->moveTowardsGroupHeading(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	}
 	luaReturnNum(0);
 }
@@ -6667,24 +6351,6 @@ luaFunc(entity_getOffset)
 
 
 
-luaFunc(entity_getPositionX)
-{
-	Entity *e = entity(L);
-	int x = 0;
-	if (e)
-		x = int(e->position.x);
-	luaReturnInt(x);
-}
-
-luaFunc(entity_getPositionY)
-{
-	Entity *e = entity(L);
-	int y = 0;
-	if (e)
-		y = int(e->position.y);
-	luaReturnInt(y);
-}
-
 luaFunc(entity_getTarget)
 {
 	Entity *e = entity(L);
@@ -7296,44 +6962,6 @@ luaFunc(getPetPower)
 	luaReturnNum(dsq->continuity.petPower);
 }
 
-luaFunc(showControls)
-{
-	std::string keygfx = lua_tostring(L, 1);
-	std::string mousegfx = lua_tostring(L, 2);
-	if (!keygfx.empty())
-	{
-		Quad *keyboard = new Quad;
-		keyboard->setBlendType(RenderObject::BLEND_ADD);
-		keyboard->followCamera = 1;
-		keyboard->setTexture("controls/" + keygfx);
-		keyboard->alpha=0;
-		keyboard->alpha.interpolateTo(0.5, 4, 1, 1);
-		keyboard->scale.interpolateTo(Vector(0.9, 0.9), 4);
-		keyboard->position = Vector(300, 500);
-		core->getTopStateData()->addRenderObject(keyboard, LR_HELP);
-	}
-	if (!mousegfx.empty())
-	{
-		float t = 30;
-		Quad *keyboard = new Quad;
-		keyboard->setBlendType(RenderObject::BLEND_ADD);
-		keyboard->followCamera = 1;
-		keyboard->setTexture("controls/" + mousegfx);
-		keyboard->alpha = 0;
-		keyboard->alpha.ensureData();
-		keyboard->alpha.data->path.addPathNode(0, 0);
-		keyboard->alpha.data->path.addPathNode(0.5, .1);
-		keyboard->alpha.data->path.addPathNode(0.5, .9);
-		keyboard->alpha.data->path.addPathNode(0, 1);
-		keyboard->alpha.startPath(t);
-		//keyboard->alpha.interpolateTo(0.5, 4, 1, 1);
-		keyboard->scale.interpolateTo(Vector(0.9, 0.9), t+0.5f);
-		keyboard->position = Vector(600, 400);
-		core->getTopStateData()->addRenderObject(keyboard, LR_HELP);
-	}
-	luaReturnNum(0);
-}
-
 luaFunc(appendUserDataPath)
 {
 	std::string path = getString(L, 1);
@@ -7433,9 +7061,6 @@ static const struct {
 	luaRegister(entity_setBoneLock),
 	luaRegister(entity_setIngredient),
 	luaRegister(entity_setDeathScene),
-	luaRegister(entity_say),
-	luaRegister(entity_isSaying),
-	luaRegister(entity_setSayPosition),
 
 
 	luaRegister(entity_setClampOnSwitchDir),
@@ -7464,8 +7089,6 @@ static const struct {
 	luaRegister(entity_setRiding),
 	luaRegister(entity_getRiding),
 
-	luaRegister(entity_setNodeGroupActive),
-
 	luaRegister(entity_setNaijaReaction),
 
 	luaRegister(entity_setEatType),
@@ -7486,8 +7109,6 @@ static const struct {
 	luaRegister(entity_setCullRadius),
 	luaRegister(entity_setUpdateCull),
 
-	luaRegister(entity_flipHToAvatar),
-
 	luaRegister(entity_switchLayer),
 
 	luaRegister(entity_debugText),
@@ -7496,9 +7117,6 @@ static const struct {
 	luaRegister(avatar_setCanDie),
 	luaRegister(avatar_toggleCape),
 	luaRegister(avatar_setPullTarget),
-
-
-	luaRegister(setGLNearest),
 
 
 	luaRegister(avatar_clampPosition),
@@ -7589,9 +7207,6 @@ static const struct {
 	luaRegister(getStringBank),
 
 	luaRegister(isPlat),
-
-	luaRegister(getAngleBetweenEntities),
-	luaRegister(getAngleBetween),
 
 
 	luaRegister(createEntity),
@@ -7710,8 +7325,6 @@ static const struct {
 	luaRegister(entity_setPositionY),
 	luaRegister(entity_getPosition),
 	luaRegister(entity_getOffset),
-	luaRegister(entity_getPositionX),
-	luaRegister(entity_getPositionY),
 
 	luaRegister(entity_getTargetPositionX),
 	luaRegister(entity_getTargetPositionY),
@@ -7788,9 +7401,6 @@ static const struct {
 	luaRegister(entity_moveTowards),
 	luaRegister(entity_moveAround),
 
-	luaRegister(entity_moveTowardsGroupCenter),
-	luaRegister(entity_moveTowardsGroupHeading),
-	luaRegister(entity_avgVel),
 	luaRegister(entity_setVelLen),
 
 	luaRegister(entity_setMaxSpeed),
@@ -7862,15 +7472,12 @@ static const struct {
 	luaRegister(setOverrideVoiceFader),
 	luaRegister(setGameSpeed),
 	luaRegister(sendEntityMessage),
-	luaRegister(healEntity),
 	luaRegister(warpAvatar),
 	luaRegister(warpNaijaToSceneNode),
 
 
 
 	luaRegister(toWindowFromWorld),
-
-	luaRegister(toggleTransitFishRide),
 
 	luaRegister(toggleDamageSprite),
 
@@ -7881,14 +7488,11 @@ static const struct {
 	luaRegister(setBlackBarsColor),
 
 
-	luaRegister(stopCursorGlow),
-
 	luaRegister(entityFollowEntity),
 
 	luaRegister(setMiniMapHint),
 	luaRegister(bedEffects),
 
-	luaRegister(killEntity),
 	luaRegister(warpNaijaToEntity),
 
 	luaRegister(setNaijaHeadTexture),
@@ -7899,7 +7503,6 @@ static const struct {
 	luaRegister(getFlag),
 	luaRegister(setStringFlag),
 	luaRegister(getStringFlag),
-	luaRegister(learnSpell),
 	luaRegister(learnSong),
 	luaRegister(unlearnSong),
 	luaRegister(hasSong),
@@ -8017,7 +7620,6 @@ static const struct {
 
 	luaRegister(showImage),
 	luaRegister(hideImage),
-	luaRegister(showControls),
 	luaRegister(clearHelp),
 	luaRegister(clearShots),
 
@@ -8044,7 +7646,6 @@ static const struct {
 
 	luaRegister(getNearestIngredient),
 
-	luaRegister(getNearestNode),
 	luaRegister(getNearestNodeByType),
 
 	luaRegister(getNode),
@@ -8054,8 +7655,6 @@ static const struct {
 
 	luaRegister(entity_warpToNode),
 	luaRegister(entity_moveToNode),
-
-	luaRegister(setNaijaModel),
 
 	luaRegister(cam_toNode),
 	luaRegister(cam_snap),
@@ -8118,7 +7717,6 @@ static const struct {
 	luaRegister(entity_addVel2),
 	luaRegister(entity_addRandomVel),
 
-	luaRegister(entity_addGroupVel),
 	luaRegister(entity_clearVel),
 	luaRegister(entity_clearVel2),
 
@@ -8156,7 +7754,6 @@ static const struct {
 	luaRegister(toggleInput),
 
 	luaRegister(entity_setTarget),
-	luaRegister(getNodeFromEntity),
 
 	luaRegister(getScreenCenter),
 
@@ -8164,8 +7761,6 @@ static const struct {
 
 	luaRegister(debugLog),
 	luaRegister(loadMap),
-
-	luaRegister(reloadTextures),
 
 	luaRegister(loadSound),
 
@@ -8343,13 +7938,6 @@ static const struct {
 
 	luaRegister(getWallNormal),
 	luaRegister(getLastCollidePosition),
-
-
-	// ============== deprecated
-
-	luaRegister(entity_fireAtTarget),  // FIXME: still used by several scripts
-	luaRegister(entity_setAffectedBySpells),  // FIXME: still used by several scripts
-
 };
 
 //============================================================================================
@@ -8672,10 +8260,6 @@ static const struct {
 	luaConstantFromClass(BLEND_DEFAULT,	RenderObject),
 	luaConstantFromClass(BLEND_ADD,		RenderObject),
 	{"BLEND_ADDITIVE",					RenderObject::BLEND_ADD},
-
-	luaConstant(SAY_NORMAL),
-	luaConstant(SAY_QUEUE),
-	luaConstant(SAY_INTERUPT),
 
 	{"ENDING_NAIJACAVE",				10},
 	{"ENDING_NAIJACAVEDONE",			11},
