@@ -382,6 +382,9 @@ void UserSettings::loadDefaults(bool doApply)
 	// Triangle => remove from cooking slots
 	ai = control.actionSet.addActionInput("FoodLeft");
 	ai->fromString("0 0 0 JOY_BUTTON_12");
+	// L        => look around
+	ai = control.actionSet.addActionInput("Look");
+	ai->fromString("0 0 0 JOY_BUTTON_8");
 #endif  // BBGE_BUILD_PSP
 
 	std::ostringstream os;

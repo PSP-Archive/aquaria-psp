@@ -16,7 +16,16 @@ unnoticeable on a PC can cause the PSP to crash after playing for a
 while.  It may help to periodically exit the game (to the PSP's menu)
 after saving, then restart and reload your game.
 
+If you have played an earlier build of the PSP port than build 369, you
+will not be able to use the "L + analog pad" combination to look around
+the nearby area or "R + analog pad" to aim energy shots unless you first
+delete the Aquaria settings file using the XMB save data utility.
+
 Other issues:
+
+- The game may crash the very first time you start it, immediately after
+  the intro sequence.  This is being looked into, but rebooting the PSP
+  and restarting the game will fix the problem.
 
 - The Key Config menu and Help screen crash the game, so they have been
   disabled for the PSP.  (The most likely cause seems to be that the
@@ -250,6 +259,8 @@ The default controls for the PSP are as follows:
 Analog pad      -- move Naija
 Directional pad -- select options in menus
 L/R triggers    -- change page in menus
+L + analog pad  -- look around the nearby area
+R + analog pad  -- aim shots in energy form
 Cross    -- swim faster; select menu option (left mouse button equivalent)
 Circle   -- interact with object; other actions (right mouse button equiv.)
 Square   -- revert to normal form; select food for cooking

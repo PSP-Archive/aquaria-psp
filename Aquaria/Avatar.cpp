@@ -8347,6 +8347,14 @@ void Avatar::onUpdate(float dt)
 						}
 					}
 
+#ifdef BBGE_BUILD_PSP
+					// We only have one joystick (analog pad) input, so
+					// disable swimming while looking or aiming.  (We use
+					// R + analog pad for aiming.)
+					if (looking || dsq->game->isActing(ACTION_NEXTPAGE))
+						addVec = Vector(0,0,0);
+#endif
+
 					if (addVec.isLength2DIn(minMouse))
 					{
 						if (dsq->inputMode == INPUT_JOYSTICK)
