@@ -40,7 +40,7 @@ function activate(me)
 			-- should do nothing (or offer a hint?)
 		elseif getFlag("MemoryCaveSavePointScene")==1 then
 			simpleConversation("MemoryCave_ghost")
-			learnSpell(2)
+			--learnSpell(2)
 			--entityFollowEntity("Drask", "Naija")
 			entity_followEntity(getEntity("Drask"), getEntity("Naija"))
 			-- setEntityScript("Drask", "");

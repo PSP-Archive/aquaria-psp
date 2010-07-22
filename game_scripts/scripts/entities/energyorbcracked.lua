@@ -38,7 +38,6 @@ function init(me)
 	entity_setProperty(me, EP_MOVABLE, true)
 	entity_setWeight(me, 200)
 	entity_setCollideRadius(me, 32)
-	entity_setAffectedBySpells(me, 1)
 	entity_setName(me, "EnergyOrb")
 	
 	entity_setMaxSpeed(me, 450)

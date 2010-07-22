@@ -82,14 +82,6 @@ function init(me)
 	entity_setCullRadius(me, 256)
 end
 
-function activate(me)
-	if v.parasite then
-		entity_say(me, "Get it out!")
-	else
-		entity_say(me, "Thank you...")
-	end
-end
-
 function lunge(me)
 	v.lungeDelay = 0
 	

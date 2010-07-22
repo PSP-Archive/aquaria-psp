@@ -65,7 +65,8 @@ function update(me, dt)
 		if v.fireDelay > 0 then
 			v.fireDelay = v.fireDelay - dt
 			if v.fireDelay < 0 then
-				entity_fireAtTarget(me, "Purple", 1, 400, 10, 3, 64)
+				-- FIXME: obsolete function
+				--entity_fireAtTarget(me, "Purple", 1, 400, 10, 3, 64)
 				v.fireDelay = 0.5
 			end
 		end

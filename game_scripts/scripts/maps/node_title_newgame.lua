@@ -56,7 +56,6 @@ function activate(me)
 	watch(0.5)
 	
 	setNodeToActivate(0)
-	stopCursorGlow()
 	
 	toggleCursor(false)
 	fade(1, 2, 0, 0, 0)

@@ -56,7 +56,6 @@ function activate(me)
 	
 	--[[
 	setNodeToActivate(0)
-	stopCursorGlow()
 	]]--
 	setActivation(false)
 
