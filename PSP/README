@@ -23,10 +23,6 @@ delete the Aquaria settings file using the XMB save data utility.
 
 Other issues:
 
-- The game may crash the very first time you start it, immediately after
-  the intro sequence.  This is being looked into, but rebooting the PSP
-  and restarting the game will fix the problem.
-
 - The Key Config menu and Help screen crash the game, so they have been
   disabled for the PSP.  (The most likely cause seems to be that the
   rendering method used by the FTGL library is too inefficient for use
