@@ -633,16 +633,6 @@ luaFunc(shot_getPosition)
 	luaReturnVec2(x, y);
 }
 
-luaFunc(shot_setLifeTime)
-{
-	Shot *shot = getShot(L);
-	if (shot)
-	{
-		shot->setLifeTime(lua_tonumber(L, 2));
-	}
-	luaReturnNum(0);
-}
-
 luaFunc(shot_setVel)
 {
 	Shot *shot = getShot(L);
@@ -806,17 +796,6 @@ luaFunc(entity_setBounceType)
 	if (e)
 	{
 		e->setBounceType((BounceType)v);
-	}
-	luaReturnNum(v);
-}
-
-luaFunc(shot_setBounceType)
-{
-	Shot *s = getShot(L);
-	int v = lua_tointeger(L, 2);
-	if (s)
-	{
-		s->setBounceType((BounceType)v);
 	}
 	luaReturnNum(v);
 }
@@ -7719,9 +7698,7 @@ static const struct {
 	luaRegister(shot_getPosition),
 	luaRegister(shot_setAimVector),
 	luaRegister(shot_setOut),
-	luaRegister(shot_setLifeTime),
 	luaRegister(shot_setVel),
-	luaRegister(shot_setBounceType),
 	luaRegister(entity_pathBurst),
 	luaRegister(entity_handleShotCollisions),
 	luaRegister(entity_handleShotCollisionsSkeletal),
