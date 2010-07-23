@@ -1077,7 +1077,7 @@ static void generate_data(const char *in_path, const char *out_path,
             free(mp3data);
 
         } else if (strlen(path) >= 4
-                && stricmp(path + strlen(path)-4, ".lus") == 0
+                && stricmp(path + strlen(path)-4, ".lua") == 0
         ) {
             /* Ignore .lua files entirely */
 
