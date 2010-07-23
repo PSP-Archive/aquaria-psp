@@ -110,6 +110,21 @@ DISABLE_SOUND_CACHE = 1
 #ICON0_WIDTH  = 630
 #ICON0_HEIGHT = 350
 
+#-------------------------------------
+
+# CUSTOM_BUILD_ID:  Set this to append custom text to the Aquaria version
+# number displayed on the Aquaria title screen.  No separator is inserted
+# between the version number and this text, so it should include any
+# necessary leading punctuation or space.
+#
+# Note that "make" automatically trims leading space from all variable
+# values, so if you want to include an initial space, you must prefix it
+# with a reference to an empty variable, as in the second example below
+# (which adds " (custom)" to the version number).
+
+#CUSTOM_BUILD_ID = -custom
+#CUSTOM_BUILD_ID = $(emptystring) (custom)
+
 ###########################################################################
 
 # Common programs/flags.
@@ -148,6 +163,12 @@ ifeq ($(DISABLE_SOUND_CACHE),1)
 -DBBGE_DISABLE_SOUND_CACHE = -DBBGE_DISABLE_SOUND_CACHE
 else
 -DBBGE_DISABLE_SOUND_CACHE =
+endif
+
+ifeq ($(CUSTOM_BUILD_ID),)
+-DAQUARIA_CUSTOM_BUILD_ID =
+else
+-DAQUARIA_CUSTOM_BUILD_ID = -DAQUARIA_CUSTOM_BUILD_ID='"$(CUSTOM_BUILD_ID)"'
 endif
 
 ######################################
@@ -304,7 +325,8 @@ Aquaria_SOURCES  = $(Aquaria_DIR)/AnimationEditor.cpp \
 Aquaria_OBJECTS := $(Aquaria_SOURCES:%.cpp=%.o)
 Aquaria_CXXFLAGS = $(BBGE_CXXFLAGS) $(-I_lua) -I$(Aquaria_DIR) \
                    -DAQUARIA_NODRM -DAQUARIA_FULL -DAQUARIA_SAVE_MAPVIS_RAW \
-                   $(-DAQUARIA_ALLOW_PSP_SETTINGS_OVERRIDE)
+                   $(-DAQUARIA_ALLOW_PSP_SETTINGS_OVERRIDE) \
+                   $(-DAQUARIA_CUSTOM_BUILD_ID)
 
 #-------------------------------------
 

@@ -116,10 +116,14 @@ Building the source (read this entire section before starting to build!)
 -------------------
 The PSP port of Aquaria uses a traditional Makefile rather than the CMake
 build system (mostly because CMake is poorly suited to cross-compiling).
-To build Aquaria for PSP, simply run "make" in the "PSP" directory.  You
-will probably need GNU Make (http://www.gnu.org/software/make/) to build
-correctly; this is installed by default on all modern Linux distributions,
-but you may need to install it yourself on other systems.
+To build Aquaria for PSP, simply run "make" in the "PSP" directory;
+however, you may need to set certain Make variables depending on your
+environment.  The most important of these are described below, but all
+user variables are documented in the Makefile itself.
+
+You will probably need GNU Make (http://www.gnu.org/software/make/) to
+build correctly; this is installed by default on all modern Linux
+distributions, but you may need to install it yourself on other systems.
 
 If you have the PSP SDK and other libraries installed in a location other
 than /usr/psp, you can pass the "PSPROOT=/path/to/psp/root" and
