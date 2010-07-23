@@ -344,6 +344,12 @@ void Intro::update(float dt)
 		mc1->cull = false;
 		addRenderObject(mc1, LR_HUD2);
 
+		/*
+		// FIXME: In the original code, the addRenderObject() call below
+		// referenced mc1 instead of mc2, causing mc1 to get added to the
+		// RenderObject list twice (potentially resulting in a crash).
+		// Fixing the addRenderObject() call will naturally change the
+		// appearance of the intro, so I've left this disabled.  --achurch
 		Quad *mc2 = new Quad("intro/intro-big-cloud", Vector(500, 300));
 		mc2->scale = Vector(2, 2);
 		mc2->followCamera = 1;
@@ -352,7 +358,8 @@ void Intro::update(float dt)
 		mc2->offset = Vector(-200, 0);
 		mc2->offset.interpolateTo(Vector(0,0), bt*1.5f);
 		mc2->cull = false;
-		addRenderObject(mc1, LR_HUD2);
+		addRenderObject(mc2, LR_HUD2);
+		*/
 
 		Quad *bbp = new Quad("intro/bbp", Vector(400,300));
 		bbp->alpha = 0;
@@ -390,9 +397,9 @@ void Intro::update(float dt)
 		cloud_bg->scale.stop();
 		cloud_bg->scale = Vector(1,1);
 		mc1->alpha.stop();
-		mc2->alpha.stop();
+		//mc2->alpha.stop();
 		mc1->alpha = 0;
-		mc2->alpha = 0;
+		//mc2->alpha = 0;
 
 
 		// -- floating city in clouds
