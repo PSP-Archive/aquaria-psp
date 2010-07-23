@@ -109,9 +109,12 @@ const float JOYSTICK_HIGH_THRESHOLD = 0.6;
 // Axis input distance at which we accept a note.
 const float JOYSTICK_NOTE_THRESHOLD = 0.6;
 
-// Mouse cursor distance (from note icon, in virtual pixels) at which we
-// accept a note.
+// Mouse cursor distance (from note icon, in virtual pixels) below which
+// we accept a note.
 const float NOTE_ACCEPT_DISTANCE = 25;
+// Joystick input angle offset (from note icon, in degrees) below which
+// we accept a note.
+const float NOTE_ACCEPT_ANGLE_OFFSET = 15;
 
 volatile int micNote = -1;
 bool openedFromMicInput = false;
@@ -2133,7 +2136,6 @@ void Avatar::updateSingingInterface(float dt)
 			if (dsq->inputMode == INPUT_JOYSTICK)
 			{
 				Vector d = dsq->joystick.position;
-				const float cursorRadius = singingInterfaceRadius - 8;
 
 				if (d.isLength2DIn(JOYSTICK_NOTE_THRESHOLD))
 				{
@@ -2141,33 +2143,38 @@ void Avatar::updateSingingInterface(float dt)
 				}
 				else
 				{
-					d.setLength2D(cursorRadius);
-					const Vector p = core->center + d;
-					// If the target position is close to a note icon, we
-					// use it as is.  If not, and if the cursor is already
-					// on a note, we stay locked to that note.  Otherwise,
-					// we pick the nearest note -- this makes sure that
-					// the player gets _some_ response even if they don't
-					// push the joystick at an exact note angle.  --achurch
-					bool alreadyAtNote = false;
-					float smallestDist = HUGE_VALF;
-					int closest = -1;
-					for (int i = 0; i < songIcons.size(); i++)
+					// Choose the closest note based on the joystick input
+					// angle (rather than the resultant cursor position).
+					// But if we already have an active note and we're not
+					// within the note-accept threshold, maintain the
+					// current note instead.
+					float angle = (atan2f(-d.y, d.x) * 180 / PI) + 90;
+					if (angle < 0)
+						angle += 360;
+					int closestNote = (int)floorf(angle/45 + 0.5f);
+					float angleOffset = fabsf(angle - closestNote*45);
+					if (closestNote == 8)
+						closestNote = 0;
+
+					bool setNote = (angleOffset <= NOTE_ACCEPT_ANGLE_OFFSET);
+					if (!setNote)
 					{
-						float dist = (songIcons[i]->position - p).getSquaredLength2D();
-						if (dist < smallestDist)
+						bool alreadyAtNote = false;
+						for (int i = 0; i < songIcons.size(); i++)
 						{
-							smallestDist = dist;
-							closest = i;
+							const float dist = (songIcons[i]->position - core->mouse.position).getSquaredLength2D();
+							if (dist <= sqr(NOTE_ACCEPT_DISTANCE))
+							{
+								alreadyAtNote = true;
+								break;
+							}
 						}
-						dist = (songIcons[i]->position - core->mouse.position).getSquaredLength2D();
-						if (dist <= sqr(NOTE_ACCEPT_DISTANCE))
-							alreadyAtNote = true;
+						if (!alreadyAtNote)
+							setNote = true;
 					}
-					if (smallestDist <= sqr(NOTE_ACCEPT_DISTANCE))
-						core->setMousePosition(p);
-					else if (!alreadyAtNote)
-						core->setMousePosition(songIcons[closest]->position);
+
+					if (setNote)
+						core->setMousePosition(songIcons[closestNote]->position);
 				}
 			}
 
