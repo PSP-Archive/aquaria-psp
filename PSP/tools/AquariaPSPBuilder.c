@@ -32,7 +32,7 @@ static jmp_buf png_jmpbuf;
  * current Mercurial revision, which should be defined on the compilation
  * command line with e.g. -DHG_REVISION=\"revision\" (for GCC -- note the
  * backslashes!), to form the final version string. */
-#define VERSION  "1.2"
+#define VERSION  "1.3"
 
 #ifndef HG_REVISION
 # error Define HG_REVISION on the compilation command line.
@@ -41,7 +41,7 @@ static jmp_buf png_jmpbuf;
 #define VERSION_STRING  VERSION " (r" HG_REVISION ")"
 
 /* Data version, used to warn users if they need to regenerate the PSP data. */
-#define DATA_VERSION  2
+#define DATA_VERSION  3
 
 /* File into which the data version is written. */
 #define DATA_VERSION_FILE  "data-version.txt"
@@ -100,9 +100,13 @@ static void uicb_toggle_hide_filenames(void);
 
 static void generate_data(const char *in_path, const char *out_path,
                           double progress_min, double progress_max);
+static void create_icon0(const char *in_path, const char *out_path);
 static void build_eboot(const char *in_path, const char *out_path);
 static void build_package(const char *in_path, const char *out_path,
                           double progress_min, double progress_max);
+
+static Texture *parse_png(const uint8_t *data, uint32_t size);
+static int create_png(Texture *texture, void **data_ret, uint32_t *size_ret);
 
 typedef void ScanDirCallback(void *filelist_ptr, uint32_t *nfiles_ptr,
                              const char *fullpath, const char *localpath,
@@ -111,9 +115,9 @@ static void build_scan_directory(void *filelist_ptr, uint32_t *nfiles_ptr,
                                  const char *basepath, const char *subdir,
                                  ScanDirCallback *callback, void *userdata);
 static void build_read_file(const char *directory, const char *filename,
-                            void **contents_ret, unsigned long *length_ret);
+                            void **contents_ret, uint32_t *length_ret);
 static void build_write_file(const char *directory, const char *filename,
-                             const void *contents, long length);
+                             const void *contents, int32_t length);
 static void build_report_error(const char *path, int is_write,
                                const GError *error);
 
@@ -420,6 +424,8 @@ static void uicb_button_pcdata(void)
          || (snprintf(buf,sizeof(buf),"%s/scripts",path), g_access(buf,0) != 0)
          || (snprintf(buf,sizeof(buf),"%s/sfx",    path), g_access(buf,0) != 0)
          || (snprintf(buf,sizeof(buf),"%s/vox",    path), g_access(buf,0) != 0)
+         || (snprintf(buf,sizeof(buf),"%s/gfx/title/logo.png",path),
+                                                          g_access(buf,0) != 0)
         ) {
             ui_show_message("message_bad_sourcedir", dialog);
             g_free(path);
@@ -660,6 +666,7 @@ static void uicb_button_build_gendata(void)
     gtk_widget_set_sensitive(ui_get_widget("label_build_count"), FALSE);
 
     in_build = 1;
+    create_icon0(path_pcdata, path_pspout);
     generate_data(path_pcdata, path_pspout, 0.0, 0.985);
     build_eboot(path_pspout, path_gameout);
     build_package(path_pspout, path_gameout, 0.99, 1.0);
@@ -813,6 +820,99 @@ static void uicb_toggle_hide_filenames(void)
 
 /*************************************************************************/
 
+/**
+ * create_icon0:  Create the ICON0.PNG (menu icon) file for the game and
+ * store it in the PSP data directory.
+ *
+ * [Parameters]
+ *      in_path: Input (PC data) directory path
+ *     out_path: Output (PSP data) directory path
+ * [Return value]
+ *     None
+ * [Notes]
+ *     If an unrecoverable error occurs, this routine terminates the program.
+ */
+static void create_icon0(const char *in_path, const char *out_path)
+{
+    current_file = "ICON0.PNG";
+    show_current_filename();
+    gtk_label_set_text(GTK_LABEL(ui_get_widget("label_build_count")), "---");
+    gtk_widget_set_sensitive(ui_get_widget("label_build_count_title"), FALSE);
+    gtk_widget_set_sensitive(ui_get_widget("label_build_count"), FALSE);
+    GTK_MAIN_ITERATION_OR_EXIT();
+
+    /* Read in the "Aquaria" logo used on the title screen. */
+
+    void *pngdata;
+    uint32_t pngsize;
+    build_read_file(in_path, "gfx/title/logo.png", &pngdata, &pngsize);
+
+    Texture *texture;
+    texture = parse_png(pngdata, pngsize);
+    if (!texture) {
+        fprintf(stderr, "Failed to parse PNG file\n");
+        ui_show_error("The file \"gfx/title/logo.png\" is corrupt!"
+                      " Unable to continue; the build will now abort.");
+        exit(1);
+    }
+
+    free(pngdata);
+
+    /* Cut off the empty borders to get a 9:5 aspect ratio, then shrink to
+     * the 144x80 icon size. */
+
+    const int left = 210, top = 89, width = 630, height = 350;
+    const uint8_t *in = &texture->pixels[(top * texture->stride + left) * 4];
+    uint8_t *out = texture->pixels;
+    int y;
+    for (y = 0; y < height; y++, in += texture->stride*4, out += width*4) {
+        memcpy(out, in, width*4);
+    }
+    texture->width  = width;
+    texture->height = height;
+    texture->stride = width;
+
+    const int new_width  = 144;
+    const int new_height = 80;
+    const int new_stride = 144;
+    void *tempbuf = malloc(new_stride * new_height * 4);
+    if (!tempbuf) {
+        fprintf(stderr, "Out of memory for shrink buffer (%d bytes)\n",
+                new_width * new_height * 4);
+        ui_oom();
+    }
+
+    ZoomInfo *zi = zoom_init(texture->width, texture->height,
+                             new_width, new_height,
+                             4, texture->stride*4, new_stride*4,
+                             1, TCV_ZOOM_CUBIC_KEYS4);
+    if (!zi) {
+        fprintf(stderr, "zoom_init() failed\n");
+        ui_oom();
+    }
+    zoom_process(zi, texture->pixels, tempbuf);
+    zoom_free(zi);
+
+    texture->width  = new_width;
+    texture->height = new_height;
+    texture->stride = new_stride;
+    memcpy(texture->pixels, tempbuf, new_stride * new_height * 4);
+    free(tempbuf);
+    
+    /* Write out the icon as a PNG file. */
+
+    if (!create_png(texture, &pngdata, &pngsize)) {
+        fprintf(stderr, "Failed to create PNG data for icon\n");
+        ui_show_error("An error occurred while generating PNG data!"
+                      " Unable to continue; the build will now abort.");
+        exit(1);
+    }
+    build_write_file(out_path, "ICON0.PNG", pngdata, pngsize);
+    free(pngdata);
+}
+
+/*************************************************************************/
+
 typedef struct FileListEntry_ {
     char *path;
     uint32_t size;
@@ -921,7 +1021,7 @@ static void generate_data(const char *in_path, const char *out_path,
 
         const char *path = filelist[i].path;
         void *filedata;
-        unsigned long filesize;
+        uint32_t filesize;
         build_read_file(in_path, path, &filedata, &filesize);
 
         if (strlen(path) >= 4
@@ -1038,28 +1138,6 @@ static void add_to_file_list(FileListEntry **filelist_ptr,
 
 /*-----------------------------------------------------------------------*/
 
-/* PNG read callback and associated data structure. */
-typedef struct pngFILE_ {
-    const uint8_t *data;
-    uint32_t size;
-    uint32_t pos;
-} pngFILE;
-static void png_read(png_structp png, png_bytep data, png_size_t length) {
-    pngFILE *f = (pngFILE *)png_get_io_ptr(png);
-    size_t toread = ubound(length, f->size - f->pos);
-    if (toread > 0) {
-        memcpy(data, f->data + f->pos, toread);
-        f->pos += toread;
-    }
-};
-
-/* PNG warning/error callbacks. */
-static void png_warning_callback(png_structp png, const char *message) {}
-static void png_error_callback(png_structp png, const char *message) {
-    fprintf(stderr, "libpng error: %s\n", message);
-    longjmp(png_jmpbuf, 1);
-}
-
 /* Local helper functions. */
 static Texture *parse_png(const uint8_t *data, uint32_t size);
 static int shrink_texture(Texture *tex);
@@ -1154,172 +1232,6 @@ static int generate_tex(const void *pngdata, uint32_t pngsize,
   error_return:
     free(texdata);
     return 0;
-}
-
-/*----------------------------------*/
-
-/**
- * parse_png:  Parse a PNG file into a Texture data structure.
- *
- * [Parameters]
- *     data: PNG file data
- *     size: PNG file size (bytes)
- * [Return value]
- *     Texture, or NULL on error
- */
-static Texture *parse_png(const uint8_t *data, uint32_t size)
-{
-    /* We have to be able to free these on error, so we need volatile
-     * declarations. */
-    volatile png_structp png_volatile = NULL;
-    volatile png_infop info_volatile = NULL;
-    volatile Texture *texture_volatile = NULL;
-    volatile void *row_buffer_volatile = NULL;
-
-    if (setjmp(png_jmpbuf) != 0) {
-        /* libpng jumped back here with an error, so return the error. */
-      error:  // Let's reuse it for our own error handling, too.
-        free((void *)row_buffer_volatile);
-        free((void *)texture_volatile);
-        png_destroy_read_struct((png_structpp)&png_volatile,
-                                (png_infopp)&info_volatile, NULL);
-        return NULL;
-    }
-
-
-    /* Set up the PNG reader instance. */
-
-    png_structp png = png_create_read_struct(
-        PNG_LIBPNG_VER_STRING,
-        NULL, png_error_callback, png_warning_callback
-    );
-    png_volatile = png;
-    png_infop info = png_create_info_struct(png);
-    info_volatile = info;
-    pngFILE in = {.data = data, .size = size, .pos = 0};
-    png_set_read_fn(png, &in, png_read);
-
-    /* Read the image information. */
-
-    png_read_info(png, info);
-    const unsigned int width      = png_get_image_width(png, info);
-    const unsigned int height     = png_get_image_height(png, info);
-    const unsigned int bit_depth  = png_get_bit_depth(png, info);
-    const unsigned int color_type = png_get_color_type(png, info);
-    if (png_get_interlace_type(png, info) != PNG_INTERLACE_NONE) {
-        DMSG("Interlaced images not supported");
-        goto error;
-    }
-    if (bit_depth < 8) {
-        DMSG("Bit depth %d not supported", bit_depth);
-        goto error;
-    }
-
-    /* Set up image transformation parameters. */
-
-    if (color_type == PNG_COLOR_TYPE_PALETTE) {
-        png_set_palette_to_rgb(png);
-    } else if (color_type == PNG_COLOR_TYPE_GRAY) {
-        png_set_gray_to_rgb(png);
-    }
-    if (bit_depth == 16) {
-        png_set_strip_16(png);
-    }
-    if (png_get_valid(png, info, PNG_INFO_tRNS)) {
-        png_set_tRNS_to_alpha(png);
-    } else if (color_type == PNG_COLOR_TYPE_RGB
-            || color_type == PNG_COLOR_TYPE_PALETTE
-            || color_type == PNG_COLOR_TYPE_GRAY
-    ) {
-        png_set_add_alpha(png, 0xFF, PNG_FILLER_AFTER);
-    }
-    png_read_update_info(png, info);
-
-    /* Create the texture structure. */
-
-    Texture *texture;
-    const uint32_t tex_width    = width;
-    const uint32_t tex_height   = height;
-    const uint32_t alloc_width  = align_up(width, 4);
-    const uint32_t alloc_height = align_up(height, 8);
-    const uint32_t struct_size  = align_up(sizeof(*texture), 64);
-    texture = malloc(struct_size + (alloc_width * alloc_height * 4));
-    if (!texture) {
-        DMSG("Out of memory for texture (%ux%u, %u bytes)", tex_width,
-             tex_height, struct_size + (alloc_width * alloc_height * 4));
-        goto error;
-    }
-    texture->width    = tex_width;
-    texture->height   = tex_height;
-    texture->stride   = alloc_width;
-    texture->indexed  = 0;
-    texture->swizzled = 0;
-    texture->empty_l  = tex_width;
-    texture->empty_r  = tex_width;
-    texture->empty_t  = tex_height;
-    texture->empty_b  = tex_height;
-    texture->mipmaps  = 0;
-    texture->pixels   = (uint8_t *)texture + struct_size;
-
-    texture_volatile = texture;
-
-    /* Read the image in one row at a time, updating the empty_[lrtb]
-     * fields as we go. */
-
-    uint8_t *row_buffer;
-    uint32_t rowbytes = png_get_rowbytes(png, info);
-    row_buffer = malloc(rowbytes);
-    if (!row_buffer) {
-        DMSG("Out of memory for pixel read buffer (%u bytes)", rowbytes);
-        goto error;
-    }
-    row_buffer_volatile = row_buffer;
-
-    uint8_t *dest = texture->pixels;
-    unsigned int y;
-    for (y = 0; y < height; y++, dest += texture->stride * 4) {
-        png_read_row(png, row_buffer, NULL);
-        memcpy(dest, row_buffer, rowbytes);
-        int whole_row_empty = 1;
-        unsigned int x;
-        for (x = 0; x < width; x++) {
-            if (dest[x*4+3] != 0) {
-                whole_row_empty = 0;
-                texture->empty_l = min(texture->empty_l, x);
-                texture->empty_r = min(texture->empty_r, tex_width - (x+1));
-            }
-        }
-        if (!whole_row_empty) {
-            texture->empty_t = min(texture->empty_t, y);
-            texture->empty_b = min(texture->empty_b, tex_height - (y+1));
-        }
-    }
-
-    row_buffer_volatile = NULL;
-    free(row_buffer);
-
-    /* Decrement all the empty_[lrtb] fields by one (if they're not zero
-     * already) to provide a 1-pixel transparent buffer around the texture
-     * and ensure that graphics hardware rounding doesn't cut anything off. */
-
-    if (texture->empty_l > 0) {
-        texture->empty_l--;
-    }
-    if (texture->empty_r > 0) {
-        texture->empty_r--;
-    }
-    if (texture->empty_t > 0) {
-        texture->empty_t--;
-    }
-    if (texture->empty_b > 0) {
-        texture->empty_b--;
-    }
-
-    /* Done!  Close down the PNG reader and return success. */
-
-    png_read_end(png, NULL);
-    png_destroy_read_struct(&png, &info, NULL);
-    return texture;
 }
 
 /*----------------------------------*/
@@ -1884,8 +1796,6 @@ static void build_eboot(const char *in_path, const char *out_path)
         uint8_t offset_prx[4];
         uint8_t offset_psar[4];
     } pbp_header;
-    // FIXME: random thought -- would it speed things up to word-align
-    // everything (and would the PSP accept that)?
 
     gtk_label_set_text(GTK_LABEL(ui_get_widget("label_build_status")),
                        "Building Aquaria for PSP...");
@@ -1896,7 +1806,19 @@ static void build_eboot(const char *in_path, const char *out_path)
     gtk_widget_set_sensitive(ui_get_widget("label_build_count"), FALSE);
     GTK_MAIN_ITERATION_OR_EXIT();
 
-    eboot_pbp_size = sizeof(pbp_header) + param_sfo_size + aquaria_prx_size;
+    void *icon0_png_data;
+    uint32_t icon0_png_size;
+    build_read_file(in_path, "ICON0.PNG", &icon0_png_data, &icon0_png_size);
+
+    /* We align all file sizes to multiples of 4 bytes because that
+     * drastically improves read performance from the Memory Stick. */
+    const uint32_t param_sfo_size_aligned   = align_up(param_sfo_size, 4);
+    const uint32_t icon0_png_size_aligned   = align_up(icon0_png_size, 4);
+    const uint32_t aquaria_prx_size_aligned = align_up(aquaria_prx_size, 4);
+
+    eboot_pbp_size = sizeof(pbp_header) + param_sfo_size_aligned
+                                        + icon0_png_size_aligned
+                                        + aquaria_prx_size_aligned;
     eboot_pbp = malloc(eboot_pbp_size);
     if (!eboot_pbp) {
         ui_oom();
@@ -1911,12 +1833,23 @@ static void build_eboot(const char *in_path, const char *out_path)
     pbp_header.offset_param[2] = offset>>16 & 0xFF;
     pbp_header.offset_param[3] = offset>>24 & 0xFF;
     memcpy(eboot_pbp + offset, param_sfo, param_sfo_size);
-    offset += param_sfo_size;
+    if (param_sfo_size_aligned > param_sfo_size) {
+        memset(eboot_pbp + offset + param_sfo_size, 0,
+               param_sfo_size_aligned - param_sfo_size);
+    }
+    offset += param_sfo_size_aligned;
 
     pbp_header.offset_icon0[0] = offset>> 0 & 0xFF;
     pbp_header.offset_icon0[1] = offset>> 8 & 0xFF;
     pbp_header.offset_icon0[2] = offset>>16 & 0xFF;
     pbp_header.offset_icon0[3] = offset>>24 & 0xFF;
+    memcpy(eboot_pbp + offset, icon0_png_data, icon0_png_size);
+    free(icon0_png_data);
+    if (icon0_png_size_aligned > icon0_png_size) {
+        memset(eboot_pbp + offset + icon0_png_size, 0,
+               icon0_png_size_aligned - icon0_png_size);
+    }
+    offset += icon0_png_size_aligned;
 
     pbp_header.offset_icon1[0] = offset>> 0 & 0xFF;
     pbp_header.offset_icon1[1] = offset>> 8 & 0xFF;
@@ -1943,6 +1876,10 @@ static void build_eboot(const char *in_path, const char *out_path)
     pbp_header.offset_prx[2] = offset>>16 & 0xFF;
     pbp_header.offset_prx[3] = offset>>24 & 0xFF;
     memcpy(eboot_pbp + offset, aquaria_prx, aquaria_prx_size);
+    if (aquaria_prx_size_aligned > aquaria_prx_size) {
+        memset(eboot_pbp + offset + aquaria_prx_size, 0,
+               aquaria_prx_size_aligned - aquaria_prx_size);
+    }
     offset += aquaria_prx_size;
 
     pbp_header.offset_psar[0] = offset>> 0 & 0xFF;
@@ -1962,7 +1899,7 @@ typedef struct FileInfo_ {
     char *pathname;     // Package pathname for file
     char *realfile;     // Path to file on host filesystem (NULL if a script)
     unsigned int script_index;  // script_data[] index if realfile==NULL
-    unsigned long size; // Size of file (bytes)
+    uint32_t size;      // Size of file (bytes)
     int index_entry;    // Location (array index) of file in package index
     int padding;        // Bytes of padding to insert before file data
 } FileInfo;
@@ -2007,10 +1944,7 @@ static void build_package(const char *in_path, const char *out_path,
 
     /*
      * (1) Generate the package file list from the contents of the input
-     *     directory and the built-in script data.  Also zero out the
-     *     sizes of all *.png and *.ogg files, since we don't need the
-     *     data on the PSP (we just need the files themselves to be
-     *     present so the engine can confirm their existence).
+     *     directory and the built-in script data.
      */
 
     filelist = NULL;
@@ -2036,16 +1970,6 @@ static void build_package(const char *in_path, const char *out_path,
         namesize += strlen(info->pathname) + 1;
     }
     GTK_MAIN_ITERATION_OR_EXIT();
-
-    for (i = 0; i < nfiles; i++) {
-        const char *s = filelist[i].pathname;
-        if (s != NULL && strlen(s) > 4
-         && (stricmp(s+strlen(s)-4, ".png") == 0
-          || stricmp(s+strlen(s)-4, ".ogg") == 0)
-        ) {
-            filelist[i].size = 0;
-        }
-    }
 
     /* Sort the file list so the user sees a nice alphabetical progression. */
     qsort(filelist, nfiles, sizeof(*filelist), stricmp_fileinfo);
@@ -2190,15 +2114,15 @@ static void build_package(const char *in_path, const char *out_path,
         }
 
         void *filedata;
-        unsigned long readlen;
+        uint32_t readlen;
         if (filelist[i].realfile) {
             while (build_read_file(NULL, filelist[i].realfile,
                                    &filedata, &readlen),
                    readlen != filelist[i].size
             ) {
                 char buf[1000];
-                snprintf(buf, sizeof(buf), "File size changed (got %lu,"
-                         " expected %lu)", readlen, filelist[i].size);
+                snprintf(buf, sizeof(buf), "File size changed (got %u,"
+                         " expected %u)", readlen, filelist[i].size);
                 build_report_error(filelist[i].realfile, 1,
                                    &((GError){.message = buf}));
                 g_free(filedata);
@@ -2340,6 +2264,316 @@ static void package_sort(PKGIndexEntry * const index, const uint32_t nfiles,
 #undef NAME
 
 /*************************************************************************/
+/******************** Miscellaneous utility functions ********************/
+/*************************************************************************/
+
+/* PNG read/write callbacks and associated data structure. */
+
+typedef struct pngRFILE_ {
+    const uint8_t *data;
+    uint32_t size;
+    uint32_t pos;
+} pngRFILE;
+static void png_read(png_structp png, png_bytep data, png_size_t length) {
+    pngRFILE *f = (pngRFILE *)png_get_io_ptr(png);
+    size_t toread = ubound(length, f->size - f->pos);
+    if (toread > 0) {
+        memcpy(data, f->data + f->pos, toread);
+        f->pos += toread;
+    }
+}
+
+typedef struct pngWFILE_ {
+    uint8_t *data;
+    uint32_t size;
+} pngWFILE;
+static void png_write(png_structp png, png_bytep data, png_size_t length) {
+    pngWFILE *f = (pngWFILE *)png_get_io_ptr(png);
+    uint8_t *new_data = realloc(f->data, f->size + length);
+    if (!new_data) {
+        png_error(png, "Out of memory");
+        return;
+    }
+    f->data = new_data;
+    memcpy(f->data + f->size, data, length);
+    f->size += length;
+}
+static void png_flush(png_structp png) {}
+
+/*----------------------------------*/
+
+/* PNG warning/error callbacks. */
+
+static void png_warning_callback(png_structp png, const char *message) {}
+
+static void png_error_callback(png_structp png, const char *message) {
+    fprintf(stderr, "libpng error: %s\n", message);
+    longjmp(png_jmpbuf, 1);
+}
+
+/*-----------------------------------------------------------------------*/
+
+/**
+ * parse_png:  Parse a PNG file into a Texture data structure.
+ *
+ * [Parameters]
+ *     data: PNG file data
+ *     size: PNG file size (bytes)
+ * [Return value]
+ *     Texture, or NULL on error
+ */
+static Texture *parse_png(const uint8_t *data, uint32_t size)
+{
+    /* We have to be able to free these on error, so we need volatile
+     * declarations. */
+    png_structp volatile png_volatile = NULL;
+    png_infop volatile info_volatile = NULL;
+    Texture * volatile texture_volatile = NULL;
+    void * volatile row_buffer_volatile = NULL;
+
+    if (setjmp(png_jmpbuf) != 0) {
+        /* libpng jumped back here with an error, so return the error. */
+      error:  // Let's reuse it for our own error handling, too.
+        free(row_buffer_volatile);
+        free(texture_volatile);
+        png_destroy_read_struct((png_structpp)&png_volatile,
+                                (png_infopp)&info_volatile, NULL);
+        return NULL;
+    }
+
+
+    /* Set up the PNG reader instance. */
+
+    png_structp png = png_create_read_struct(
+        PNG_LIBPNG_VER_STRING,
+        NULL, png_error_callback, png_warning_callback
+    );
+    png_volatile = png;
+    png_infop info = png_create_info_struct(png);
+    info_volatile = info;
+    pngRFILE in = {.data = data, .size = size, .pos = 0};
+    png_set_read_fn(png, &in, png_read);
+
+    /* Read the image information. */
+
+    png_read_info(png, info);
+    const unsigned int width      = png_get_image_width(png, info);
+    const unsigned int height     = png_get_image_height(png, info);
+    const unsigned int bit_depth  = png_get_bit_depth(png, info);
+    const unsigned int color_type = png_get_color_type(png, info);
+    if (png_get_interlace_type(png, info) != PNG_INTERLACE_NONE) {
+        DMSG("Interlaced images not supported");
+        goto error;
+    }
+    if (bit_depth < 8) {
+        DMSG("Bit depth %d not supported", bit_depth);
+        goto error;
+    }
+
+    /* Set up image transformation parameters. */
+
+    if (color_type == PNG_COLOR_TYPE_PALETTE) {
+        png_set_palette_to_rgb(png);
+    } else if (color_type == PNG_COLOR_TYPE_GRAY) {
+        png_set_gray_to_rgb(png);
+    }
+    if (bit_depth == 16) {
+        png_set_strip_16(png);
+    }
+    if (png_get_valid(png, info, PNG_INFO_tRNS)) {
+        png_set_tRNS_to_alpha(png);
+    } else if (color_type == PNG_COLOR_TYPE_RGB
+            || color_type == PNG_COLOR_TYPE_PALETTE
+            || color_type == PNG_COLOR_TYPE_GRAY
+    ) {
+        png_set_add_alpha(png, 0xFF, PNG_FILLER_AFTER);
+    }
+    png_read_update_info(png, info);
+
+    /* Create the texture structure. */
+
+    Texture *texture;
+    const uint32_t tex_width    = width;
+    const uint32_t tex_height   = height;
+    const uint32_t alloc_width  = align_up(width, 4);
+    const uint32_t alloc_height = align_up(height, 8);
+    const uint32_t struct_size  = align_up(sizeof(*texture), 64);
+    texture = malloc(struct_size + (alloc_width * alloc_height * 4));
+    if (!texture) {
+        DMSG("Out of memory for texture (%ux%u, %u bytes)", tex_width,
+             tex_height, struct_size + (alloc_width * alloc_height * 4));
+        goto error;
+    }
+    texture->width    = tex_width;
+    texture->height   = tex_height;
+    texture->stride   = alloc_width;
+    texture->indexed  = 0;
+    texture->swizzled = 0;
+    texture->empty_l  = tex_width;
+    texture->empty_r  = tex_width;
+    texture->empty_t  = tex_height;
+    texture->empty_b  = tex_height;
+    texture->mipmaps  = 0;
+    texture->pixels   = (uint8_t *)texture + struct_size;
+
+    texture_volatile = texture;
+
+    /* Read the image in one row at a time, updating the empty_[lrtb]
+     * fields as we go. */
+
+    uint8_t *row_buffer;
+    uint32_t rowbytes = png_get_rowbytes(png, info);
+    row_buffer = malloc(rowbytes);
+    if (!row_buffer) {
+        DMSG("Out of memory for pixel read buffer (%u bytes)", rowbytes);
+        goto error;
+    }
+    row_buffer_volatile = row_buffer;
+
+    uint8_t *dest = texture->pixels;
+    unsigned int y;
+    for (y = 0; y < height; y++, dest += texture->stride * 4) {
+        png_read_row(png, row_buffer, NULL);
+        memcpy(dest, row_buffer, rowbytes);
+        int whole_row_empty = 1;
+        unsigned int x;
+        for (x = 0; x < width; x++) {
+            if (dest[x*4+3] != 0) {
+                whole_row_empty = 0;
+                texture->empty_l = min(texture->empty_l, x);
+                texture->empty_r = min(texture->empty_r, tex_width - (x+1));
+            }
+        }
+        if (!whole_row_empty) {
+            texture->empty_t = min(texture->empty_t, y);
+            texture->empty_b = min(texture->empty_b, tex_height - (y+1));
+        }
+    }
+
+    row_buffer_volatile = NULL;
+    free(row_buffer);
+
+    /* Decrement all the empty_[lrtb] fields by one (if they're not zero
+     * already) to provide a 1-pixel transparent buffer around the texture
+     * and ensure that graphics hardware rounding doesn't cut anything off. */
+
+    if (texture->empty_l > 0) {
+        texture->empty_l--;
+    }
+    if (texture->empty_r > 0) {
+        texture->empty_r--;
+    }
+    if (texture->empty_t > 0) {
+        texture->empty_t--;
+    }
+    if (texture->empty_b > 0) {
+        texture->empty_b--;
+    }
+
+    /* Done!  Close down the PNG reader and return success. */
+
+    png_read_end(png, NULL);
+    png_destroy_read_struct(&png, &info, NULL);
+    return texture;
+}
+
+/*-----------------------------------------------------------------------*/
+
+/**
+ * parse_png:  Generate a PNG file from a Texture data structure.  The
+ * returned buffer should be free()d when no longer needed.
+ *
+ * [Parameters]
+ *      texture: Image data
+ *     data_ret: Pointer to variable to receive PNG file data buffer
+ *     size_ret: Pointer to variable to receive PNG file size (bytes)
+ * [Return value]
+ *     Nonzero on success, zero on error
+ */
+static int create_png(Texture *texture, void **data_ret, uint32_t *size_ret)
+{
+    /* As with parse_png(), these need to be volatile. */
+    png_structp volatile png_volatile = NULL;
+    png_infop volatile info_volatile = NULL;
+    uint8_t ** volatile data_ptr_volatile = NULL;
+    uint8_t ** volatile row_pointers_volatile = NULL;
+
+    if (setjmp(png_jmpbuf) != 0) {
+        /* libpng (or we) jumped back with an error, so return the error. */
+      error:
+        free(row_pointers_volatile);
+        free(*data_ptr_volatile);
+        png_destroy_write_struct((png_structpp)&png_volatile,
+                                 (png_infopp)&info_volatile);
+        return 0;
+    }
+
+
+    /* Make sure we have standard RGBA data (we don't support indexed or
+     * swizzled data here). */
+
+    if (texture->indexed || texture->swizzled) {
+        fprintf(stderr, "Invalid texture flags (indexed=%d swizzled=%d)\n",
+                texture->indexed, texture->swizzled);
+        goto error;
+    }
+
+    /* Set up the PNG writer instance. */
+
+    png_structp png = png_create_write_struct(
+        PNG_LIBPNG_VER_STRING,
+        NULL, png_error_callback, png_warning_callback
+    );
+    png_volatile = png;
+    png_infop info = png_create_info_struct(png);
+    info_volatile = info;
+    pngWFILE out = {.data = NULL, .size = 0};
+    data_ptr_volatile = &out.data;
+    png_set_write_fn(png, &out, png_write, png_flush);
+
+    /* Set up image encoding parameters. */
+
+    png_set_IHDR(png, info, texture->width, texture->height, 8,
+                 PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+    png_set_compression_level(png, Z_BEST_COMPRESSION);
+    png_set_compression_mem_level(png, 9);
+    png_set_compression_window_bits(png, 15);
+
+    /* Create the PNG data. */
+
+    uint8_t **row_pointers = malloc(texture->height * sizeof(uint8_t *));
+    if (!row_pointers) {
+        fprintf(stderr, "Out of memory for %d row pointers\n",texture->height);
+        goto error;
+    }
+    row_pointers_volatile = row_pointers;
+    int y;
+    for (y = 0; y < texture->height; y++) {
+        row_pointers[y] = &texture->pixels[y * (texture->stride * 4)];
+    }
+    png_set_rows(png, info, row_pointers);
+
+    png_write_png(png, info,
+#ifdef IS_LITTLE_ENDIAN
+                  PNG_TRANSFORM_IDENTITY,
+#else
+                  PNG_TRANSFORM_BGR | PNG_TRANSFORM_SWAP_ALPHA,
+#endif
+                  NULL);
+
+    row_pointers_volatile = NULL;
+    free(row_pointers);
+
+    /* Done!  Close down the PNG writer and return success. */
+
+    png_write_end(png, NULL);
+    png_destroy_write_struct(&png, &info);
+    *data_ret = out.data;
+    *size_ret = out.size;
+    return 1;
+}
+
 /*************************************************************************/
 
 /**
@@ -2422,7 +2656,7 @@ static void build_scan_directory(void *filelist_ptr, uint32_t *nfiles_ptr,
  *     None
  */
 static void build_read_file(const char *directory, const char *filename,
-                            void **contents_ret, unsigned long *length_ret)
+                            void **contents_ret, uint32_t *length_ret)
 {
     char *path;
     if (directory) {
@@ -2462,7 +2696,7 @@ static void build_read_file(const char *directory, const char *filename,
  *     None
  */
 static void build_write_file(const char *directory, const char *filename,
-                             const void *contents, long length)
+                             const void *contents, int32_t length)
 {
     char *path, *parent;
     if (directory) {

@@ -101,14 +101,14 @@ DISABLE_SOUND_CACHE = 1
 # width/height) will be extracted from the PNG file, resized to 144x80
 # pixels, and used as the icon.
 #
-# If ICON0_SOURCE_PNG is empty (use "ICON0_SOURCE_PNG=" on the Make command
-# line), no icon will be generated.
+# If ICON0_SOURCE_PNG is empty, no icon will be generated.
 
-ICON0_SOURCE_PNG = /data/games/aquaria/gfx/title/logo.png
-ICON0_LEFT   = 210
-ICON0_TOP    =  89
-ICON0_WIDTH  = 630
-ICON0_HEIGHT = 350
+# Example using the "Aquaria" logo from the title screen:
+#ICON0_SOURCE_PNG = /data/games/aquaria/gfx/title/logo.png
+#ICON0_LEFT   = 210
+#ICON0_TOP    =  89
+#ICON0_WIDTH  = 630
+#ICON0_HEIGHT = 350
 
 ###########################################################################
 
@@ -544,11 +544,6 @@ tools:
 
 ifneq ($(ICON0_SOURCE_PNG),)
 
-EBOOT.PBP: aquaria.prx PARAM.SFO ICON0.PNG Makefile
-	$(ECHO) "Packing $@"
-	$(Q)pack-pbp $@ PARAM.SFO ICON0.PNG NULL NULL NULL NULL aquaria.prx NULL
-	$(ECHO) "Finished building Aquaria for PSP."
-
 ICON0.PNG: $(ICON0_SOURCE_PNG) ICON0-alpha.pnm Makefile
 	$(ECHO) "Generating $@"
 	$(Q)pngtopnm <$< \
@@ -565,12 +560,15 @@ ICON0-alpha.pnm: $(ICON0_SOURCE_PNG) Makefile
 
 else
 
-EBOOT.PBP: aquaria.prx PARAM.SFO Makefile
-	$(ECHO) "Packing $@"
-	$(Q)pack-pbp $@ PARAM.SFO NULL NULL NULL NULL NULL aquaria.prx NULL
-	$(ECHO) "Finished building Aquaria for PSP."
+ICON0.PNG:
+	touch $@
 
 endif
+
+EBOOT.PBP: aquaria.prx PARAM.SFO ICON0.PNG Makefile
+	$(ECHO) "Packing $@"
+	$(Q)pack-pbp $@ PARAM.SFO ICON0.PNG NULL NULL NULL NULL aquaria.prx NULL
+	$(ECHO) "Finished building Aquaria for PSP."
 
 PARAM.SFO: Makefile
 	$(ECHO) "Generating $@"
