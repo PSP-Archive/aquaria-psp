@@ -66,8 +66,8 @@
 
 /* スレッド優先度（小さい値ほど高優先度） */
 #define THREADPRI_MAIN           32  // メインスレッド
+#define THREADPRI_UTILITY_BASE   26  // OSのセーブデータユーティリティ関連
 #define THREADPRI_FILEIO         25  // ファイル操作
-#define THREADPRI_UTILITY_BASE   21  // OSのセーブデータユーティリティ関連
 #define THREADPRI_SOUND          20  // 音声再生とストリーミング
 #define THREADPRI_CALLBACK_WATCH 15  // HOMEボタン・電源コールバック処理
 
