@@ -99,6 +99,13 @@ INCLUDE_DIRECTORIES(${LIBVORBISDIR}/include)
 # !!! FIXME: don't use fmod!
 #INCLUDE_DIRECTORIES("${BBGEDIR}/fmodapi42604linux64/api/inc")
 
+# Custom build ID: e.g. "-custom", " (my very own build)"
+SET(AQUARIA_CUSTOM_BUILD_ID "" CACHE STRING
+    "Text to append to the Aquaria version ID on the title screen.")
+if (NOT(AQUARIA_CUSTOM_BUILD_ID STREQUAL ""))
+  ADD_DEFINITIONS("-DAQUARIA_CUSTOM_BUILD_ID=\"${AQUARIA_CUSTOM_BUILD_ID}\"")
+endif (NOT(AQUARIA_CUSTOM_BUILD_ID STREQUAL ""))
+
 # Aquaria/BBGE specific defines...
 ADD_DEFINITIONS(-DGL_GLEXT_LEGACY=1)
 ADD_DEFINITIONS(-DHAVE_PUTENV=1)

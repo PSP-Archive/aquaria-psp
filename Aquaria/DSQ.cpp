@@ -865,7 +865,11 @@ void DSQ::setVersionLabelText() {
 	{
 		//os << "gm" << VERSION_GM;
 	}
-	
+
+	#ifdef AQUARIA_CUSTOM_BUILD_ID
+	os << AQUARIA_CUSTOM_BUILD_ID;
+	#endif
+
 	std::string regName;
 
 	#if AQUARIA_NODRM
