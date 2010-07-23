@@ -47,17 +47,21 @@ extern int quantize_image(const uint32_t *src, const int32_t src_stride,
  * 　・色ヒストグラム生成時に色の精度を落とさない
  * 　・アルファ値を考慮する
  *
+ * callback!=NULLの場合、約1秒間隔にその関数を呼び出す。
+ *
  * 【引　数】    imageptr: 画像データポインタ（0xAARRGGBBまたは0xAABBGGRR形式）
  * 　　　　　       width: 画像の幅（ピクセル）
  * 　　　　　      height: 画像の高さ（ピクセル）
  * 　　　　　      stride: 画像のライン長（ピクセル）
  * 　　　　　     palette: 生成した色パレットを格納するバッファへのポインタ
  * 　　　　　fixed_colors: パレットのうち、固定されている色
+ * 　　　　　    callback: 定期的に呼び出されるコールバック関数（NULL可）
  * 【引　数】なし
  */
 extern void generate_palette(const uint32_t *imageptr, uint32_t width,
                              uint32_t height, uint32_t stride,
-                             uint32_t *palette, int fixed_colors);
+                             uint32_t *palette, int fixed_colors,
+                             void (*callback)(void));
 
 /**
  * generate_palette_slow:  画像データから最適な256色パレットを生成する。

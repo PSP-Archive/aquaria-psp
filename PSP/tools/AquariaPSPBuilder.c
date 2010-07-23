@@ -795,10 +795,12 @@ static void uicb_toggle_hide_filenames(void)
  * GTK_MAIN_ITERATION_OR_EXIT:  Convenience macro to run a GTK+ main loop
  * iteration and exit the program if a gtk_main_quit() is detected.
  */
-#define GTK_MAIN_ITERATION_OR_EXIT()  do { \
-    if (gtk_main_iteration_do(FALSE)) {    \
-        exit(0);                           \
-    }                                      \
+#define GTK_MAIN_ITERATION_OR_EXIT()  do {  \
+    while (gtk_events_pending()) {          \
+        if (gtk_main_iteration_do(FALSE)) { \
+            exit(0);                        \
+        }                                   \
+    }                                       \
 } while (0)
 
 /**
@@ -1138,7 +1140,10 @@ static void add_to_file_list(FileListEntry **filelist_ptr,
 
 /*-----------------------------------------------------------------------*/
 
-/* Local helper functions. */
+/* Periodic callback for generate_palette(). */
+static void genpal_callback(void) { GTK_MAIN_ITERATION_OR_EXIT(); }
+
+/* Other local helper functions. */
 static Texture *parse_png(const uint8_t *data, uint32_t size);
 static int shrink_texture(Texture *tex);
 static int quantize_texture(Texture *tex);
@@ -1192,8 +1197,8 @@ static int generate_tex(const void *pngdata, uint32_t pngsize,
 
     uint32_t palette[256];
     memset(palette, 0, sizeof(palette));
-    generate_palette((uint32_t *)texture->pixels,
-                     total_pixels, 1, total_pixels, palette, 0);
+    generate_palette((uint32_t *)texture->pixels, total_pixels, 1,
+                     total_pixels, palette, 0, genpal_callback);
     SET_PROGRESS_AND_ITERATE(progress_min + 0.80*progress_delta);
 
     /* Quantize the texture using the given palette and generate a

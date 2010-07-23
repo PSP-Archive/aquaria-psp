@@ -206,7 +206,8 @@ static int convert_to_8bpp(const char **files, unsigned int num_files,
         }
     }
 
-    generate_palette(temp_pixelbuf, total_pixels, 1, total_pixels, palette, 0);
+    generate_palette(temp_pixelbuf, total_pixels, 1, total_pixels,
+                     palette, 0, NULL);
 
     free(temp_pixelbuf);
 

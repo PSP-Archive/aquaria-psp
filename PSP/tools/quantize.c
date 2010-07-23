@@ -13,6 +13,8 @@
 
 #include "quantize.h"
 
+#include <time.h>
+
 /*************************************************************************/
 
 /* 画像の色情報を格納する構造体 */
@@ -30,7 +32,8 @@ static struct colorinfo *colortable;  // 動的確保
 
 static uint32_t generate_colortable(const uint32_t *imageptr, uint32_t width,
                                     uint32_t height, uint32_t stride,
-                                    const uint32_t *palette, int fixed_colors);
+                                    const uint32_t *palette, int fixed_colors,
+                                    void (*callback)(void));
 static inline uint32_t colordiff_sq(uint32_t color1, uint32_t color2);
 
 /*************************************************************************/
@@ -81,7 +84,7 @@ int quantize_image(const uint32_t *src, const int32_t src_stride,
                                   fixed_colors);
         } else {
             generate_palette(src, width, height, src_stride, palette,
-                             fixed_colors);
+                             fixed_colors, NULL);
         }
     }
 
@@ -151,17 +154,21 @@ static int compare_box(const void * const a, const void * const b);
  * 　・色ヒストグラム生成時に色の精度を落とさない
  * 　・アルファ値を考慮する
  *
+ * callback!=NULLの場合、約1秒間隔にその関数を呼び出す。
+ *
  * 【引　数】    imageptr: 画像データポインタ（0xAARRGGBBまたは0xAABBGGRR形式）
  * 　　　　　       width: 画像の幅（ピクセル）
  * 　　　　　      height: 画像の高さ（ピクセル）
  * 　　　　　      stride: 画像のライン長（ピクセル）
  * 　　　　　     palette: 生成した色パレットを格納するバッファへのポインタ
  * 　　　　　fixed_colors: パレットのうち、固定されている色
+ * 　　　　　    callback: 定期的に呼び出されるコールバック関数（NULL可）
  * 【引　数】なし
  */
 void generate_palette(const uint32_t *imageptr, uint32_t width,
                       uint32_t height, uint32_t stride,
-                      uint32_t *palette, int fixed_colors)
+                      uint32_t *palette, int fixed_colors,
+                      void (*callback)(void))
 {
     PRECOND(imageptr != NULL);
     PRECOND(palette != NULL);
@@ -177,7 +184,7 @@ void generate_palette(const uint32_t *imageptr, uint32_t width,
     }
     const uint32_t ncolors =
         generate_colortable(imageptr, width, height, stride,
-                            palette, fixed_colors);
+                            palette, fixed_colors, callback);
 
     /* 色空間分割用ボックスを初期化する */
 
@@ -426,7 +433,7 @@ void generate_palette_slow(const uint32_t *imageptr, uint32_t width,
     }
     const uint32_t ncolors =
         generate_colortable(imageptr, width, height, stride,
-                            palette, fixed_colors);
+                            palette, fixed_colors, NULL);
 
     /* テーブルを頻度順にソートする */
     qsort(colortable, ncolors, sizeof(*colortable), compare_colortable);
@@ -757,19 +764,31 @@ static int select_color_2(uint32_t i, uint32_t *palette, int fixed_colors,
  */
 static uint32_t generate_colortable(const uint32_t *imageptr, uint32_t width,
                                     uint32_t height, uint32_t stride,
-                                    const uint32_t *palette, int fixed_colors)
+                                    const uint32_t *palette, int fixed_colors,
+                                    void (*callback)(void))
 {
     PRECOND(imageptr != NULL);
     PRECOND(colortable != NULL);
     PRECOND(palette != NULL);
+
+    time_t last_callback = time(NULL);
+    uint32_t total_pixels = 0;
 
     /* テーブルを生成する */
     int y;
     for (y = 0; y < height; y++) {
         const uint32_t *ptr = &imageptr[y * stride];
         int x;
-        for (x = 0; x < width; x++) {
+        for (x = 0; x < width; x++, total_pixels++) {
             uint32_t i;
+
+            if (callback != NULL && total_pixels % 256 == 0
+             && time(NULL) != last_callback
+            ) {
+                (*callback)();
+                last_callback = time(NULL);
+            }
+
             /* 固定色の場合は除く */
             for (i = 0; i < fixed_colors; i++) {
                 if (ptr[x] == palette[i]) {
@@ -779,6 +798,7 @@ static uint32_t generate_colortable(const uint32_t *imageptr, uint32_t width,
             if (i < fixed_colors) {
                 continue;
             }
+
             /* 色をカウントする。ついでに、検索を速くするために1つ前へ
              * 移動する */
             if (ptr[x] == colortable[0].color) {
