@@ -2,8 +2,8 @@ About the Aquaria PSP port
 ==========================
 
 This is an unofficial, work-in-progress port of Aquaria to the Sony PSP.
-At present, it is marginally playable through at least the first few
-areas, but still runs very slowly.
+At present, the game is playable, but the frame rate drops precipitously
+in some areas.
 
 
 Important notice (limitations of this version)
@@ -37,24 +37,31 @@ data files from the commercial distribution of the game.  The builder is
 self-contained, so that you don't need to install any compilers or other
 tools -- simply run the program and follow the prompts.
 
+    IMPORTANT:  Never mix game files ("EBOOT.PBP" and "aquaria.dat")
+    from different builds!  The PSP port is still in development,
+    and there may be subtle changes to the data format between one
+    build and another that can cause the game to malfunction if the
+    files do not match.  Always copy the entire contents of the
+    output game folder to your PSP when the build completes.
+
 The first time you use the builder, it will convert the Aquaria data
 files to a format suitable for use by the PSP.  This is a fairly
 time-consuming process, and will typically take 10-15 minutes even on
-a fast PC.  (While processing some files, the program may not respond to
-input for 10-15 seconds or so; if the window appears blank or you can't
-click the "Pause" or "Abort" button, wait a moment and try again.)
-These converted files will be saved in the folder you specify as the
-"new PSP data folder"; you can delete this folder when the build
+a fast PC.  (While processing certain data files, the program may stop
+responding to input for 10-15 seconds or so; if the window appears blank
+or you can't click the "Pause" or "Abort" button, wait a moment and try
+again.)  These converted files will be saved in the folder you specify
+as the "new PSP data folder"; you can delete this folder when the build
 finishes, but if you keep it on your system, you can then reuse it when
 a newer version of the PSP program is released to save time during the
 build.
 
-When the builder finishes its work, the folder you specified in the
-"Output game folder" field will contain all the files needed to play
-Aquaria on the PSP.  Copy this folder to your PSP, either using the
-PSP's USB mode or a separate Memory Stick reader, under the "PSP/GAME"
-folder.  For example, if you use Windows and your PSP is connected as
-drive E:, you should end up with the following folder structure:
+When the builder finishes its work, the folder you specified as the
+"output game folder" will contain all the files needed to play Aquaria
+on the PSP.  Copy this folder to your PSP, either using the PSP's USB
+mode or a separate Memory Stick reader, under the "PSP/GAME" folder.
+For example, if you use Windows and your PSP is connected as drive E:,
+you should end up with the following folder structure:
 
 E: --> PSP --> GAME --> AQUARIA
 
@@ -64,12 +71,9 @@ name is fine).
 Once you have Aquaria installed on your PSP, skip down to the "Default
 controls" section for information on playing the game.
 
-Note that the current version of the builder does not include an icon
-with the program, so the game will show up in the PSP's game list with
-the default grey icon.  Also note that the links in the "about this
-program" screen will not work if your system web browser is
-misconfigured, or if (on Linux) you do not have the "gvfs" package
-installed.
+Note that the links in the "about this program" screen will not work if
+your system web browser is misconfigured, or if (on Linux) you do not
+have the "gvfs" package installed.
 
 For developers, the source code for this tool is included under the
 PSP/tools subdirectory in the source tree.  In order to build it, you
@@ -78,7 +82,9 @@ LAME, and GTK+ (2.16 or later) packages installed; on Ubuntu 10.04, for
 example, these are the libpng12-dev, libogg-dev, libvorbis-dev,
 libmp3lame-dev, and libgtk2.0-dev packages.  You will also need to be
 able to build the PSP executable itself, as described below, and you
-will need Perl available in your shell's search path.
+will need Perl available in your shell's search path.  To compile the
+tool, run "make AquariaPSPBuilder" from the PSP/tools subdirectory after
+building the PSP executable.
 
 
 Source code build prerequisites
@@ -232,7 +238,9 @@ need the zlib, libpng, libogg, libvorbis, and lame packages installed
 
 There is also a script in the "tools" directory, "convert-all-data.sh",
 which you can use to convert all PNG and Ogg files in one go.  Run the
-script without any command line parameters for documentation.
+script without any command line parameters for documentation.  (However,
+it is advised to use the "AquariaPSPBuilder" program instead; see above
+for details.)
 
 
 Using a package file
@@ -251,7 +259,8 @@ can be created.  (However, the script does not include the ICON0.PNG
 file necessary for adding an icon to the settins and achievements save
 files, and does not update the game scripts to those included in the
 source tree.  The "AquariaPSPBuilder" tool under PSP/tools takes care of
-both issues automatically, and its use is recommended.)
+both issues automatically, and its use is recommended.  See above for
+details.)
 
 One caveat to keep in mind is that any directory included in the package
 file will _not_ be searched on the Memory Stick when looking for files.
