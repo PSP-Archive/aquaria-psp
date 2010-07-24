@@ -514,19 +514,6 @@ luaFunc(foundLostMemory)
 	luaReturnInt(0);
 }
 
-luaFunc(setGameOver)
-{
-	bool v = false;
-	if (lua_isnumber(L, 0))
-		v = lua_tointeger(L, 0);
-	else if (lua_isboolean(L, 0))
-		v = lua_toboolean(L, 0);
-
-	dsq->game->runGameOverScript = !v;
-
-	luaReturnNum(0);
-}
-
 luaFunc(setStory)
 {
 	dsq->continuity.setStory(lua_tonumber(L, 1));
@@ -1180,16 +1167,6 @@ luaFunc(entity_setTouchDamage)
 	if (e)
 	{
 		e->touchDamage = lua_tonumber(L, 2);
-	}
-	luaReturnNum(0);
-}
-
-luaFunc(entity_setTouchPush)
-{
-	Entity *e = entity(L);
-	if (e)
-	{
-		e->pushAvatar = lua_tonumber(L, 2);
 	}
 	luaReturnNum(0);
 }
@@ -2006,11 +1983,6 @@ luaFunc(entity_isFollowingPath)
 		luaReturnBool(false);
 }
 
-luaFunc(entity_setBehaviorType)
-{
-	luaReturnInt(0);
-}
-
 luaFunc(entity_toggleBone)
 {
 	Entity *e = entity(L);
@@ -2020,11 +1992,6 @@ luaFunc(entity_toggleBone)
 		e->skeletalSprite.toggleBone(e->skeletalSprite.getBoneIdx(b), lua_tonumber(L, 3));
 	}
 	luaReturnNum(0);
-}
-
-luaFunc(entity_getBehaviorType)
-{
-	luaReturnInt(0);
 }
 
 luaFunc(entity_setColor)
@@ -7283,8 +7250,6 @@ static const struct {
 	luaRegister(entity_setTargetPriority),
 
 
-	luaRegister(entity_setBehaviorType),
-	luaRegister(entity_getBehaviorType),
 	luaRegister(entity_setEntityType),
 	luaRegister(entity_getEntityType),
 
@@ -7737,7 +7702,6 @@ static const struct {
 	luaRegister(node_setActive),
 
 
-	luaRegister(setGameOver),
 	luaRegister(setSceneColor),
 
 
@@ -7745,7 +7709,6 @@ static const struct {
 
 	luaRegister(entity_setCollideRadius),
 	luaRegister(entity_getCollideRadius),
-	luaRegister(entity_setTouchPush),
 	luaRegister(entity_setTouchDamage),
 
 	luaRegister(entity_isEntityInRange),
