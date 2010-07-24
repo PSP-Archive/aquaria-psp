@@ -324,6 +324,8 @@ void OggDecoder::stop()
     }
 #endif
 
+    ov_clear(&vf);
+
     alSourceStop(source);
     int queued = 0;
     alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
