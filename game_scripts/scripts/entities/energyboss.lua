@@ -106,7 +106,7 @@ function init(me)
 		
 	entity_scale(me, 1.5, 1.5)
 	entity_setTouchDamage(me, 1)
-	entity_setTouchPush(me, 1)
+	--entity_setTouchPush(me, 1)
 	
 	entity_setWeight(me, 800)
 	

@@ -155,11 +155,6 @@ end
 function hitSurface(me)
 end
 
-function activate(me)
-	--msg1("Naija: Pet!")
-	entity_setBehaviorType(me, BT_ACTIVEPET)
-end
-
 function damage(me, attacker, bone, damageType, dmg)
 	if damageType == DT_AVATAR_BITE then
 		entity_changeHealth(me, -99)
