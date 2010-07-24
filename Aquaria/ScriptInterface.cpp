@@ -1132,29 +1132,6 @@ luaFunc(createShot)
 }
 
 
-luaFunc(entity_fireShot)
-{
-	Entity *e = entity(L);
-	Shot *s = 0;
-	if (e)
-	{
-		int homing = lua_tonumber(L, 6);
-		int maxSpeed = lua_tonumber(L, 7);
-		Entity *e2 = 0;
-		if (lua_touserdata(L, 2) != NULL)
-		{
-			e2 = entity(L,2);
-		}
-		std::string particle;
-		if (lua_isstring(L, 8))
-		{
-			particle = lua_tostring(L, 8);
-		}
-		s = dsq->game->fireShot(e, particle, e->position, lua_tointeger(L, 3), Vector(lua_tonumber(L, 4),lua_tonumber(L, 5),0), e2, homing, maxSpeed);
-	}
-	luaReturnPtr(s);
-}
-
 luaFunc(entity_sound)
 {
 	Entity *e = entity(L);
@@ -7652,7 +7629,6 @@ static const struct {
 
 
 	luaRegister(createShot),
-	luaRegister(entity_fireShot),
 
 	luaRegister(entity_isHit),
 

@@ -547,6 +547,20 @@ SoundManager::~SoundManager()
 	// release
 	if (!enabled) return;
 
+	for (SoundMap::iterator i = soundMap.begin(); i != soundMap.end(); i++)
+	{
+		std::string snd = (*i).first;
+		debugLog("unloading sound [" + snd + "]");
+#ifndef BBGE_DISABLE_SOUND_CACHE
+		FMOD::Sound *samp = (FMOD::Sound*)((*i).second);
+		samp->release();
+#else
+		SoundInfo *info = (SoundInfo*)((*i).second)
+		delete info;
+#endif
+	}
+	soundMap.clear();
+
 #ifdef BBGE_BUILD_FMODEX
 	SoundCore::system->release();
 #endif
