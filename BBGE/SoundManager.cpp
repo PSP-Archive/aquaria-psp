@@ -539,7 +539,7 @@ SoundManager::~SoundManager()
 		FMOD::Sound *samp = (FMOD::Sound*)((*i).second);
 		samp->release();
 #else
-		SoundInfo *info = (SoundInfo*)((*i).second)
+		SoundInfo *info = (SoundInfo*)((*i).second);
 		delete info;
 #endif
 	}
