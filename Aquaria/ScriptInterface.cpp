@@ -7973,7 +7973,6 @@ static const struct {
 	luaConstantFromClass(STATE_PUSH,		Entity),
 	luaConstantFromClass(STATE_PUSHDELAY,	Entity),
 	luaConstantFromClass(STATE_PLANTED,		Entity),
-	luaConstantFromClass(STATE_TRANSFORM,	Entity),
 	luaConstantFromClass(STATE_PULLED,		Entity),
 	luaConstantFromClass(STATE_FOLLOWNAIJA,	Entity),
 	luaConstantFromClass(STATE_DEATHSCENE,	Entity),
