@@ -29,8 +29,8 @@ public:
 	FrameBuffer();	
 	~FrameBuffer();
 	bool init(int width, int height, bool fitToScreen=false, GLint filter=GL_LINEAR);
-	bool isInited() { return enabled; }
-	bool isEnabled() { return inited; }
+	bool isInited() { return inited; }
+	bool isEnabled() { return enabled; }
 	void setEnabled(bool e);
 	void startCapture();
 	void endCapture();
