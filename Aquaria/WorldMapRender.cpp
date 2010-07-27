@@ -1035,7 +1035,7 @@ void WorldMapRender::onUpdate(float dt)
 				if (visMethod == VIS_VERTEX)
 				{
 					activeQuad->setDrawGridAlpha(x, y, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(x-1, p.y, visibleMapSegAlpha);
+					activeQuad->setDrawGridAlpha(x-1, y, visibleMapSegAlpha);
 					activeQuad->setDrawGridAlpha(x-1, y-1, visibleMapSegAlpha);
 					activeQuad->setDrawGridAlpha(x-1, y+1, visibleMapSegAlpha);
 					activeQuad->setDrawGridAlpha(x+1, y, visibleMapSegAlpha);
