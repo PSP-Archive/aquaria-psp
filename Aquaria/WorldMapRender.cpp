@@ -37,6 +37,11 @@ namespace WorldMapRenderNamespace
 
 	const float blinkPeriod		= 0.2;
 
+	// Fraction of the screen width and height we consider "visited".
+	// (We don't mark the entire screen "visited" because the player may
+	// overlook things on the edge of the screen while moving.)
+	const float visitedFraction	= 0.8;
+
 	enum VisMethod
 	{
 		VIS_VERTEX		= 0,
@@ -1286,27 +1291,36 @@ void WorldMapRender::onUpdate(float dt)
 	else
 	{
 #ifdef AQUARIA_BUILD_MAPVIS
-		if (dsq->game->avatar && activeTile)
+		if (!dsq->isInCutscene() && dsq->game->avatar && activeTile)
 		{
-			Vector p = dsq->game->avatar->position;
-			p.x /= dsq->game->cameraMax.x;
-			p.y /= dsq->game->cameraMax.y;
-			int x = int(p.x * MAPVIS_SUBDIV);
-			int y = int(p.y * MAPVIS_SUBDIV);
-			activeTile->markVisited(x-1, y-1, x+1, y+1);
+			const float screenWidth  = core->getVirtualWidth()  * core->invGlobalScale;
+			const float screenHeight = core->getVirtualHeight() * core->invGlobalScale;
+			Vector camera = core->cameraPos;
+			camera.x += screenWidth/2;
+			camera.y += screenHeight/2;
+			const float visWidth  = screenWidth  * visitedFraction;
+			const float visHeight = screenHeight * visitedFraction;
+			Vector tl, br;
+			tl.x = (camera.x - visWidth/2 ) / dsq->game->cameraMax.x;
+			tl.y = (camera.y - visHeight/2) / dsq->game->cameraMax.y;
+			br.x = (camera.x + visWidth/2 ) / dsq->game->cameraMax.x;
+			br.y = (camera.y + visHeight/2) / dsq->game->cameraMax.y;
+			const int x0 = int(tl.x * MAPVIS_SUBDIV);
+			const int y0 = int(tl.y * MAPVIS_SUBDIV);
+			const int x1 = int(br.x * MAPVIS_SUBDIV);
+			const int y1 = int(br.y * MAPVIS_SUBDIV);
+			activeTile->markVisited(x0, y0, x1, y1);
 			if (activeQuad)
 			{
 				if (visMethod == VIS_VERTEX)
 				{
-					activeQuad->setDrawGridAlpha(x, y, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(x-1, p.y, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(x-1, y-1, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(x-1, y+1, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(x+1, y, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(x+1, y-1, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(x+1, y+1, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(x, y-1, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(x, y+1, visibleMapSegAlpha);
+					for (int x = x0; x <= x1; x++)
+					{
+						for (int y = y0; y <= y1; y++)
+						{
+							activeQuad->setDrawGridAlpha(x, y, visibleMapSegAlpha);
+						}
+					}
 				}
 				else if (visMethod == VIS_WRITE)
 				{
