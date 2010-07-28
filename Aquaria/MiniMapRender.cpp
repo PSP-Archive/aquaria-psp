@@ -489,7 +489,7 @@ void MiniMapRender::onRender()
 						}
 						else
 						{
-							if (curColorIsWater)
+							if (!curColorIsWater)
 							{
 								glColor4f(0.1, 0.2, 0.9, 0.4f*lightLevel);
 								curColorIsWater = true;

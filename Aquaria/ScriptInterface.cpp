@@ -271,6 +271,16 @@ luaFunc(getVars)
 	return 1;
 }
 
+// Set the global "v" to the instance's local variable table.
+// Must be called when starting a script and after any code which may
+// allow a function in another script to be called (notably, after any
+// call to Core::main() or DSQ::watch()).
+static void fixupLocalVars(lua_State *L)
+{
+	l_getVars(L);
+	lua_setglobal(L, "v");
+}
+
 luaFunc(indexWarnGlobal)
 {
 	lua_pushvalue(L, -1);
@@ -1884,6 +1894,7 @@ luaFunc(entity_waitForPath)
 	{
 		core->main(FRAME_TIME);
 	}
+	fixupLocalVars(L);
 	luaReturnInt(0);
 }
 
@@ -1907,6 +1918,7 @@ luaFunc(entity_watchForPath)
 	{
 		core->main(FRAME_TIME);
 	}
+	fixupLocalVars(L);
 
 	dsq->game->avatar->enableInput();
 	luaReturnInt(0);
@@ -1925,6 +1937,7 @@ luaFunc(watchForVoice)
 			break;
 		}
 	}
+	fixupLocalVars(L);
 	luaReturnNum(0);
 }
 
@@ -4497,6 +4510,7 @@ luaFunc(bedEffects)
 	dsq->game->positionToAvatar = bedPosition;
 	dsq->game->transitionToScene(dsq->game->sceneName);
 
+	fixupLocalVars(L);
 	luaReturnNum(0);
 }
 
@@ -5236,12 +5250,14 @@ luaFunc(watch)
 	float t = lua_tonumber(L, 1);
 	int quit = lua_tointeger(L, 2);
 	dsq->watch(t, quit);
+	fixupLocalVars(L);
 	luaReturnNum(0);
 }
 
 luaFunc(wait)
 {
 	core->main(lua_tonumber(L, 1));
+	fixupLocalVars(L);
 	luaReturnNum(0);
 }
 
@@ -5259,6 +5275,7 @@ luaFunc(warpNaijaToEntity)
 		dsq->overlay->alpha.interpolateTo(0, 1);
 		core->main(1);
 
+		fixupLocalVars(L);
 	}
 	luaReturnNum(0);
 }
@@ -8768,8 +8785,7 @@ bool ScriptInterface::runScript(const std::string &file, const std::string &func
 
 bool Script::doCall(int nparams, int nrets)
 {
-	l_getVars(L);
-	lua_setglobal(L, "v");
+	fixupLocalVars(L);
 	if (lua_pcall(L, nparams, nrets, 0) == 0)
 	{
 		return true;
