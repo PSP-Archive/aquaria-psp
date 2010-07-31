@@ -27,6 +27,7 @@ v.mia = 0
 v.n = 0
 
 function init(me)
+	v.n = getNaija()
 end
 
 function update(me, dt)
@@ -41,8 +42,6 @@ function update(me, dt)
 	end
 	if not v.done and node_isEntityIn(me, getNaija()) then
 		v.done = true
-		
-		local n = getNaija()
 		
 		local cam = getNode("cam")
 		local cam2 = getNode("cam2")
