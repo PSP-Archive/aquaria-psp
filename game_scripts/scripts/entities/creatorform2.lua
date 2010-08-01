@@ -98,7 +98,7 @@ function update(me, dt)
 	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	
 	if bone ~= 0 then
-		if not v.inHand and v.grabDelay == 0 and v.bone == v.grabPoint then
+		if not v.inHand and v.grabDelay == 0 and bone == v.grabPoint then
 			v.inHand = true
 			avatar_fallOffWall()
 		end
