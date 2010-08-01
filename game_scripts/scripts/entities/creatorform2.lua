@@ -126,6 +126,14 @@ function update(me, dt)
 				v.inHand = false
 				v.breakFreeTimer = 0
 				v.grabDelay = 4
+				local x, y = entity_x(v.n), entity_y(v.n)
+				if isObstructed(x, y) then
+					-- Trapped in the floor!  Warp out.
+					while y > 4500 and isObstructed(x, y) do
+						y = y-20
+					end
+					entity_setPosition(v.n, x, y)
+				end
 			end
 		end
 	end
