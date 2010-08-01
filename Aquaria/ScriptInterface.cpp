@@ -5859,7 +5859,11 @@ luaFunc(entity_getNearestEntity)
 	Entity *me = entity(L);
 	const char *name = 0;
 	if (lua_isstring(L, 2))
+	{
 		name = lua_tostring(L, 2);
+		if (!*name)
+			name = NULL;
+	}
 
 	bool nameCheck = true;
 	if (name && (name[0] == '!' || name[0] == '~'))
