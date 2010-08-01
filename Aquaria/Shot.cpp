@@ -84,6 +84,16 @@ void ShotData::bankLoad(const std::string &file, const std::string &path)
 {
 	std::string usef = path + file + ".txt";
 
+	// FIXME: Li's attack and the pet blaster's energy balls are missing
+	// the CheckDamageTarget flag, preventing entities (such as seahorses)
+	// from properly ignoring the shots.  In lieu of modifying the
+	// separately-distributed data files, we add a hack here to set the
+	// flag on those two shot types.
+	if (nocasecmp(file,"li") == 0 || nocasecmp(file,"petblasterfire") == 0)
+	{
+		checkDamageTarget = true;
+	}
+
 	debugLog(usef);
 	std::ifstream inf(usef.c_str());
 	std::string token;

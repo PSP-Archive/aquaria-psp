@@ -98,7 +98,7 @@ function update(me, dt)
 	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	
 	if bone ~= 0 then
-		if not v.inHand and v.grabDelay == 0 and v.bone == v.grabPoint then
+		if not v.inHand and v.grabDelay == 0 and bone == v.grabPoint then
 			v.inHand = true
 			avatar_fallOffWall()
 		end
@@ -126,6 +126,14 @@ function update(me, dt)
 				v.inHand = false
 				v.breakFreeTimer = 0
 				v.grabDelay = 4
+				local x, y = entity_x(v.n), entity_y(v.n)
+				if isObstructed(x, y) then
+					-- Trapped in the floor!  Warp out.
+					while y > 4500 and isObstructed(x, y) do
+						y = y-20
+					end
+					entity_setPosition(v.n, x, y)
+				end
 			end
 		end
 	end

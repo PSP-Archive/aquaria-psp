@@ -29,8 +29,10 @@ namespace MiniMapRenderSpace
 
 	const int BUTTON_RADIUS = 15;
 
+	// Total minimap size in virtual pixels
+	const float miniMapSize = 200;
 	// View area radius in virtual pixels
-	const int miniMapRadius = 80;
+	const float miniMapRadius = 80;
 	// Minimap scale (actual distance / displayed distance)
 	const float miniMapScale = 40;
 	// View area radius in world tiles
@@ -201,7 +203,7 @@ void MiniMapRender::slide(int slide)
 		offset.interpolateTo(Vector(0, 0), 0.28, 0, 0, 1);
 	break;
 	case 1:
-		offset.interpolateTo(Vector(0, scale.y*205-600), 0.28, 0, 0, 1);
+		offset.interpolateTo(Vector(0, getMiniMapHeight()+5-600), 0.28, 0, 0, 1);
 	break;
 	}
 }
@@ -235,12 +237,22 @@ void MiniMapRender::toggle(int t)
 	toggleOn = t;
 }
 
+float MiniMapRender::getMiniMapWidth() const
+{
+    return scale.x * miniMapSize;
+}
+
+float MiniMapRender::getMiniMapHeight() const
+{
+    return scale.y * miniMapSize;
+}
+
 void MiniMapRender::onUpdate(float dt)
 {
 	RenderObject::onUpdate(dt);	
 
-	position.x = core->getVirtualWidth() - core->getVirtualOffX() - scale.x*100;
-	position.y = core->getVirtualHeight() - scale.y*100;
+	position.x = core->getVirtualWidth() - core->getVirtualOffX() - getMiniMapWidth()/2;
+	position.y = core->getVirtualHeight() - getMiniMapHeight()/2;
 	position.z = 2.9;
 
 	waterSin += dt * (bitSizeLookupPeriod / (2*PI));
