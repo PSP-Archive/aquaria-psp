@@ -30,6 +30,7 @@ v = getVars()
 v.size = 0
 v.t = 0.5
 v.size0 = 1.5
+v.maxHits = 16
 
 v.n = 0
 v.mld = 0.2
@@ -160,13 +161,13 @@ function damage(me, attacker, bone, damageType, dmg)
 		
 		v.size = v.size + dmg
 		v.maxSpeed = v.maxSpeed + dmg * 10
-		if v.size >= 16 then
+		if v.size >= v.maxHits then
 			entity_setState(me, STATE_DEAD)
 		end	
 		--entity_setCollideRadius(me, getRadius(me))
 		entity_setCollideRadius(me, entity_getCollideRadius(me)-(v.size*0.5))
 		
-		local sz = v.size0 - (v.size * 0.1)
+		local sz = v.size0 * (1 - v.size/v.maxHits)
 		entity_scale(me, sz, sz, 0.5)
 	end
 	return true
