@@ -948,6 +948,11 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	underlay->alpha = 0;
 	dsq->game->addRenderObject(underlay, LR_HUDUNDERLAY);
 
+#ifdef BBGE_BUILD_PSP
+	// Disable these on the PSP because there's no way to select or move them.
+	addHintQuad1 = 0;
+	addHintQuad2 = 0;
+#else
 	addHintQuad1 = new Quad("gems/pyramidyellow", Vector(0,0));
 	addHintQuad1->followCamera = 1;
 	addHintQuad1->alpha = 0;
@@ -957,6 +962,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	addHintQuad2->followCamera = 1;
 	addHintQuad2->alpha = 0;
 	dsq->game->addRenderObject(addHintQuad2, LR_WORLDMAPHUD);
+#endif
 
 	//helpButton->event.set(MakeFunctionEvent(WorldMapRender, onToggleHelpScreen));
 	helpButton = new AquariaMenuItem;
@@ -1479,8 +1485,10 @@ void WorldMapRender::toggle(bool turnON)
 		//dsq->game->hudUnderlay->alpha.interpolateTo(WORLDMAP_UNDERLAY_ALPHA, 0.2);
 		underlay->alpha.interpolateTo(WORLDMAP_UNDERLAY_ALPHA, 0.2);
 
-		addHintQuad1->alpha.interpolateTo(1.0, 0.2);
-		addHintQuad2->alpha.interpolateTo(1.0, 0.2);
+		if (addHintQuad1)
+			addHintQuad1->alpha.interpolateTo(1.0, 0.2);
+		if (addHintQuad2)
+			addHintQuad2->alpha.interpolateTo(1.0, 0.2);
 		helpButton->alpha.interpolateTo(1.0, 0.2);
 		
 		addAllGems();
@@ -1552,8 +1560,10 @@ void WorldMapRender::toggle(bool turnON)
 		dsq->game->togglePause(false);
 		//dsq->game->hudUnderlay->alpha.interpolateTo(0, 0.2);
 		underlay->alpha.interpolateTo(0, 0.2);
-		addHintQuad1->alpha.interpolateTo(0, 0.2);
-		addHintQuad2->alpha.interpolateTo(0, 0.2);
+		if (addHintQuad1)
+			addHintQuad1->alpha.interpolateTo(0, 0.2);
+		if (addHintQuad2)
+			addHintQuad2->alpha.interpolateTo(0, 0.2);
 		helpButton->alpha.interpolateTo(0, 0.2);
 
 
@@ -1613,11 +1623,11 @@ void WorldMapRender::action (int id, int state)
 
 		if (id == ACTION_PRIMARY && state)
 		{
-			if (addHintQuad1->isCoordinateInRadius(core->mouse.position, 10))
+			if (addHintQuad1 && addHintQuad1->isCoordinateInRadius(core->mouse.position, 10))
 			{
 				createGemHint("pyramidyellow");
 			}
-			if (addHintQuad2->isCoordinateInRadius(core->mouse.position, 10))
+			if (addHintQuad2 && addHintQuad2->isCoordinateInRadius(core->mouse.position, 10))
 			{
 				createGemHint("pyramidpurple");
 			}
