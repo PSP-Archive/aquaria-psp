@@ -881,11 +881,13 @@ void WorldMapRender::onUpdate(float dt)
 	if (tophud)
 		tophud->alpha.x = this->alpha.x;
 
+	const float mmWidth  = game->miniMapRender->getMiniMapWidth();
+	const float mmHeight = game->miniMapRender->getMiniMapHeight();
 	if (addHintQuad1)
-		addHintQuad1->position = game->miniMapRender->position + Vector(-15, -64);
+		addHintQuad1->position = game->miniMapRender->position + Vector(-mmWidth*3/22, -mmHeight/2-10);
 
 	if (addHintQuad2)
-		addHintQuad2->position = game->miniMapRender->position + Vector(15, -64);
+		addHintQuad2->position = game->miniMapRender->position + Vector(mmWidth*3/22, -mmHeight/2-10);
 
 	int offset = 26;
 	if (helpButton)
