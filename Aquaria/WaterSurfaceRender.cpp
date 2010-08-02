@@ -201,18 +201,16 @@ void WaterSurfaceRender::onRender()
 
 	if (dsq->useFrameBuffer && dsq->frameBuffer.isInited())
 	{
-		int scrh=0;
-		scrh = 768;
-		float factor = core->frameBuffer.getHeight()/float(scrh);
+		const float reflectSize = 97;
+		const float reflectPos = (dsq->game->waterLevel.x - core->cameraPos.y)
+				+ (dsq->game->waterLevel.x - core->screenCenter.y) / 3;
+		const float reflectOffset = -0.03f;
+		const float coordDiv = 768;
+		const float v0 = 1 + reflectOffset - (reflectPos * core->globalScale.x) / coordDiv;
+		const float v1 = v0 + (reflectSize * core->globalScale.x) / coordDiv;
 
-		float diff = (dsq->game->waterLevel.x - core->screenCenter.y)*factor + (core->screenCenter.y-core->cameraPos.y);
-
-		float tehSz = 97;
-		float psy1 = (tehSz/100.0)-(diff/float(scrh*core->invGlobalScale));
-		float bit = (tehSz/float(scrh*core->invGlobalScale));
-		
-		upperLeftTextureCoordinates.y = (psy1*core->frameBuffer.getHeightP());
-		lowerRightTextureCoordinates.y = (psy1*core->frameBuffer.getHeightP() + bit*core->frameBuffer.getHeightP());
+		upperLeftTextureCoordinates.y = v0 * core->frameBuffer.getHeightP();
+		lowerRightTextureCoordinates.y = v1 * core->frameBuffer.getHeightP();
 
 		upperLeftTextureCoordinates.x = 0;
 		lowerRightTextureCoordinates.x = core->frameBuffer.getWidthP();
