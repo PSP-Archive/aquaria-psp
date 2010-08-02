@@ -3121,6 +3121,9 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 
 	if (selectedSaveSlot != 0)
 	{
+		// Drop focus early so it doesn't see joystick movement and
+		// try to select a destroyed save slot (and thus crash).
+		selectedSaveSlot->setFocus(false);
 		recentSaveSlot = selectedSaveSlot->getSlotIndex();
 		user.data.saveSlot = recentSaveSlot;
 		if (saveSlotMode == SSM_SAVE)
