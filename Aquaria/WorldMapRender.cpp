@@ -116,7 +116,18 @@ protected:
 			wp.y = core->center.y + h2;
 
 		Vector move = wp - getWorldPosition();
-		position += move;
+		// FIXME: This is a quick HACK to get the current world map
+		// scale factor so we can set the position properly, without
+		// having to play with multiple levels of parent pointers or
+		// anything like that.  (If we don't scale the move vector
+		// properly, the dots overshoot at high zoom or don't go far
+		// enough at low zoom and we can end up with a weird "disco"
+		// effect -- see icculus bug 4542.)
+		const float x0 = getWorldPosition().x;
+		position.x += 1;
+		const float x1 = getWorldPosition().x;
+		position.x -= 1;
+		position += move / (x1-x0);
 	}
 };
 
