@@ -6260,21 +6260,21 @@ void Avatar::clampVelocity()
 
 
 
-	if (dsq->continuity.form == FORM_BEAST)
-	{
-		currentMaxSpeed *= MULT_MAXSPEED_BEASTFORM;
-	}
-
 	if (!inCurrent || (inCurrent && withCurrent))
 	{
 		if (dsq->continuity.form == FORM_FISH)
 		{
-			currentMaxSpeed *= MULT_MAXSPEED_FISHFORM;
+			useSpeedMult *= MULT_MAXSPEED_FISHFORM;
 		}
 	}
 	else
 	{
 		useSpeedMult = 1;
+	}
+
+	if (dsq->continuity.form == FORM_BEAST)
+	{
+		useSpeedMult *= MULT_MAXSPEED_BEASTFORM;
 	}
 
 	if (currentState == STATE_PUSH)
