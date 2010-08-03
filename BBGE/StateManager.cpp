@@ -218,6 +218,11 @@ void StateManager::enqueueJumpState (const std::string &state, bool force, bool 
 	}
 }
 
+bool StateManager::isStateJumpPending()
+{
+	return !enqueuedJumpState.empty();
+}
+
 void StateManager::pushState(const std::string &s)
 {
 	std::string state = s;

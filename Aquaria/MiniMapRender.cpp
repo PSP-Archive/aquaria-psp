@@ -246,7 +246,8 @@ void MiniMapRender::onUpdate(float dt)
 								case 0:
 								{
 									doubleClickDelay = 0;
-									dsq->game->showInGameMenu();
+									if (!core->isStateJumpPending())
+										dsq->game->showInGameMenu();
 									btn = true;
 								}
 								break;
@@ -265,7 +266,7 @@ void MiniMapRender::onUpdate(float dt)
 						}
 						else
 						{
-							if (doubleClickDelay > 0)
+							if (doubleClickDelay > 0 && !core->isStateJumpPending())
 							{
 								
 								if (dsq->continuity.gems.empty())

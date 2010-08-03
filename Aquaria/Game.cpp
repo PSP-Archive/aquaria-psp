@@ -6097,7 +6097,7 @@ void Game::action(int id, int state)
 			recipes->setFocus(true);
 			recipeMenu.toggle(!recipeMenu.on, true);
 		}
-		else
+		else if (!core->isStateJumpPending())
 		{
 			toggleWorldMap();
 		}
@@ -7798,6 +7798,8 @@ void Game::onToggleHelpScreen()
 {
 	if (inHelpScreen)
 		toggleHelpScreen(false);
+	else if (core->isStateJumpPending())
+		return;
 	else
 	{
 		if (worldMapRender->isOn())
@@ -8103,7 +8105,7 @@ void Game::onPressEscape()
 
 		if (!paused)
 		{
-			if (core->getNestedMains() == 1)
+			if (core->getNestedMains() == 1 && !core->isStateJumpPending())
 				showInGameMenu();
 		}
 		else
