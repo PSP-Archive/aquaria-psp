@@ -83,6 +83,7 @@ public:
 
 	
 	void enqueueJumpState (const std::string &state, bool force = false, bool staged = false);
+	bool isStateJumpPending();
 	void pushState(const std::string &state);
 	void popState();
 	void popAllStates();

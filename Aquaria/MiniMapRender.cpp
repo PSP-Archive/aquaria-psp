@@ -262,13 +262,24 @@ void MiniMapRender::onUpdate(float dt)
 
 	if (dsq->darkLayer.isUsed() && dsq->game->avatar)
 	{
-		Path *p = dsq->game->getNearestPath(dsq->game->avatar->position, PATH_RADARHIDE);
-
-		float t=dt*2;
-		if ((dsq->continuity.form != FORM_SUN && dsq->game->avatar->isInDarkness())
-			|| (p && p->isCoordinateInside(dsq->game->avatar->position)))
+		if (dsq->continuity.form != FORM_SUN && dsq->game->avatar->isInDarkness())
 		{
 			radarHide = true;
+		}
+		else
+		{
+			for (Path *p = dsq->game->getFirstPathOfType(PATH_RADARHIDE); p; p = p->nextOfType)
+			{
+				if (p->isCoordinateInside(dsq->game->avatar->position))
+				{
+					radarHide = true;
+					break;
+				}
+			}
+		}
+		float t = dt*2;
+		if (radarHide)
+		{
 			lightLevel -= t;
 			if (lightLevel < 0)
 				lightLevel = 0;
@@ -341,7 +352,8 @@ void MiniMapRender::onUpdate(float dt)
 								case 0:
 								{
 									doubleClickDelay = 0;
-									dsq->game->showInGameMenu();
+									if (!core->isStateJumpPending())
+										dsq->game->showInGameMenu();
 									btn = true;
 								}
 								break;
@@ -360,7 +372,7 @@ void MiniMapRender::onUpdate(float dt)
 						}
 						else
 						{
-							if (doubleClickDelay > 0)
+							if (doubleClickDelay > 0 && !core->isStateJumpPending())
 							{
 								
 								if (dsq->continuity.gems.empty())

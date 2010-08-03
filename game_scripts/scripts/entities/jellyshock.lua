@@ -216,6 +216,7 @@ end
 function exitState(me)
 	if entity_isState(me, STATE_SHOCK) then
 		entity_touchAvatarDamage(me, 170, 1, 800)
+		entity_setState(me, STATE_IDLE)
 	end
 end
 

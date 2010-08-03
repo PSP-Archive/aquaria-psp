@@ -417,7 +417,7 @@ function damage(me, attacker, bone, damageType, dmg)
 			else
 				entity_setState(me, STATE_PAIN)
 			end
-		else
+		elseif v.hits2 > 0 then
 			v.hits2 = v.hits2 - 1 --dmg?
 			if v.hits2 <= 0 then
 				entity_setState(me, STATE_TRANSITION)

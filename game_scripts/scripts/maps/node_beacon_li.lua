@@ -23,7 +23,7 @@ function init(me)
 end
 
 function update(me, dt)
-	if not hasLi() then
+	if getFlag(FLAG_LI) < 100 then
 		if not getBeacon(BEACON_LI) then
 			if node_isEntityIn(me, getNaija()) then
 				setBeacon(BEACON_LI, true, 720, -670, 0.25, 0.25, 1.0)
