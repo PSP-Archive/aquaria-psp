@@ -178,6 +178,21 @@ function update(me, dt)
 	
 	sx,sy = entity_getScale(me)
 		
+	-- Quick HACK to handle getting bumped out of the water.  --achurch
+	if not entity_isUnderWater(me) then
+		moveState = MOVE_STATE_DOWN
+		moveTimer = 5 + math.random(200)/100.0 + math.random(3)
+		entity_setMaxSpeed(me, 500)
+		entity_setMaxSpeedLerp(me, 1, 0)
+		entity_addVel(me, 0, 500*dt)
+		entity_updateMovement(me, dt)
+		entity_setHairHeadPosition(me, entity_x(me), entity_y(me))
+		entity_updateHair(me, dt)
+		return
+	elseif not entity_isState(me, STATE_PUSH) then
+		entity_setMaxSpeed(me, 50)
+	end
+	
 	moveTimer = moveTimer - dt
 	if moveTimer < 0 then
 		if moveState == MOVE_STATE_DOWN then		
