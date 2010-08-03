@@ -883,7 +883,7 @@ public:
 	float getWaterLevel();
 	void setMusicToPlay(const std::string &musicToPlay);
 	Vector lastCollidePosition;
-	void switchBgLoop(int v, bool effects=true);
+	void switchBgLoop(int v);
 	ElementTemplate getElementTemplateForLetter(int i);
 	CurrentRender *currentRender;
 	SteamRender *steamRender;
@@ -901,7 +901,7 @@ public:
 	BitmapText *songLabel, *foodLabel, *foodDescription, *treasureLabel;
 	ToolTip *treasureDescription;
 	Quad *treasureCloseUp;
-	void updateBgSfxLoop(bool effects=true);
+	void updateBgSfxLoop();
 	void preLocalWarp(LocalWarpType localWarpType);
 	void postLocalWarp();
 	void entityDied(Entity *e);
