@@ -3336,9 +3336,9 @@ void Avatar::formAbility(int ability)
 			for (i = Shot::shots.begin(); i != Shot::shots.end(); i++)
 			{
 				Shot *s = (*i);
-				if (s->shotData && s->firer)
+				if (s->shotData && !s->shotData->invisible)
 				{
-					if (!s->shotData->invisible && s->firer->getEntityType()==ET_ENEMY)
+					if (!s->firer || s->firer->getEntityType()==ET_ENEMY)
 					{
 						if ((s->position - position).isLength2DIn(256))
 						{
