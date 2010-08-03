@@ -481,6 +481,7 @@ protected:
 
 	float ignoreInputDelay;
 	float idleAnimDelay;
+	float splashDelay;
 	//Hair *hair;
 
 	BitmapText *text;

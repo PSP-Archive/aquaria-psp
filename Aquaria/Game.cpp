@@ -5915,7 +5915,7 @@ void Game::hideImage()
 	dsq->overlay->color = 0;
 }
 
-void Game::switchBgLoop(int v, bool effects)
+void Game::switchBgLoop(int v)
 {
 	if (v != lastBgSfxLoop)
 	{
@@ -5925,8 +5925,6 @@ void Game::switchBgLoop(int v, bool effects)
 			dsq->loops.bg = BBGE_AUDIO_NOCHANNEL;
 		}
 
-		Vector hsplash = avatar->getHeadPosition();
-		hsplash.y = waterLevel.x;
 		switch(v)
 		{
 		case 0:
@@ -5939,13 +5937,6 @@ void Game::switchBgLoop(int v, bool effects)
 				sfx.priority = 0.8;
 				dsq->loops.bg = core->sound->playSfx(sfx);
 			}
-
-			if (effects)
-			{
-				core->sound->playSfx("GoUnder");
-
-				core->createParticleEffect("HeadSplash", hsplash, LR_PARTICLES);
-			}
 		break;
 		case 1:
 			if (!airSfxLoop.empty())
@@ -5956,12 +5947,6 @@ void Game::switchBgLoop(int v, bool effects)
 			    sfx.loops = -1;
 				sfx.priority = 0.8;
 				dsq->loops.bg = core->sound->playSfx(sfx);
-			}
-
-			if (effects)
-			{
-				core->sound->playSfx("Emerge");
-				core->createParticleEffect("HeadSplash", hsplash, LR_PARTICLES);
 			}
 		break;
 		}
@@ -6222,7 +6207,7 @@ void Game::action(int id, int state)
 			recipeMenu.toggle(!recipeMenu.on, true);
 #endif
 		}
-		else
+		else if (!core->isStateJumpPending())
 		{
 			toggleWorldMap();
 		}
@@ -7124,7 +7109,7 @@ void Game::applyState()
 	}
 
 	debugLog("Updating bgSfxLoop");
-	updateBgSfxLoop(false);
+	updateBgSfxLoop();
 
 	if (verbose) debugLog("loading map init script");
 	dsq->runScript("scripts/maps/map_"+sceneName+".lua", "init");
@@ -8018,6 +8003,8 @@ void Game::onToggleHelpScreen()
 {
 	if (inHelpScreen)
 		toggleHelpScreen(false);
+	else if (core->isStateJumpPending())
+		return;
 	else
 	{
 		if (worldMapRender->isOn())
@@ -8330,7 +8317,7 @@ void Game::onPressEscape()
 
 		if (!paused)
 		{
-			if (core->getNestedMains() == 1)
+			if (core->getNestedMains() == 1 && !core->isStateJumpPending())
 				showInGameMenu();
 		}
 		else
@@ -10290,7 +10277,7 @@ bool Game::trace(Vector start, Vector target)
 }
 
 const float bgLoopFadeTime = 1;
-void Game::updateBgSfxLoop(bool effects)
+void Game::updateBgSfxLoop()
 {
 	if (!avatar) return;
 
@@ -10328,10 +10315,10 @@ void Game::updateBgSfxLoop(bool effects)
 
 	if (avatar->isUnderWater(avatar->getHeadPosition()))
 	{
-		dsq->game->switchBgLoop(0, effects);
+		dsq->game->switchBgLoop(0);
 	}
 	else
-		dsq->game->switchBgLoop(1, effects);
+		dsq->game->switchBgLoop(1);
 }
 
 const float helpTextScrollSpeed = 800.0f;
@@ -10607,7 +10594,7 @@ void Game::update(float dt)
 	}
 
 
-	if (avatar && (avatar->isEntityDead() || avatar->health <= 0) && core->getNestedMains()==1)
+	if (avatar && (avatar->isEntityDead() || avatar->health <= 0) && core->getNestedMains()==1 && !isPaused())
 	{
 		dsq->stopVoice();
 		/*

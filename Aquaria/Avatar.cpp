@@ -98,6 +98,9 @@ const float BURST_USE_RATE = 1.5; //0.9 //1.5;
 const float BURST_DELAY = 0.1;
 const float BURST_ACCEL = 4000; //2000 // 1000
 
+// Minimum time between two splash effects (seconds).
+const float SPLASH_INTERVAL = 0.2;
+
 const float TUMMY_TIME = 6.0;
 
 const float chargeMax = 2.0;
@@ -3199,9 +3202,9 @@ void Avatar::formAbility(int ability)
 			for (i = Shot::shots.begin(); i != Shot::shots.end(); i++)
 			{
 				Shot *s = (*i);
-				if (s->shotData && s->firer)
+				if (s->shotData && !s->shotData->invisible)
 				{
-					if (!s->shotData->invisible && s->firer->getEntityType()==ET_ENEMY)
+					if (!s->firer || s->firer->getEntityType()==ET_ENEMY)
 					{
 						if ((s->position - position).isLength2DIn(256))
 						{
@@ -4596,6 +4599,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	burstDelay = 0;
 	ignoreInputDelay = 0;
 	idleAnimDelay = 2;
+	splashDelay = 0;
 	avatar = this;
 
 	frame = 0;
@@ -6039,6 +6043,13 @@ void Avatar::onExitState(int action)
 
 void Avatar::splash(bool down)
 {
+	if (splashDelay > 0)
+	{
+		lastJumpOutFromWaterBubble = false;
+		return;
+	}
+	splashDelay = SPLASH_INTERVAL;
+
 	if (down)
 	{
 		int freq = 1000;
@@ -6050,6 +6061,8 @@ void Avatar::splash(bool down)
 			core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter,0.08,0.05,22,0.2f, 1.2));
 		dsq->rumble(0.7, 0.7, 0.2);
 		plungeEmitter.start();
+
+		core->sound->playSfx("GoUnder");
 	}
 	else
 	{
@@ -6059,9 +6072,17 @@ void Avatar::splash(bool down)
 		dsq->postProcessingFx.radialBlurColor = Vector(1,1,1);
 		dsq->postProcessingFx.intensity = 0.1;
 		*/
+
+		core->sound->playSfx("Emerge");
 	}
 	// make a splash effect @ current position
 
+	// FIXME: This is broken for waterfalls/bubbles (e.g. the waterfalls
+	// in the Turtle Cave).  Not sure how best to fix it in the current
+	// code.  --achurch
+	Vector hsplash = avatar->getHeadPosition();
+	hsplash.y = dsq->game->waterLevel.x;
+	core->createParticleEffect("HeadSplash", hsplash, LR_PARTICLES);
 
 	float a = 0;
 
@@ -6129,21 +6150,21 @@ void Avatar::clampVelocity()
 
 
 
-	if (dsq->continuity.form == FORM_BEAST)
-	{
-		currentMaxSpeed *= MULT_MAXSPEED_BEASTFORM;
-	}
-
 	if (!inCurrent || (inCurrent && withCurrent))
 	{
 		if (dsq->continuity.form == FORM_FISH)
 		{
-			currentMaxSpeed *= MULT_MAXSPEED_FISHFORM;
+			useSpeedMult *= MULT_MAXSPEED_FISHFORM;
 		}
 	}
 	else
 	{
 		useSpeedMult = 1;
+	}
+
+	if (dsq->continuity.form == FORM_BEAST)
+	{
+		useSpeedMult *= MULT_MAXSPEED_BEASTFORM;
 	}
 
 	if (currentState == STATE_PUSH)
@@ -7266,6 +7287,10 @@ void Avatar::onUpdate(float dt)
 		myZoom.update(dt);
 
 	_isUnderWater = isUnderWater();
+
+	splashDelay -= dt;
+	if (splashDelay < 0)
+		splashDelay = 0;
 
 	// JUMPING OUT
 	if (!_isUnderWater && state.wasUnderWater)
