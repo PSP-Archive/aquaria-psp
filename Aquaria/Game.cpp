@@ -10385,7 +10385,7 @@ void Game::update(float dt)
 	}
 
 
-	if (avatar && (avatar->isEntityDead() || avatar->health <= 0) && core->getNestedMains()==1)
+	if (avatar && (avatar->isEntityDead() || avatar->health <= 0) && core->getNestedMains()==1 && !isPaused())
 	{
 		dsq->stopVoice();
 		/*
