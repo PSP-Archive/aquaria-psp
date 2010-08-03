@@ -167,13 +167,26 @@ void MiniMapRender::onUpdate(float dt)
 
 	if (dsq->darkLayer.isUsed() && dsq->game->avatar)
 	{
-		Path *p = dsq->game->getNearestPath(dsq->game->avatar->position, PATH_RADARHIDE);
-
-		float t=dt*2;
-		if ((dsq->continuity.form != FORM_SUN && dsq->game->avatar->isInDarkness())
-			|| (p && p->isCoordinateInside(dsq->game->avatar->position)))
+		if (dsq->continuity.form != FORM_SUN && dsq->game->avatar->isInDarkness())
 		{
 			radarHide = true;
+		}
+		else
+		{
+			Path *p;
+			for (int i = 0; i < dsq->game->paths.size(); i++)
+			{
+				p = dsq->game->paths[i];
+				if (p->pathType == PATH_RADARHIDE && p->isCoordinateInside(dsq->game->avatar->position))
+				{
+					radarHide = true;
+					break;
+				}
+			}
+		}
+		float t = dt*2;
+		if (radarHide)
+		{
 			a -= t;
 			if (a < 0)
 				a = 0;
