@@ -1493,7 +1493,23 @@ void Continuity::castSong(int num)
 		case SONG_SPIRITFORM:
 			if (dsq->game->avatar->isUnderWater())
 			{
-				dsq->game->avatar->changeForm(FORM_SPIRIT);
+				// Don't try to enter spirit form while warping,
+				// or we'll get stuck in the spirit world afterward.
+				bool inWarp = false;
+				const Vector avatarPosition(dsq->game->avatar->position);
+				for (int i = 0; i < dsq->game->paths.size(); i++)
+				{
+					Path *p = dsq->game->paths[i];
+					if (p->pathType == PATH_WARP && p->isCoordinateInside(avatarPosition))
+					{
+						inWarp = true;
+						break;
+					}
+				}
+				if (inWarp)
+					core->sound->playSfx("SongFail");
+				else
+					dsq->game->avatar->changeForm(FORM_SPIRIT);
 			}
 			else
 			{
