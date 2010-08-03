@@ -162,8 +162,8 @@ function update(me, dt)
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if entity_isState(me, STATE_DROWN) then
-		return false
+	if entity_isState(me, STATE_DROWN) or entity_isState(me, STATE_DROWNED) then
+		return true
 	end
 	if entity_isState(me, STATE_WALL) then
 		entity_setState(me, STATE_FALLING)	
