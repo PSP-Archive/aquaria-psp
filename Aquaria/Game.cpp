@@ -7733,6 +7733,8 @@ void Game::onCook()
 		if (r)
 		{
 			dsq->continuity.learnRecipe(r);
+			if (haveLeftovers)
+				updatePreviewRecipe();
 		}
 
 		core->mouse.buttonsEnabled = true;
