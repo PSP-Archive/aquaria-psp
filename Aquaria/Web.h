@@ -30,7 +30,6 @@ public:
 	int addPoint(const Vector &point = Vector(0,0));
 	void setPoint(int pt, const Vector &v);
 	void setParentEntity(Entity *e);
-	int getNumPoints();
 	typedef std::list<Web*> Webs;
 	static Webs webs;
 	static void killAllWebs();

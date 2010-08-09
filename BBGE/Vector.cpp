@@ -534,12 +534,6 @@ void InterpolatedVector::stopPath()
 		data->followingPath = false;
 }
 
-void InterpolatedVector::resumePath()
-{
-	InterpolatedVectorData *data = ensureData();
-	data->followingPath = true;
-}
-
 void InterpolatedVector::updatePath(float dt)
 {
 	InterpolatedVectorData *data = ensureData();

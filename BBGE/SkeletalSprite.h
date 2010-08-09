@@ -75,7 +75,6 @@ public:
 
 	
 	void setSegmentProps(int minDist, int maxDist, bool reverse);
-	Vector segmentOffset;
 
 	bool fileRenderQuad;
 

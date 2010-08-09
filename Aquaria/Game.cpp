@@ -950,24 +950,6 @@ void TreasureSlot::refresh()
 	}
 }
 
-Ingredient *Game::getNearestIngredient(const Vector &pos, int radius)
-{
-	int closest = -1;
-	int r2 = sqr(radius);
-	Ingredient *returnIngredient = 0;
-
-	for (Ingredient::Ingredients::iterator i = Ingredient::ingredients.begin(); i != Ingredient::ingredients.end(); i++)
-	{
-		int len = (pos - (*i)->position).getSquaredLength2D();
-		if (len <= r2 && (closest == - 1 || len < closest))
-		{
-			closest = len;
-			returnIngredient = (*i);
-		}
-	}
-	return returnIngredient;
-}
-
 Entity *Game::getNearestEntity(const Vector &pos, int radius, Entity *ignore, EntityType et, DamageType dt, int lrStart, int lrEnd)
 {
 	int sqrRadius = radius*radius;

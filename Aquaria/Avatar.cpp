@@ -739,11 +739,6 @@ const float spellCastDelays	[]	= { 0.05, 0.2,  0.4, 0.1, 0.1,  0.1,  0.2,  0.1, 
 
 bool avatarDebugEnabled = false;
 
-void Avatar::toggleMovement(bool on)
-{
-	canMove = on;
-}
-
 bool Avatar::isLockable()
 {
 	return (bursting || !_isUnderWater) && (boneLockDelay == 0) && (dsq->continuity.form != FORM_FISH);
@@ -932,11 +927,6 @@ std::string Avatar::getIdleAnimName()
 void Avatar::clampPosition()
 {
 	lastPosition = position;
-}
-
-void Avatar::updatePosition()
-{
-	updateHair(0);
 }
 
 void Avatar::debugMsg(const std::string &msg)
@@ -1595,7 +1585,7 @@ public:
 
 void Avatar::openFoodInterface()
 {
-	if (!singing && !pickingPullTarget && health > 0 && !isEntityDead() && !blockSinging)
+	if (!singing && !pickingPullTarget && health > 0 && !isEntityDead())
 	{
 		// build it
 		foodIcons.clear();
@@ -1607,7 +1597,7 @@ void Avatar::openFoodInterface()
 
 void Avatar::openSingingInterface()
 {
-	if (!singing && !pickingPullTarget && health > 0 && !isEntityDead() && !blockSinging)
+	if (!singing && !pickingPullTarget && health > 0 && !isEntityDead())
 	{
 		//core->mouse.position = Vector(400,300);
 		if (dsq->inputMode != INPUT_MOUSE)
@@ -3787,11 +3777,6 @@ void Avatar::startCharge(int ability)
 	}
 }
 
-void Avatar::setBlockSinging(bool v)
-{
-	blockSinging = v;
-}
-
 bool Avatar::canSetBoneLock()
 {
 	/*
@@ -4500,7 +4485,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	flourish = false;
 	tummyAmount=0;
 
-	blockSinging = false;
 	singing = false;
 
 	spiritEnergyAbsorbed = 0;

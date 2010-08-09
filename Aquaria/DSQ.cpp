@@ -4439,7 +4439,7 @@ void DSQ::onUpdate(float dt)
 			os << "inTummy: " << avatar->inTummy << " tummyAmount: " << avatar->tummyAmount << std::endl;
 			os << "inCurrent: " << avatar->isInCurrent() << std::endl;
 			os << "qsongCastDelay: " << avatar->quickSongCastDelay << std::endl;
-			os << "singing: " << dsq->game->avatar->singing << " blockSinging: " << dsq->game->avatar->isBlockSinging();
+			os << "singing: " << dsq->game->avatar->singing;
 			os << " look: " << dsq->game->avatar->state.updateLookAtTime << " ";
 
 			os << "inputMode: ";

@@ -25,7 +25,7 @@ StateMachine::StateMachine ()
 	//debugLog("StateMachine::StateMachine()");
 	stateExtraDT = 0;
 	enqueuedTime = stateTime = -1;
-	enqueuedState = nextState = prevState = currentState = STATE_NONE;
+	enqueuedState = nextState = currentState = STATE_NONE;
 
 	stateCounter = 0;
 	currentStateData = enqueuedStateData = 0;
@@ -41,16 +41,10 @@ bool StateMachine::isState(int state)
 	return currentState == state;
 }
 
-int StateMachine::getPrevState()
-{
-	return prevState;
-}
-  
 void StateMachine::perform(int state, float time, void *stateData)
 {
 	//debugLog("in perform");
 	stateExtraDT = 0;
-	prevState = currentState;
 	nextState = state;
 	//debugLog("onExitState");
 	

@@ -29,7 +29,6 @@ bool ScriptedEntity::runningActivation = false;
 ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, EntityType et, BehaviorType bt) : CollideEntity(), Segmented(2, 26)
 {	
 	crushDelay = 0;
-	autoSkeletalSpriteUpdate = true;
 	script = 0;
 	songNoteFunction = songNoteDoneFunction = true;
 	addChild(&pullEmitter, PM_STATIC);
@@ -49,7 +48,6 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 	setBehaviorType(bt);
 	eggDataIdx = -1;
 	//behavior = BT_NORMAL;
-	myTimer = 0;
 	layer = LR_ENTITIES;
 	surfaceMoveDir = 1;
 	this->position = position;
@@ -85,11 +83,6 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 	{
 		errorLog("Could not load script [" + file + "]");
 	}
-}
-
-void ScriptedEntity::setAutoSkeletalUpdate(bool v)
-{
-	autoSkeletalSpriteUpdate = v;
 }
 
 void ScriptedEntity::message(const std::string &msg, int v)
@@ -639,13 +632,8 @@ void ScriptedEntity::onUpdate(float dt)
 	}
 	*/
 
-	if (!autoSkeletalSpriteUpdate)
-		skeletalSprite.ignoreUpdate = true;
-
 	CollideEntity::onUpdate(dt);
 
-	if (!autoSkeletalSpriteUpdate)
-		skeletalSprite.ignoreUpdate = false;
 	//updateStrands(dt);
 
 	if (becomeSolidDelay)
@@ -663,16 +651,6 @@ void ScriptedEntity::onUpdate(float dt)
 
 	if (life != 1 || isEntityDead()) return;
 
-
-	if (myTimer > 0)
-	{
-		myTimer -= dt;
-		if (myTimer <= 0)
-		{
-			myTimer = 0;
-			onExitTimer();
-		}
-	}
 
 	if (this->isEntityDead() || this->getState() == STATE_DEATHSCENE || this->getState() == STATE_DEAD)
 	{
@@ -698,25 +676,6 @@ void ScriptedEntity::onUpdate(float dt)
 		springPlant->position = this->position;
 	}
 	*/
-}
-
-void ScriptedEntity::resetTimer(float t)
-{
-	myTimer = t;
-}
-
-void ScriptedEntity::stopTimer()
-{
-	myTimer = 0;
-}
-
-void ScriptedEntity::onExitTimer()
-{
-	if (script)
-	{
-		if (!script->call("exitTimer", this))
-			debugLog(this->name + " : " + script->getLastError() + " exitTimer");
-	}
 }
 
 void ScriptedEntity::onAnimationKeyPassed(int key)

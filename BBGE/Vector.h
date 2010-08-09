@@ -567,7 +567,6 @@ public:
 	void startPath(float time, float ease=0);
 	void startSpeedPath(float speed);
 	void stopPath();
-	void resumePath();
 
 	void updatePath(float dt);
 

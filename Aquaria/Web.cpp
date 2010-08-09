@@ -81,11 +81,6 @@ void Web::setPoint(int pt, const Vector &v)
 	points[pt] = v;
 }
 
-int Web::getNumPoints()
-{
-	return points.size();
-}
-
 void Web::onUpdate(float dt)
 {
 	RenderObject::onUpdate(dt);

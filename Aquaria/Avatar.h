@@ -181,8 +181,6 @@ public:
 	void applyWorldEffects(WorldType type);
 	Vector extraVel;
 
-	void toggleMovement(bool on);
-
 	Vector getFacing();
 
 	void refreshModel(std::string file, const std::string &skin, bool forceIdle=false);
@@ -294,16 +292,12 @@ public:
 	Vector getAim();
 	void setWasUnderWater();
 	Quad *lightFormGlow, *lightFormGlowCone;
-	void setBlockSinging(bool v);
 	Vector headPosition;
-	void updatePosition();
 	float quickSongCastDelay;
 	void onAnimationKeyPassed(int key);
 	int tummyAmount;
 
 	bool isSwimming();
-
-	bool isBlockSinging() { return blockSinging; }
 
 	float songInterfaceTimer;
 	void removeEatData(int idx);
@@ -384,7 +378,6 @@ protected:
 	void updateTargetQuads(float dt);
 	Vector bodyOffset;
 	bool flourish;
-	bool blockSinging;
 	int spiritEnergyAbsorbed;
 	float formAbilityDelay;
 	Vector bodyPosition;

@@ -31,8 +31,6 @@ public:
 	void init();
 	void postInit();
 	void destroy();
-	void stopTimer();
-	void resetTimer(float t);
 	void setEntityLayer(int layer);
 	void setupEntity(const std::string &tex, int layer=0);
 	void setupBasicEntity(std::string texture, int health, int manaBall, int exp, int money, int collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer);
@@ -83,7 +81,6 @@ public:
 	void stopEmitter(int emit);
 
 	void shiftWorlds(WorldType lastWorld, WorldType worldType);
-	void setAutoSkeletalUpdate(bool v);
 
 	void shotHitEntity(Entity *hit, Shot *shot, Bone *b);
 protected:
@@ -91,7 +88,6 @@ protected:
 	void onDieEaten();
 	void luaDebugMsg(const std::string &func, const std::string &msg);
 	float crushDelay;
-	bool autoSkeletalSpriteUpdate;
 	int beforePullMaxSpeed;
 	bool songNoteFunction, preUpdateFunc;
 	bool songNoteDoneFunction;
@@ -106,9 +102,7 @@ protected:
 	float eggSpawnRate;
 	int eggDataIdx;
 	
-	void onExitTimer();
 	void onHitEntity(const CollideData &c);
-	float myTimer;
 	void onHitWall();
 	bool reverseSegments;
 	int moneyAmount, expType;

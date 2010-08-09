@@ -256,7 +256,7 @@ void Bone::updateSegments()
 				Vector diff;
 				if (i == 0)
 				{
-					Vector world = getWorldCollidePosition(segmentOffset);
+					Vector world = getWorldCollidePosition(Vector(0,0));
 					diff = world - segments[i]->getWorldPosition();
 				}
 				else
@@ -273,7 +273,7 @@ void Bone::updateSegments()
 				Vector diff;
 				if (i == top)
 				{
-					Vector world = getWorldCollidePosition(segmentOffset);
+					Vector world = getWorldCollidePosition(Vector(0,0));
 					diff = world - segments[i]->getWorldPosition();
 				}
 				else

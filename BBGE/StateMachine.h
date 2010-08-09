@@ -40,7 +40,6 @@ public:
 	void stopState(int state);
 	bool isState(int state);
 	int getState();
-	int getPrevState();
 	int getEnqueuedState() { return enqueuedState; }
 	float getStateTime();
 	void setStateTime(float t);
@@ -63,7 +62,7 @@ protected:
 	virtual void onEnterState(int state);
 	virtual void onExitState(int state);
 
-	int currentState, nextState, prevState, enqueuedState;
+	int currentState, nextState, enqueuedState;
 	float stateTime, enqueuedTime, stateExtraDT;
 	
 	void onUpdate (float dt);

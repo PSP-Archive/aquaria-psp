@@ -367,10 +367,9 @@ public:
 	void moveAround(Vector p, float dt, int spd, int d);
 
 	void moveTowardsAngle(int angle, float dt, int spd);
-	void moveAroundAngle(int angle, float dt, int spd, int dir);
 
-	void moveTowardsTarget(float dt, int spd, int t=0);
-	void moveAroundTarget(float dt, int spd, int d, int t=0);
+	void moveTowardsTarget(float dt, int spd);
+	void moveAroundTarget(float dt, int spd, int d);
 	void moveAroundEntity(float dt, int spd, int d, Entity *e);
 	void moveTowardsGroupCenter(float dt, int spd);
 	void moveTowardsGroupHeading(float dt, int spd);
@@ -378,13 +377,12 @@ public:
 	void doSpellAvoidance(float dt, int range, float mod);
 	void doEntityAvoidance(float dt, int range, float mod, Entity *ignore =0);
 	void setMaxSpeed(int ms);
-	Entity *findTarget(int dist, int type, int t=0);
-	//bool hasTarget() { return target != 0; }
-	bool hasTarget(int t=0);
-	bool isTargetInRange(int range, int t=0);
+	Entity *findTarget(int dist, int type);
+	bool hasTarget() { return target != 0; }
+	bool isTargetInRange(int range);
 	void doGlint(const Vector &position, const Vector &scale=Vector(2,2), const std::string &tex="Glint", RenderObject::BlendTypes bt=BLEND_DEFAULT);
-	Entity *getTargetEntity(int t=0);
-	void setTargetEntity(Entity *e, int t=0);
+	Entity *getTargetEntity() { return target; }
+	void setTargetEntity(Entity *e) { target = e; }
 
 	void attachEntity(Entity *e, Vector offset);
 	void detachEntity(Entity *e);
@@ -403,11 +401,7 @@ public:
 	void stopFollowingPath();
 	void overideMaxSpeed(int ms, float time);
 	void disableOverideMaxSpeed();
-	int currentEntityTarget;
 	void moveToNode(Path *path, int speedType, int dieOnPathEnd=0, bool swim = false);
-	bool isHit();
-	bool pathBurst(bool wallJump = false);
-	Timer burstTimer;
 	void revive(int a);
 	void setName(const std::string &name);
 	Path *getNode();
@@ -418,11 +412,8 @@ public:
 	{
 		return layer == LR_ENTITIES || layer == LR_ENTITIES0 || layer == LR_ENTITIES2 || layer == LR_ENTITIES_MINUS2 || layer == LR_ENTITIES_MINUS3;
 	}
-	void watchEntity(Entity *e);
 	void idle();
 	int followPos;
-	void slowToStopPath(float t);
-	bool isSlowingToStopPath();
 	Vector lastMove;
 	int pushAvatar;
 	float damageTime;
@@ -504,7 +495,6 @@ public:
 	Entity *getRiding();
 
 	void setBounceType(BounceType bt);
-	BounceType getBounceType();
 	void setDieTimer(float v) { dieTimer = v; }
 	float getHealthPerc();
 	void setDeathScene(bool v);
@@ -517,7 +507,6 @@ public:
 	bool beautyFlip;
 	void attachLance();
 	void setInvincible(bool inv);
-	void clampToHit();
 	bool updateLocalWarpAreas(bool affectAvatar);
 	virtual void entityDied(Entity *e);
 	//bool registerEntityDied;
@@ -533,7 +522,6 @@ public:
 	int getv(EV ev);
 	float getvf(EV ev);
 	bool isv(EV ev, int v);
-	void setIngredientData(const std::string &name);
 
 	void postUpdate(float dt);
 	BoneLock* getBoneLock() { return &boneLock; }
@@ -570,7 +558,6 @@ protected:
 	BoneLock boneLock;
 	virtual void onDieNormal() {}
 	virtual void onDieEaten() {}
-	IngredientData *ingredientData;
 	int vs[EV_MAX];
 	void onEndOfLife();
 
@@ -612,11 +599,9 @@ protected:
 	virtual void onHealthChange(float change){}
 	bool inCurrent;
 	std::vector<bool> entityProperties;
-	float slowingToStopPathTimer, slowingToStopPath;
 
 	void movementDetails(Vector v);
 	float ondulateTimer;
-	Entity *watchingEntity;
 	Path node;
 	virtual void onPathEnd();
 	bool swimPath;
@@ -639,8 +624,7 @@ protected:
 	void doMovementPattern(Entity *target, MovementPatternType type, int minDist, int maxDist, int spd1, int spd2, float dt);
 
 
-	//Entity *target;
-	std::vector<Entity*>targets;
+	Entity *target;
 	virtual void onAlwaysUpdate(float dt){}
 	virtual void onUpdateFrozen(float dt){}
 	float frozenTimer;
