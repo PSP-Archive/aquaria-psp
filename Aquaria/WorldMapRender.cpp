@@ -70,6 +70,12 @@ namespace WorldMapRenderNamespace
 	bool editorActive=false;
 
 	Quad *tophud=0;
+
+#ifdef BBGE_BUILD_PSP
+	// We expand the UI graphic significantly on the PSP to make the text
+	// readable, so we allow it to be faded out with the Square button.
+	InterpolatedVector uiFader;
+#endif
 	
 	Gradient *underlay = 0;
 }
@@ -938,6 +944,8 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	areaLabel3->position *= pspScale;
 	areaLabel3->position.x -= 400*(pspScale-1);
 	areaLabel3->scale *= fontScale;
+	// Also initialize the fader to full opacity.
+	uiFader.x = 1;
 #endif
 
 	if (activeTile)
@@ -1046,6 +1054,25 @@ void WorldMapRender::onUpdate(float dt)
 
 	if (tophud)
 		tophud->alpha.x = this->alpha.x;
+
+#ifdef BBGE_BUILD_PSP
+	if (!uiFader.isInterpolating())
+	{
+		if (core->joystick.buttons[15])  // Button 15 = Square
+			uiFader.interpolateTo(0.25, 0.05);
+		else
+			uiFader.interpolateTo(1, 0.05);
+	}
+	uiFader.update(dt);
+	if (areaLabel)
+		areaLabel->alpha.x *= uiFader.x;
+	if (areaLabel2)
+		areaLabel2->alpha.x *= uiFader.x;
+	if (areaLabel3)
+		areaLabel3->alpha.x *= uiFader.x;
+	if (tophud)
+		tophud->alpha.x *= uiFader.x;
+#endif
 
 	const float mmWidth  = game->miniMapRender->getMiniMapWidth();
 	const float mmHeight = game->miniMapRender->getMiniMapHeight();
