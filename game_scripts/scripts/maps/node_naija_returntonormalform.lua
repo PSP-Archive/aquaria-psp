@@ -28,6 +28,8 @@ function update(me, dt)
 			voice("naija_returntonormalform")
 			if isPlat(PLAT_MAC) then
 				setControlHint(getStringBank(86), 1, 1)
+			elseif isPlat(PLAT_PSP) then
+				setControlHint("Press Square to revert and pass through.")
 			else
 				setControlHint(getStringBank(66), 1, 1)
 			end

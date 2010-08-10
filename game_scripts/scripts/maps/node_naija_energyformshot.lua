@@ -29,6 +29,8 @@ function update(me, dt)
 			voice("naija_energyformshot")
 			if isPlat(PLAT_MAC) then
 				setControlHint(getStringBank(90), 0, 1)
+			elseif isPlat(PLAT_PSP) then
+				setControlHint("Press Circle to attack in Energy Form.")
 			else
 				setControlHint(getStringBank(70), 0, 1)
 			end

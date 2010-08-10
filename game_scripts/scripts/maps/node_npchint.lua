@@ -27,6 +27,8 @@ function update(me, dt)
 		if node_isEntityIn(me, getNaija()) then
 			if isPlat(PLAT_MAC) then
 				setControlHint(getStringBank(88), 0, 1)
+			elseif isPlat(PLAT_PSP) then
+				setControlHint("Press Circle to interact.")
 			else
 				setControlHint(getStringBank(68), 0, 1)
 			end

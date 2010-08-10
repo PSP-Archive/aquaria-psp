@@ -25,7 +25,11 @@ end
 function update(me, dt)
 	if isFlag(FLAG_HINT_HEALTHUPGRADE, 0) then
 		if node_isEntityIn(me, getNaija()) then
-			setControlHint(getStringBank(22), 0, 1, 0, 5)
+			if isPlat(PLAT_PSP) then
+				setControlHint(getStringBank(22), 0, 0, 0, 5)
+			else
+				setControlHint(getStringBank(22), 0, 1, 0, 5)
+			endif
 			setFlag(FLAG_HINT_HEALTHUPGRADE, 1)
 		end
 	end

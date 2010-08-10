@@ -25,7 +25,11 @@ end
 function update(me, dt)
 	if isFlag(FLAG_BOSS_MITHALA, 1) and isFlag(FLAG_HINT_BEASTFORM2, 0) then
 		if node_isEntityIn(me, getNaija()) then
-			setControlHint(getStringBank(12), 0, 1, 0, 8)
+			if isPlat(PLAT_PSP) then
+				setControlHint(getStringBank(12), 0, 0, 0, 8)
+			else
+				setControlHint(getStringBank(12), 0, 1, 0, 8)
+			end
 			setFlag(FLAG_HINT_BEASTFORM2, 1)
 		end
 	end

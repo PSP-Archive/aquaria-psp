@@ -4183,7 +4183,11 @@ void Avatar::lockToWall()
 				
 				if (!dsq->game->isControlHint()){
 					dsq->continuity.setFlag("lockedToWall", 1);
-					dsq->game->setControlHint(dsq->continuity.stringBank.get(13), 1, 0, 0, 6, "", true);
+#ifdef BBGE_BUILD_PSP
+					dsq->game->setControlHint(dsq->continuity.stringBank.get(13), false, false, false, 6, "", true);
+#else
+					dsq->game->setControlHint(dsq->continuity.stringBank.get(13), true, false, false, 6, "", true);
+#endif
 				}
 			}
 

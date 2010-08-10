@@ -27,6 +27,8 @@ function update(me, dt)
 		if node_isEntityIn(me, getNaija()) then
 			if isPlat(PLAT_MAC) then
 				setControlHint(getStringBank(91), 1, 0, 0, 8)
+			elseif isPlat(PLAT_PSP) then
+				setControlHint("Press Cross while swimming for a speed boost.", 0, 0, 0, 8)
 			else
 				setControlHint(getStringBank(71), 1, 0, 0, 8)
 			end

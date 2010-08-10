@@ -51,6 +51,17 @@ void StringBank::load(const std::string &file)
 		}
 		stringMap[idx] = line;
 	}
+
+#ifdef BBGE_BUILD_PSP
+	// Override a few for the PSP.
+	stringMap[0] = "Press Cross twice in a row to eat the selected food.";
+	stringMap[1] = "Press Square to select ingredients for cooking, Select to combine them, or Triangle to cancel a selection. Hold Select and press Triangle to discard food into the environment.";
+	stringMap[4] = "You've found a new map token!\nPress Triangle to view the world map.";
+	stringMap[13] = "Press Circle to let go, or hold the analog pad in a direction and press Circle to jump.";
+	stringMap[14] = "The songs that Naija has learned are displayed here. Move the cursor to a song to see how it is sung. Press Circle or Cross to hear Naija's description.";
+	stringMap[15] = "Use these icons to switch between menu pages.";
+	stringMap[17] = "Naija's pets are displayed here. Press Circle or Cross to select the active pet.";
+#endif
 }
 
 std::string StringBank::get(int idx)

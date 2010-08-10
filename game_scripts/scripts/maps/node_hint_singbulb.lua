@@ -25,7 +25,11 @@ end
 function update(me, dt)
 	if isFlag(FLAG_HINT_SINGBULB, 0) then
 		if node_isEntityIn(me, getNaija()) then
-			setControlHint(getStringBank(21), 0, 1, 0, 10)
+			if isPlat(PLAT_PSP) then
+				setControlHint(getStringBank(21), 0, 0, 0, 10)
+			else
+				setControlHint(getStringBank(21), 0, 1, 0, 10)
+			endif
 			setFlag(FLAG_HINT_SINGBULB, 1)
 		end
 	end

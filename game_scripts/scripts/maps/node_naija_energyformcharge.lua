@@ -29,6 +29,8 @@ function update(me, dt)
 			voice("naija_energyformcharge")
 			if isPlat(PLAT_MAC) then
 				setControlHint(getStringBank(89), 0, 1)
+			elseif isPlat(PLAT_PSP) then
+				setControlHint("Hold Circle to charge in Energy Form.")
 			else
 				setControlHint(getStringBank(69), 0, 1)
 			end

@@ -27,6 +27,10 @@ function update(me, dt)
 		if node_isEntityIn(me, getNaija()) then
 			if isPlat(PLAT_MAC) then
 				setControlHint(getStringBank(83), 0, 1)
+			elseif isPlat(PLAT_PSP) then
+				-- No targeting interface on the PSP, but we do
+				-- have an aiming interface:
+				setControlHint("Hold R and move the analog pad to aim Energy Form shots.")
 			else
 				setControlHint(getStringBank(63), 0, 1)
 			end

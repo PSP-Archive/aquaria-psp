@@ -27,6 +27,8 @@ function update(me, dt)
 		if node_isEntityIn(me, getNaija()) then
 			if isPlat(PLAT_MAC) then
 				setControlHint(getStringBank(84), 0, 1)
+			elseif isPlat(PLAT_PSP) then
+				setControlHint("Press or hold Circle to create seeds in Nature Form.", 0, 0, 0, 8)
 			else
 				setControlHint(getStringBank(64), 0, 1)
 			end

@@ -27,6 +27,8 @@ function update(me, dt)
 		if node_isEntityIn(me, getNaija()) then
 			if isPlat(PLAT_MAC) then
 				setControlHint(getStringBank(85), 1, 0, 0, 8)
+			elseif isPlat(PLAT_PSP) then
+				setControlHint("Move the analog pad in a circle to roll.", 0, 0, 0, 8)
 			else
 				setControlHint(getStringBank(65), 1, 0, 0, 8)
 			end

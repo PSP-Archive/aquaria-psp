@@ -26,7 +26,11 @@ function update(me, dt)
 	if hasSong(SONG_DUALFORM) then
 		if isFlag(FLAG_HINT_DUALFORMCHARGE, 0) then
 			if node_isEntityIn(me, getNaija()) then
-				setControlHint(getStringBank(29), 0, 1, 0, 12)
+				if isPlat(PLAT_PSP) then
+					setControlHint(getStringBank(29), 0, 0, 0, 12)
+				else
+					setControlHint(getStringBank(29), 0, 1, 0, 12)
+				end
 				setFlag(FLAG_HINT_DUALFORMCHARGE, 1)
 			end
 		end
