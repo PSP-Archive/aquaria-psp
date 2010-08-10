@@ -900,7 +900,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	//areaLabel->setFontSize(fontSize);
 	areaLabel->setAlign(ALIGN_CENTER);
 	areaLabel->followCamera = 1;
-	areaLabel->position = Vector(145,aly);
+	areaLabel->position = Vector(150,aly);
 	dsq->game->addRenderObject(areaLabel, LR_WORLDMAPHUD);
 	areaLabel->alpha = 0;
 

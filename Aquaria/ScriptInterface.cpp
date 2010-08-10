@@ -8657,6 +8657,7 @@ Script *ScriptInterface::openScript(const std::string &file)
 	std::string realFile = core->adjustFilenameCase(file);
 
 	lua_State *baseState = loadedScripts[realFile];
+	bool createdBaseState = false;
 	if (!baseState)
 	{
 		baseState = createLuaVM();
@@ -8691,12 +8692,18 @@ Script *ScriptInterface::openScript(const std::string &file)
 		}
 
 		loadedScripts[realFile] = baseState;
+		createdBaseState = true;
 	}
 
 	lua_State *thread = createLuaThread(baseState);
 	if (!thread)
 	{
 		debugLog("Unable to create new thread for script [" + realFile + "]");
+		if (createdBaseState)
+		{
+			destroyLuaVM(baseState);
+			loadedScripts.erase(realFile);
+		}
 		return NULL;
 	}
 
@@ -8707,6 +8714,11 @@ Script *ScriptInterface::openScript(const std::string &file)
 		debugLog(lua_tostring(thread, -1));
 		debugLog("(error doing initial run of script [" + realFile + "])");
 		destroyLuaThread(baseState, thread);
+		if (createdBaseState)
+		{
+			destroyLuaVM(baseState);
+			loadedScripts.erase(realFile);
+		}
 		return NULL;
 	}
 
