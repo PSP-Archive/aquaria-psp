@@ -29,7 +29,7 @@ function update(me, dt)
 				setControlHint(getStringBank(22), 0, 0, 0, 5)
 			else
 				setControlHint(getStringBank(22), 0, 1, 0, 5)
-			endif
+			end
 			setFlag(FLAG_HINT_HEALTHUPGRADE, 1)
 		end
 	end

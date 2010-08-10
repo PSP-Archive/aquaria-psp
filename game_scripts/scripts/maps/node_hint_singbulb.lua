@@ -29,7 +29,7 @@ function update(me, dt)
 				setControlHint(getStringBank(21), 0, 0, 0, 10)
 			else
 				setControlHint(getStringBank(21), 0, 1, 0, 10)
-			endif
+			end
 			setFlag(FLAG_HINT_SINGBULB, 1)
 		end
 	end

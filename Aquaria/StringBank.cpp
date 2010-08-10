@@ -61,6 +61,7 @@ void StringBank::load(const std::string &file)
 	stringMap[14] = "The songs that Naija has learned are displayed here. Move the cursor to a song to see how it is sung. Press Circle or Cross to hear Naija's description.";
 	stringMap[15] = "Use these icons to switch between menu pages.";
 	stringMap[17] = "Naija's pets are displayed here. Press Circle or Cross to select the active pet.";
+	stringMap[35] = "The Shield Song - Press START for Song Menu";
 #endif
 }
 

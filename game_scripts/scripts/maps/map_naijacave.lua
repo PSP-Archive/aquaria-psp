@@ -203,6 +203,8 @@ function init()
 		
 		if isPlat(PLAT_MAC) then
 			setControlHint(getStringBank(81), 1, 0)
+		elseif isPlat(PLAT_PSP) then
+			setControlHint("Use the analog pad to swim.")
 		else
 			setControlHint(getStringBank(61), 1, 0)
 		end
