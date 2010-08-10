@@ -933,8 +933,11 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 #ifdef BBGE_BUILD_PSP  // Need to make these much bigger to be legible.
 	const float pspScale = 1.4f;
 	const float fontScale = pspScale * 1.15f;
-	tophud->position.y *= pspScale;
-	tophud->scale *= pspScale;
+	// We prescale this graphic in the data file.
+	//tophud->position.y *= pspScale;
+	//tophud->scale *= pspScale;
+	tophud->position.y *= (float)600/(272*2);
+	tophud->scale *= (float)600/(272*2);
 	areaLabel->position *= pspScale;
 	areaLabel->position.x -= 400*(pspScale-1);
 	areaLabel->scale *= fontScale;

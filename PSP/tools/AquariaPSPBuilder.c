@@ -32,7 +32,7 @@ static jmp_buf png_jmpbuf;
  * current Mercurial revision, which should be defined on the compilation
  * command line with e.g. -DHG_REVISION=\"revision\" (for GCC -- note the
  * backslashes!), to form the final version string. */
-#define VERSION  "1.3"
+#define VERSION  "1.4"
 
 #ifndef HG_REVISION
 # error Define HG_REVISION on the compilation command line.
@@ -41,7 +41,7 @@ static jmp_buf png_jmpbuf;
 #define VERSION_STRING  VERSION " (r" HG_REVISION ")"
 
 /* Data version, used to warn users if they need to regenerate the PSP data. */
-#define DATA_VERSION  3
+#define DATA_VERSION  4
 
 /* File into which the data version is written. */
 #define DATA_VERSION_FILE  "data-version.txt"
@@ -927,7 +927,8 @@ static void add_to_file_list(FileListEntry **filelist_ptr,
                              uint32_t *nfiles_ptr,
                              const char *fullpath, const char *localpath,
                              uint32_t filesize, void *userdata);
-static int generate_tex(const void *pngdata, uint32_t pngsize,
+static int generate_tex(const char *pngpath,
+                        const void *pngdata, uint32_t pngsize,
                         void **texdata_ret, uint32_t *texsize_ret,
                         double progress_min, double progress_max);
 static int generate_mp3(const void *oggdata, uint32_t oggsize,
@@ -1035,7 +1036,7 @@ static void generate_data(const char *in_path, const char *out_path,
 
             void *texdata = NULL;
             uint32_t texsize = 0;
-            while (!generate_tex(filedata, filesize, &texdata, &texsize,
+            while (!generate_tex(path, filedata, filesize, &texdata, &texsize,
                                  progress, next_progress)) {
                 free(texdata);
                 build_report_error(path, 0,
@@ -1140,12 +1141,34 @@ static void add_to_file_list(FileListEntry **filelist_ptr,
 
 /*-----------------------------------------------------------------------*/
 
+/* List of texture files that get special processing.  If there's no match,
+ * the default processing of shrinking to half size is applied. */
+
+static const struct {
+    const char *path;  // Local path of file to which this entry applies.
+    int clip_x, clip_y, clip_w, clip_h;  // Clip region (only if w/h nonzero)
+    float scale;       // Scale factor (only if nonzero)
+} tex_special_list[] = {
+
+    /* World map UI: scale to native size (272/600 * 1.4 scale factor used
+     * in WorldMapRender.cpp).  The clip region is chosen to give an output
+     * texture size of 512x64. */
+    {"gfx/gui/worldmap-ui.png",
+     .clip_x = 109, .clip_y = 0, .clip_w = 806, .clip_h = 101,
+     .scale = (272.0/600.0) * 1.4
+    },
+
+};
+
+/*----------------------------------*/
+
 /* Periodic callback for generate_palette(). */
 static void genpal_callback(void) { GTK_MAIN_ITERATION_OR_EXIT(); }
 
 /* Other local helper functions. */
 static Texture *parse_png(const uint8_t *data, uint32_t size);
-static int shrink_texture(Texture *tex);
+static int clip_texture(Texture *tex, int left, int top, int width, int height);
+static int shrink_texture(Texture *tex, int new_width, int new_height);
 static int quantize_texture(Texture *tex);
 static int swizzle_texture(Texture *tex);
 static int generate_texfile(Texture *tex, void **data_ret, uint32_t *size_ret);
@@ -1156,6 +1179,7 @@ static int generate_texfile(Texture *tex, void **data_ret, uint32_t *size_ret);
  * generate_tex:  Convert a PNG image to our custom PSP texture format.
  *
  * [Parameters]
+ *          pngpath: Local pathname of PNG file
  *          pngdata: PNG file data buffer
  *          pngsize: PNG file data size (bytes)
  *      texdata_ret: Pointer to variable to receive the *.tex data buffer
@@ -1165,7 +1189,8 @@ static int generate_texfile(Texture *tex, void **data_ret, uint32_t *size_ret);
  * [Return value]
  *     Nonzero on success, zero on failure
  */
-static int generate_tex(const void *pngdata, uint32_t pngsize,
+static int generate_tex(const char *pngpath,
+                        const void *pngdata, uint32_t pngsize,
                         void **texdata_ret, uint32_t *texsize_ret,
                         double progress_min, double progress_max)
 {
@@ -1174,9 +1199,8 @@ static int generate_tex(const void *pngdata, uint32_t pngsize,
     uint32_t texsize = 0;
 
     Texture *texture;
-    uint32_t total_pixels;
 
-    /* First decode the PNG file and shrink it to half size. */
+    /* First decode the PNG file. */
 
     texture = parse_png(pngdata, pngsize);
     if (!texture) {
@@ -1185,16 +1209,56 @@ static int generate_tex(const void *pngdata, uint32_t pngsize,
     }
     SET_PROGRESS_AND_ITERATE(progress_min + 0.05*progress_delta);
 
-    if (!shrink_texture(texture)) {
-        fprintf(stderr, "Failed to shrink image\n");
-        goto error_free_texture;
-    }
-    SET_PROGRESS_AND_ITERATE(progress_min + 0.35*progress_delta);
+    /* See if there are any special operations to apply to this file.
+     * If not, apply the default transformation of shrinking to half size. */
 
-    total_pixels = texture->width * texture->height;
+    unsigned int i;
+    for (i = 0; i < lenof(tex_special_list); i++) {
+        if (stricmp(pngpath, tex_special_list[i].path) == 0) {
+            break;
+        }
+    }
+
+    if (i < lenof(tex_special_list)) {
+
+        if (tex_special_list[i].clip_w && tex_special_list[i].clip_h) {
+            if (!clip_texture(texture,
+                              tex_special_list[i].clip_x,
+                              tex_special_list[i].clip_y,
+                              tex_special_list[i].clip_w,
+                              tex_special_list[i].clip_h)) {
+                fprintf(stderr, "Failed to clip image\n");
+                goto error_free_texture;
+            }
+        }
+
+        if (tex_special_list[i].scale && tex_special_list[i].scale != 1) {
+            const float scale = tex_special_list[i].scale;
+            if (!shrink_texture(texture,
+                                (int)roundf(texture->width * scale),
+                                (int)roundf(texture->height * scale))) {
+                fprintf(stderr, "Failed to shrink image\n");
+                goto error_free_texture;
+            }
+        }
+
+    } else {  // No special operations to be performed.
+
+        /* Don't bother shrinking if the width or height is already 1. */
+        if (texture->width != 1 && texture->height != 1) {
+            if (!shrink_texture(texture, texture->width/2, texture->height/2)) {
+                fprintf(stderr, "Failed to shrink image\n");
+                goto error_free_texture;
+            }
+        }
+
+    }
+
+    SET_PROGRESS_AND_ITERATE(progress_min + 0.35*progress_delta);
 
     /* Generate a color palette for the image. */
 
+    const uint32_t total_pixels = texture->width * texture->height;
     uint32_t palette[256];
     memset(palette, 0, sizeof(palette));
     generate_palette((uint32_t *)texture->pixels, total_pixels, 1,
@@ -1242,24 +1306,70 @@ static int generate_tex(const void *pngdata, uint32_t pngsize,
 /*----------------------------------*/
 
 /**
- * shrink_texture:  Shrink the given texture to half its current width and
- * height, unless the width or height is 1 (in which case nothing is done).
- * The texture buffer is _not_ reallocated.
+ * clip_texture:  Clip the given texture to the given region.  The texture
+ * buffer is _not_ reallocated.
  *
  * [Parameters]
- *     tex: Texture to shrink
+ *               tex: Texture to shrink
+ *         left, top: Coordinates of upper-left corner of clip region (pixels)
+ *     width, height: Size of clip region (pixels)
  * [Return value]
  *     Nonzero on success, zero on error
  */
-static int shrink_texture(Texture *tex)
+static int clip_texture(Texture *tex, int left, int top, int width, int height)
 {
-    if (tex->width == 1 || tex->height == 1) {
-        return 1;
+    uint32_t new_stride = align_up(width, 4);
+    const uint8_t *src = &tex->pixels[(top*tex->stride + left) * 4];
+    uint8_t *dest = tex->pixels;
+    int y;
+    for (y = 0; y < height; y++, src += tex->stride*4, dest += new_stride*4) {
+        memcpy(dest, src, width*4);
     }
 
-    const int new_width  = tex->width / 2;
-    const int new_height = tex->height / 2;
-    const int new_stride = align_up(tex->stride / 2, 4);
+    if (tex->empty_l > left) {
+        tex->empty_l -= left;
+    } else {
+        tex->empty_l = 0;
+    }
+    if (tex->empty_t > top) {
+        tex->empty_t -= top;
+    } else {
+        tex->empty_t = 0;
+    }
+    if (tex->empty_r > tex->width - (left+width)) {
+        tex->empty_r -= tex->width - (left+width);
+    } else {
+        tex->empty_r = 0;
+    }
+    if (tex->empty_b > tex->height - (top+height)) {
+        tex->empty_b -= tex->height - (top+height);
+    } else {
+        tex->empty_b = 0;
+    }
+
+    tex->width  = width;
+    tex->height = height;
+    tex->stride = new_stride;
+
+    return 1;
+}
+
+/*----------------------------------*/
+
+/**
+ * shrink_texture:  Shrink the given texture to the given width and height.
+ * The texture buffer is _not_ reallocated.
+ *
+ * [Parameters]
+ *            tex: Texture to shrink
+ *      new_width: New width for texture (pixels)
+ *     new_height: New height for texture (pixels)
+ * [Return value]
+ *     Nonzero on success, zero on error
+ */
+static int shrink_texture(Texture *tex, int new_width, int new_height)
+{
+    const int new_stride = align_up(new_width, 4);
     void *tempbuf = malloc(new_stride * new_height * 4);
     if (!tempbuf) {
         fprintf(stderr, "Out of memory for shrink buffer (%d bytes)\n",
@@ -1278,6 +1388,8 @@ static int shrink_texture(Texture *tex)
     zoom_process(zi, tex->pixels, tempbuf);
     zoom_free(zi);
 
+    const int old_width  = tex->width;
+    const int old_height = tex->height;
     tex->width  = new_width;
     tex->height = new_height;
     tex->stride = new_stride;
@@ -1285,17 +1397,21 @@ static int shrink_texture(Texture *tex)
     free(tempbuf);
 
     /* Make sure we keep our 1-pixel transparent buffer at the new size. */
-    if (tex->empty_l > 0) {
-        tex->empty_l = (tex->empty_l - 1) / 2;
-    }
-    if (tex->empty_r > 0) {
-        tex->empty_r = (tex->empty_r - 1) / 2;
-    }
-    if (tex->empty_t > 0) {
-        tex->empty_t = (tex->empty_t - 1) / 2;
-    }
-    if (tex->empty_b > 0) {
-        tex->empty_b = (tex->empty_b - 1) / 2;
+    while (new_width < old_width || new_height < old_height) {
+        new_width *= 2;
+        new_height *= 2;
+        if (tex->empty_l > 0) {
+            tex->empty_l = (tex->empty_l - 1) / 2;
+        }
+        if (tex->empty_r > 0) {
+            tex->empty_r = (tex->empty_r - 1) / 2;
+        }
+        if (tex->empty_t > 0) {
+            tex->empty_t = (tex->empty_t - 1) / 2;
+        }
+        if (tex->empty_b > 0) {
+            tex->empty_b = (tex->empty_b - 1) / 2;
+        }
     }
 
     return 1;
