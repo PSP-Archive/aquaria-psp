@@ -774,7 +774,8 @@ void WorldMapRender::clearVis(WorldMapTile *tile)
 	{
 		if (savedTexData)
 		{
-			resetTileAlpha(tile, savedTexData);
+			if (tile->q)
+				resetTileAlpha(tile, savedTexData);
 			delete[] savedTexData;
 			savedTexData = 0;
 		}
