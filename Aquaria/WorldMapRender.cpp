@@ -925,8 +925,8 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	dsq->game->addRenderObject(areaLabel3, LR_WORLDMAPHUD);
 
 #ifdef BBGE_BUILD_PSP  // Need to make these much bigger to be legible.
-	const float pspScale = 1.25f;
-	const float fontScale = pspScale * 1.2f;
+	const float pspScale = 1.4f;
+	const float fontScale = pspScale * 1.15f;
 	tophud->position.y *= pspScale;
 	tophud->scale *= pspScale;
 	areaLabel->position *= pspScale;
@@ -975,7 +975,11 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	dsq->game->addRenderObject(addHintQuad2, LR_WORLDMAPHUD);
 #endif
 
-	//helpButton->event.set(MakeFunctionEvent(WorldMapRender, onToggleHelpScreen));
+#ifdef BBGE_BUILD_PSP
+	// Hide the help button to make more room for the header bar (besides
+	// which, there's no way to select it on the PSP anyway).
+	helpButton = 0;
+#else
 	helpButton = new AquariaMenuItem;
 	helpButton->event.setActionMapperCallback(this, ACTION_TOGGLEHELPSCREEN, 0);
 	helpButton->useQuad("gui/icon-help");
@@ -984,6 +988,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	helpButton->alpha = 0;
 	//helpButton->position = Vector(800-20, 20);
 	dsq->game->addRenderObject(helpButton, LR_WORLDMAPHUD);
+#endif
 }
 
 void WorldMapRender::onToggleHelpScreen()
@@ -1500,7 +1505,8 @@ void WorldMapRender::toggle(bool turnON)
 			addHintQuad1->alpha.interpolateTo(1.0, 0.2);
 		if (addHintQuad2)
 			addHintQuad2->alpha.interpolateTo(1.0, 0.2);
-		helpButton->alpha.interpolateTo(1.0, 0.2);
+		if (helpButton)
+			helpButton->alpha.interpolateTo(1.0, 0.2);
 		
 		addAllGems();
 		
@@ -1575,7 +1581,8 @@ void WorldMapRender::toggle(bool turnON)
 			addHintQuad1->alpha.interpolateTo(0, 0.2);
 		if (addHintQuad2)
 			addHintQuad2->alpha.interpolateTo(0, 0.2);
-		helpButton->alpha.interpolateTo(0, 0.2);
+		if (helpButton)
+			helpButton->alpha.interpolateTo(0, 0.2);
 
 
 		for (GemMovers::iterator i = gemMovers.begin(); i != gemMovers.end(); i++)
