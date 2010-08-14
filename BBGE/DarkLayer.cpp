@@ -198,23 +198,20 @@ void DarkLayer::render()
 		
 		//glBlendFunc(GL_SRC_ALPHA_SATURATE, GL_ONE);
 		//glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_ALPHA);
-		int x=0,y=0;
-		x = -core->getVirtualOffX()*2;
-		y = -core->getVirtualOffY()*2;
 		glColor4f(1,1,1,1);
 
 		glBegin(GL_QUADS);											// Begin Drawing Quads
 			
 				glTexCoord2f(0,1);							// Texture Coordinate	( 0, 1 )
-				glVertex2f(x-stretch,y-stretch);									// First Vertex		(   0,   0 )
+				glVertex2f(-stretch,-stretch);									// First Vertex		(   0,   0 )
 				glTexCoord2f(0,0);							// Texture Coordinate	( 0, 0 )
-				glVertex2f(x-stretch,core->height+stretch);							// Second Vertex	(   0, 480 )
+				glVertex2f(-stretch,core->height+stretch);							// Second Vertex	(   0, 480 )
 
 				glTexCoord2f(1,0);							// Texture Coordinate	( 1, 0 )
 				glVertex2f(core->width+stretch,core->height+stretch);				// Third Vertex		( 640, 480 )
 
 				glTexCoord2f(1,1);							// Texture Coordinate	( 1, 1 )
-				glVertex2f(core->width+stretch,y-stretch);							// Fourth Vertex	( 640,   0 )
+				glVertex2f(core->width+stretch,-stretch);							// Fourth Vertex	( 640,   0 )
 		glEnd();
 
 		glPopMatrix();
