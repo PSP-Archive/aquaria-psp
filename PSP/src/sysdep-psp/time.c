@@ -121,8 +121,10 @@ void sys_time_delay(double time)
 
     const int32_t target = sceKernelGetSystemTimeLow() + iround(time*1000000);
 
+#if 0  //FIXME: no longer applicable
     /* 必ず1フレーム以上待つ（表示バグ回避の為） */
     sceDisplayWaitVblankStart();
+#endif
 
     while ((int32_t)(target-sceKernelGetSystemTimeLow()) > 0 || psp_suspend) {
         sceDisplayWaitVblankStart();

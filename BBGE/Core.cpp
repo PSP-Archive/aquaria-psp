@@ -2948,6 +2948,9 @@ void Core::main(float runTime)
 		}
 #endif
 
+#ifdef BBGE_BUILD_PSP
+		sys_time_delay(0);  // Suspend checks, etc.
+#endif
 
 #ifdef BBGE_BUILD_GLFW
 		if (verbose) debugLog("glfwSetTime");
