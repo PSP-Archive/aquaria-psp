@@ -303,6 +303,7 @@ AquariaSlider::AquariaSlider()
 // len, grab radius
 {
 	inputTimer = inputDelay = 0;
+	_hadInput = false;
 }
 
 void AquariaSlider::onUpdate(float dt)
@@ -349,7 +350,11 @@ bool AquariaSlider::doSliderInput(float dt)
 		inputTimer += dt;
 		if (inputTimer >= inputDelay)
 		{
+			float oldValue = value;
 			setValue(value + inputAmount);
+			if (value != oldValue)
+				_hadInput = true;
+
 			inputTimer = 0;
 			if (inputDelay == 0)
 				inputDelay = SLIDER_REPEAT_DELAY;

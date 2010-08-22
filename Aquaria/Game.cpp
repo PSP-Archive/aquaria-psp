@@ -9678,7 +9678,16 @@ void Game::updateOptionsMenu(float dt)
 		*/
 
 		optsfxdly += dt;
-		if (optsfxdly > 0.6)
+		if (sfxslider->hadInput())
+		{
+			dsq->sound->playSfx("denied");
+		}
+		else if (voxslider->hadInput())
+		{
+			if (!dsq->sound->isPlayingVoice())
+				dsq->voice("naija_somethingfamiliar");
+		}
+		else if (optsfxdly > 0.6)
 		{
 			optsfxdly = 0;
 			if (sfxslider->isGrabbed())
