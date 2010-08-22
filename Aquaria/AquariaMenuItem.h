@@ -130,6 +130,9 @@ public:
 	bool isGuiVisible();
 protected:
 	void onUpdate(float dt);
+	bool doSliderInput(float dt);  // Returns whether input was detected
+
+	float inputTimer, inputDelay;
 };
 
 class AquariaCheckBox : public CheckBox, public AquariaGuiElement
