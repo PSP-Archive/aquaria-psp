@@ -225,10 +225,6 @@ void MiniMapRender::clickEffect(int type)
 
 void MiniMapRender::toggle(int t)
 {
-	for (int i = 0; i < buttons.size(); i++)
-	{
-		buttons[i]->renderQuad = (bool)t;
-	}
 	toggleOn = t;
 }
 
@@ -409,26 +405,13 @@ void MiniMapRender::onUpdate(float dt)
 			lastCursorIn = _isCursorIn;
 		}
 	}
+
+	core->getRenderObjectLayer(LR_MINIMAP)->visible =
+		toggleOn && dsq->game->avatar && dsq->game->avatar->getState() != Entity::STATE_TITLE && !(dsq->disableMiniMapOnNoInput && !dsq->game->avatar->isInputEnabled());
 }
 
 void MiniMapRender::onRender()
 {
-	if (!toggleOn)
-		return;
-
-	if (!dsq->game->avatar || dsq->game->avatar->getState() == Entity::STATE_TITLE || (dsq->disableMiniMapOnNoInput && !dsq->game->avatar->isInputEnabled()))
-	{
-		for (int i = 0; i < buttons.size(); i++)
-			buttons[i]->renderQuad = false;
-		return;
-	}
-	else
-	{
-		for (int i = 0; i < buttons.size(); i++)
-			buttons[i]->renderQuad = true;
-	}
-
-
 #ifdef BBGE_BUILD_OPENGL
 
 	glBindTexture(GL_TEXTURE_2D, 0);

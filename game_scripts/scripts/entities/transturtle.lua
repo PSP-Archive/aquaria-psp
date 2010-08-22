@@ -355,6 +355,9 @@ function activate(me)
 		fade(1, 1)
 		watch(1)
 		
+		-- HACK: Keep the mouse cursor from reappearing for an instant
+		-- when under keyboard or joystick control.
+		disableInput()
 		
 		
 		-- rotation
