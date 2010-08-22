@@ -287,22 +287,83 @@ void AquariaGuiQuad::onUpdate(float dt)
 	Quad::onUpdate(dt);
 }
 
+// Joystick input threshold at which we start sliding (0.0-1.0); must be
+// less than updateMovement() threshold.
+const float SLIDER_JOY_THRESHOLD = 0.39;
+// Initial delay before repeating for slider input (seconds).
+const float SLIDER_REPEAT_DELAY = 0.4;
+// Scale factor for delay as repeats continue.
+const float SLIDER_REPEAT_ACCEL = 0.8;
+
 AquariaSlider::AquariaSlider()
 : Slider(90, 12, "gui/slider-bg", "gui/slider-fg"), AquariaGuiElement()
 // len, grab radius
 {
+	inputTimer = inputDelay = 0;
+	_hadInput = false;
 }
 
 void AquariaSlider::onUpdate(float dt)
 {
-	AquariaGuiElement::updateMovement(dt);
 	if (!hasInput())
 	{
+		inputTimer = inputDelay = 0;
+		AquariaGuiElement::updateMovement(dt);
 		RenderObject::onUpdate(dt);
 	}
 	else
 	{
+		if (!doSliderInput(dt))
+			AquariaGuiElement::updateMovement(dt);
 		Slider::onUpdate(dt);
+	}
+}
+
+bool AquariaSlider::doSliderInput(float dt)
+{
+	if (!(core->mouse.position - this->position).isLength2DIn(5))
+		return false;
+
+	float inputAmount;  // How much to adjust by?
+
+	StateObject *obj = dsq->getTopStateObject();
+	if (core->joystick.position.x <= -SLIDER_JOY_THRESHOLD)
+		inputAmount = -0.1f;
+	else if (core->joystick.position.x >= SLIDER_JOY_THRESHOLD)
+		inputAmount = +0.1f;
+	else if (core->joystick.dpadLeft)
+		inputAmount = -0.1f;
+	else if (core->joystick.dpadRight)
+		inputAmount = +0.1f;
+	else if (obj && obj->isActing(ACTION_MENULEFT))
+		inputAmount = -0.1f;
+	else if (obj && obj->isActing(ACTION_MENURIGHT))
+		inputAmount = +0.1f;
+	else
+		inputAmount = 0;
+
+	if (inputAmount != 0)
+	{
+		inputTimer += dt;
+		if (inputTimer >= inputDelay)
+		{
+			float oldValue = value;
+			setValue(value + inputAmount);
+			if (value != oldValue)
+				_hadInput = true;
+
+			inputTimer = 0;
+			if (inputDelay == 0)
+				inputDelay = SLIDER_REPEAT_DELAY;
+			else
+				inputDelay *= SLIDER_REPEAT_ACCEL;
+		}
+		return true;
+	}
+	else
+	{
+		inputTimer = inputDelay = 0;
+		return false;
 	}
 }
 
