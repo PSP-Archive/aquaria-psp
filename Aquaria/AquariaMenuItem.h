@@ -131,8 +131,13 @@ public:
 
 	Vector getGuiPosition();
 	bool isGuiVisible();
+	bool hadInput() {bool ret = _hadInput; _hadInput = false; return ret;}
 protected:
 	void onUpdate(float dt);
+	bool doSliderInput(float dt);  // Returns whether input was detected
+
+	float inputTimer, inputDelay;
+	bool _hadInput;
 };
 
 class AquariaCheckBox : public CheckBox, public AquariaGuiElement
