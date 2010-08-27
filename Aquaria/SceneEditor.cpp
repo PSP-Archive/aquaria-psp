@@ -2481,7 +2481,7 @@ void SceneEditor::updateMultiSelect()
 
 void SceneEditor::action(int id, int state)
 {
-	if (core->getKeyState(KEY_LCONTROL) && editingElement)
+	if (core->getCtrlState() && editingElement)
 	{
 		if (id == ACTION_BGLAYEREND)
 		{
@@ -2859,7 +2859,7 @@ void SceneEditor::nextElement()
 	if (state != ES_SELECTING) return;
 
 
-	if (core->getKeyState(KEY_LCONTROL))
+	if (core->getCtrlState())
 	{
 		dsq->mod.recache();
 		return;
@@ -2946,7 +2946,7 @@ void SceneEditor::prevElement()
 
 	if (editType != ET_SELECTENTITY)
 	{
-		if (core->getKeyState(KEY_LCONTROL))
+		if (core->getCtrlState())
 		{
 			debugLog("SELECT ENTITY FROM GROUPS!");
 			selectEntityFromGroups();
@@ -3119,7 +3119,7 @@ void SceneEditor::placeElement()
 	}
 	else if (editType == ET_PATHS)
 	{
-		if (core->getKeyState(KEY_LCONTROL))
+		if (core->getCtrlState())
 		{
 			// new path
 			Path *p = new Path;
@@ -3594,7 +3594,7 @@ void SceneEditor::update(float dt)
 			case ES_ROTATING:
 			{
 				float add = (dsq->getGameCursorPosition().x - cursorOffset.x)/2.4f;
-				if (core->getKeyState(KEY_LCONTROL))
+				if (core->getCtrlState())
 				{
 					int a = (oldRotation.z + add)/45;
 					add = a * 45;
@@ -3661,7 +3661,7 @@ void SceneEditor::update(float dt)
 				{
 
 					float add = (dsq->getGameCursorPosition().x - cursorOffset.x)/2.4f;
-					if (core->getKeyState(KEY_LCONTROL))
+					if (core->getCtrlState())
 					{
 						int a = (oldRotation.z + add)/45;
 						add = a * 45;
@@ -3675,7 +3675,7 @@ void SceneEditor::update(float dt)
 				else if (editingElement)
 				{
 					float add = (dsq->getGameCursorPosition().x - cursorOffset.x)/2.4f;
-					if (core->getKeyState(KEY_LCONTROL))
+					if (core->getCtrlState())
 					{
 						int a = (oldRotation.z + add)/45;
 						add = a * 45;
@@ -3733,7 +3733,7 @@ void SceneEditor::update(float dt)
 				}
 				if (!selectedElements.empty())
 				{
-					if (core->getKeyState(KEY_LCONTROL))
+					if (core->getCtrlState())
 					{
 						dummy.scale = Vector(1,1);
 					}
@@ -3751,7 +3751,7 @@ void SceneEditor::update(float dt)
 				}
 				else if (editingElement)
 				{
-					if (core->getKeyState(KEY_LCONTROL))
+					if (core->getCtrlState())
 					{
 						editingElement->scale = Vector(1,1);
 					}

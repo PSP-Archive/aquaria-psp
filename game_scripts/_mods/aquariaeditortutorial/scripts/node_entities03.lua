@@ -40,7 +40,7 @@ function sayNext()
 	elseif v.thingSaying == 3 then
 		setControlHint("Once you've selected an entity to drop, press Escape to exit the Entity Selection Menu.", 0, 0, 0, 16)
 	elseif v.thingSaying == 4 then
-		setControlHint("Press Spacebar to drop the entity!  That's all there is to it!", 0, 0, 0, 16)
+		setControlHint("Press Spacebar to drop the entity! That's all there is to it!", 0, 0, 0, 16)
 	end
 end
 

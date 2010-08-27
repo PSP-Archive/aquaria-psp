@@ -32,7 +32,7 @@ end
 
 function sayNext()
 	if v.thingSaying == 0 then
-		setControlHint("This final obstruction will damage Naija if she touches it!  You'll have to turn it off to continue onward.", 0, 0, 0, 16)
+		setControlHint("This final obstruction will damage Naija if she touches it! You'll have to turn it off to continue onward.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then
 		setControlHint("Press 'I' over this pillar to toggle it off.", 0, 0, 0, 16)
 	end

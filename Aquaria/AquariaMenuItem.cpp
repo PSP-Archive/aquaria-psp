@@ -467,8 +467,6 @@ AquariaKeyConfig::AquariaKeyConfig(const std::string &actionInputName, InputSetT
 	addChild(keyConfigFont, PM_POINTER);
 
 
-	waitingForInput = 0;
-
 	keyDown = false;
 
 	locked = 0;
@@ -481,6 +479,9 @@ void AquariaKeyConfig::destroy()
 {
 	AquariaGuiElement::clean();
 	RenderObject::destroy();
+
+	if (waitingForInput == this)
+		waitingForInput = 0;
 }
 
 Vector AquariaKeyConfig::getGuiPosition()

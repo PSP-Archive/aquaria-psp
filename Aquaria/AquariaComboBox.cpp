@@ -289,8 +289,6 @@ void AquariaComboBox::setSelectedItem(int index)
 {
 	if (isopen) close();
 
-	selectedItem = index;
-
 	if (index == AQUARIACOMBOBOXITEM_UP)
 	{
 		doScroll(1);
@@ -302,7 +300,18 @@ void AquariaComboBox::setSelectedItem(int index)
 	else
 	{
 		if (index >= 0 && index < items.size())
+		{
+			selectedItem = index;
 			selectedItemLabel->setText(items[index]);
+			scroll = index;
+			if (scroll + numDrops > items.size())
+			{
+				if (items.size() < numDrops)
+					scroll = 0;
+				else
+					scroll = items.size() - numDrops;
+			}
+		}
 	}
 }
 
