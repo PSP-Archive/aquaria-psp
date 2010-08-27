@@ -34,7 +34,7 @@ function sayNext()
 	if v.thingSaying == 0 then
 		setControlHint("There are three main editing modes: Tile Edit, Entity Edit and Node Edit.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then
-		setControlHint("The first mode, Tile Edit, lets you edit the backdrop.  Things like rocks, plants, or anything else that you don't interact with directly.", 0, 0, 0, 16)
+		setControlHint("The first mode, Tile Edit, lets you edit the backdrop. Things like rocks, plants, or anything else that you don't interact with directly.", 0, 0, 0, 16)
 	elseif v.thingSaying == 2 then
 		setControlHint("To enter Tile Edit mode, press F5 in the level editor, or select it from the drop-down menu at the top!", 0, 0, 0, 16)
 	end

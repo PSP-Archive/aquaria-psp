@@ -30,7 +30,7 @@ SONG_LIST = {
 "cathedral",
 "cave",
 "druniaddance",
-"endingpart",
+"endingpart1",
 "fallenbreed",
 "fallofmithalas",
 "flyaway",

@@ -32,7 +32,7 @@ end
 
 function sayNext()
 	if v.thingSaying == 0 then
-		setControlHint("That's it for Tile Edit Mode!  Now let's move on to the Entity Edit Mode.", 0, 0, 0, 16)
+		setControlHint("That's it for Tile Edit Mode! Now let's move on to the Entity Edit Mode.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then
 		setControlHint("Entities are any active objects that you want to be able to interact with.", 0, 0, 0, 16)
 	elseif v.thingSaying == 2 then

@@ -32,7 +32,7 @@ end
 
 function sayNext()
 	if v.thingSaying == 0 then
-		setControlHint("The last editor mode is Node Edit Mode.  (That rhymes!)", 0, 0, 0, 16)
+		setControlHint("The last editor mode is Node Edit Mode. (That rhymes!)", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then
 		setControlHint("Nodes are areas you can define to perform a variety of tasks.", 0, 0, 0, 16)
 	elseif v.thingSaying == 2 then

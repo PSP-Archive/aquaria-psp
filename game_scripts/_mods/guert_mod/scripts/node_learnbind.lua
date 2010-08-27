@@ -34,7 +34,7 @@ function update(me, dt)
  if v.islearned == false then
 
   if node_isEntityIn(me, v.n) then
-    setControlHint("You've found a new song! You can now use BIND song!", 0, 0, 0, 16)
+    setControlHint("You've found a new song! You can now use the BIND song!", 0, 0, 0, 16)
     learnSong(4)
     v.islearned = true
   end

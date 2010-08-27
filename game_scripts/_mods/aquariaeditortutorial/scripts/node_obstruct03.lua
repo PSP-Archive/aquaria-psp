@@ -32,7 +32,7 @@ end
 
 function sayNext()
 	if v.thingSaying == 0 then
-		setControlHint("This is a slightly thicker obstruction.  Press 'O' again to make this.", 0, 0, 0, 16)
+		setControlHint("This is a slightly thicker obstruction. Press 'O' again to make this.", 0, 0, 0, 16)
 	end
 end
 

@@ -36,11 +36,11 @@ end
 
 function sayNext()
 	if v.thingSaying == 0 then
-		setControlHint("Welcome to the Aquaria Editor Tutorial Mod!  This will teach you the basics of using Aquaria's level editor.", 0, 0, 0, 16)
+		setControlHint("Welcome to the Aquaria Editor Tutorial Mod! This will teach you the basics of using Aquaria's level editor.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then
 		setControlHint("Throughout the tutorial, you will see bubbles with question marks in them.", 0, 0, 0, 16)
 	elseif v.thingSaying == 2 then
-		setControlHint("These are hint bubbles!  Right-click on them to learn about the editor.", 0, 0, 0, 16)
+		setControlHint("These are hint bubbles! Right-click on them to learn about the editor.", 0, 0, 0, 16)
 	elseif v.thingSaying == 3 then
 		setControlHint("To begin the tutorial, right-click on these bubbles, from left to right!", 0, 0, 0, 16)
 	end
