@@ -425,7 +425,7 @@ void AnimationEditor::undo()
 {
 	if (dsq->isNested()) return;
 
-	if (core->getKeyState(KEY_LCONTROL))
+	if (core->getCtrlState())
 	{
 		if (undoEntry >= 0 && undoEntry < undoHistory.size())
 		{
@@ -440,7 +440,7 @@ void AnimationEditor::redo()
 {
 	if (dsq->isNested()) return;
 
-	if (core->getKeyState(KEY_LCONTROL))
+	if (core->getCtrlState())
 	{
 		undoEntry++;
 		if (undoEntry >= 0 && undoEntry < undoHistory.size())
@@ -750,7 +750,7 @@ void AnimationEditor::copy()
 {
 	if (dsq->isNested()) return;
 
-	if (core->getKeyState(KEY_LCONTROL))
+	if (core->getCtrlState())
 		copyBuffer = *editSprite->getCurrentAnimation()->getKeyframe(currentKey);
 }
 
@@ -758,7 +758,7 @@ void AnimationEditor::paste()
 {
 	if (dsq->isNested()) return;
 
-	if (core->getKeyState(KEY_LCONTROL))
+	if (core->getCtrlState())
 	{
 		SkeletalKeyframe *k = editSprite->getCurrentAnimation()->getKeyframe(currentKey);
 		float time = k->t;
