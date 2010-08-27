@@ -35,7 +35,7 @@ function sayNext()
 		setControlHint("In Tile Edit mode, use the Left Mouse Button to drag tiles around.", 0, 0, 0, 16)
 	elseif thingSaying == 1 then
 		setControlHint("Hold the Right Mouse Button and drag to rotate them. Try moving these starfish over here!", 0, 0, 0, 16)
-		elseif thingSaying == 2 then
+	elseif thingSaying == 2 then
 		setControlHint("Press 'T' to the flip the sprite.", 0, 0, 0, 16)
 	elseif thingSaying == 3 then
 		setControlHint("You can also hold Shift and click the Left Mouse Button on a tile to clone it. Try it out!", 0, 0, 0, 16)

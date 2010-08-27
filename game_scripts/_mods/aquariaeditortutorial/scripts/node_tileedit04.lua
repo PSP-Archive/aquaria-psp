@@ -36,7 +36,7 @@ function sayNext()
 	elseif thingSaying == 1 then
 		setControlHint("The first nine layers are mapped to the 1-9 keys on your keyboard.", 0, 0, 0, 16)
 	elseif thingSaying == 2 then
-		setControlHint("This starfish is on layer '4'.  Press '4' to select that layer and then you can edit it.", 0, 0, 0, 16)
+		setControlHint("This starfish is on layer '4'. Press '4' to select that layer and then you can edit it.", 0, 0, 0, 16)
 	end
 end
 

@@ -39,7 +39,7 @@ function sayNext()
 		setControlHint("To set what the node does, hover your mouse over the center of the node and press 'N'.", 0, 0, 0, 16)
 	elseif thingSaying == 3 then
 		setControlHint("If you try it on this current node, you will see that it is defined as a current with power 500.", 0, 0, 0, 16)
-		elseif thingSaying == 4 then
+	elseif thingSaying == 4 then
 		setControlHint("The '0.1' defines the transparency of the current.", 0, 0, 0, 16)
 	end
 end

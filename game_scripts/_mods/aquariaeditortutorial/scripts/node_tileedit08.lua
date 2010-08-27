@@ -32,11 +32,11 @@ end
 
 function sayNext()
 	if thingSaying == 0 then
-		setControlHint("Tiles can have various visual properties, which are set using the Numpad.", 0, 0, 0, 16)
+		setControlHint("Tiles can have various visual properties, which are set using the number pad.", 0, 0, 0, 16)
 	elseif thingSaying == 1 then
-		setControlHint("Every key from '1' to '7' is mapped to a different effect.  You can see an example of each one in these plants.", 0, 0, 0, 16)
+		setControlHint("Every key from '1' to '7' is mapped to a different effect. You can see an example of each one in these plants.", 0, 0, 0, 16)
 	elseif thingSaying == 2 then
-		setControlHint("'0' on the Num Pad will remove any visual effect.", 0, 0, 0, 16)
+		setControlHint("'0' on the number pad will remove any visual effect.", 0, 0, 0, 16)
 	end
 end
 
