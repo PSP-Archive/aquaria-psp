@@ -763,7 +763,7 @@ void SongSlot::onUpdate(float dt)
 			{
 				mbDown = true;
 			}
-			else if (mbDown && anyButton)
+			else if (mbDown && !anyButton)
 			{
 				mbDown = false;
 
