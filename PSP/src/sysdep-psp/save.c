@@ -327,7 +327,7 @@ static void init_save_params(SceUtilitySavedataParam *params, int mode,
         break;
       default:
         snprintf(saveparams.saveName, sizeof(saveparams.saveName),
-                 PATH_SAVEDIR_FMT, num);
+                 PATH_SAVEDIR_FMT, num-1);
         snprintf(saveparams.fileName, sizeof(saveparams.fileName),
                  "%s", PATH_SAVEFILE);
         break;
