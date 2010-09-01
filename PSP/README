@@ -11,6 +11,18 @@ Important notice (limitations of this version)
 Due to Aquaria's memory requirements, the game will only run on a PSP-2000
 ("Slim") or later.  Aquaria will _not_ run on a PSP-1000 ("Phat").  Sorry!
 
+    IMPORTANT:  As of build 491, Aquaria uses a slightly different
+    internal naming scheme for save files, necessitated by certain
+    changes in the game's engine.  Because of this, any games saved
+    with a previous build (490 or earlier) will appear one slot lower
+    in the save menu than they did previously; for example, if you
+    saved a game in slot #1 using an older build, it will now appear
+    in slot #2 instead.
+
+    In particular, if you have a game saved in slot #32, you WILL NOT
+    BE ABLE TO LOAD IT using this version.  Be sure to save any game
+    in slot #32 to a different slot before upgrading.
+
 Save early and often!  Memory fragmentation issues which are normally
 unnoticeable on a PC can cause the PSP to crash after playing for a
 while.  It may help to periodically exit the game (to the PSP's menu)
@@ -142,8 +154,8 @@ For some packages, you can choose between the version of the package
 installed on your system (if any) and the version included in the Aquaria
 source code distribution.  For example, by passing "USE_INSTALLED_LUA=0"
 on the "make" command line, the build will use the version of Lua
-included under the "Aquaria" source directory rather than any version you
-may have already built for the PSP on your system.  See the top of the
+included under the "ExternalLibs" source directory rather than any version
+you may have already built for the PSP on your system.  See the top of the
 Makefile for a full list of such packages.  (Note that the build process
 does _not_ autodetect whether you have the packages installed, and will
 attempt to use preinstalled libraries for all packages unless you specify
