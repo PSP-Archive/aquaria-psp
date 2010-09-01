@@ -32,7 +32,7 @@ static jmp_buf png_jmpbuf;
  * current Mercurial revision, which should be defined on the compilation
  * command line with e.g. -DHG_REVISION=\"revision\" (for GCC -- note the
  * backslashes!), to form the final version string. */
-#define VERSION  "1.4"
+#define VERSION  "1.5"
 
 #ifndef HG_REVISION
 # error Define HG_REVISION on the compilation command line.
@@ -2107,9 +2107,10 @@ static void build_package(const char *in_path, const char *out_path,
     }
 
     uint32_t nameofs = 0;
-    uint32_t dataofs = sizeof(PKGHeader)
-                     + (sizeof(PKGIndexEntry) * nfiles)
-                     + namesize;
+    const uint32_t database = sizeof(PKGHeader)
+                            + (sizeof(PKGIndexEntry) * nfiles)
+                            + namesize;
+    uint32_t dataofs = database;
     for (i = 0; i < nfiles; i++) {
         index[i].hash          = pkg_hash(filelist[i].pathname);
         index[i].nameofs_flags = nameofs;
@@ -2130,6 +2131,8 @@ static void build_package(const char *in_path, const char *out_path,
         index[i].offset = dataofs;
         dataofs += filelist[i].size;
     }
+
+    const uint32_t datasize = dataofs - database;
 
     package_sort(index, nfiles, namebuf, 0, nfiles-1);
     GTK_MAIN_ITERATION_OR_EXIT();
@@ -2208,6 +2211,7 @@ static void build_package(const char *in_path, const char *out_path,
     gtk_widget_set_sensitive(ui_get_widget("label_build_count_title"), TRUE);
     gtk_widget_set_sensitive(ui_get_widget("label_build_count"), TRUE);
 
+    uint32_t datadone = 0;
     for (i = 0; i < nfiles; i++) {
         current_file = filelist[i].pathname;
         show_current_filename();
@@ -2215,8 +2219,19 @@ static void build_package(const char *in_path, const char *out_path,
         snprintf(countbuf, sizeof(countbuf), "%u/%u", i+1, nfiles);
         gtk_label_set_text(GTK_LABEL(ui_get_widget("label_build_count")),
                            countbuf);
+
+        /* We can't rely on either the file count or the data size alone
+         * to measure progress in terms of real time, since both have an
+         * effect; the *_weight constants here are a rough guesstimate of
+         * the expense of file opens/closes versus reads/writes. */
+        const double file_weight = 0.85;
+        const double data_weight = 0.15;
+        const double file_fraction = (double)i / (double)nfiles;
+        const double data_fraction = (double)datadone / (double)datasize;
+        const double fraction = file_fraction * file_weight
+                              + data_fraction * data_weight;
         const double progress = progress_min
-                              + ((progress_max - progress_min) * i) / nfiles;
+                              + (progress_max - progress_min) * fraction;
         SET_PROGRESS_AND_ITERATE(progress);
 
         uint32_t filepos = ftell(pkg);
@@ -2261,6 +2276,8 @@ static void build_package(const char *in_path, const char *out_path,
         if (filelist[i].realfile) {
             g_free(filedata);
         }
+
+        datadone += filelist[i].size;
     }
 
     fclose(pkg);
