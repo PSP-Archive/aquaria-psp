@@ -10,6 +10,8 @@
 #ifndef MALLOC_OPNEW_H
 #define MALLOC_OPNEW_H
 
+#ifdef DEBUG
+
 /*************************************************************************/
 
 /* First include some system headers that use weird new() syntax, at least
@@ -39,6 +41,7 @@ inline void operator delete[](void *ptr, const char *file, int line) {
 
 /*************************************************************************/
 
+#endif  // DEBUG
 #endif  // MALLOC_OPNEW_H
 
 /*
