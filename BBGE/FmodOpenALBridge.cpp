@@ -125,8 +125,10 @@ private:
 // It might be better to just update libogg/libvorbis to the current
 // versions so we don't have to worry about identifier collisions --
 // we can then drop all this and use OV_CALLBACKS_NOCLOSE in the
-// ov_open_callbacks() call.
-static int _ov_header_fseek_wrap(FILE *f,ogg_int64_t off,int whence){
+// ov_open_callbacks() call.  Note that we rename the fseek() wrapper
+// to avoid an identifier collision when building with more recent
+// versions of libvorbis.
+static int BBGE_ov_header_fseek_wrap(FILE *f,ogg_int64_t off,int whence){
   if(f==NULL)return(-1);
 #ifdef __MINGW32__
   return fseeko64(f,off,whence);
@@ -139,7 +141,7 @@ static int _ov_header_fseek_wrap(FILE *f,ogg_int64_t off,int whence){
 static int noclose(FILE *f) {return 0;}
 static const ov_callbacks local_OV_CALLBACKS_NOCLOSE = {
   (size_t (*)(void *, size_t, size_t, void *))  fread,
-  (int (*)(void *, ogg_int64_t, int))           _ov_header_fseek_wrap,
+  (int (*)(void *, ogg_int64_t, int))           BBGE_ov_header_fseek_wrap,
   (int (*)(void *))                             noclose,  // NULL doesn't work in libvorbis-1.1.2
   (long (*)(void *))                            ftell
 };
