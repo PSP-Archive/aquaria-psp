@@ -28,10 +28,102 @@ ADD_DEFINITIONS(-DBBGE_BUILD_ACHIEVEMENTS_INTERNAL=1)
 SET(BBGEDIR ${CMAKE_CURRENT_SOURCE_DIR}/BBGE)
 SET(SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/Aquaria)
 SET(EXTLIBDIR ${CMAKE_CURRENT_SOURCE_DIR}/ExternalLibs)
+
+SET(FTGLDIR ${EXTLIBDIR}/FTGL)
+SET(FTGLSRCDIR ${FTGLDIR}/src)
+SET(FREETYPE2DIR ${EXTLIBDIR}/freetype2)
+SET(FREETYPE2SRCDIR ${FREETYPE2DIR}/src)
 SET(LUADIR ${EXTLIBDIR}/lua-5.1.4)
 SET(LUASRCDIR ${LUADIR}/src)
+SET(LIBOGGDIR ${EXTLIBDIR}/libogg-1.1.3)
+SET(LIBVORBISDIR ${EXTLIBDIR}/libvorbis-1.1.2)
 
-# Find SDL or use the included library if applicable
+################ Look for external libraries
+
+### FreeType
+
+OPTION(AQUARIA_INTERNAL_FREETYPE "Always use included FreeType library" FALSE)
+if(NOT AQUARIA_INTERNAL_FREETYPE)
+    find_package(Freetype)
+endif(NOT AQUARIA_INTERNAL_FREETYPE)
+if(NOT FREETYPE_FOUND)
+    set(FREETYPE_INCLUDE_DIRS ${FREETYPE2DIR}/include)
+endif(NOT FREETYPE_FOUND)
+
+### Lua
+
+OPTION(AQUARIA_INTERNAL_LUA "Always use included Lua library" FALSE)
+if(NOT AQUARIA_INTERNAL_LUA)
+    find_package(Lua51)
+endif(NOT AQUARIA_INTERNAL_LUA)
+if(NOT LUA51_FOUND)
+    set(LUA_INCLUDE_DIR ${LUASRCDIR})
+endif(NOT LUA51_FOUND)
+
+### Ogg/Vorbis
+
+OPTION(AQUARIA_INTERNAL_OGGVORBIS "Always use included Ogg/Vorbis libraries" FALSE)
+if(NOT AQUARIA_INTERNAL_OGGVORBIS)
+    # CMake doesn't seem to have a module for libogg or libvorbis yet, so
+    # we roll our own based on existing find_package modules.
+
+    find_path(OGG_INCLUDE_DIR ogg.h
+        HINTS $ENV{OGG_DIR}
+        PATH_SUFFIXES include/ogg include
+        PATHS ~/Library/Frameworks /Library/Frameworks /usr/local /usr /sw /opt/local /opt/csw /opt
+    )
+    find_library(OGG_LIBRARY
+        NAMES ogg
+        HINTS $ENV{OGG_DIR}
+        PATH_SUFFIXES lib64 lib
+        PATHS ~/Library/Frameworks /Library/Frameworks /usr/local /usr /sw /opt/local /opt/csw /opt
+    )
+
+    if(OGG_LIBRARY)
+
+        find_path(VORBIS_INCLUDE_DIR vorbisfile.h
+            HINTS $ENV{VORBIS_DIR}
+            PATH_SUFFIXES include/vorbis include
+            PATHS ~/Library/Frameworks /Library/Frameworks /usr/local /usr /sw /opt/local /opt/csw /opt
+        )
+        find_library(VORBIS_LIBRARY
+            NAMES vorbis
+            HINTS $ENV{VORBIS_DIR}
+            PATH_SUFFIXES lib64 lib
+            PATHS ~/Library/Frameworks /Library/Frameworks /usr/local /usr /sw /opt/local /opt/csw /opt
+        )
+        find_library(VORBISFILE_LIBRARY
+            NAMES vorbisfile
+            HINTS $ENV{VORBIS_DIR}
+            PATH_SUFFIXES lib64 lib
+            PATHS ~/Library/Frameworks /Library/Frameworks /usr/local /usr /sw /opt/local /opt/csw /opt
+        )
+
+        if(VORBIS_LIBRARY AND VORBISFILE_LIBRARY)
+            set(OGGVORBIS_INCLUDE_DIRS "${OGG_INCLUDE_DIR};${VORBIS_INCLUDE_DIR}" CACHE STRING "Ogg/Vorbis include directories")
+            if(UNIX AND NOT APPLE)
+                find_library(VORBIS_MATH_LIBRARY m)
+                set(OGGVORBIS_LIBRARIES "${VORBISFILE_LIBRARY};${VORBIS_LIBRARY};${VORBIS_MATH_LIBRARY};${OGG_LIBRARY}" CACHE STRING "Ogg/Vorbis libraries")
+            else(UNIX AND NOT APPLE)
+                set(OGGVORBIS_LIBRARIES "${VORBISFILE_LIBRARY};${VORBIS_LIBRARY};${OGG_LIBRARY}" CACHE STRING "Ogg/Vorbis libraries")
+            endif(UNIX AND NOT APPLE)
+        endif(VORBIS_LIBRARY AND VORBISFILE_LIBRARY)
+
+    endif(OGG_LIBRARY)
+
+    find_package_handle_standard_args(OggVorbis  DEFAULT_MSG  OGGVORBIS_LIBRARIES OGGVORBIS_INCLUDE_DIRS)
+
+    mark_as_advanced(OGG_INCLUDE_DIR VORBIS_INCLUDE_DIR OGGVORBIS_INCLUDE_DIRS)
+    mark_as_advanced(OGG_LIBRARY VORBIS_LIBRARY VORBISFILE_LIBRARY VORBIS_MATH_LIBRARY OGGVORBIS_LIBRARIES)
+
+endif(NOT AQUARIA_INTERNAL_OGGVORBIS)
+
+if(NOT OGGVORBIS_FOUND)
+    set(OGGVORBIS_INCLUDE_DIRS ${LIBOGGDIR}/include ${LIBVORBISDIR}/include)
+endif(NOT OGGVORBIS_FOUND)
+
+### SDL
+
 OPTION(AQUARIA_INTERNAL_SDL "Always use included SDL library" FALSE)
 if(NOT AQUARIA_INTERNAL_SDL)
     find_package(SDL)
@@ -58,7 +150,8 @@ if (NOT SDL_FOUND)
     endif(MACOSX)
 endif (NOT SDL_FOUND)
 
-# Find OpenAL or use the included library if applicable
+### OpenAL
+
 OPTION(AQUARIA_INTERNAL_OPENAL "Always use included OpenAL library" FALSE)
 if(NOT AQUARIA_INTERNAL_OPENAL)
     find_package(OpenAL)
@@ -78,24 +171,18 @@ if (NOT OPENAL_FOUND)
     endif(WIN32)
 endif (NOT OPENAL_FOUND)
 
-SET(FTGLDIR ${EXTLIBDIR}/FTGL)
-SET(FTGLSRCDIR ${FTGLDIR}/src)
-SET(FREETYPE2DIR ${EXTLIBDIR}/freetype2)
-SET(FREETYPE2SRCDIR ${FREETYPE2DIR}/src)
-SET(LIBOGGDIR ${EXTLIBDIR}/libogg-1.1.3)
-SET(LIBVORBISDIR ${EXTLIBDIR}/libvorbis-1.1.2)
+################ End of external libraries
 
 INCLUDE_DIRECTORIES(${BBGEDIR})
 INCLUDE_DIRECTORIES(${BBGEDIR}/GL)
 INCLUDE_DIRECTORIES(${EXTLIBDIR}/glpng/zlib)
 INCLUDE_DIRECTORIES(${SRCDIR})
-INCLUDE_DIRECTORIES(${SDL_INCLUDE_DIR})
-INCLUDE_DIRECTORIES(${LUASRCDIR})
 INCLUDE_DIRECTORIES(${FTGLDIR}/include)
-INCLUDE_DIRECTORIES(${FREETYPE2DIR}/include)
+INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${OGGVORBIS_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${SDL_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIR})
-INCLUDE_DIRECTORIES(${LIBOGGDIR}/include)
-INCLUDE_DIRECTORIES(${LIBVORBISDIR}/include)
 
 # !!! FIXME: don't use fmod!
 #INCLUDE_DIRECTORIES("${BBGEDIR}/fmodapi42604linux64/api/inc")
@@ -449,27 +536,42 @@ SET(LUA_SRCS
     ${LUASRCDIR}/lmathlib.c
 )
 
-ADD_EXECUTABLE(aquaria
-    ${AQUARIA_SRCS}
-    ${LUA_SRCS}
-    ${BBGE_SRCS}
-    ${FREETYPE2_SRCS}
-    ${OGGVORBIS_SRCS}
-    ${FTGL_SRCS}
-    ${OPTIONAL_SRCS}
-)
 
 IF(MACOSX)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework Carbon")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework Cocoa")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework OpenGL")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework OpenAL")
-    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "${SDL_LIBRARY}")
-    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "${OPENAL_LIBRARY}")
-    TARGET_LINK_LIBRARIES(aquaria ${OPTIONAL_LIBS})
-ELSE(MACOSX)
-    TARGET_LINK_LIBRARIES(aquaria ${SDL_LIBRARY} ${OPENAL_LIBRARY})
 ENDIF(MACOSX)
+
+SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${SDL_LIBRARY})
+SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${OPENAL_LIBRARY})
+
+IF(FREETYPE_FOUND)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${FREETYPE_LIBRARIES})
+ELSE(FREETYPE_FOUND)
+    SET(OPTIONAL_SRCS ${OPTIONAL_SRCS} ${FREETYPE2_SRCS})
+ENDIF(FREETYPE_FOUND)
+
+IF(LUA51_FOUND)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${LUA_LIBRARIES})
+ELSE(LUA51_FOUND)
+    SET(OPTIONAL_SRCS ${OPTIONAL_SRCS} ${LUA_SRCS})
+ENDIF(LUA51_FOUND)
+
+IF(OGGVORBIS_FOUND)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${OGGVORBIS_LIBRARIES})
+ELSE(OGGVORBIS_FOUND)
+    SET(OPTIONAL_SRCS ${OPTIONAL_SRCS} ${OGGVORBIS_SRCS})
+ENDIF(OGGVORBIS_FOUND)
+
+ADD_EXECUTABLE(aquaria
+    ${AQUARIA_SRCS}
+    ${BBGE_SRCS}
+    ${FTGL_SRCS}
+    ${OPTIONAL_SRCS}
+)
+TARGET_LINK_LIBRARIES(aquaria ${OPTIONAL_LIBS})
 
 # end of CMakeLists.txt ...
 
