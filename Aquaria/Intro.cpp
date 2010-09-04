@@ -773,9 +773,6 @@ void Intro::update(float dt)
 		// -- drown
 
 
-		dsq->sound->fadeSfx(drone);
-		dsq->sound->fadeSfx(windLoop);
-
 		dsq->sound->playSfx("ericdrowns");
 
 		if (waitQuit(8)) return;
