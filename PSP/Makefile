@@ -413,7 +413,7 @@ endif
 
 #-------------------------------------
 
-libogg_DIR         = $(EXTLIB_DIR)/libogg-1.1.3
+libogg_DIR         = $(EXTLIB_DIR)/libogg-1.2.0
 libogg_SOURCES     = $(libogg_DIR)/src/bitwise.c \
                      $(libogg_DIR)/src/framing.c
 libogg_OBJECTS    := $(libogg_SOURCES:%.c=%.o)
@@ -430,7 +430,7 @@ endif
 
 #-------------------------------------
 
-libvorbis_DIR      = $(EXTLIB_DIR)/libvorbis-1.1.2
+libvorbis_DIR      = $(EXTLIB_DIR)/libvorbis-1.3.1
 libvorbis_SOURCES  = $(libvorbis_DIR)/lib/analysis.c \
                      $(libvorbis_DIR)/lib/bitrate.c \
                      $(libvorbis_DIR)/lib/block.c \
