@@ -1145,7 +1145,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 		debugLog("OK");
 	}
 
-	user.load(true);
+	user.apply();
 
 	/*
 
@@ -1269,8 +1269,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	loadBit(LOAD_SOUNDCACHE);
 
-
-	user.load();
 
 	debugLog("Init Script Interface...");
 		scriptInterface.init();
