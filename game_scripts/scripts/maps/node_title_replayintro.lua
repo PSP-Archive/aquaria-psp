@@ -32,6 +32,7 @@ function activate(me)
 	watch(0.5)
 	
 	if confirm("", "replayintro") then
+		fade2(0, 0, 0, 0, 0)  -- Avoid a white flash when starting the intro.
 		jumpState("intro")
 	end
 end
