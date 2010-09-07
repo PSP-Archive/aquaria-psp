@@ -46,23 +46,22 @@
  * sets up structures appropriately so that external libraries using the
  * macros in stdio.h still operate correctly:
  *
- * - For files in read mode, __sFILE_fake._p points to the current position
- *   in the read buffer, and __sFILE_fake._r contains the number of bytes
- *   still available for reading; these fields are updated appropriately on
+ * - For files in read mode, __sFILE._p points to the current position in
+ *   the read buffer, and __sFILE._r contains the number of bytes still
+ *   available for reading; these fields are updated appropriately on
  *   fread(), fseek(), and so on.
  *
- * - For files in write mode, __sFILE_fake.{_p,_w,_lbfsize} are all NULL/zero.
+ * - For files in write mode, __sFILE.{_p,_w,_lbfsize} are all NULL/zero.
  *
- * - __SEOF and __SERR are set in __sFILE_fake._flags when end-of-file or
- *   an I/O error is detected, respectively.  We also set __SRD, __SWR, and
- *   __SAPP for internal reference, though these are not checked by stdio.h
- *   macros.
+ * - __SEOF and __SERR are set in __sFILE._flags when end-of-file or an I/O
+ *   error is detected, respectively.  We also set __SRD, __SWR, and __SAPP
+ *   for internal reference, though these are not checked by stdio.h macros.
  *
- * - __sFILE_fake._file is always set to -1.  (The __sfileno() macro is
+ * - __sFILE._file is always set to -1.  (The __sfileno() macro is
  *   commented out in stdio.h, so this field is not actually referenced.)
  *
- * - __sFILE_fake._bf and __sFILE_fake._data are not used by stdio.h macros,
- *   and are cleared to zero at allocation time.
+ * - __sFILE._bf and __sFILE._data are not used by stdio.h macros, and are
+ *   cleared to zero at allocation time.
  */
 
 /*************************************************************************/
@@ -71,7 +70,6 @@
 
 /* Include common headers. */
 
-#define _REENT_SMALL 1  // For __sFILE_fake
 #ifdef DEBUG
 # define saved_DEBUG
 # undef DEBUG
@@ -94,6 +92,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+/* Clear out Newlib macros from stdio.h so we can define the functions. */
+#undef feof
+#undef ferror
+
 /*************************************************************************/
 
 /* Replacement FILE structure for our use.  We provide the fields used by
@@ -101,7 +103,7 @@
 
 typedef struct pspstdio_FILE_ {
     /* Newlib data. */
-    struct __sFILE_fake newlib;
+    struct __sFILE newlib;
 
     /* File data buffer and size for files opened for reading, and
      * associated resource manager. */
