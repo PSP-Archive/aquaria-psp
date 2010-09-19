@@ -22,7 +22,7 @@ v = getVars()
 dofile("scripts/include/nodecollectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "CollectibleEnergyBoss", FLAG_COLLECTIBLE_ENERGYBOSS)
+	v.commonInit(me, "CollectibleEnergyBoss", FLAG_COLLECTIBLE_ENERGYBOSS)
 end
 
 function update(me, dt)

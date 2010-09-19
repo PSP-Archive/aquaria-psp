@@ -32,7 +32,7 @@ v.notesToSing = 8
 v.timer = 3
 
 function init(me)
-	commonInit(me, "sun-door-0001", "EnergyDoor", 1, 0)
+	v.commonInit(me, "sun-door-0001", "EnergyDoor", 1, 0)
 	entity_setState(me, STATE_CLOSED, -1)
 	
 	if entity_isFlag(me, 1) then
@@ -48,7 +48,7 @@ function init(me)
 	]]--
 end
 
-function singNote(me)
+local function singNote(me)
 	v.timer = 9 - v.curNote
 	v.sungNote = getRandNote()
 	local q = createQuad("particles/ring2")
@@ -73,7 +73,7 @@ end
 
 function update(me, dt)
 	if v.n == 0 then v.n = getNaija() end
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 	
 	if entity_isState(me, STATE_CLOSED) then
 		if entity_isEntityInRange(me, v.n, 256) then

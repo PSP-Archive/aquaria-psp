@@ -24,5 +24,5 @@ v = getVars()
 dofile("scripts/include/collectiblecostumetemplate.lua")
 
 function init(me)
-	commonInit2(me, "Collectibles/EnergyTemple", FLAG_COLLECTIBLE_ENERGYTEMPLE, "ETC")
+	v.commonInit2(me, "Collectibles/EnergyTemple", FLAG_COLLECTIBLE_ENERGYTEMPLE, "ETC")
 end

@@ -33,8 +33,8 @@ v = getVars()
 -- FUNCTIONS
 -- ================================================================================================
 
-MOVE_STATE_UP = 0
-MOVE_STATE_DOWN = 1
+local MOVE_STATE_UP = 0
+local MOVE_STATE_DOWN = 1
 
 v.moveState = 0
 v.moveTimer = 0

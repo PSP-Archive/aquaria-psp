@@ -22,5 +22,5 @@ v = getVars()
 dofile("scripts/include/healthupgradetemplate.lua")
 
 function init(me)
-	commonInit(me, 4)
+	v.commonInit(me, 4)
 end

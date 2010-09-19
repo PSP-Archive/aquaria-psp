@@ -19,11 +19,11 @@
 
 v = getVars()
 
-dofile("scripts/include/nodecollectibletemplate.lua")
+dofile("scripts/entities/currentswitch.lua")
 
 function init(me)
-	commonInit(me, "CollectibleTurtleShell", FLAG_COLLECTIBLE_TURTLESHELL)
-end
-
-function update(me, dt)
+	if entity_isFlag(me, 0) then
+		entity_setFlag(me, v.CURRENTSWITCH_OFF)
+	end
+	v.commonInit(me)
 end

@@ -24,13 +24,13 @@ v = getVars()
 -- ================================================================================================
 
 -- specific
-STATE_JUMP				= 1000
-STATE_TRANSITION		= 1001
-STATE_RETURNTOWALL		= 1002
-STATE_SURFACE			= 1003
-STATE_LAYEGGS			= 1004
-STATE_RECOVER			= 1005
-STATE_PASSON			= 1006
+local STATE_JUMP			= 1000
+local STATE_TRANSITION		= 1001
+local STATE_RETURNTOWALL	= 1002
+local STATE_SURFACE			= 1003
+local STATE_LAYEGGS			= 1004
+local STATE_RECOVER			= 1005
+local STATE_PASSON			= 1006
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 

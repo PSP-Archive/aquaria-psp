@@ -31,9 +31,9 @@ v.speed = 150
 v.delay = 0.5
 v.moveaway = 0
 
-STATE_ROTATE = 1000
-STATE_WALK = 1001
-STATE_MOVEAWAY = 1002
+local STATE_ROTATE = 1000
+local STATE_WALK = 1001
+local STATE_MOVEAWAY = 1002
 
 -- ================================================================================================
 -- F U N C T I O N S

@@ -24,7 +24,7 @@ v = getVars()
 v.done = false
 v.lifeTime = 0
 
-STATE_WITHER = 1001
+local STATE_WITHER = 1001
 
 function init(me)
 	setupEntity(me)

@@ -22,19 +22,19 @@ v = getVars()
 v.n = 0
 
 -- intro animation sequence:
-STATE_INTRO				= 1000
-STATE_INTRO2			= 1001
-STATE_INTRO3			= 1002
+local STATE_INTRO			= 1000
+local STATE_INTRO2			= 1001
+local STATE_INTRO3			= 1002
 -- creator is getting ready to sing:
-STATE_SING				= 1003
+local STATE_SING			= 1003
 -- creator is singing a song:
-STATE_PLAYSEG			= 1004
+local STATE_PLAYSEG			= 1004
 -- creator is in pain:
-STATE_PAIN				= 1005
+local STATE_PAIN			= 1005
 -- naija sings a wrong note:
-STATE_WRONG				= 1006
+local STATE_WRONG			= 1006
 
-STATE_SPAWNSPHERES		= 1007
+local STATE_SPAWNSPHERES	= 1007
 
 v.delay = 0
 
@@ -58,7 +58,7 @@ v.bone_head				= 0
 
 v.died					= 0
 
-function getHitPerc()
+local function getHitPerc()
 	return v.hits/v.maxHits
 end
 
@@ -108,7 +108,7 @@ function postInit(me)
 end
 
 
-function generateSong(size)
+local function generateSong(size)
 	debugLog("generating song")
 	v.songSize = size
 	for i=1,size do

@@ -22,5 +22,5 @@ v = getVars()
 dofile("scripts/maps/finalcommon.lua")
 
 function init()
-	initFinalSpirits()
+	v.initFinalSpirits()
 end

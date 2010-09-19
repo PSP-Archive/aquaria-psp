@@ -46,7 +46,7 @@ v.blinkTime = 0
 -- F U N C T I O N S
 -- ================================================================================================
 
-function commonInit(me, skin)
+function v.commonInit(me, skin)
 	setupBasicEntity(
 	me,
 	"Starmie/Body",					-- texture

@@ -21,7 +21,7 @@ v = getVars()
 
 dofile("scripts/maps/finalcommon.lua")
 
-function hasQuit()
+local function hasQuit()
 	if not (getEnqueuedState() == "") then
 		fade2(1, 0, 1, 1, 1)
 		return true
@@ -29,7 +29,7 @@ function hasQuit()
 	return false
 end
 
-function quickFlash(t)
+local function quickFlash(t)
 	fade2(1, t, 1, 1, 1)
 	playSfx("memory-flash", 0, 0.5)
 	watch(t)

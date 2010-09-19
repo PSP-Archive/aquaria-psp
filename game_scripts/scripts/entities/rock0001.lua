@@ -22,10 +22,10 @@ v = getVars()
 dofile("scripts/include/rocktemplate.lua")
 
 function init(me)
-	commonInit(me, "rock0001", 80)
+	v.commonInit(me, "rock0001", 80)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 end
 

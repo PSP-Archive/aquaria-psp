@@ -22,5 +22,5 @@ v = getVars()
 dofile("scripts/include/sporefungus.lua")
 
 function init(me)
-	commonInit(me, "Sporefungus0001")
+	v.commonInit(me, "Sporefungus0001")
 end

@@ -20,13 +20,13 @@
 v = getVars()
 
 
-STATE_CLIMBUP		= 1000
-STATE_WALLATTACK	= 1001
-STATE_CLIMBDOWN		= 1002
-STATE_WALL			= 1003
-STATE_FALLING		= 1004
-STATE_DROWN			= 1005
-STATE_DROWNED		= 1006
+local STATE_CLIMBUP		= 1000
+local STATE_WALLATTACK	= 1001
+local STATE_CLIMBDOWN	= 1002
+local STATE_WALL		= 1003
+local STATE_FALLING		= 1004
+local STATE_DROWN		= 1005
+local STATE_DROWNED		= 1006
 
 v.treeNode = 0
 v.moveTimer = 0
@@ -87,9 +87,6 @@ function init(me)
 end
 
 function postInit(me)
-end
-
-function checkSurface(me)
 end
 
 function update(me, dt)	

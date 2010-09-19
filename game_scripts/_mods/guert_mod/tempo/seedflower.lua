@@ -22,6 +22,5 @@ v = getVars()
 dofile("scripts/entities/seedcommon.lua")
 
 function init(me)
-	commonInit(me, SEED_FLOWER)
+	v.commonInit(me, v.SEED_FLOWER)
 end
-

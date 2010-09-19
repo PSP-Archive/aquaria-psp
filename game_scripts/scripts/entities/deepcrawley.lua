@@ -43,9 +43,9 @@ v.maxSpeed = 321 + math.random(32)
 v.width = 128
 v.dir = -1
 
-STATE_ROTATE = 1000
-STATE_WALK = 1001
-STATE_MOVEAWAY = 1002
+local STATE_ROTATE = 1000
+local STATE_WALK = 1001
+local STATE_MOVEAWAY = 1002
 
 -- ================================================================================================
 -- F U N C T I O N S

@@ -25,13 +25,13 @@ v.growEmitter = 0
 v.done = false
 v.weight = 400
 
-SEED_FLOWER			= 0
-SEED_VINE			= 1
-SEED_UBERVINE		= 2
+v.SEED_FLOWER		= 0
+v.SEED_VINE			= 1
+v.SEED_UBERVINE		= 2
 
 v.seedType = 0
 
-function commonInit(me, st)
+function v.commonInit(me, st)
 	setupEntity(me)
 	entity_setTexture(me, "Naija/Seedling")
 	entity_setEntityLayer(me, 1)
@@ -51,11 +51,11 @@ function commonInit(me, st)
 	entity_setAllDamageTargets(me, false)
 	entity_setDamageTarget(me, DT_AVATAR_BITE, true)
 	
-	seedType = st
+	v.seedType = st
 	
-	if seedType == SEED_FLOWER then
+	if v.seedType == v.SEED_FLOWER then
 		entity_setTexture(me, "Naija/Seed")
-	elseif seedType == SEED_UBERVINE then
+	elseif v.seedType == v.SEED_UBERVINE then
 		entity_setTexture(me, "Naija/Uberseed")
 	end
 end
@@ -64,18 +64,18 @@ function postInit(me)
 	entity_ensureLimit(me, 3, STATE_DONE)
 end
 
-function terminate(me)
+local function terminate(me)
 	if not v.done then
 		
-		if v.seedType == SEED_VINE then
+		if v.seedType == v.SEED_VINE then
 			registerSporeDrop(entity_x(me), entity_y(me),1)
-			createEntity("Vine", "", entity_getPosition(me))			
-		elseif v.seedType == SEED_UBERVINE then
+			createEntity("Vine", "", entity_getPosition(me))
+		elseif v.seedType == v.SEED_UBERVINE then
 			registerSporeDrop(entity_x(me), entity_y(me),2)
-			createEntity("UberVine", "", entity_getPosition(me))			
+			createEntity("UberVine", "", entity_getPosition(me))
 		else
 			registerSporeDrop(entity_x(me), entity_y(me),0)
-			createEntity("NatureFormFlowers", "", entity_getPosition(me))			
+			createEntity("NatureFormFlowers", "", entity_getPosition(me))
 		end
 		
 		entity_delete(me)

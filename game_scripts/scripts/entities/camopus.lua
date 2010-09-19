@@ -26,9 +26,9 @@ v.tback = 0
 v.tfront = 0
 
 
-STATE_APPEAR			= 1000
-STATE_HIDDEN			= 1001
-STATE_HIDE				= 1002
+local STATE_APPEAR			= 1000
+local STATE_HIDDEN			= 1001
+local STATE_HIDE			= 1002
 
 v.inout	= 0
 v.dir 	= 1

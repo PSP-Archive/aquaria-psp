@@ -25,5 +25,5 @@ v = getVars()
 dofile("scripts/entities/seaturtlecommon.lua")
 
 function init(me)
-	commonInit(me, 6)
+	v.commonInit(me, 6)
 end

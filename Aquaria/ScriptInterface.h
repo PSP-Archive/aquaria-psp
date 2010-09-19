@@ -63,7 +63,8 @@ public:
 	const std::string &getLastError() {return lastError;}
 
 protected:
-	// Low-level helper
+	// Low-level helpers.
+	void lookupFunc(const char *name);
 	bool doCall(int nparams, int nrets = 0);
 
 	lua_State *L;
@@ -87,9 +88,8 @@ public:
 protected:
 	lua_State *createLuaVM();
 	void destroyLuaVM(lua_State *state);
-	lua_State *createLuaThread(lua_State *baseState);
-	void destroyLuaThread(lua_State *baseState, lua_State *thread);
+	lua_State *createLuaThread(const std::string &file);
+	int destroyLuaThread(const std::string &file, lua_State *thread);
 
-	typedef std::map<std::string, lua_State*> ScriptFileMap;
-	ScriptFileMap loadedScripts;
+	lua_State *baseState;
 };

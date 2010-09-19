@@ -30,7 +30,7 @@ function init(me)
 	node_setCursorActivation(me, true)
 end
 
-function sayNext()
+local function sayNext()
 	if v.thingSaying == 0 then
 		setControlHint("All the backdrop objects in Aquaria are on one of 13 layers.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then

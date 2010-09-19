@@ -20,27 +20,53 @@
 v = getVars()
 
 -- ================================================================================================
--- METAL OBJECT
+-- SPIKEBALL
 -- ================================================================================================
 
+-- entity specific
+v.dir = 0
  
 -- ================================================================================================
 -- FUNCTIONS
 -- ================================================================================================
 
-function init(me)
-	setupEntity(me, "MetalObject")
-	--entity_setProperty(me, EP_SOLID, true)
-	entity_setProperty(me, EP_MOVABLE, true)
-	entity_setWeight(me, 100)
-	entity_setCollideRadius(me, 32)
-	entity_setName(me, "MetalObject")
-	
-	--entity_setProperty(me, EP_BATTERY, true)
+function v.commonInit(me, initDir)
+	v.dir = initDir
+	setupBasicEntity(
+	me,
+	"SpikeyEgg",					-- texture
+	10,								-- health
+	1,								-- manaballamount
+	1,								-- exp
+	1,								-- money
+	90,								-- collideRadius
+	STATE_IDLE,						-- initState
+	256,							-- sprite width	
+	256,							-- sprite height
+	1,								-- particle "explosion" type, maps to particleEffects.txt -1 = none
+	0,								-- 0/1 hit other entities off/on (uses collideRadius)
+	4000							-- updateCull -1: disabled, default: 4000
+	)
+	entity_setAllDamageTargets(me, false)
+	--entity_scale(me, 0.9, 0.9)
+end
+
+function postInit(me)
 end
 
 function update(me, dt)
+--[[
+	local spd = 500
+	if v.dir == 0 then
+		entity_addVel(me, 0, spd*dt)
+	else
+		entity_addVel(me, 0, -spd*dt)
+	end
 	entity_updateMovement(me, dt)
+	]]--
+	entity_handleShotCollisions(me)
+	entity_touchAvatarDamage(me, entity_getCollideRadius(me), 0.5, 500, 0.5)
+	
 end
 
 function enterState(me)
@@ -50,10 +76,17 @@ function exitState(me)
 end
 
 function hitSurface(me)
-end
-
-function hit(me, attacker, bone, spellType, dmg)
+	entity_clearVel(me)
+	if v.dir == 0 then
+		v.dir = 1
+	else
+		v.dir = 0
+	end
 end
 
 function activate(me)
+end
+
+function damage(me)
+	return false
 end

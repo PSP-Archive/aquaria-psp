@@ -22,7 +22,7 @@ v = getVars()
 dofile("scripts/include/nodecollectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "CollectibleUpsideDownSeed", FLAG_COLLECTIBLE_UPSIDEDOWNSEED)
+	v.commonInit(me, "CollectibleUpsideDownSeed", FLAG_COLLECTIBLE_UPSIDEDOWNSEED)
 end
 
 function update(me, dt)

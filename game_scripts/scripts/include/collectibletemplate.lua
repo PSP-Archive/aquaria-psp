@@ -26,7 +26,7 @@ v.back = false
 
 v.isCostume = false
 
-function commonInit(me, gfx, flag, cst)
+function v.commonInit(me, gfx, flag, cst)
 	v.myFlag = flag
 	setupEntity(me, gfx)
 	debugLog("in common init")
@@ -45,7 +45,7 @@ function commonInit(me, gfx, flag, cst)
 	v.isCostume = cst
 end
 
-function commonUpdate(me, dt)
+function v.commonUpdate(me, dt)
 	if entity_isState(me, STATE_IDLE) then
 		if v.back then
 			local e = getFirstEntity()
@@ -66,7 +66,7 @@ end
 
 v.incut = false
 
-function commonEnterState(me, state)
+function v.commonEnterState(me, state)
 	if v.incut then return end
 	
 	if entity_isState(me, STATE_COLLECT) then
@@ -124,7 +124,7 @@ function commonEnterState(me, state)
 	end
 end
 
-function commonExitState(me, state)
+function v.commonExitState(me, state)
 	if entity_isState(me, STATE_COLLECT) then
 		entity_alpha(me, 0, 1)
 		spawnParticleEffect("Collect", entity_x(me), entity_y(me))

@@ -31,12 +31,12 @@ v.bone_eye3 = 0
 v.bone_eye4 = 0
 v.bone_tentacles = 0
 
-function doEye(bone)
+local function doEye(bone)
 	bone_scale(bone, 0.6, 0.6, 0)
 	bone_scale(bone, 1.2, 1.2, 4 + math.random(6))
 end
 
-function updateEye(bone)
+local function updateEye(bone)
 	local x,y = bone_getScale(bone)
 	if x > 1.1 then
 		local sx,sy = bone_getWorldPosition(bone)
@@ -46,7 +46,7 @@ function updateEye(bone)
 	end
 end
 
-function clearBarriers()
+local function clearBarriers()
 	if v.node ~= 0 then
 		-- do magic
 		node_setElementsInLayerActive(v.node, 2, false)

@@ -28,8 +28,8 @@ v.blupTime = 3.0
 v.sz = 1.0
 v.dir = 0
 
-MOVE_STATE_UP = 0
-MOVE_STATE_DOWN = 1
+local MOVE_STATE_UP = 0
+local MOVE_STATE_DOWN = 1
 
 v.moveState = 0
 v.moveTimer = 0
@@ -39,7 +39,7 @@ v.waveTimer = 0
 v.soundDelay = 0
 v.glows = {}
 
-function doIdleScale(me)
+local function doIdleScale(me)
 	entity_scale(me, 0.9*v.sz, 1.1*v.sz)
 	entity_scale(me, 1.1*v.sz, 0.9*v.sz, v.blupTime, -1, 1, 1)
 end

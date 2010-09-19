@@ -27,5 +27,5 @@ dofile("scripts/entities/whelkcommon.lua")
 
 function init(me)
 	-- init with shell
-	commonInit(me, true)
+	v.commonInit(me, true)
 end

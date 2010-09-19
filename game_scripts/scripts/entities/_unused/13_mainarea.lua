@@ -27,8 +27,8 @@ v.curNode = 1
 v.lastNode = 0
 v.bone_head = 0
 
-STATE_HEADTOCAVE 	= 1000
-STATE_TRANS			= 1001
+local STATE_HEADTOCAVE 	= 1000
+local STATE_TRANS			= 1001
 
 function init(me)
 	setupEntity(me)
@@ -58,7 +58,7 @@ end
 v.done1st = false
 v.over = false
 v.is = false
-function doScene(me)
+local function doScene(me)
 	v.done1st = true
 	if v.is then return end
 	setCameraLerpDelay(1)
@@ -166,7 +166,7 @@ function update(me, dt)
 				emote(EMOTE_NAIJAUGH)
 				
 				setInvincibleOnNested(false)
-				setCanDie(false)
+				avatar_setCanDie(false)
 				entity_heal(v.n, 100)
 				
 				local cn = getNode("FIRSTVISIONEXIT")
@@ -201,7 +201,7 @@ function update(me, dt)
 				
 				entity_heal(v.n, 100)
 				
-				setCanDie(true)
+				avatar_setCanDie(true)
 				
 				vision("EnergyTemple", 4)
 				

@@ -27,5 +27,5 @@ dofile("scripts/entities/nudicommon.lua")
 
 function init(me)
 	-- init without shell
-	commonInit(me, false)
+	v.commonInit(me, false)
 end

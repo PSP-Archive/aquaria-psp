@@ -30,7 +30,7 @@ v.effectRange = 1800
 
 v.sound = ""
 
-function commonInit(me, tex, snd, sz, flipDir)
+function v.commonInit(me, tex, snd, sz, flipDir)
 	setupEntity(me, tex, -2)
 	entity_scale(me, sz, sz)
 	entity_setActivationType(me, AT_NONE)
@@ -48,7 +48,7 @@ function postInit(me)
 end
 
 v.ret = 0
-function commonUpdate(me, dt)
+function v.commonUpdate(me, dt)
 	if entity_getState(me)==STATE_OPEN then
 		--v.ret = v.ret + dt
 		v.delay = v.delay + dt

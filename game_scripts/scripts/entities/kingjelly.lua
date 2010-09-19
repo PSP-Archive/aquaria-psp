@@ -27,9 +27,9 @@ v.closeRange = 860
 v.farRange = 950
 v.started = false
 
-STATE_READY				= 1000
-STATE_SPAWNJELLIES		= 1001
-STATE_MOVECORE			= 1002
+local STATE_READY			= 1000
+local STATE_SPAWNJELLIES	= 1001
+local STATE_MOVECORE		= 1002
 
 v.maxHealth = 60
 
@@ -108,7 +108,7 @@ function activate(me)
 	entity_setState(me, STATE_READY)
 end
 
-function killJellies(me)
+local function killJellies(me)
 	local ent = getFirstEntity()
 	while ent ~= 0 do
 		if ent ~= me and entity_getEntityType(ent)==ET_ENEMY and entity_isEntityInRange(me, ent, v.farRange*2) and entity_isName(ent, "EvilJelly") then
@@ -118,7 +118,26 @@ function killJellies(me)
 	end
 end
 
-function toggleZaps(me, on)
+local function toggleZapGlow(me, on)
+	v.zapGlowOn = on
+	if on then
+		v.start = math.random(360*2)-360
+		for i=1,v.nZaps do
+			--debugLog("setting alpha to 1")
+			bone_rotate(v.zapGlows[i], v.start+(i-1)*v.spread)
+			bone_alpha(v.zapGlows[i], 1, 0.2)
+			bone_scale(v.zapGlows[i], 1, 1)
+			bone_scale(v.zapGlows[i], 1.5, 1.5, 0.2, -1)
+		end
+	else
+		for i=1,v.nZaps do
+			--debugLog("setting alpha to 0")
+			bone_alpha(v.zapGlows[i], 0, 0.5)
+		end	
+	end
+end
+
+local function toggleZaps(me, on)
 	v.zapsOn = on
 	if on then
 		toggleZapGlow(me, false)
@@ -138,26 +157,7 @@ function toggleZaps(me, on)
 	end
 end
 
-function toggleZapGlow(me, on)
-	v.zapGlowOn = on
-	if on then
-		v.start = math.random(360*2)-360
-		for i=1,v.nZaps do
-			--debugLog("setting alpha to 1")
-			bone_rotate(v.zapGlows[i], v.start+(i-1)*v.spread)
-			bone_alpha(v.zapGlows[i], 1, 0.2)
-			bone_scale(v.zapGlows[i], 1, 1)
-			bone_scale(v.zapGlows[i], 1.5, 1.5, 0.2, -1)
-		end
-	else
-		for i=1,v.nZaps do
-			--debugLog("setting alpha to 0")
-			bone_alpha(v.zapGlows[i], 0, 0.5)
-		end	
-	end
-end
-
-function zapCollision(me, dt)
+local function zapCollision(me, dt)
 	if not v.zapsOn then return end
 	if avatar_isShieldActive() then return end
 	for i=1,v.nZaps do

@@ -35,10 +35,10 @@ v.node_before_that = 0
 -- S T A T E S
 -- ================================================================================================
 
-STATE_INTRO = 1001
-STATE_PATTERN_01 = 1002
-STATE_SWIMMING = 1003
-STATE_AVOIDING_WALLS = 1004
+local STATE_INTRO = 1001
+local STATE_PATTERN_01 = 1002
+local STATE_SWIMMING = 1003
+local STATE_AVOIDING_WALLS = 1004
 
 -- ================================================================================================
 -- L O C A L   V A R I A B L E S
@@ -99,14 +99,14 @@ v.D4 = 0
 -- M Y   F U N C T I O N S
 -- ================================================================================================
 
-function changeAngle(me)
+local function changeAngle(me)
 	v.angle = entity_getRotation(me)
 	v.angle = v.angle + math.random(110) - 55
 	
 	entity_rotateTo(me, v.angle, v.turnT)
 end
 
-function rotateToNode(me, node)
+local function rotateToNode(me, node)
 	local ndX, ndY = node_getPosition(node)
 	local meX, meY = entity_getPosition(me)
 	local vecX = (ndX - meX)
@@ -116,7 +116,7 @@ function rotateToNode(me, node)
 end
 
 -- NODE LIST
-function loadNodes(me)
+local function loadNodes(me)
 	v.targetNode = entity_getNearestNode(me, "C2")
 	
 	v.A1 = entity_getNearestNode(me, "A1")

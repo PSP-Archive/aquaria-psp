@@ -25,7 +25,7 @@ v.note1 = -1
 v.note2 = -1
 v.note3 = -1
 
-function commonInit(me, gfxNum, n1, n2, n3)
+function v.commonInit(me, gfxNum, n1, n2, n3)
 	setupEntity(me)
 	entity_setTexture(me, string.format("NudiBranch/NudiBranch%d", gfxNum))
 	entity_setEntityType(me, ET_ENEMY)

@@ -19,11 +19,26 @@
 
 v = getVars()
 
-dofile("scripts/entities/currentswitch.lua")
+-- song cave collectible
+
+dofile("scripts/include/collectibletemplate.lua")
 
 function init(me)
-	if entity_isFlag(me, 0) then
-		entity_setFlag(me, CURRENTSWITCH_ON)
+	v.commonInit(me, "Collectibles/babycrib", FLAG_COLLECTIBLE_BABYCRIB)
+	entity_setEntityLayer(me, -1)
+end
+
+function update(me, dt)
+	v.commonUpdate(me, dt)
+end
+
+function enterState(me, state)
+	v.commonEnterState(me, state)
+	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
+		--createEntity("Walker", "", entity_x(me), entity_y(me))
 	end	
-	commonInit(me)
+end
+
+function exitState(me, state)
+	v.commonExitState(me, state)
 end

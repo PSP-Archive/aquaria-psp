@@ -32,7 +32,7 @@ v.running = false
 
 -- SEE ENERGYTEMPLE_FIRSTSLOT
 
-function singSong(me)
+local function singSong(me)
 	local node = getNode("SONGMOUTH")				
 	spawnParticleEffect("EnergyGodSong", node_x(node), node_y(node))
 	playSfx("EnergyGodSong")
@@ -89,7 +89,7 @@ function init(me)
 	]]--
 end
 
-function transformScene(me)
+local function transformScene(me)
 	setCutscene(1,1)
 	setFlag(FLAG_ENERGYGODENCOUNTER, 3)
 	local camNode = getNode("ENERGYGODCAM")

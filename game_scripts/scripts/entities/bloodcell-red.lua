@@ -22,7 +22,7 @@ v = getVars()
 dofile("scripts/entities/bloodcell-common.lua")
 
 function init(me)
-	commonInit(me, "bloodcell-red")
+	v.commonInit(me, "bloodcell-red")
 	
 	esetv(me, EV_TYPEID, EVT_CELLRED)
 
@@ -31,7 +31,7 @@ function init(me)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 	
 	if entity_isEntityInRange(me, v.n, 40) then 
 		if not avatar_isBursting() then

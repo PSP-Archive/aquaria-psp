@@ -31,7 +31,7 @@ function init(me)
 	entity_scale(me, 0.6, 0.6)
 end
 
-function spawnEnemies(me)
+local function spawnEnemies(me)
 	if v.spawnedEnemies then return end
 	v.spawnedEnemies = true
 	

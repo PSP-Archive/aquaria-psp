@@ -21,7 +21,7 @@ v = getVars()
 
 v.nauty = 0
 
-function spawnEgg(me)
+local function spawnEgg(me)
 	local node = getNode("COLLECTIBLENAUTILUSPRIMELOCATION")
 	createEntity("CollectibleNautilusPrime", "", node_x(node), node_y(node))
 end

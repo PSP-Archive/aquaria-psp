@@ -19,7 +19,7 @@
 
 v = getVars()
 
-function hitWatch(tlen)
+local function hitWatch(tlen)
 	local h = entity_getHealth(getNaija())
 	
 	local t = 0
@@ -35,7 +35,7 @@ function hitWatch(tlen)
 	return false
 end
 
-function changeCostume(cost)
+local function changeCostume(cost)
 
 		setInvincibleOnNested(false)
 		
@@ -91,7 +91,7 @@ FLAG_COLLECTIBLE_MUTANTCOSTUME		= 519
 FLAG_COLLECTIBLE_JELLYCOSTUME		= 520
 FLAG_COLLECTIBLE_MITHALANCOSTUME	= 521
 ]]--
-function useTreasure(idx)
+local function useTreasure(idx)
 	debugLog("useTreasure!")
 	if idx == FLAG_COLLECTIBLE_ENERGYTEMPLE then
 		changeCostume("ETC")

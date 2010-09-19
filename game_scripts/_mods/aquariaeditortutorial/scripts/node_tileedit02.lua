@@ -30,7 +30,7 @@ function init(me)
 	node_setCursorActivation(me, true)
 end
 
-function sayNext()
+local function sayNext()
 	if v.thingSaying == 0 then
 		setControlHint("In Tile Edit mode, use the Left Mouse Button to drag tiles around.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then

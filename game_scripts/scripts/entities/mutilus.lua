@@ -22,8 +22,8 @@ v = getVars()
 -- N A U T I L U S
 
 -- entity specific
-STATE_ATTACKPREP		= 1000
-STATE_ATTACK			= 1001
+local STATE_ATTACKPREP		= 1000
+local STATE_ATTACK			= 1001
 
 v.lungeDelay = 0					-- prevents the nautilus from lunging over and over
 v.dodgeTimer = 0

@@ -22,7 +22,7 @@ v = getVars()
 dofile("scripts/include/nodecollectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "CollectibleTurtleEgg", FLAG_COLLECTIBLE_TURTLEEGG)
+	v.commonInit(me, "CollectibleTurtleEgg", FLAG_COLLECTIBLE_TURTLEEGG)
 end
 
 function update(me, dt)

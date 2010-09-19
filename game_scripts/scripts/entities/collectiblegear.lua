@@ -24,15 +24,15 @@ v = getVars()
 dofile("scripts/include/collectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "Collectibles/golden-gear", FLAG_COLLECTIBLE_GEAR)
+	v.commonInit(me, "Collectibles/golden-gear", FLAG_COLLECTIBLE_GEAR)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		createEntity("GearFast", "", entity_x(me)+150, entity_y(me)+100)
 		createEntity("GearMed", "", entity_x(me)+600, entity_y(me)+200)
@@ -40,5 +40,5 @@ function enterState(me, state)
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

@@ -38,12 +38,147 @@ extern "C"
 
 const bool throwLuaErrors = false;
 
-// Set this to true to complain loudly (via errorLog()) whenever a script
-// tries to get or set a global variable.
+// Set this to true to complain (via errorLog()) whenever a script tries to
+// get or set a global variable.
 const bool complainOnGlobalVar = false;
 // Set this to true to complain whenever a script tries to get an undefined
 // thread-local variable.
 const bool complainOnUndefLocal = false;
+
+// List of all interface functions called by C++ code, terminated by NULL.
+static const char * const interfaceFunctions[] = {
+	"action",
+	"activate",
+	"animationKey",
+	"damage",
+	"dieEaten",
+	"dieNormal",
+	"enterState",
+	"entityDied",
+	"exitState",
+	"exitTimer",
+	"hitEntity",
+	"hitSurface",
+	"init",
+	"lightFlare",
+	"msg",
+	"postInit",
+	"preUpdate",
+	"shiftWorlds",
+	"shotHitEntity",
+	"song",
+	"songNote",
+	"songNoteDone",
+	"sporesDropped",
+	"update",
+	NULL
+};
+
+//============================================================================================
+// R U L E S  F O R  W R I T I N G  S C R I P T S
+//============================================================================================
+
+//
+// All scripts in Aquaria run as separate threads in the same Lua state.
+// This means that scripts must follow certain rules to avoid interfering
+// with each other:
+//
+// -- DON'T use global variables (or functions).  Use file-scope or
+//    instance locals instead.
+//
+//    Since every script runs in the same Lua state and thus shares the
+//    same global environment, global variables set in one script affect
+//    every other script.  Something as innocuous-looking as "hits = 10"
+//    would set a "hits" variable in _every_ script -- overwriting any
+//    value that another script might have already set!
+//
+//    For constant values and functions (which are in effect constant
+//    values), you can use Lua's "local" keyword to declare the value as
+//    local to the script file which declares it.  Any functions defined
+//    later in the file will then be able to access those local values as
+//    function upvalues, thus avoiding touching the global environment.
+//    (However, remember to define the constants or functions _before_
+//    you use them!)
+//
+//    For variables, a file-scope local won't work, because a script's
+//    functions are shared across all instances of that script -- for
+//    example, every active jellyfish entity calls the same "update"
+//    function.  If you used file-scope locals, then you'd have no way to
+//    separate one instance's data from another.  Instead, the Aquaria
+//    script engine provides a Lua table specific to each script instance,
+//    into which instance-local variables can be stored.  This table is
+//    loaded into the global variable "v" when any script function is
+//    called from the game, so functions can store variables in this table
+//    without worrying that another instance of the script will clobber
+//    them.
+//
+//    The instance-local table is also available to code in the script
+//    outside any functions, which is executed when the script is loaded.
+//    In this case, the values in the table are used as defaults and
+//    copied into the instance-local table of each new instance of the
+//    script.
+//
+//    If you use any include files, be aware that file-scope locals in the
+//    include files can only be used inside those files, since they would
+//    be out of scope in the calling file.  To export constants or
+//    functions to the calling file, you'll have to use instance locals
+//    instead.  (As an exception, if you have constants which you know are
+//    unique across all scripts, you can define them as globals.  Aquaria
+//    itself defines a number of global constants for use in scripts --
+//    see the "SCRIPT CONSTANTS" section toward the bottom of this file.)
+//
+//    It is customary to write "v = getVars()" (note that this "v" is
+//    global, not local) at the top of each script to clarify what "v" is
+//    used for; the getVars() function returns the current instance's local
+//    variable table.  However, this line is not absolutely necessary.
+//
+// -- DO define instance functions in the global namespace.
+//
+//    As an exception to the rule above, interface functions such as
+//    init() or update() _should_ be defined in the global namespace.
+//    For example:
+//
+//        local function doUpdateStuff(dt)
+//            -- Some update stuff.
+//        end
+//        function update(dt)
+//            doUpdateStuff(dt)
+//            -- Other update stuff.
+//        end
+//
+//    The script engine will take care of ensuring that different scripts'
+//    functions don't interfere with each other.
+//
+// -- DON'T call any functions from the outermost (file) scope of an
+//    instanced script file.
+//
+//    "Instanced" script files are those for which multiple instances may
+//    be created, i.e. entity or node scripts.  For these, the script
+//    itself is executed only once, when it is loaded; any statements
+//    outside function definitions will be executed at this time, but not
+//    when a new script instance is created.  For example, if you try to
+//    call a function such as math.random() to set a different value for
+//    each instance, you'll instead end up with the same value for every
+//    instance.  In cases like this, the variable should be set in the
+//    script's init() function, not at file scope.
+//
+//    Likewise, any functions which have side effects or otherwise modify
+//    program state should not be called from file scope.  Call them from
+//    init() instead.
+//
+// In summary:
+//
+// -- Never use global variables or functions, except interface functions.
+// -- Constants and local functions should be defined with "local":
+//        local MY_CONSTANT = 42
+//        local function getMyConstant()  return MY_CONSTANT  end
+// -- Variables should be stored in the "v" table:
+//        function update(dt)  v.timer = v.timer + dt  end
+// -- Variables can have default values set when the script is loaded:
+//        v.countdown = 5
+//        function update(dt)  v.countdown = v.countdown - dt  end
+// -- Always perform instance-specific setup in init(), not at file scope.
+//
 
 //============================================================================================
 // S C R I P T  C O M M A N D S
@@ -286,13 +421,31 @@ luaFunc(indexWarnGlobal)
 	lua_pushvalue(L, -1);
 	lua_rawget(L, -3);
 	lua_remove(L, -3);
+
 	if (lua_isnil(L, -1))
 	{
-		lua_Debug ar;
-		// Don't warn on undefined gets from C code, since those are
-		// usually just attempts to call script functions.
-		if (lua_getstack(L, 1, &ar))
+		// Don't warn on "v" or known interface functions.
+		lua_pushvalue(L, -2);
+		const char *varname = lua_tostring(L, -1);
+		bool doWarn = (strcmp(varname, "v") != 0);
+		for (unsigned int i = 0; doWarn && interfaceFunctions[i] != NULL; i++)
 		{
+			doWarn = (strcmp(varname, interfaceFunctions[i]) != 0);
+		}
+
+		if (doWarn)
+		{
+			lua_Debug ar;
+			if (lua_getstack(L, 1, &ar))
+			{
+				lua_getinfo(L, "Sl", &ar);
+			}
+			else
+			{
+				snprintf(ar.short_src, sizeof(ar.short_src), "???");
+				ar.currentline = 0;
+			}
+
 			lua_getinfo(L, "Sl", &ar);
 			std::ostringstream os;
 			os << "WARNING: " << ar.short_src << ":" << ar.currentline
@@ -300,13 +453,56 @@ luaFunc(indexWarnGlobal)
 			   << lua_tostring(L, -2);
 			errorLog(os.str());
 		}
+
+		lua_pop(L, 1);
 	}
+
 	lua_remove(L, -2);
 
 	return 1;
 }
 
-luaFunc(indexWarnThread)
+luaFunc(newindexWarnGlobal)
+{
+	// Don't warn on "v" or known interface functions.
+	lua_pushvalue(L, -2);
+	const char *varname = lua_tostring(L, -1);
+	bool doWarn = (strcmp(varname, "v") != 0);
+	for (unsigned int i = 0; doWarn && interfaceFunctions[i] != NULL; i++)
+	{
+		doWarn = (strcmp(varname, interfaceFunctions[i]) != 0);
+	}
+
+	if (doWarn)
+	{
+		lua_Debug ar;
+		if (lua_getstack(L, 1, &ar))
+		{
+			lua_getinfo(L, "Sl", &ar);
+		}
+		else
+		{
+			snprintf(ar.short_src, sizeof(ar.short_src), "???");
+			ar.currentline = 0;
+		}
+
+		std::ostringstream os;
+		os << "WARNING: " << ar.short_src << ":" << ar.currentline
+		   << ": script set global "
+		   << (lua_type(L, -2) == LUA_TFUNCTION ? "function" : "variable")
+		   << " " << lua_tostring(L, -1);
+		errorLog(os.str());
+	}
+
+	lua_pop(L, 1);
+
+	// Do the set anyway.
+	lua_rawset(L, -3);
+	lua_pop(L, 1);
+	return 0;
+}
+
+luaFunc(indexWarnInstance)
 {
 	lua_pushvalue(L, -1);
 	lua_rawget(L, -3);
@@ -325,45 +521,13 @@ luaFunc(indexWarnThread)
 		}
 		std::ostringstream os;
 		os << "WARNING: " << ar.short_src << ":" << ar.currentline
-		   << ": script tried to get/call undefined thread variable "
+		   << ": script tried to get/call undefined instance variable "
 		   << lua_tostring(L, -2);
 		errorLog(os.str());
 	}
 	lua_remove(L, -2);
 
 	return 1;
-}
-
-luaFunc(newindexWarnGlobal)
-{
-	if (!lua_isfunction(L, -1))
-	{
-		lua_Debug ar;
-		if (lua_getstack(L, 1, &ar))
-		{
-			lua_getinfo(L, "Sl", &ar);
-		}
-		else
-		{
-			snprintf(ar.short_src, sizeof(ar.short_src), "???");
-			ar.currentline = 0;
-		}
-		lua_pushvalue(L, -2);
-		const char *varname = lua_tostring(L, -1);
-		// Don't warn on the "v" global.
-		if (strcmp(varname, "v") != 0)
-		{
-			std::ostringstream os;
-			os << "WARNING: " << ar.short_src << ":" << ar.currentline
-			   << ": script set global variable " << lua_tostring(L, -1);
-			errorLog(os.str());
-		}
-		lua_pop(L, 1);
-	}
-
-	lua_rawset(L, -3);
-	lua_pop(L, 1);
-	return 0;
 }
 
 luaFunc(dofile_caseinsensitive)
@@ -1894,7 +2058,6 @@ luaFunc(entity_waitForPath)
 	{
 		core->main(FRAME_TIME);
 	}
-	fixupLocalVars(L);
 	luaReturnInt(0);
 }
 
@@ -1918,7 +2081,6 @@ luaFunc(entity_watchForPath)
 	{
 		core->main(FRAME_TIME);
 	}
-	fixupLocalVars(L);
 
 	dsq->game->avatar->enableInput();
 	luaReturnInt(0);
@@ -1937,7 +2099,6 @@ luaFunc(watchForVoice)
 			break;
 		}
 	}
-	fixupLocalVars(L);
 	luaReturnNum(0);
 }
 
@@ -3385,7 +3546,9 @@ luaFunc(entity_msg)
 {
 	Entity *e = entity(L);
 	if (e)
+	{
 		e->message(getString(L, 2), lua_tonumber(L, 3));
+	}
 	luaReturnNum(0);
 }
 
@@ -4510,7 +4673,6 @@ luaFunc(bedEffects)
 	dsq->game->positionToAvatar = bedPosition;
 	dsq->game->transitionToScene(dsq->game->sceneName);
 
-	fixupLocalVars(L);
 	luaReturnNum(0);
 }
 
@@ -5250,14 +5412,12 @@ luaFunc(watch)
 	float t = lua_tonumber(L, 1);
 	int quit = lua_tointeger(L, 2);
 	dsq->watch(t, quit);
-	fixupLocalVars(L);
 	luaReturnNum(0);
 }
 
 luaFunc(wait)
 {
 	core->main(lua_tonumber(L, 1));
-	fixupLocalVars(L);
 	luaReturnNum(0);
 }
 
@@ -5274,8 +5434,6 @@ luaFunc(warpNaijaToEntity)
 
 		dsq->overlay->alpha.interpolateTo(0, 1);
 		core->main(1);
-
-		fixupLocalVars(L);
 	}
 	luaReturnNum(0);
 }
@@ -8322,7 +8480,6 @@ static const struct {
 	{"FLAG_COLLECTIBLE_JELLYPLANT",			506},
 	{"FLAG_COLLECTIBLE_MITHALASPOT",		507},
 	{"FLAG_COLLECTIBLE_SEAHORSECOSTUME",	508},
-	//{"FLAG_COLLECTIBLE_TURTLESHELL",		508},
 	{"FLAG_COLLECTIBLE_CHEST",				509},
 	{"FLAG_COLLECTIBLE_BANNER",				510},
 	{"FLAG_COLLECTIBLE_MITHALADOLL",		511},
@@ -8346,7 +8503,6 @@ static const struct {
 	{"FLAG_COLLECTIBLE_STONEHEAD",			529},
 	{"FLAG_COLLECTIBLE_STARFISH",			530},
 	{"FLAG_COLLECTIBLE_BLACKPEARL",			531},
-	//{"FLAG_COLLECTIBLE_BABYCRIB",			532},
 	luaConstant(FLAG_COLLECTIBLE_END),
 
 	luaConstant(FLAG_PET_ACTIVE),
@@ -8535,6 +8691,7 @@ static const struct {
 
 void ScriptInterface::init()
 {
+    baseState = createLuaVM();
 }
 
 lua_State *ScriptInterface::createLuaVM()
@@ -8548,17 +8705,28 @@ lua_State *ScriptInterface::createLuaVM()
 	luaopen_table(state);			/* opens the table library */
 	luaopen_string(state);			/* opens the string lib. */
 	luaopen_math(state);			/* opens the math lib. */
-	//luaopen_os(state);			/* opens the os lib */
-	//luaopen_io(state);			/* opens the I/O library */
 
-	// Keep a table of active threads (so they aren't garbage-collected).
+	// Set up various tables for state management:
+
+	// -- Interface function tables for each script file.
 	lua_newtable(state);
-	lua_setglobal(state, "_threadtable");
+	lua_setglobal(state, "_scriptfuncs");
 
-	// Also keep a table of local variable tables for each thread
-	// (returned by getVars()).
+	// -- Number of users (active threads) for each script file.
+	lua_newtable(state);
+	lua_setglobal(state, "_scriptusers");
+
+	// -- Initial instance-local tables for each script file.
+	lua_newtable(state);
+	lua_setglobal(state, "_scriptvars");
+
+	// -- Instance-local variable tables for each thread.
 	lua_newtable(state);
 	lua_setglobal(state, "_threadvars");
+
+	// -- Active threads (so they aren't garbage-collected).
+	lua_newtable(state);
+	lua_setglobal(state, "_threadtable");
 
 	// Register all custom functions and constants.
 	for (unsigned int i = 0; i < sizeof(luaFunctionTable)/sizeof(*luaFunctionTable); i++)
@@ -8571,6 +8739,18 @@ lua_State *ScriptInterface::createLuaVM()
 		lua_setglobal(state, luaConstantTable[i].name);
 	}
 
+	// Add hooks to monitor global get/set operations if requested.
+	if (complainOnGlobalVar)
+	{
+		if (!lua_getmetatable(state, LUA_GLOBALSINDEX))
+			lua_newtable(state);
+		lua_pushcfunction(state, l_indexWarnGlobal);
+		lua_setfield(state, -2, "__index");
+		lua_pushcfunction(state, l_newindexWarnGlobal);
+		lua_setfield(state, -2, "__newindex");
+		lua_setmetatable(state, LUA_GLOBALSINDEX);
+	}
+
 	// All done, return the new state.
 	return state;
 }
@@ -8581,11 +8761,16 @@ void ScriptInterface::destroyLuaVM(lua_State *state)
 		lua_close(state);
 }
 
-lua_State *ScriptInterface::createLuaThread(lua_State *baseState)
+// Initial value for the instance-local table should be on the stack of
+// the base Lua state; it will be popped when this function returns.
+lua_State *ScriptInterface::createLuaThread(const std::string &file)
 {
 	lua_State *thread = lua_newthread(baseState);
 	if (!thread)
+	{
+		lua_pop(baseState, 1);
 		return NULL;
+	}
 
 	// Save the thread object in a Lua table to prevent it from being
 	// garbage-collected.
@@ -8595,25 +8780,46 @@ lua_State *ScriptInterface::createLuaThread(lua_State *baseState)
 	lua_rawset(baseState, -3);     // -3 = _threadtable
 	lua_pop(baseState, 2);
 
-	// Create a local variable table for this thread.
-	lua_getglobal(baseState, "_threadvars");
-	lua_pushlightuserdata(baseState, thread);
+	// Set up the instance-local variable table for this thread, copying
+	// the contents of the initial-value table.
 	lua_newtable(baseState);
+	lua_pushnil(baseState);
+	while (lua_next(baseState, -3))
+	{
+		// We need to save a copy of the key for the next iteration.
+		lua_pushvalue(baseState, -2);
+		lua_insert(baseState, -2);
+		lua_settable(baseState, -4);
+	}
+	lua_remove(baseState, -2);  // We no longer need the original table.
 	if (complainOnUndefLocal)
 	{
 		if (!lua_getmetatable(baseState, -1))
 			lua_newtable(baseState);
-		lua_pushcfunction(baseState, l_indexWarnThread);
+		lua_pushcfunction(baseState, l_indexWarnInstance);
 		lua_setfield(baseState, -2, "__index");
 		lua_setmetatable(baseState, -2);
 	}
+	lua_getglobal(baseState, "_threadvars");
+	lua_pushlightuserdata(baseState, thread);
+	lua_pushvalue(baseState, -3);  // -3 = instance-local table
 	lua_rawset(baseState, -3);     // -3 = _threadvars
+	lua_pop(baseState, 2);
+
+	// Update the usage count for this script.
+	lua_getglobal(baseState, "_scriptusers");
+	lua_getfield(baseState, -1, file.c_str());
+	const int users = lua_tointeger(baseState, -1) + 1;
+	lua_pop(baseState, 1);
+	lua_pushinteger(baseState, users);
+	lua_setfield(baseState, -2, file.c_str());
 	lua_pop(baseState, 1);
 
 	return thread;
 }
 
-void ScriptInterface::destroyLuaThread(lua_State *baseState, lua_State *thread)
+// Returns the number of remaining users of this script.
+int ScriptInterface::destroyLuaThread(const std::string &file, lua_State *thread)
 {
 	// Threads are not explicitly closed; instead, we delete the thread
 	// resources from the state-global tables, thus allowing them to be
@@ -8631,93 +8837,142 @@ void ScriptInterface::destroyLuaThread(lua_State *baseState, lua_State *thread)
 	lua_pushnil(baseState);
 	lua_rawset(baseState, -3);
 	lua_pop(baseState, 1);
+
+	lua_getglobal(baseState, "_scriptusers");
+	lua_getfield(baseState, -1, file.c_str());
+	const int users = lua_tointeger(baseState, -1) - 1;
+	lua_pop(baseState, 1);
+	if (users > 0)
+		lua_pushinteger(baseState, users);
+	else
+		lua_pushnil(baseState);
+	lua_setfield(baseState, -2, file.c_str());
+	lua_pop(baseState, 1);
+
+	return users;
 }
 
 void ScriptInterface::collectGarbage()
 {
-	for (ScriptFileMap::iterator i = loadedScripts.begin(); i != loadedScripts.end(); i++)
-	{
-		lua_gc((*i).second, LUA_GCCOLLECT, 0);
-	}
+	lua_gc(baseState, LUA_GCCOLLECT, 0);
 }
 
 void ScriptInterface::shutdown()
 {
-	if (loadedScripts.begin() != loadedScripts.end())
-	{
-		for (ScriptFileMap::iterator i = loadedScripts.begin(); i != loadedScripts.end(); i++)
-		{
-			debugLog("Script still in use at shutdown: " + (*i).first);
-		}
-	}
 }
 
 Script *ScriptInterface::openScript(const std::string &file)
 {
 	std::string realFile = core->adjustFilenameCase(file);
+	bool loadedScript = false;
 
-	lua_State *baseState = loadedScripts[realFile];
-	bool createdBaseState = false;
-	if (!baseState)
+	lua_getglobal(baseState, "_scriptvars");
+	lua_getfield(baseState, -1, realFile.c_str());
+	lua_remove(baseState, -2);
+	if (!lua_istable(baseState, -1))
 	{
-		baseState = createLuaVM();
-		if (!baseState)
+		// We must not have loaded the script yet, so load it.
+		loadedScript = true;
+
+		// Clear out the (presumably nil) getfield() result from the stack.
+		lua_pop(baseState, 1);
+
+		// Create a new variable table for the initial run of the script.
+		// This will become the initial instance-local variable table for
+		// all instances of this script.
+		lua_newtable(baseState);
+		if (complainOnUndefLocal)
 		{
-			debugLog("Unable to create new state for script [" + realFile + "]");
-			loadedScripts.erase(realFile);  // HACK: needed because operator[] inserts an empty element  --achurch
-			return NULL;
+			if (!lua_getmetatable(baseState, -1))
+				lua_newtable(baseState);
+			lua_pushcfunction(baseState, l_indexWarnInstance);
+			lua_setfield(baseState, -2, "__index");
+			lua_setmetatable(baseState, -2);
 		}
 
+		// Save the current value of the "v" global, so we can restore it
+		// after we run the script.  (We do this here and in Script::call()
+		// so that nested Lua calls don't disrupt the caller's instance
+		// variable table.)
+		lua_getglobal(baseState, "v");
+
+		// Load the file itself.  This leaves the Lua chunk on the stack.
 		int result = luaL_loadfile(baseState, realFile.c_str());
 		if (result != 0)
 		{
-			debugLog(lua_tostring(baseState, -1));
-			debugLog("(error loading script [" + realFile + "])");
-			destroyLuaVM(baseState);
-			loadedScripts.erase(realFile);  // HACK: see above
+			debugLog("Error loading script [" + realFile + "]: " + lua_tostring(baseState, -1));
+			lua_pop(baseState, 2);
 			return NULL;
 		}
 
-		lua_setglobal(baseState, "_module");
-
-		if (complainOnGlobalVar)
+		// Do the initial run of the script, popping the Lua chunk.
+		lua_getglobal(baseState, "_threadvars");
+		lua_pushlightuserdata(baseState, baseState);
+		lua_pushvalue(baseState, -5);
+		lua_settable(baseState, -3);
+		lua_pop(baseState, 1);
+		fixupLocalVars(baseState);
+		result = lua_pcall(baseState, 0, 0, 0);
+		lua_getglobal(baseState, "_threadvars");
+		lua_pushlightuserdata(baseState, baseState);
+		lua_pushnil(baseState);
+		lua_settable(baseState, -3);
+		lua_pop(baseState, 1);
+		if (result != 0)
 		{
-			if (!lua_getmetatable(baseState, LUA_GLOBALSINDEX))
-				lua_newtable(baseState);
-			lua_pushcfunction(baseState, l_indexWarnGlobal);
-			lua_setfield(baseState, -2, "__index");
-			lua_pushcfunction(baseState, l_newindexWarnGlobal);
-			lua_setfield(baseState, -2, "__newindex");
-			lua_setmetatable(baseState, LUA_GLOBALSINDEX);
+			debugLog("Error doing initial run of script [" + realFile + "]: " + lua_tostring(baseState, -1));
+			lua_pop(baseState, 2);
+			return NULL;
 		}
 
-		loadedScripts[realFile] = baseState;
-		createdBaseState = true;
+		// Restore the old value of the "v" global.
+		lua_setglobal(baseState, "v");
+
+		// Store the instance-local table in the _scriptvars table.
+		lua_getglobal(baseState, "_scriptvars");
+		lua_pushvalue(baseState, -2);
+		lua_setfield(baseState, -2, realFile.c_str());
+		lua_pop(baseState, 1);
+
+		// Generate an interface function table for the script, and
+		// clear out the functions from the global environment.
+		lua_getglobal(baseState, "_scriptfuncs");
+		lua_newtable(baseState);
+		for (unsigned int i = 0; interfaceFunctions[i] != NULL; i++)
+		{
+			const char *funcName = interfaceFunctions[i];
+			lua_getglobal(baseState, funcName);
+			if (!lua_isnil(baseState, -1))
+			{
+				lua_setfield(baseState, -2, funcName);
+				lua_pushnil(baseState);
+				lua_setglobal(baseState, funcName);
+			}
+			else
+			{
+				lua_pop(baseState, 1);
+			}
+		}
+		lua_setfield(baseState, -2, realFile.c_str());
+		lua_pop(baseState, 1);
+
+		// Leave the instance-local table on the stack for createLuaThread().
 	}
 
-	lua_State *thread = createLuaThread(baseState);
+	lua_State *thread = createLuaThread(realFile.c_str());
 	if (!thread)
 	{
 		debugLog("Unable to create new thread for script [" + realFile + "]");
-		if (createdBaseState)
+		if (loadedScript)
 		{
-			destroyLuaVM(baseState);
-			loadedScripts.erase(realFile);
-		}
-		return NULL;
-	}
-
-	lua_getglobal(thread, "_module");
-	int result = lua_pcall(thread, 0, 0, 0);
-	if (result != 0)
-	{
-		debugLog(lua_tostring(thread, -1));
-		debugLog("(error doing initial run of script [" + realFile + "])");
-		destroyLuaThread(baseState, thread);
-		if (createdBaseState)
-		{
-			destroyLuaVM(baseState);
-			loadedScripts.erase(realFile);
+			lua_getglobal(baseState, "_scriptfuncs");
+			lua_pushnil(baseState);
+			lua_setfield(baseState, -2, realFile.c_str());
+			lua_pop(baseState, 1);
+			lua_getglobal(baseState, "_scriptvars");
+			lua_pushnil(baseState);
+			lua_setfield(baseState, -2, realFile.c_str());
+			lua_pop(baseState, 1);
 		}
 		return NULL;
 	}
@@ -8727,29 +8982,20 @@ Script *ScriptInterface::openScript(const std::string &file)
 
 void ScriptInterface::closeScript(Script *script)
 {
-	lua_State *baseState = loadedScripts[script->getFile()];
-	if (!baseState)
-	{
-		debugLog("Lost base state for script [" + script->getFile() + "]");
-		delete script;
-		loadedScripts.erase(script->getFile());  // HACK: see above
-		return;
-	}
-
-	destroyLuaThread(baseState, script->getLuaState());
+	const char *file = script->getFile().c_str();
+	int users = destroyLuaThread(file, script->getLuaState());
 
 	// If this was the last instance of this script, unload the script itself.
-	lua_getglobal(baseState, "_threadtable");
-	lua_pushnil(baseState);
-	int empty = (lua_next(baseState, -2) == 0);
-	if (empty)
+	if (users <= 0)
 	{
-		destroyLuaVM(baseState);
-		loadedScripts.erase(script->getFile());
-	}
-	else
-	{
-		lua_pop(baseState, 3);  // _threadtable, key, value
+		lua_getglobal(baseState, "_scriptfuncs");
+		lua_pushnil(baseState);
+		lua_setfield(baseState, -2, file);
+		lua_pop(baseState, 1);
+		lua_getglobal(baseState, "_scriptvars");
+		lua_pushnil(baseState);
+		lua_setfield(baseState, -2, file);
+		lua_pop(baseState, 1);
 	}
 
 	delete script;
@@ -8799,44 +9045,66 @@ bool ScriptInterface::runScript(const std::string &file, const std::string &func
 
 //-------------------------------------------------------------------------
 
+void Script::lookupFunc(const char *name)
+{
+	lua_getglobal(L, "_scriptfuncs");
+	lua_getfield(L, -1, file.c_str());
+	lua_remove(L, -2);
+	lua_getfield(L, -1, name);
+	lua_remove(L, -2);
+}
+
 bool Script::doCall(int nparams, int nrets)
 {
+	lua_getglobal(L, "v");
+	lua_insert(L, -(nparams+2));
 	fixupLocalVars(L);
+
+	bool result;
 	if (lua_pcall(L, nparams, nrets, 0) == 0)
 	{
-		return true;
+		result = true;
 	}
 	else
 	{
 		lastError = lua_tostring(L, -1);
 		lua_pop(L, 1);
-		return false;
+		result = false;
 	}
+
+	if (nrets > 0)
+	{
+		lua_pushvalue(L, -(nrets+1));
+		lua_remove(L, -(nrets+2));
+	}
+	lua_setglobal(L, "v");
+
+	return result;
 }
 
 bool Script::call(const char *name)
 {
-	lua_getglobal(L, name);
+	lookupFunc(name);
 	return doCall(0);
 }
 
 bool Script::call(const char *name, float param1)
 {
-	lua_getglobal(L, name);
+	lookupFunc(name);
 	lua_pushnumber(L, param1);
 	return doCall(1);
 }
 
 bool Script::call(const char *name, void *param1)
 {
-	lua_getglobal(L, name);
+	lookupFunc(name);
 	luaPushPointer(L, param1);
 	return doCall(1);
 }
 
 bool Script::call(const char *name, void *param1, float param2)
 {
-	lua_getglobal(L, name);
+	lookupFunc(name);
 	luaPushPointer(L, param1);
 	lua_pushnumber(L, param2);
 	return doCall(2);
@@ -8844,7 +9112,7 @@ bool Script::call(const char *name, void *param1, float param2)
 
 bool Script::call(const char *name, void *param1, void *param2)
 {
-	lua_getglobal(L, name);
+	lookupFunc(name);
 	luaPushPointer(L, param1);
 	luaPushPointer(L, param2);
 	return doCall(2);
@@ -8852,7 +9120,7 @@ bool Script::call(const char *name, void *param1, void *param2)
 
 bool Script::call(const char *name, void *param1, float param2, float param3)
 {
-	lua_getglobal(L, name);
+	lookupFunc(name);
 	luaPushPointer(L, param1);
 	lua_pushnumber(L, param2);
 	lua_pushnumber(L, param3);
@@ -8861,7 +9129,7 @@ bool Script::call(const char *name, void *param1, float param2, float param3)
 
 bool Script::call(const char *name, void *param1, float param2, float param3, bool *ret1)
 {
-	lua_getglobal(L, name);
+	lookupFunc(name);
 	luaPushPointer(L, param1);
 	lua_pushnumber(L, param2);
 	lua_pushnumber(L, param3);
@@ -8874,7 +9142,7 @@ bool Script::call(const char *name, void *param1, float param2, float param3, bo
 
 bool Script::call(const char *name, void *param1, const char *param2, float param3)
 {
-	lua_getglobal(L, name);
+	lookupFunc(name);
 	luaPushPointer(L, param1);
 	lua_pushstring(L, param2);
 	lua_pushnumber(L, param3);
@@ -8883,7 +9151,7 @@ bool Script::call(const char *name, void *param1, const char *param2, float para
 
 bool Script::call(const char *name, void *param1, void *param2, void *param3)
 {
-	lua_getglobal(L, name);
+	lookupFunc(name);
 	luaPushPointer(L, param1);
 	luaPushPointer(L, param2);
 	luaPushPointer(L, param3);
@@ -8892,7 +9160,7 @@ bool Script::call(const char *name, void *param1, void *param2, void *param3)
 
 bool Script::call(const char *name, void *param1, float param2, float param3, float param4)
 {
-	lua_getglobal(L, name);
+	lookupFunc(name);
 	luaPushPointer(L, param1);
 	lua_pushnumber(L, param2);
 	lua_pushnumber(L, param3);
@@ -8902,7 +9170,7 @@ bool Script::call(const char *name, void *param1, float param2, float param3, fl
 
 bool Script::call(const char *name, void *param1, void *param2, void *param3, void *param4)
 {
-	lua_getglobal(L, name);
+	lookupFunc(name);
 	luaPushPointer(L, param1);
 	luaPushPointer(L, param2);
 	luaPushPointer(L, param3);
@@ -8912,7 +9180,7 @@ bool Script::call(const char *name, void *param1, void *param2, void *param3, vo
 
 bool Script::call(const char *name, void *param1, void *param2, void *param3, float param4, float param5, float param6, float param7, void *param8, bool *ret1)
 {
-	lua_getglobal(L, name);
+	lookupFunc(name);
 	luaPushPointer(L, param1);
 	luaPushPointer(L, param2);
 	luaPushPointer(L, param3);

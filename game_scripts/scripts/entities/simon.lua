@@ -27,10 +27,10 @@ v = getVars()
 -- game over : user was too slow
 -- victory
 
-STATE_PLAYSEG		= 1000
-STATE_WAIT			= 1001
-STATE_GAMEOVER		= 1002
-STATE_VICTORY		= 1003
+local STATE_PLAYSEG		= 1000
+local STATE_WAIT		= 1001
+local STATE_GAMEOVER	= 1002
+local STATE_VICTORY		= 1003
 
 v.songLen = 8
 v.waitTime = 4.5
@@ -48,7 +48,7 @@ v.body = 0
 v.idolWeight = 200
 
 -- note: check this against creatorform5 when its done
-function generateSong()
+local function generateSong()
 	for i=1, 10 do
 		v.song[i] = math.random(7)
     end

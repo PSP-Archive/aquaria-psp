@@ -20,9 +20,9 @@
 v = getVars()
 
 -- regular areas
-TURTLE_REGULAR		= 0
+local TURTLE_REGULAR	= 0
 -- energy upgrade secret, forest 05, openwater03
-TURTLE_SECRET1		= 1
+local TURTLE_SECRET1	= 1
 
 v.seat = 0
 v.seat2 = 0
@@ -115,7 +115,7 @@ function init(me)
 end
 
 
-function lights(me, on, t)
+local function lights(me, on, t)
 	local a = 1
 	if not on then
 		a = 0
@@ -155,6 +155,37 @@ function postInit(me)
 	if entity_isEntityInRange(me, v.n, 350) then
 		v.seen = true
 	end
+end
+
+local function isOtherFlag(flag)
+	return (v.myFlag ~= flag and isFlag(flag, 1))
+end
+
+local function anyOtherFlag()
+	if v.turtleType == TURTLE_REGULAR then
+		debugLog("turtle is regular")
+		if isOtherFlag(FLAG_TRANSTURTLE_VEIL01) then
+			return true
+		elseif isOtherFlag(FLAG_TRANSTURTLE_VEIL02) then
+			return true
+		elseif isOtherFlag(FLAG_TRANSTURTLE_OPENWATER03) then
+			return true
+		elseif isOtherFlag(FLAG_TRANSTURTLE_FOREST04) then
+			return true
+		elseif isOtherFlag(FLAG_TRANSTURTLE_MAINAREA) then
+			return true
+		elseif isOtherFlag(FLAG_TRANSTURTLE_FINALBOSS) then
+			return true
+		elseif isOtherFlag(FLAG_TRANSTURTLE_ABYSS03) then
+			return true
+		end
+	end
+	if v.turtleType == TURTLE_SECRET1 then
+		debugLog("turtle is secret")
+		return true
+	end
+	debugLog("turtle is nothing")
+	return false
 end
 
 function update(me, dt)
@@ -235,37 +266,6 @@ function update(me, dt)
 			setFlag(v.myFlag, 1)
 		end
 	end
-end
-
-function isOtherFlag(flag)
-	return (v.myFlag ~= flag and isFlag(flag, 1))
-end
-
-function anyOtherFlag()
-	if v.turtleType == TURTLE_REGULAR then
-		debugLog("turtle is regular")
-		if isOtherFlag(FLAG_TRANSTURTLE_VEIL01) then
-			return true
-		elseif isOtherFlag(FLAG_TRANSTURTLE_VEIL02) then
-			return true
-		elseif isOtherFlag(FLAG_TRANSTURTLE_OPENWATER03) then
-			return true
-		elseif isOtherFlag(FLAG_TRANSTURTLE_FOREST04) then
-			return true
-		elseif isOtherFlag(FLAG_TRANSTURTLE_MAINAREA) then
-			return true
-		elseif isOtherFlag(FLAG_TRANSTURTLE_FINALBOSS) then
-			return true
-		elseif isOtherFlag(FLAG_TRANSTURTLE_ABYSS03) then
-			return true
-		end
-	end
-	if v.turtleType == TURTLE_SECRET1 then
-		debugLog("turtle is secret")
-		return true
-	end
-	debugLog("turtle is nothing")
-	return false
 end
 
 function activate(me)

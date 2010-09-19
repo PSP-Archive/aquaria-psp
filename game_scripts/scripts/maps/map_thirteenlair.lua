@@ -19,7 +19,7 @@
 
 v = getVars()
 
-function foundSecrets()
+local function foundSecrets()
 	--return true
 	if not isFlag(FLAG_SKIPSECRETCHECK, 0) then
 		return false

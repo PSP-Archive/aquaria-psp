@@ -22,8 +22,8 @@ v = getVars()
 v.n = 0
 v.chargeTimer = 0
 
-STATE_CHARGEPREP 	= 1001
-STATE_CHARGE 		= 1002
+local STATE_CHARGEPREP 	= 1001
+local STATE_CHARGE 		= 1002
 
 function init(me)
 	setupEntity(me)

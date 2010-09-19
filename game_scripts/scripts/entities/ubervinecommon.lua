@@ -27,7 +27,7 @@ v.lifeTime = 0
 v.n = 0
 v.limited = false
 
-function commonInit(me, lim)
+function v.commonInit(me, lim)
 	setupEntity(me)
 	entity_initSkeletal(me, "UberVine")
 	entity_setEntityLayer(me, -1)
@@ -150,7 +150,7 @@ end
 
 v.spawnDelay = 0
 
-function spawnShots(me)
+local function spawnShots(me)
 	if v.spawnDelay == 0 then
 		local sx, sy = entity_getScale(me)
 		local sx2, sy2 = bone_getScale(entity_getBoneByIdx(me, 0))

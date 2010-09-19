@@ -30,8 +30,8 @@ v.ly = 0
 v.setWaterLevel = false
 
 
-STATE_DROPPED 	= 1000
-STATE_ROTATE	= 1001
+local STATE_DROPPED 	= 1000
+local STATE_ROTATE	= 1001
 
 function init(me)
 	setupEntity(me)

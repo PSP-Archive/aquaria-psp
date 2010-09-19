@@ -22,7 +22,7 @@ v = getVars()
 dofile("scripts/include/nodecollectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "CollectibleSunKey", FLAG_COLLECTIBLE_SUNKEY)
+	v.commonInit(me, "CollectibleSunKey", FLAG_COLLECTIBLE_SUNKEY)
 end
 
 function update(me, dt)

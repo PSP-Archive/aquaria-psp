@@ -22,7 +22,7 @@ v = getVars()
 dofile("scripts/include/nodecollectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "CollectibleBlasterEgg", FLAG_COLLECTIBLE_BLASTEREGG)
+	v.commonInit(me, "CollectibleBlasterEgg", FLAG_COLLECTIBLE_BLASTEREGG)
 end
 
 function update(me, dt)

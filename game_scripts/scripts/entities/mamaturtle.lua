@@ -27,7 +27,7 @@ v = getVars()
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-STATE_SCREECH			= 1000
+local STATE_SCREECH			= 1000
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -108,9 +108,6 @@ function enterState(me)
 		entity_setState(plant, STATE_OPEN)
 		watch(1)
 	end
-end
-
-function hit(me, attacker, bone, spellType, dmg)
 end
 
 function exitState(me)

@@ -23,5 +23,5 @@ dofile("scripts/entities/nudibranchtemplate.lua")
 
 
 function init(me)
-	commonInit(me, 0, 3, 4, 5)
+	v.commonInit(me, 0, 3, 4, 5)
 end

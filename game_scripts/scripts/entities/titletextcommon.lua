@@ -22,7 +22,7 @@ v = getVars()
 v.delay = 0.2
 v.b1 = 0
 v.b2 = 0
-function commonInit(me, file)
+function v.commonInit(me, file)
 	setupEntity(me)
 	entity_initSkeletal(me, file)
 	

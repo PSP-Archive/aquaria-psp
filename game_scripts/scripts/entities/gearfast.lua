@@ -22,5 +22,5 @@ v = getVars()
 dofile("scripts/entities/gearcommon.lua")
 
 function init(me)
-	commonInit(me, 100)
+	v.commonInit(me, 100)
 end

@@ -19,7 +19,7 @@
 
 v = getVars()
 
-STATE_RUNOFF			= 1000
+local STATE_RUNOFF			= 1000
 
 v.n = 0
 
@@ -38,11 +38,11 @@ v.body = 0
 
 v.runNode = 0
 
-function normalSegs(me)
+local function normalSegs(me)
 	bone_setSegs(entity_getBoneByIdx(me, 0), 2, 8, 0.7, 0.7, -0.02, 0, 6, 1)
 end
 
-function singSegs(me)
+local function singSegs(me)
 	bone_setSegs(entity_getBoneByIdx(me, 0), 2, 8, 0.7, 0.7, 0.02, 0, 6, 1)
 end
 

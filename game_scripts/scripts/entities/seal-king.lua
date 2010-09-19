@@ -22,5 +22,5 @@ v = getVars()
 dofile("scripts/include/sealtemplate.lua")
 
 function init(me)
-	commonInit(me, "Seal-King", FLAG_SEAL_KING)
+	v.commonInit(me, "Seal-King", FLAG_SEAL_KING)
 end

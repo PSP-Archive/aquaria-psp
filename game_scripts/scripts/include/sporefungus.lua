@@ -22,7 +22,7 @@ v = getVars()
 v.delayMax = 2
 v.delay = v.delayMax
 
-function commonInit(me, gfx)
+function v.commonInit(me, gfx)
 	setupBasicEntity(me, 
 	0,							-- texture
 	12,								-- health

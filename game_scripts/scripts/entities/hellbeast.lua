@@ -50,20 +50,20 @@ v.soundDelay = 0
 
 v.skull = false
 
-STATE_ATTACK1 		= 1000
-STATE_ATTACK2 		= 1001
-STATE_ATTACK3 		= 1002
-STATE_HOLDING 		= 1003
-STATE_ATTACK4 		= 1004
-STATE_ACIDSPRAY 	= 1005
-STATE_PAIN 			= 1006
-STATE_DIE 			= 1007
-STATE_DONE 			= 1008
-STATE_MOVERIGHT		= 1009
-STATE_MOVELEFT		= 1010
-STATE_ATTACK5		= 1011
-STATE_TRANSFORM		= 1012
-STATE_CREATEMERMAN	= 1013
+local STATE_ATTACK1 		= 1000
+local STATE_ATTACK2 		= 1001
+local STATE_ATTACK3 		= 1002
+local STATE_HOLDING 		= 1003
+local STATE_ATTACK4 		= 1004
+local STATE_ACIDSPRAY 	= 1005
+local STATE_PAIN 			= 1006
+local STATE_DIE 			= 1007
+local STATE_DONE 			= 1008
+local STATE_MOVERIGHT	= 1009
+local STATE_MOVELEFT	= 1010
+local STATE_ATTACK5		= 1011
+local STATE_TRANSFORM	= 1012
+local STATE_CREATEMERMAN= 1013
 -- yer done!
 
 v.attacksToGo = 3
@@ -715,7 +715,7 @@ function update(me, dt)
 end
 
 v.inCutScene = false
-function cutscene(me)
+local function cutscene(me)
 	v.n = getNaija()
 	if not v.inCutScene then		
 		v.inCutScene = true

@@ -72,6 +72,6 @@ function update(me, dt)
 
 end
 
-function entityNumber(me, ent, num)
+local function entityNumber(me, ent, num)
 	if isFlag(FLAG_WHALELAMPPUZZLE, 1) then return end
 end

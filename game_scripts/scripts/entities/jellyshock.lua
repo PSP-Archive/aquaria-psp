@@ -33,7 +33,7 @@ v.dirTimer = 0
 v.blupTime = 3.0
 
 
-STATE_SHOCK			= 1000
+local STATE_SHOCK		= 1000
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -41,8 +41,8 @@ STATE_SHOCK			= 1000
 v.sz = 1.0
 v.dir = 0
 
-MOVE_STATE_UP = 0
-MOVE_STATE_DOWN = 1
+local MOVE_STATE_UP = 0
+local MOVE_STATE_DOWN = 1
 
 v.moveState = 0
 v.moveTimer = 0
@@ -54,7 +54,7 @@ v.shockDelay = 5
 
 v.collisionSegs = 28
 
-function doIdleScale(me)	
+local function doIdleScale(me)	
 	entity_scale(me, 1.0*v.sz, 0.75*v.sz, v.blupTime, -1, 1, 1)
 end
 

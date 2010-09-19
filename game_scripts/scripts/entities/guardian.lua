@@ -22,8 +22,8 @@ v = getVars()
 v.n = 0
 v.attackDelay = 2
 
-STATE_GETREADY				= 1000
-STATE_FIRING				= 1001
+local STATE_GETREADY			= 1000
+local STATE_FIRING				= 1001
 
 v.body = 0
 

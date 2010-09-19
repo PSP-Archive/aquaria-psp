@@ -21,7 +21,7 @@ v = getVars()
 
 v.mergog = 0
 
-function spawnEgg(me)
+local function spawnEgg(me)
 	local node = getNode("COLLECTIBLEPIRANHAEGGLOCATION")
 	createEntity("CollectiblePiranhaEgg", "", node_x(node), node_y(node))
 end

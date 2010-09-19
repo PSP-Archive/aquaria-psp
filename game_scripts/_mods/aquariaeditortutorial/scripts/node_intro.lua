@@ -34,7 +34,7 @@ function init(me)
 	setStringFlag("editorhint", node_getName(me))
 end
 
-function sayNext()
+local function sayNext()
 	if v.thingSaying == 0 then
 		setControlHint("Welcome to the Aquaria Editor Tutorial Mod! This will teach you the basics of using Aquaria's level editor.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then

@@ -24,8 +24,8 @@ v = getVars()
 -- ================================================================================================
 
 -- specific
-STATE_JUMP				= 1000
-STATE_TRANSITION		= 1001
+local STATE_JUMP			= 1000
+local STATE_TRANSITION		= 1001
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
@@ -75,7 +75,7 @@ function init(me)
 	loadSound("FroogFlap")
 end
 
-function isInLine(me)
+local function isInLine(me)
 	if (entity_getRotation(me) >= -45 and entity_getRotation(me) <= 45) or
 	(entity_getRotation(me) >= 135 and entity_getRotation(me) <= 225) then
 		if entity_x(entity_getTarget(me)) > entity_x(me)-v.y_range/2 and entity_x(entity_getTarget(me)) < entity_x(me)+v.y_range/2 then
@@ -205,7 +205,7 @@ function enterState(me)
 	end
 end
 
-function hit(me, attacker, bone, spellType, dmg)
+function damage(me, attacker, bone, damageType, dmg)
 	if entity_isState(me, STATE_IDLE) then
 		entity_setState(me, STATE_JUMP)
 	end

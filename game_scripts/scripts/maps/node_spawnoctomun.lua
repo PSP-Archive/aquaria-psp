@@ -21,7 +21,7 @@ v = getVars()
 
 v.boss = 0
 
-function spawnItem(me)
+local function spawnItem(me)
 	debugLog("Spawning collectible dumbo egg")
 	local node = getNode("DUMBOEGGLOC")
 	if node == 0 then

@@ -23,9 +23,9 @@ v = getVars()
 dofile("scripts/entities/doorcommon.lua")
 
 function init(me)
-	commonInit(me, "final-door", "TentacleDoor", 3, 1)
+	v.commonInit(me, "final-door", "TentacleDoor", 3, 1)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 end

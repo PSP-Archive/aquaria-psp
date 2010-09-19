@@ -24,8 +24,8 @@ v.glow = 0
 v.boneGlow = 0
 v.lungeDelay = 0
 
-STATE_AROUSED		= 1001
-STATE_LUNGE			= 1002
+local STATE_AROUSED		= 1001
+local STATE_LUNGE		= 1002
 v.hitDelay = 0
 v.lunging = false
 

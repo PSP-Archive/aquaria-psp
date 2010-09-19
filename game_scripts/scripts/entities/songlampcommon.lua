@@ -23,7 +23,7 @@ v.n = 0
 v.note = 0
 v.node = 0
 
-function commonInit(me, myNote)
+function v.commonInit(me, myNote)
 	v.note = myNote
 	setupEntity(me)
 	entity_setEntityType(me, ET_NEUTRAL)

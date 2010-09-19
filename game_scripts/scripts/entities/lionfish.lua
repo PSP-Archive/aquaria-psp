@@ -27,10 +27,10 @@ v = getVars()
 -- S T A T E S
 -- ================================================================================================
 
-STATE_GLIDING = 1001
-STATE_TO_THRUST = 1002
-STATE_THRUSTING = 1003
-STATE_TO_GLIDE = 1004
+local STATE_GLIDING = 1001
+local STATE_TO_THRUST = 1002
+local STATE_THRUSTING = 1003
+local STATE_TO_GLIDE = 1004
 
 -- ================================================================================================
 -- L O C A L   V A R I A B L E S 

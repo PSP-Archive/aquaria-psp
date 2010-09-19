@@ -23,7 +23,7 @@ function init(me)
 	node_setCursorActivation(me, true)
 end
 	
-function visions(me)
+local function visions(me)
 	if isFlag(FLAG_VISION_ENERGYTEMPLE, 1) and isFlag(FLAG_ENERGYBOSSDEAD, 0) then
 		vision("EnergyTemple", 3)
 		playSfx("VisionWakeup")

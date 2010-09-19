@@ -45,7 +45,7 @@ v.burstTimer = 0
 -- FUNCTIONS
 -- ================================================================================================
 
-function doIdleScale(me)
+local function doIdleScale(me)
 	entity_scale(me, 0.75*v.sz, 1*v.sz)
 	entity_scale(me, 1*v.sz, 0.75*v.sz, 1.5, -1, 1, 1)
 end

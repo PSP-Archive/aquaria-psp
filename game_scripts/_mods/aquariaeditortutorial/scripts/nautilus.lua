@@ -29,8 +29,8 @@ dofile("scripts/entities/EntityInclude.lua")
 -- S T A T E S
 -- ================================================================================================
 
-STATE_ATTACKPREP	= 1000
-STATE_ATTACK		= 1001
+local STATE_ATTACKPREP	= 1000
+local STATE_ATTACK		= 1001
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S

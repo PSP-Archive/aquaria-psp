@@ -24,5 +24,5 @@ v = getVars()
 dofile("scripts/entities/seahorsecommon.lua")
 
 function init(me)
-	commonInit(me, "Seahorse/Seahorse-0005", 0)
+	v.commonInit(me, "Seahorse/Seahorse-0005", 0)
 end

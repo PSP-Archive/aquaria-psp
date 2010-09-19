@@ -25,13 +25,13 @@ v.mom = 0
 v.body = 0
 
 v.started = false
-STATE_ATTACK1		= 1001
-STATE_ATTACK2		= 1002
-STATE_ATTACK3		= 1003
+local STATE_ATTACK1		= 1001
+local STATE_ATTACK2		= 1002
+local STATE_ATTACK3		= 1003
 
-STATE_PREP1			= 1005
-STATE_PREP2			= 1006
-STATE_PREP3			= 1007
+local STATE_PREP1		= 1005
+local STATE_PREP2		= 1006
+local STATE_PREP3		= 1007
 v.enraged = false
 v.dadMax = 0
 v.dadMin = 0
@@ -122,7 +122,7 @@ function animationKey(me, key)
 end
 
 v.inCut = false
-function cutScene(me)
+local function cutScene(me)
 	if v.inCut then return end
 	v.inCut = true
 	local dad = me

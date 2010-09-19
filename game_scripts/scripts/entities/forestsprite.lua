@@ -22,8 +22,8 @@ v = getVars()
 v.n = 0
 
 
-STATE_SLEEP				= 1000
-STATE_DANCE				= 1001
+local STATE_SLEEP			= 1000
+local STATE_DANCE			= 1001
 
 function init(me)
 	setupEntity(me)

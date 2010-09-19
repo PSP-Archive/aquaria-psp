@@ -47,7 +47,7 @@ v.leadDelay = 0
 v.following			= 0
 v.spawnedInsects	= false
 
-STATE_CREATE		= 1000
+local STATE_CREATE		= 1000
 
 v.inAbyss = false
 
@@ -103,7 +103,7 @@ function init(me)
 	v.abyssEndNode = getNode("CCTONGUE")
 end
 
-function updateLocation(me)
+local function updateLocation(me)
 	debugLog("updateLocation")
 	local f = getFlag(FLAG_SUNKENCITY_PUZZLE)
 	if isMapName("BoilerRoom") then
@@ -222,7 +222,7 @@ end
 
 v.incutscene = false
 
-function cutsceneintro(me, node)
+local function cutsceneintro(me, node)
 	v.incutscene = true
 	entity_idle(v.n)
 	entity_flipToEntity(v.n, me)
@@ -233,12 +233,12 @@ function cutsceneintro(me, node)
 	end
 end
 
-function cutsceneextro(me)
+local function cutsceneextro(me)
 	cam_toEntity(v.n)
 	v.incutscene = false
 end
 
-function cutscene1(me)
+local function cutscene1(me)
 	cutsceneintro(me, v.node_start)
 
 	cam_toEntity(me)
@@ -266,7 +266,7 @@ function cutscene1(me)
 	cutsceneextro(me)
 end
 
-function cutscene2(me)
+local function cutscene2(me)
 	cutsceneintro(me, v.node_climbdown)
 	
 	entity_followPath(me, v.node_climbdown, SPEED_SLOW)
@@ -280,7 +280,7 @@ function cutscene2(me)
 	cutsceneextro(me)
 end
 
-function cutscene3(me)
+local function cutscene3(me)
 	cutsceneintro(me, v.node_runaway)
 	
 	entity_followPath(me, v.node_runaway)
@@ -296,7 +296,7 @@ function cutscene3(me)
 end
 
 -- reunited with mom
-function cutscene4(me)
+local function cutscene4(me)
 	cutsceneintro(me, v.node_mom)
 	
 	entity_setState(v.mom, STATE_SING)
@@ -321,7 +321,7 @@ function cutscene4(me)
 	cutsceneextro(me)
 end
 
-function cutscene5(me)
+local function cutscene5(me)
 	entity_setState(v.gf, STATE_DONE)
 	
 	cutsceneintro(me, v.node_gf)
@@ -351,7 +351,7 @@ function cutscene5(me)
 	cutsceneextro(me)
 end
 
-function cutscene6(me)
+local function cutscene6(me)
 	cutsceneintro(me, getNode("KIDSCAM"))
 	
 	watch(1)
@@ -375,7 +375,7 @@ function cutscene6(me)
 	cutsceneextro(me)
 end
 
-function cutscene7(me)
+local function cutscene7(me)
 	entity_setState(v.gf, STATE_DONE)
 	
 	cutsceneintro(me, v.node_bullies)
@@ -393,7 +393,7 @@ function cutscene7(me)
 	cutsceneextro(me)
 end
 
-function cutscene8(me)
+local function cutscene8(me)
 	cutsceneintro(me, v.node_anima)
 	watch(1)
 	

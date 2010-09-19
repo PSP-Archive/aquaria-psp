@@ -28,7 +28,7 @@ v.moving = 0
 v.upRate = 1
 
 
-STATE_RUNAWAY = 1001
+local STATE_RUNAWAY = 1001
 
 function init(me)
 	setupEntity(me)

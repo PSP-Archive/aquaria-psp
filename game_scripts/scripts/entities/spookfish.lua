@@ -42,13 +42,13 @@ v.boostDir = 0
 -- M Y   F U N C T I O N S
 -- ================================================================================================
 
-function setSpookSegsOn(me)
+local function setSpookSegsOn(me)
 	bone_setSegs(v.body, 8, 2, 0.12, 0.42, 0, -0.03, 8, 0)
 	bone_setSegs(v.glow01, 8, 2, 0.12, 0.42, 0, -0.03, 8, 0)
 	bone_setSegs(v.glow02, 8, 2, 0.12, 0.42, 0, -0.03, 8, 0)
 end
 
-function setSpookSegsOff(me)
+local function setSpookSegsOff(me)
 	bone_setSegs(v.body, 8, 2, 0.23, 0.69, 0, -0.03, 8, 0)
 	bone_setSegs(v.glow01, 8, 2, 0.23, 0.69, 0, -0.03, 8, 0)
 	bone_setSegs(v.glow02, 8, 2, 0.23, 0.69, 0, -0.03, 8, 0)

@@ -22,12 +22,12 @@ v = getVars()
 -- current switches
 dofile("scripts/entities/entityInclude.lua")
 
-CURRENTSWITCH_OFF	= 1
-CURRENTSWITCH_ON	= 2
+v.CURRENTSWITCH_OFF	= 1
+v.CURRENTSWITCH_ON	= 2
 
 v.bone_orb = 0
 
-function commonInit(me)
+function v.commonInit(me)
 	entity_setEntityType(me, ET_NEUTRAL)
 	entity_setWidth(me, 64)
 	entity_setHeight(me, 64)
@@ -40,14 +40,14 @@ end
 
 function postInit(me)
 	debugLog("postInit")
-	if entity_isFlag(me, CURRENTSWITCH_ON) then
+	if entity_isFlag(me, v.CURRENTSWITCH_ON) then
 		entity_setState(me, STATE_ON)
-	elseif entity_isFlag(me, CURRENTSWITCH_OFF) then
+	elseif entity_isFlag(me, v.CURRENTSWITCH_OFF) then
 		entity_setState(me, STATE_OFF)
 	end	
 end
 
-function setGroupState(me, state)
+local function setGroupState(me, state)
 	if entity_getGroupID(me) ~= 0 then
 		local iter = 0
 		local ent = getEntityInGroup(entity_getGroupID(me), iter)
@@ -77,7 +77,7 @@ function enterState(me, state)
 		else
 			debugLog("did not find node")
 		end
-		entity_setFlag(me, CURRENTSWITCH_ON)
+		entity_setFlag(me, v.CURRENTSWITCH_ON)
 		-- turn other switches off
 		setGroupState(me, STATE_OFF)
 		--bone_setColor(v.bone_orb, 0, 1, 0, 0.5)
@@ -90,7 +90,7 @@ function enterState(me, state)
 		if node ~= 0 then
 			node_setActive(node, false)
 		end		
-		entity_setFlag(me, CURRENTSWITCH_OFF)
+		entity_setFlag(me, v.CURRENTSWITCH_OFF)
 		-- turn other switches on
 		setGroupState(me, STATE_ON)
 		--bone_setColor(v.bone_orb, 1, 0, 0, 0.5)
@@ -99,7 +99,7 @@ function enterState(me, state)
 end
 
 function activate(me)
-	if entity_isFlag(me, CURRENTSWITCH_OFF) then
+	if entity_isFlag(me, v.CURRENTSWITCH_OFF) then
 		debugLog("setting stateon")
 		entity_setState(me, STATE_ON)
 	end

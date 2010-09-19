@@ -23,5 +23,5 @@ dofile("scripts/entities/breakablecommon.lua")
 
 function init(me)
 	loadSound("mithalasurn-break")
-	commonInit(me, "Breakable/urn", 40, 3, 5, "mithalasurn-break", false, 1, 0.6)
+	v.commonInit(me, "Breakable/urn", 40, 3, 5, "mithalasurn-break", false, 1, 0.6)
 end

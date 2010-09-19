@@ -31,8 +31,8 @@ v = getVars()
 v.fireDelay = 3
 v.moveTimer = 0
 
-STATE_FIRING = 1001
-STATE_CLAW	 = 1002
+local STATE_FIRING = 1001
+local STATE_CLAW = 1002
 
 v.leftArm = 0
 v.claw = 0
