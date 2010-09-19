@@ -143,12 +143,6 @@ function update(me, dt)
 					end
 				end
 			end
-			if entity_isName(e, "MetalObject") then
-				if entity_x(e) > v.leftx and entity_x(e) < v.rightx
-				and entity_y(e) > v.topy and entity_y(e) < v.btmy then
-					entity_setState(me, STATE_DISABLED)
-				end
-			end
 			e = getNextEntity()
 		end
 	end
