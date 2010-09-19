@@ -21,9 +21,10 @@ v = getVars()
 
 v.n = 0
 v.dir = 0
-v.fireDelay = 1 + math.random(3)
 
 function init(me)
+	v.fireDelay = 1 + math.random(3)
+
 	setupEntity(me)
 	entity_setEntityType(me, ET_ENEMY)
 	entity_initSkeletal(me, "Orbiter")	

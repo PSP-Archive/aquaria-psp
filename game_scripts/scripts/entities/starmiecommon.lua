@@ -27,8 +27,6 @@ v = getVars()
 -- L O C A L   V A R I A B L E S 
 -- ================================================================================================
 
-v.rotDir = math.random(2)-1	-- Random direction for spinning 'round Naija
-
 v.shotDelay = 0
 v.sD = 6	-- Time between shots
 
@@ -47,6 +45,8 @@ v.blinkTime = 0
 -- ================================================================================================
 
 function v.commonInit(me, skin)
+	v.rotDir = math.random(2)-1	-- Random direction for spinning 'round Naija
+
 	setupBasicEntity(
 	me,
 	"Starmie/Body",					-- texture

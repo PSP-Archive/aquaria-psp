@@ -32,12 +32,12 @@ v.treeNode = 0
 v.moveTimer = 0
 v.minNode = 0
 v.maxNode = 0
-v.walkSpd = 170+math.random(50)
-
-v.soundDelay = math.random(3)+2
 v.hitSoundDelay = 0
 
 function init(me)
+	v.walkSpd = 170+math.random(50)
+	v.soundDelay = math.random(3)+2
+
 	setupBasicEntity(me, 
 	"",					-- texture
 	6,								-- health

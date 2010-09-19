@@ -21,12 +21,12 @@ v = getVars()
 
 v.n = 0
 v.dir = 0
-v.fireDelay = 2 + math.random(2)
-
 
 local STATE_FLYBACK = 1000
 
 function init(me)
+	v.fireDelay = 2 + math.random(2)
+
 	setupEntity(me)
 	entity_setEntityType(me, ET_ENEMY)
 	entity_initSkeletal(me, "pistolshrimp")	

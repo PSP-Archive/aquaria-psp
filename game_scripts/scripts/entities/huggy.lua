@@ -32,16 +32,10 @@ local STATE_FLYOFF			= 1001
 -- ================================================================================================
 
 v.eyes = 0
-v.color = math.random(8)-1
 v.noteDown = -1
-v.angle = randAngle360()
-
-v.swimTime = 0.60 + math.random(40)/100
-v.swimTimer = v.swimTime * 0.76
 
 v.attachBone = 0
 v.rollTime = 0
-v.maxRollTime = math.random(12)/30.0 + 0.45
 
 v.healDelay = 0
 v.healInterval = 0.5
@@ -52,6 +46,12 @@ v.healAmount = 1/60.0
 -- ================================================================================================
 
 function init(me)
+	v.color = math.random(8)-1
+	v.angle = randAngle360()
+	v.swimTime = 0.60 + math.random(40)/100
+	v.swimTimer = v.swimTime * 0.76
+	v.maxRollTime = math.random(12)/30.0 + 0.45
+
 	setupBasicEntity(
 	me,
 	"Huggy/Head",					-- texture

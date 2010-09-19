@@ -30,8 +30,6 @@ local STATE_ATTACKPREP		= 1002
 
 v.n = 0
 
-v.add = math.random(50)
-
 v.minCap = 400
 v.maxCap = 700
 v.cap = v.minCap
@@ -47,6 +45,8 @@ v.lungeDelay = 2
 -- ================================================================================================
 
 function init(me)
+	v.add = math.random(50)
+
 	setupBasicEntity(
 	me,
 	"Maul",					-- texture

@@ -23,8 +23,6 @@ v = getVars()
 -- Energy God
 -- ================================================================================================
 
-v.naija = getNaija()
-
 function init(me)	
 	setupBasicEntity(
 	me,
@@ -51,6 +49,8 @@ function init(me)
 	entity_setName(me, "EnergyGod")
 	entity_setState(me, STATE_IDLE)	
 	--entity_generateCollisionMask(me)
+
+	v.naija = getNaija()
 end
 
 function update(me, dt)

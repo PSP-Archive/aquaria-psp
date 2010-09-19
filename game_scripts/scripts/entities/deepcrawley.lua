@@ -39,7 +39,6 @@ v.note = -1
 v.excited = 0
 v.glow = 0
 
-v.maxSpeed = 321 + math.random(32)
 v.width = 128
 v.dir = -1
 
@@ -52,6 +51,8 @@ local STATE_MOVEAWAY = 1002
 -- ================================================================================================
 
 function init(me)
+	v.maxSpeed = 321 + math.random(32)
+
 	setupEntity(me)
 	entity_setEntityLayer(me, -2)
 	entity_setEntityType(me, ET_ENEMY)
