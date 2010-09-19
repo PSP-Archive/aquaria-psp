@@ -8061,7 +8061,6 @@ static const struct {
 	{"STATE_ON",			701},
 	{"STATE_OFF",			702},
 	{"STATE_SEED",			703},
-	{"STATE_PLANTED",		704},
 	{"STATE_SK_RED",		705},
 	{"STATE_SK_GREEN",		706},
 	{"STATE_SK_BLUE",		707},
@@ -8278,7 +8277,7 @@ static const struct {
 	{"FLAG_NAIJA_MINIMAP",				201},
 	{"FLAG_NAIJA_SPEEDBOOST",			202},
 	{"FLAG_NAIJA_MEMORYCRYSTAL",		203},
-	{"FLAG_NAIJA_SINGING",				204},
+	// 204 is unused
 	{"FLAG_NAIJA_LEAVESVEDHA",			205},
 	{"FLAG_NAIJA_SONGDOOR",				206},
 	{"FLAG_NAIJA_ENTERVEDHACAVE",		207},
@@ -8393,7 +8392,7 @@ static const struct {
 	{"FLAG_ENTER_HOMECAVE",				654},
 	{"FLAG_ENTER_FOREST",				655},
 	{"FLAG_ENTER_VEIL",					656},
-	{"FLAG_ENTER_MITHALAS",				657},
+	// 657 is unused
 	{"FLAG_ENTER_MERMOGCAVE",			658},
 	{"FLAG_ENTER_MITHALAS",				659},
 	{"FLAG_ENTER_SUNTEMPLE",			660},
