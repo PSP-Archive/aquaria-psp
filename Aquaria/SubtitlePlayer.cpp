@@ -64,25 +64,17 @@ void SubtitlePlayer::go(const std::string &subs)
 	std::string line;
 	while (std::getline(in, line))
 	{
-		std::istringstream is(line);
-
 		SubLine sline;
-
-		std::string timeStamp;
-		is >> timeStamp;
-		int loc = timeStamp.find(':');
-		if (loc != std::string::npos)
+		const char *s = line.c_str();
+		int minutes = (int)strtol(s, const_cast<char **>(&s), 10);
+		if (*s == ':')
 		{
-			int minutes=0, seconds=0;
-			std::istringstream is(timeStamp.substr(0, loc));
-			is >> minutes;
-			sline.timeStamp = minutes*60;
-			std::istringstream is2(timeStamp.substr(loc+1, timeStamp.size()));
-			is2 >> seconds;
-			sline.timeStamp += seconds;
-			sline.line = line.substr(loc+4, line.size());
+			float seconds = strtof(s+1, const_cast<char **>(&s));
+			s += strspn(s, " \t");
+			sline.line.assign(s);
+			sline.timeStamp = minutes*60 + seconds;
+			subLines.push_back(sline);
 		}
-		subLines.push_back(sline);
 	}
 	curLine = 0;
 }
