@@ -205,7 +205,7 @@ function enterState(me)
 	end
 end
 
-local function hit(me, attacker, bone, spellType, dmg)
+function damage(me, attacker, bone, damageType, dmg)
 	if entity_isState(me, STATE_IDLE) then
 		entity_setState(me, STATE_JUMP)
 	end
