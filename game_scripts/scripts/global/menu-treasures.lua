@@ -91,7 +91,7 @@ FLAG_COLLECTIBLE_MUTANTCOSTUME		= 519
 FLAG_COLLECTIBLE_JELLYCOSTUME		= 520
 FLAG_COLLECTIBLE_MITHALANCOSTUME	= 521
 ]]--
-local function useTreasure(idx)
+function useTreasure(idx)
 	debugLog("useTreasure!")
 	if idx == FLAG_COLLECTIBLE_ENERGYTEMPLE then
 		changeCostume("ETC")
