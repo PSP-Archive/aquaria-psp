@@ -19,49 +19,38 @@
 
 v = getVars()
 
-v.flag = 0
-STATE_BUSTED	= 1001
+-- ================================================================================================
+-- METAL OBJECT
+-- ================================================================================================
+
+ 
+-- ================================================================================================
+-- FUNCTIONS
+-- ================================================================================================
 
 function init(me)
-	setupEntity(me, "Fan", ET_ENEMY)
-	entity_setCollideRadius(me, 64)
-	entity_setHealth(me, 12)
-	if entity_isFlag(me, 1) then
-		entity_setState(me, STATE_BUSTED)
-	else
-		entity_setState(me, STATE_IDLE)
-	end
-	--[[
-	v.flag = f
-	if isFlag(f, 1) then
-		entity_setState(me, STATE_BUSTED)
-	else
-		entity_setState(me, STATE_IDLE)
-	end
-	]]--
-end
-
-function enterState(me, state)
-	if entity_isState(me, STATE_BUSTED) then
-		debugLog("SETTING BUSTED")
-		entity_setFlag(me, 1)
-		local node = entity_getNearestNode(me)
-		node_setActive(node, false)
-	end	
-end
-
-function exitState(me, state)
+	setupEntity(me, "MetalObject")
+	--entity_setProperty(me, EP_SOLID, true)
+	entity_setProperty(me, EP_MOVABLE, true)
+	entity_setWeight(me, 100)
+	entity_setCollideRadius(me, 32)
+	entity_setName(me, "MetalObject")
+	
+	--entity_setProperty(me, EP_BATTERY, true)
 end
 
 function update(me, dt)
-	entity_handleShotCollisions(me, dt)
+	entity_updateMovement(me, dt)
 end
 
-function damage(me, attacker, bone, damageType, dmg)
-	if damageType == DT_CRUSH then
-		if entity_isState(me, STATE_IDLE) then		
-			entity_setState(me, STATE_BUSTED)
-		end
-	end
-	return false
+function enterState(me)
+end
+
+function exitState(me)
+end
+
+function hitSurface(me)
+end
+
+function activate(me)
 end

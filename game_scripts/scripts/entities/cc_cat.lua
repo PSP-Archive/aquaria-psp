@@ -22,7 +22,7 @@ v = getVars()
 -- get beat up by CC_BeatCat
 v.n = 0
 
-function createKid(node)
+local function createKid(node)
 --[[
 	local x = node_x(node)
 	local y = node_y(node)
@@ -32,7 +32,7 @@ function createKid(node)
 	entity_alpha(ent, 1, 2)
 end
 
-function createRockScene(me)
+local function createRockScene(me)
 	createKid(getNode("ROCKKID1"))
 	createKid(getNode("ROCKKID2"))
 	createKid(getNode("ROCKKID3"))

@@ -21,7 +21,7 @@ v = getVars()
 
 v.n = 0
 
-function initFinalSpirit(flag, name)
+local function initFinalSpirit(flag, name)
 	if getFlag(flag) > 0 then
 		local ent = getEntity(name)
 		if ent ~= 0 then
@@ -34,7 +34,7 @@ function initFinalSpirit(flag, name)
 	end
 end
 
-function initFinalSpirits()
+function v.initFinalSpirits()
 	v.n = getNaija()
 	initFinalSpirit(FLAG_SPIRIT_ERULIAN, "Erulian-Final")
 	initFinalSpirit(FLAG_SPIRIT_KROTITE, "Krotite-Final")

@@ -23,8 +23,8 @@ v.n = 0
 
 v.head = 0
 
-STATE_SWIM			= 1000
-STATE_BURST			= 1001
+local STATE_SWIM		= 1000
+local STATE_BURST		= 1001
 
 v.burstDelay		= 0
 
@@ -34,11 +34,11 @@ v.fireDelay			= 3
 v.fired				= 0
 v.fireShotDelay		= 0
 
-function idle(me)
+local function idle(me)
 	entity_setState(me, STATE_IDLE, math.random(1)+0.5)
 end
 
-function doBurstDelay()
+local function doBurstDelay()
 	v.burstDelay = math.random(4) + 2
 end
 

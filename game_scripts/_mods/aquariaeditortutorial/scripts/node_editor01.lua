@@ -31,7 +31,7 @@ function init(me)
 	node_setCursorActivation(me, true)
 end
 
-function sayNext(me)
+local function sayNext(me)
 	if v.thingSaying == 0 then
 		setControlHint("Hit TAB to enter the level editor, and TAB to exit the level editor.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then

@@ -27,10 +27,10 @@ v = getVars()
 -- S T A T E S
 -- ================================================================================================
 
-STATE_GLIDING = 1001
-STATE_TO_THRUST = 1002
-STATE_THRUSTING = 1003
-STATE_TO_GLIDE = 1004
+local STATE_GLIDING = 1001
+local STATE_TO_THRUST = 1002
+local STATE_THRUSTING = 1003
+local STATE_TO_GLIDE = 1004
 
 -- ================================================================================================
 -- L O C A L   V A R I A B L E S 
@@ -65,7 +65,7 @@ v.saveNode = 0
 -- F U N C T I O N S
 -- ================================================================================================
 
-function commonInit(me, turType)
+function v.commonInit(me, turType)
 	setupBasicEntity(
 	me,
 	"SeaTurtle/Head",				-- texture
@@ -188,6 +188,11 @@ function postInit(me)
 			entity_fh(me)
 		end
 	end
+end
+
+local function sing(me)
+	v.singing = true
+	v.songNote = 1
 end
 
 function update(me, dt)
@@ -328,11 +333,6 @@ function update(me, dt)
 	end
 end
 
-function sing(me)
-	v.singing = true
-	v.songNote = 1
-end
-
 function enterState(me)
 	if entity_getState(me) == STATE_GLIDING then
 		entity_animate(me, "glide", LOOP_INF)
@@ -376,7 +376,7 @@ function damage(me, attacker, bone, damageType, dmg)
 	return true
 end
 
-function startFollowing(me)
+local function startFollowing(me)
 	v.following = true
 end
 

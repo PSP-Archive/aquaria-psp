@@ -24,11 +24,11 @@ v = getVars()
 -- ================================================================================================
 
 -- entity specific
-STATE_WAIT				= 1000
-STATE_WEAK				= 1001
-STATE_ATTACKPREP		= 1002
-STATE_ATTACK			= 1003
-STATE_RANGEATTACK		= 1004
+local STATE_WAIT			= 1000
+local STATE_WEAK			= 1001
+local STATE_ATTACKPREP		= 1002
+local STATE_ATTACK			= 1003
+local STATE_RANGEATTACK		= 1004
 
 
 -- ================================================================================================

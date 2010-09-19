@@ -22,7 +22,7 @@ v = getVars()
 -- energy door
 dofile("scripts/entities/doorcommon.lua")
 
---commonInit(me, "Final-Tongue", "TentacleDoor", 4.5, 0)
+--v.commonInit(me, "Final-Tongue", "TentacleDoor", 4.5, 0)
 
 v.ix = 0
 v.iy = 0
@@ -75,6 +75,3 @@ function exitState(me, state)
 		entity_setState(me, STATE_OPENED)
 	end
 end
-
-
-

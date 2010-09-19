@@ -24,15 +24,15 @@ v = getVars()
 dofile("scripts/include/collectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "Collectibles/blackpearl", FLAG_COLLECTIBLE_BLACKPEARL)
+	v.commonInit(me, "Collectibles/blackpearl", FLAG_COLLECTIBLE_BLACKPEARL)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		local ent
 		ent = createEntity("Clam", "", entity_x(me)+200, entity_y(me)-150)
@@ -41,5 +41,5 @@ function enterState(me, state)
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

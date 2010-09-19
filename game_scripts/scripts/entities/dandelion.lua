@@ -21,7 +21,7 @@ v = getVars()
 
 v.n = 0
 
-STATE_SHAKE = 1001
+local STATE_SHAKE = 1001
 
 v.bone_head = 0
 

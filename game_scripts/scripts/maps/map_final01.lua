@@ -22,7 +22,7 @@ v = getVars()
 dofile("scripts/maps/finalcommon.lua")
 
 function init()
-	initFinalSpirits()
+	v.initFinalSpirits()
 	
 	if isFlag(FLAG_FINAL, FINAL_START) then
 		setFlag(FLAG_LI, 200)

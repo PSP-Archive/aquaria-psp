@@ -24,7 +24,7 @@ v.dir = 0
 v.fireDelay = 2 + math.random(2)
 
 
-STATE_FLYBACK = 1000
+local STATE_FLYBACK = 1000
 
 function init(me)
 	setupEntity(me)

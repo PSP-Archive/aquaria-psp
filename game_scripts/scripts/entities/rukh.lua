@@ -27,10 +27,10 @@ v = getVars()
 -- S T A T E S
 -- ================================================================================================
 
-STATE_NESTING = 1001
-STATE_STARTLED = 1002
-STATE_HOVERING = 1003
-STATE_FLYING = 1004
+local STATE_NESTING = 1001
+local STATE_STARTLED = 1002
+local STATE_HOVERING = 1003
+local STATE_FLYING = 1004
 
 -- ================================================================================================
 -- L O C A L   V A R I A B L E S 

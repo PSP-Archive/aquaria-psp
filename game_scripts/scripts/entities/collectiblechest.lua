@@ -24,17 +24,17 @@ v = getVars()
 dofile("scripts/include/collectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "Collectibles/treasure-chest", FLAG_COLLECTIBLE_CHEST)
+	v.commonInit(me, "Collectibles/treasure-chest", FLAG_COLLECTIBLE_CHEST)
 	entity_initEmitter(me, 0, "Bubbles01")
 	entity_startEmitter(me, 0)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		--[[
 		createEntity("JellySmall", "", node_x(me)-64, node_y(me))
@@ -45,5 +45,5 @@ function enterState(me, state)
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

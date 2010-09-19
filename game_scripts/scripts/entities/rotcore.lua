@@ -19,7 +19,7 @@
 
 v = getVars()
 
-STATE_MOVING 	= 1001
+local STATE_MOVING 	= 1001
 
 v.n = 0
 v.eyes = {}
@@ -41,7 +41,7 @@ v.soundDelay = 0
 
 v.rotSpeed = 40
 
-function clearBarriers()
+local function clearBarriers()
 	if v.node ~= 0 then
 		-- do magic
 		node_setElementsInLayerActive(v.node, 2, false)
@@ -91,7 +91,7 @@ function init(me)
 	loadSound("rotcore-die2")
 end
 
-function clearBeams()
+local function clearBeams()
 	for i=1,6 do
 		if v.beams[i]~=0 then
 			beam_delete(v.beams[i])
@@ -118,20 +118,7 @@ function postInit(me)
 	end
 end
 
-function cueAddEyeBeam(me, idx)
-	v.eyeHits[idx] = 1000
-	if v.beams[idx] == 0 then
-		bone_rotateOffset(v.eyes[idx], 180, 0.5, 0, 0, 1)				
-		if v.addBeamIdx ~= -1 and v.addBeamIdx ~= idx then
-			addEyeBeam(me, v.addBeamIdx)
-		end
-		v.addBeamIdx = idx
-		v.addBeamDelay = 0.5
-		v.beamTimer = 6
-	end
-end
-
-function addEyeBeam(me, idx)
+local function addEyeBeam(me, idx)
 	if v.beams[idx] == 0 then
 		local bx, by = bone_getWorldPosition(v.eyes[idx])
 		v.beams[idx] = createBeam(bx, by, bone_getWorldRotation(v.eyes[idx])-90)
@@ -149,6 +136,19 @@ function addEyeBeam(me, idx)
 			v.beamTimer = 0
 			entity_setState(me, STATE_OPEN)
 		end
+	end
+end
+
+local function cueAddEyeBeam(me, idx)
+	v.eyeHits[idx] = 1000
+	if v.beams[idx] == 0 then
+		bone_rotateOffset(v.eyes[idx], 180, 0.5, 0, 0, 1)				
+		if v.addBeamIdx ~= -1 and v.addBeamIdx ~= idx then
+			addEyeBeam(me, v.addBeamIdx)
+		end
+		v.addBeamIdx = idx
+		v.addBeamDelay = 0.5
+		v.beamTimer = 6
 	end
 end
 

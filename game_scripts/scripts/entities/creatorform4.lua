@@ -51,13 +51,13 @@ v.hitNaija = 0
 -- S T A T E S
 -- ================================================================================================
 
-STATE_TRAP			= 1000
-STATE_PAIN			= 1001
-STATE_ATTACK		= 1002
-STATE_LUREWAIT		= 1003
-STATE_INTRO			= 1004
-STATE_CHASE			= 1005
-STATE_CREEP			= 1006
+local STATE_TRAP		= 1000
+local STATE_PAIN		= 1001
+local STATE_ATTACK		= 1002
+local STATE_LUREWAIT	= 1003
+local STATE_INTRO		= 1004
+local STATE_CHASE		= 1005
+local STATE_CREEP		= 1006
 
 -- ================================================================================================
 -- P H A S E S
@@ -65,9 +65,9 @@ STATE_CREEP			= 1006
 
 v.phase = 0
 
-PHASE_LURE			= 0
-PHASE_HIDE			= 1
-PHASE_FINAL			= 2
+local PHASE_LURE		= 0
+local PHASE_HIDE		= 1
+local PHASE_FINAL		= 2
 
 -- ================================================================================================
 -- F U N C T I O N S

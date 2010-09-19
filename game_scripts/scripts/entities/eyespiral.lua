@@ -28,8 +28,8 @@ v.glow = 0
 
 v.hits = 16
 
-STATE_BLIND		= 1000
-STATE_PULLABLE	= 1001
+local STATE_BLIND	= 1000
+local STATE_PULLABLE= 1001
 
 function init(me)
 	setupEntity(me)

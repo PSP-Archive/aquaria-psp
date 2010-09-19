@@ -27,13 +27,13 @@ v = getVars()
 -- S T A T E S 
 -- ================================================================================================
 
-STATE_HIDE			= 1001
-STATE_STAND			= 1002
-STATE_CRAWL			= 1003
---STATE_OPEN			= 1004
-STATE_CHARGE		= 1005
---STATE_CLOSE			= 1006
-STATE_SIT			= 1007
+local STATE_HIDE		= 1001
+local STATE_STAND		= 1002
+local STATE_CRAWL		= 1003
+--local STATE_OPEN		= 1004
+local STATE_CHARGE		= 1005
+--local STATE_CLOSE		= 1006
+local STATE_SIT			= 1007
 
 -- ================================================================================================
 -- L O C A L   V A R I A B L E S 

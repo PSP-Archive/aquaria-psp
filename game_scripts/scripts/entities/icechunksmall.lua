@@ -25,7 +25,7 @@ v = getVars()
 dofile("scripts/entities/icechunkcommon.lua")
 
 function init(me)
-	commonInit(me, 2)
+	v.commonInit(me, 2)
 end
 
 function dieNormal(me)
@@ -33,4 +33,3 @@ function dieNormal(me)
 		spawnIngredient("IceChunk", entity_x(me), entity_y(me))
 	end
 end
-

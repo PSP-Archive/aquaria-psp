@@ -34,7 +34,7 @@ v.bone_body = 0
 v.goDelay = 10
 
  
-function commonInit(me, shell)
+function v.commonInit(me, shell)
 	v.hasShell = shell
 	
 	local layer = 1

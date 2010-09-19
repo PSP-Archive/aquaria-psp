@@ -22,7 +22,7 @@ v = getVars()
 v.n = 0
 v.glow = 0
 
-function commonInit(me, skel)
+function v.commonInit(me, skel)
 	setupEntity(me)
 	entity_setEntityType(me, ET_NEUTRAL)
 	entity_initSkeletal(me, skel)
@@ -60,7 +60,7 @@ function postInit(me)
 	entity_update(me, randRange(1, 4)*0.1)
 end
 
-function commonUpdate(me, dt)
+function v.commonUpdate(me, dt)
 	
 	entity_updateCurrents(me, dt)
 	entity_updateMovement(me, dt)

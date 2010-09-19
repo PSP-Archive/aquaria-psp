@@ -29,8 +29,8 @@ v.fireDelay = 2
 v.moveTimer = 0
 v.charge = 0
 
-STATE_CHARGE = 1000
-STATE_DELAY = 1001
+local STATE_CHARGE = 1000
+local STATE_DELAY = 1001
 v.inited = false
 
 -- ================================================================================================

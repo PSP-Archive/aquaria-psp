@@ -22,8 +22,8 @@ v = getVars()
 v.n = 0
 v.dir = 0
 
-STATE_FLYING = 1000
-STATE_FALLING = 1001
+local STATE_FLYING = 1000
+local STATE_FALLING = 1001
 v.inity = 0
 v.drownTimer = 0
 v.drownTime = 6

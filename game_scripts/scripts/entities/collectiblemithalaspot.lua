@@ -24,20 +24,20 @@ v = getVars()
 dofile("scripts/include/collectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "Collectibles/mithalaspot", FLAG_COLLECTIBLE_MITHALASPOT)
+	v.commonInit(me, "Collectibles/mithalaspot", FLAG_COLLECTIBLE_MITHALASPOT)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		createEntity("MithalasUrn", "", entity_x(me)+700, entity_y(me))
 	end	
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

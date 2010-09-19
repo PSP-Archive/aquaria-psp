@@ -33,7 +33,7 @@ v.spawnTimes = 1
 
 v.sfxVol = 1
 
-function commonInit(me, fle, cr, h, num, snd, ignoreSets, stimes, svol)
+function v.commonInit(me, fle, cr, h, num, snd, ignoreSets, stimes, svol)
 	if svol ~= 0 then
 		v.sfxVol = svol
 	end

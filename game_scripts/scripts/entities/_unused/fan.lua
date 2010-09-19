@@ -19,26 +19,49 @@
 
 v = getVars()
 
--- song cave collectible
-
-dofile("scripts/include/collectibletemplate.lua")
+v.flag = 0
+local STATE_BUSTED	= 1001
 
 function init(me)
-	commonInit(me, "Collectibles/babycrib", FLAG_COLLECTIBLE_BABYCRIB)
-	entity_setEntityLayer(me, -1)
-end
-
-function update(me, dt)
-	commonUpdate(me, dt)
+	setupEntity(me, "Fan", ET_ENEMY)
+	entity_setCollideRadius(me, 64)
+	entity_setHealth(me, 12)
+	if entity_isFlag(me, 1) then
+		entity_setState(me, STATE_BUSTED)
+	else
+		entity_setState(me, STATE_IDLE)
+	end
+	--[[
+	v.flag = f
+	if isFlag(f, 1) then
+		entity_setState(me, STATE_BUSTED)
+	else
+		entity_setState(me, STATE_IDLE)
+	end
+	]]--
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
-	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
-		--createEntity("Walker", "", entity_x(me), entity_y(me))
+	if entity_isState(me, STATE_BUSTED) then
+		debugLog("SETTING BUSTED")
+		entity_setFlag(me, 1)
+		local node = entity_getNearestNode(me)
+		node_setActive(node, false)
 	end	
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+end
+
+function update(me, dt)
+	entity_handleShotCollisions(me, dt)
+end
+
+function damage(me, attacker, bone, damageType, dmg)
+	if damageType == DT_CRUSH then
+		if entity_isState(me, STATE_IDLE) then		
+			entity_setState(me, STATE_BUSTED)
+		end
+	end
+	return false
 end

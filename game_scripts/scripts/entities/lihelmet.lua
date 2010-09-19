@@ -20,7 +20,7 @@
 v = getVars()
 
 v.n = 0
-STATE_BEFOREMEET = 1005
+local STATE_BEFOREMEET = 1005
 
 function init(me)
 	setupEntity(me)

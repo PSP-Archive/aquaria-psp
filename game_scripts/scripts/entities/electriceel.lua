@@ -44,7 +44,7 @@ v.songTimer = 0
 v.spawns = 0
 
 v.shockDelay = 6
-STATE_SHOCK			= 1000
+local STATE_SHOCK		= 1000
 
 -- initializes the entity
 function init(me)

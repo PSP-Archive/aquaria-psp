@@ -30,7 +30,7 @@ function init(me)
 	node_setCursorActivation(me, true)
 end
 
-function sayNext()
+local function sayNext()
 	if v.thingSaying == 0 then
 		setControlHint("Use 'E' and 'R' to cycle through the available tiles. Drop a new tile by pressing Spacebar.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then

@@ -20,9 +20,9 @@
 v = getVars()
 
 -- entity specific
-STATE_GOTOHOLE			= 1001
-STATE_HIDE				= 1002
-STATE_SHOW				= 1003
+local STATE_GOTOHOLE		= 1001
+local STATE_HIDE			= 1002
+local STATE_SHOW			= 1003
  
 v.chaseDelay = 0
 v.lastHole = 0

@@ -30,7 +30,7 @@ function init(me)
 	node_setCursorActivation(me, true)
 end
 
-function sayNext()
+local function sayNext()
 	if v.thingSaying == 0 then
 		setControlHint("There are also 3 parallax layers, mapped to 'B', 'N', and 'M'.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then

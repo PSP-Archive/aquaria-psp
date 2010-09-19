@@ -30,7 +30,7 @@ function init(me)
 	node_setCursorActivation(me, true)
 end
 
-function sayNext()
+local function sayNext()
 	if v.thingSaying == 0 then
 		setControlHint("In the editor, you can hold the middle mouse button or use the A, S, D, W keys to move the view around.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then

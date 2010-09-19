@@ -74,7 +74,7 @@ function init(me)
 	entity_setInternalOffset(me, 0, 8)
 end
 
-function getRadius(me)
+local function getRadius(me)
 	return 32 + v.size*9
 end
 

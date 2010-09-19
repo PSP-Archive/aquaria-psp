@@ -33,7 +33,7 @@ v.maxRideTime = 20
 v.throwOffTimer = 0
 v.maxThrowOffTime = 15
 
-STATE_THROWOFF 			= 1000
+local STATE_THROWOFF 			= 1000
 
 v.roarDelay = 0
 

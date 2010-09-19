@@ -22,7 +22,7 @@ v = getVars()
 v.myNote = 0
 v.noteQuad = 0
 
-function commonInit(me, note)
+function v.commonInit(me, note)
 	v.myNote = note
 end
 

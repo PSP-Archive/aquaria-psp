@@ -22,6 +22,5 @@ v = getVars()
 dofile("scripts/maps/node_shownote_common.lua")
 
 function init(me)
-	commonInit(me, 3)
+	v.commonInit(me, 3)
 end
-

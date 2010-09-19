@@ -81,13 +81,85 @@ end
 function postInit(me)
 end
 
-function showLap()
+local function showLap()
 	if v.lap >= v.maxLaps then
 		centerText(getStringBank(853))
 	else
 		centerText(string.format("%s %d", getStringBank(852), v.lap))
 	end
 end
+
+local function stopRace(me)
+	setCameraLerpDelay(0)
+	v.raceStarted = false
+	overrideZoom(0, 5)
+	
+	setTimerTextAlpha(0, 1)
+end
+
+local function lost(me)
+	v.raceStarted = false
+	
+	debugLog("you failed the race")
+
+	playSfx("denied")
+	entity_idle(v.n)
+	fadeOutMusic(1.4)
+	watch(0.5)
+	fade2(1, 1, 1, 1, 1)
+	watch(1)
+	entity_setPosition(v.n, node_x(me), node_y(me))
+	watch(0.5)
+	
+	updateMusic()
+	
+	fade2(0, 1, 1, 1, 1)
+	watch(1)
+	
+	stopRace(me)
+end
+
+local function won(me)
+	v.raceStarted = false
+	
+	updateMusic()
+	
+	
+	
+	entity_idle(v.n)
+	watch(1)
+	entity_flipToEntity(v.n, v.timeRock)
+	
+	if v.raceTime < getFlag(FLAG_SEAHORSEBESTTIME) then
+		setFlag(FLAG_SEAHORSEBESTTIME, v.raceTime)
+		cam_toEntity(v.timeRock)
+		watch(0.5)
+		entity_msg(v.timeRock, "time", v.raceTime)
+		watch(3)
+	end
+	
+	
+	
+	if v.raceTime < getFlag(FLAG_SEAHORSETIMETOBEAT) then
+		if isFlag(FLAG_COLLECTIBLE_SEAHORSECOSTUME, 0) and getEntity("collectibleseahorsecostume") == 0 then
+			local nd = getNode("armorloc")
+			local e = createEntity("collectibleseahorsecostume", "", node_x(nd), node_y(nd))
+			entity_alpha(e, 0)
+			cam_toEntity(e)
+			watch(0.5)
+			playSfx("secret")
+			playSfx("mia-appear")
+			spawnParticleEffect("tinyredexplode", node_x(nd), node_y(nd))
+			entity_alpha(e, 1, 1)
+			watch(2)
+		end
+	end
+	
+	cam_toEntity(v.n)
+	
+	stopRace(me)
+end
+
 
 function songNoteDone(me, note, t)
 	if not v.raceStarted then
@@ -193,78 +265,6 @@ function update(me, dt)
 		debugLog(string.format("v.raceTime: %d", v.raceTime))
 	end
 end
-
-function lost(me)
-	v.raceStarted = false
-	
-	debugLog("you failed the race")
-
-	playSfx("denied")
-	entity_idle(v.n)
-	fadeOutMusic(1.4)
-	watch(0.5)
-	fade2(1, 1, 1, 1, 1)
-	watch(1)
-	entity_setPosition(v.n, node_x(me), node_y(me))
-	watch(0.5)
-	
-	updateMusic()
-	
-	fade2(0, 1, 1, 1, 1)
-	watch(1)
-	
-	stopRace(me)
-end
-
-function won(me)
-	v.raceStarted = false
-	
-	updateMusic()
-	
-	
-	
-	entity_idle(v.n)
-	watch(1)
-	entity_flipToEntity(v.n, v.timeRock)
-	
-	if v.raceTime < getFlag(FLAG_SEAHORSEBESTTIME) then
-		setFlag(FLAG_SEAHORSEBESTTIME, v.raceTime)
-		cam_toEntity(v.timeRock)
-		watch(0.5)
-		entity_msg(v.timeRock, "time", v.raceTime)
-		watch(3)
-	end
-	
-	
-	
-	if v.raceTime < getFlag(FLAG_SEAHORSETIMETOBEAT) then
-		if isFlag(FLAG_COLLECTIBLE_SEAHORSECOSTUME, 0) and getEntity("collectibleseahorsecostume") == 0 then
-			local nd = getNode("armorloc")
-			local e = createEntity("collectibleseahorsecostume", "", node_x(nd), node_y(nd))
-			entity_alpha(e, 0)
-			cam_toEntity(e)
-			watch(0.5)
-			playSfx("secret")
-			playSfx("mia-appear")
-			spawnParticleEffect("tinyredexplode", node_x(nd), node_y(nd))
-			entity_alpha(e, 1, 1)
-			watch(2)
-		end
-	end
-	
-	cam_toEntity(v.n)
-	
-	stopRace(me)
-end
-
-function stopRace(me)
-	setCameraLerpDelay(0)
-	v.raceStarted = false
-	overrideZoom(0, 5)
-	
-	setTimerTextAlpha(0, 1)
-end
-
 
 function activate(me)
 end

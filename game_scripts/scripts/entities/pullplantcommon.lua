@@ -21,7 +21,7 @@ v = getVars()
 
 v.n = 0
 
-STATE_PULL			= 1001
+local STATE_PULL		= 1001
 
 v.entToSpawn = ""
 v.ingToSpawn = ""
@@ -33,7 +33,7 @@ v.pullMax				= 0.2
 v.leaf1 				= 0
 v.leaf2				= 0
 
-function commonInit(me, ent, ing, amt)
+function v.commonInit(me, ent, ing, amt)
 	setupEntity(me)
 	if amt == 0 then
 		v.amount = 1

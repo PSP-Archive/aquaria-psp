@@ -33,9 +33,9 @@ v.started = false
 v.createDelayTime = 20
 v.createDelay = v.createDelayTime
 
-STATE_GOTODAD	= 1000
-STATE_MOURN		= 1001
-STATE_MOMVISION = 1002
+local STATE_GOTODAD	= 1000
+local STATE_MOURN	= 1001
+local STATE_MOMVISION = 1002
 
 v.fireDelay = 2
 v.shotDelay = 0.1

@@ -29,7 +29,7 @@ v.soundTimer =0
 
 v.useSetRotSpd = 0
 
-function commonInit(me, usrs)
+function v.commonInit(me, usrs)
 	v.useSetRotSpd = usrs
 	entity_setEntityType(me, ET_NEUTRAL)
 	--entity_setTexture(me, "")
@@ -77,7 +77,7 @@ function damage(me)
 	return false
 end
 
-function doFunction(me)
+local function doFunction(me)
 	if v.actDelay == 0 then
 		v.actDelay = v.t
 		local node = entity_getNearestNode(me)

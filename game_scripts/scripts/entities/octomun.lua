@@ -30,8 +30,8 @@ v.grabbingEntity = 0
 v.dark = 0
 v.inkBlastDelay = 0
 
-STATE_ATTACK1 = 1001
-STATE_BASH = 1002
+local STATE_ATTACK1 = 1001
+local STATE_BASH = 1002
 
 v.fireDelay = 0
 
@@ -99,7 +99,7 @@ function postInit(me)
 	entity_setTarget(me, v.n)
 end
 
-function tentacle1Collision(me)
+local function tentacle1Collision(me)
 	if v.grabbingEntity ~= 0 then
 		return
 	end

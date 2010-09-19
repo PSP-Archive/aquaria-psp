@@ -25,5 +25,5 @@ v = getVars()
 dofile("scripts/entities/starmiecommon.lua")
 
 function init(me)
-	commonInit(me, 2)
+	v.commonInit(me, 2)
 end

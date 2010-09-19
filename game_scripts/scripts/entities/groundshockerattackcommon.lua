@@ -34,7 +34,7 @@ v.life = 0.87
 -- F U N C T I O N S
 -- ================================================================================================
 
-function commonInit(me, dir)
+function v.commonInit(me, dir)
 	setupBasicEntity(
 	me,
 	"GroundShocker/Shell",			-- texture

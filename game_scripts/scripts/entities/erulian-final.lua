@@ -22,5 +22,5 @@ v = getVars()
 dofile("scripts/entities/finalspiritcommon.lua")
 
 function init(me)
-	commonInit(me, "Erulian", 3, FLAG_SPIRIT_ERULIAN, 1, 0, 1)
+	v.commonInit(me, "Erulian", 3, FLAG_SPIRIT_ERULIAN, 1, 0, 1)
 end

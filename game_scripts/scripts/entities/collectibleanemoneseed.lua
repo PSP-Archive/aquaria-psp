@@ -24,15 +24,15 @@ v = getVars()
 dofile("scripts/include/collectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "Collectibles/anemone-seed", FLAG_COLLECTIBLE_ANEMONESEED)
+	v.commonInit(me, "Collectibles/anemone-seed", FLAG_COLLECTIBLE_ANEMONESEED)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		createEntity("Anemone", "", entity_x(me)+150, entity_y(me)+70)
 		createEntity("Anemone", "", entity_x(me)+230, entity_y(me)+100)
@@ -41,5 +41,5 @@ function enterState(me, state)
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

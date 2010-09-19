@@ -22,10 +22,10 @@ v = getVars()
 -- N A U T I L U S
 
 -- entity specific
-STATE_CIRCLE			= 1000
-STATE_WANDER			= 1001		--Assumes bevy has no target
-STATE_SEEKTARGET		= 1002		--Everything is just dandy, following stuff
-STATE_SEEKBEVY			= 1003		--No bevy in range, find a bevy!
+local STATE_CIRCLE			= 1000
+local STATE_WANDER			= 1001		--Assumes bevy has no target
+local STATE_SEEKTARGET		= 1002		--Everything is just dandy, following stuff
+local STATE_SEEKBEVY		= 1003		--No bevy in range, find a bevy!
 
 v.targetDelay = 0.5					-- Time between checking targets
 v.wanderDelay = 2					-- Amount of time to wander in a given direction

@@ -27,12 +27,12 @@ v.fireDelayTime = 1
 v.sing = false
 
 function init(me)
-	commonInit(me, "bloodcell-white")
+	v.commonInit(me, "bloodcell-white")
 	
 	esetv(me, EV_TYPEID, EVT_CELLWHITE)
 end
 
-function fire(me)
+local function fire(me)
 	local e = getFirstEntity()
 	local target = 0
 	while e ~= 0 do
@@ -51,7 +51,7 @@ function fire(me)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 	
 	if v.sing then
 		entity_moveTowardsTarget(me, dt, 300)

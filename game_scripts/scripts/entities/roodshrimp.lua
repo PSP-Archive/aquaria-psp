@@ -24,9 +24,9 @@ v = getVars()
 -- ================================================================================================
 
 -- specific
-STATE_JUMP				= 1000
-STATE_TRANSITION		= 1001
-STATE_RETURNTOWALL		= 1002
+local STATE_JUMP			= 1000
+local STATE_TRANSITION		= 1001
+local STATE_RETURNTOWALL	= 1002
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 

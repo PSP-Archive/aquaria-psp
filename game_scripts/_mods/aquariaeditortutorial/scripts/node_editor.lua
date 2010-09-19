@@ -30,7 +30,7 @@ function init(me)
 	v.n = getNaija()
 end
 
-function sayNext()
+local function sayNext()
 	if v.thingSaying == 0 then
 		setControlHint("Hi, I'm Derek, one of the two developers of Aquaria!", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then

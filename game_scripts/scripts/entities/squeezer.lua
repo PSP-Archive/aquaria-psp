@@ -23,10 +23,10 @@ v = getVars()
 -- S Q U E E Z E R
 -- ================================================================================================
 
-STATE_CLAMP				= 1000
-STATE_CLAMPED			= 1001
-STATE_UNCLAMP			= 1002
-STATE_GRABBED			= 1003
+local STATE_CLAMP			= 1000
+local STATE_CLAMPED			= 1001
+local STATE_UNCLAMP			= 1002
+local STATE_GRABBED			= 1003
 
 
 -- ================================================================================================

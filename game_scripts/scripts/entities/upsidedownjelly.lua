@@ -48,7 +48,7 @@ function init(me)
 	entity_setDamageTarget(me, DT_AVATAR_LIZAP, false)
 end
 
-function grabBounceGroup(me)
+local function grabBounceGroup(me)
 	v.bounceGroup = {}
 	if v.groupNode ~= 0 then
 
@@ -77,7 +77,7 @@ function postInit(me)
 	grabBounceGroup(me)
 end
 
-function bounceReact(me)
+local function bounceReact(me)
 	entity_scale(me, 1, 1)
 	entity_scale(me, 0.8, 1, 0.1, 5, 1)		
 	if v.soundDelay < 0 then

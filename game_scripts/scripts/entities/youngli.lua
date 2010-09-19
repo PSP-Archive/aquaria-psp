@@ -19,8 +19,8 @@
 
 v = getVars()
 
-ANIMLAYER_LI = 0
-ANIMLAYER_BOAT = 1
+local ANIMLAYER_LI = 0
+local ANIMLAYER_BOAT = 1
 v.n = 0
 
 v.headNormal = 0

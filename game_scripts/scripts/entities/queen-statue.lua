@@ -21,7 +21,7 @@ v = getVars()
 
 v.n = 0
 
-STATE_SIT				= 1000
+local STATE_SIT				= 1000
 
 function init(me)
 	setupEntity(me)

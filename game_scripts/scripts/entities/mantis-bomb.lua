@@ -54,7 +54,7 @@ function postInit(me)
 	entity_setTarget(me, v.n)
 end
 
-function explode(me)
+local function explode(me)
 	playSfx("mantis-bomb")
 	entity_delete(me)
 	shakeCamera(4, 1)

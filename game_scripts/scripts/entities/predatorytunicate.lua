@@ -28,9 +28,9 @@ v.hx = 0
 v.hy = 0
 v.hurtTimer = 0
 
-STATE_TRAP		= 1001
-STATE_TRAPPED	= 1002
-STATE_RELEASE	= 1003
+local STATE_TRAP	= 1001
+local STATE_TRAPPED	= 1002
+local STATE_RELEASE	= 1003
 
 function init(me)
 	setupEntity(me)

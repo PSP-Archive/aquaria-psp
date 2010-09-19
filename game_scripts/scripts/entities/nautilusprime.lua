@@ -23,10 +23,10 @@ v = getVars()
 -- N A U T I L U S  P R I M E!! 
 -- ================================================================================================
 
-STATE_ATTACKPREP		= 1000
-STATE_ATTACK			= 1001
-STATE_STARTDELAY		= 1002
-STATE_GIVEBIRTH			= 1003
+local STATE_ATTACKPREP		= 1000
+local STATE_ATTACK			= 1001
+local STATE_STARTDELAY		= 1002
+local STATE_GIVEBIRTH		= 1003
 
 
 -- ================================================================================================
@@ -116,7 +116,7 @@ function postInit(me)
 	v.n = getNaija()
 end
 
-function wakeUp(me)
+local function wakeUp(me)
 	overrideZoom(0.5, 1)
 	playMusic("MiniBoss")
 	v.leaveDelay = 4
@@ -351,7 +351,7 @@ function enterState(me)
 	end
 end
 
-function spawnNautilus(me, x, y)
+local function spawnNautilus(me, x, y)
 	local ent = createEntity("Nautilus", "", entity_x(me)+x, entity_y(me)+y)
 	entity_scale(ent, 0, 0)
 	entity_scale(ent, 1, 1, 2.5)

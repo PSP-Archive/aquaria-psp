@@ -26,8 +26,8 @@ dofile("scripts/include/collectibletemplate.lua")
 v.on = false
 v.cname = ""
 
-function commonInit2(me, gfx, flag, costumeName)
-	commonInit(me, gfx, flag, true)
+function v.commonInit2(me, gfx, flag, costumeName)
+	v.commonInit(me, gfx, flag, true)
 	v.cname = costumeName
 	entity_setEntityLayer(me, -1)
 	
@@ -37,7 +37,7 @@ function commonInit2(me, gfx, flag, costumeName)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		if getCostume() == v.cname then
@@ -55,7 +55,7 @@ function update(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		entity_setActivation(me, AT_CLICK, 32, 700)
 	end
@@ -109,5 +109,5 @@ function activate(me)
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

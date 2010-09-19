@@ -28,7 +28,7 @@ function init(me)
 	loadSound("creatorform6-die3")
 end
 
-function flash()
+local function flash()
 	fade(1, 0, 1, 1, 1)
 	fade(0, 1, 1, 1, 1)
 end

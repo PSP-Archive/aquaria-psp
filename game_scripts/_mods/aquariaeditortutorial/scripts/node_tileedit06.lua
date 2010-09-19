@@ -30,7 +30,7 @@ function init(me)
 	node_setCursorActivation(me, true)
 end
 
-function sayNext()
+local function sayNext()
 	if v.thingSaying == 0 then
 		setControlHint("Layers 8 and 9 are the only layers that go over active entities, like Naija!", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then

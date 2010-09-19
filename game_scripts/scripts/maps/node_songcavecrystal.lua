@@ -29,7 +29,7 @@ function init(me)
 	]]--
 end
 	
-function runScene(me)
+local function runScene(me)
 	setCutscene(1, 1)
 	setFlag(FLAG_SONGCAVECRYSTAL, 1)
 	

@@ -33,7 +33,7 @@ v.bone_body = 0
 v.moveTimer = 0
 
  
-function commonInit(me, shell)
+function v.commonInit(me, shell)
 	v.hasShell = shell
 	
 	local layer = 1

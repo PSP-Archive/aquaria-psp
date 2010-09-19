@@ -21,16 +21,16 @@ v = getVars()
 
 v.n = 0
 
-STATE_STEPFORE			= 1000
-STATE_STEPBACK			= 1001
-STATE_ATTACK1			= 1002
-STATE_ATTACK2			= 1003
-STATE_ATTACK3			= 1004
-STATE_BACKHANDATTACK	= 1005
-STATE_MOUTHATTACK		= 1006
-STATE_SPAWNNAIJA		= 1007
+local STATE_STEPFORE		= 1000
+local STATE_STEPBACK		= 1001
+local STATE_ATTACK1			= 1002
+local STATE_ATTACK2			= 1003
+local STATE_ATTACK3			= 1004
+local STATE_BACKHANDATTACK	= 1005
+local STATE_MOUTHATTACK		= 1006
+local STATE_SPAWNNAIJA		= 1007
 
-STATE_SCENEGHOST		= 1010
+local STATE_SCENEGHOST		= 1010
 
 
 v.maxLeft					= 0
@@ -67,14 +67,14 @@ v.eyeSpiral = 0
 
 v.eyeCoverHits = 24
 
-PHASE_HASLI		= 0
-PHASE_FINAL		= 1
+local PHASE_HASLI	= 0
+local PHASE_FINAL	= 1
 
 v.phase = PHASE_HASLI
 
 v.attackPhase = 0
 
-function enterFinalPhase(me)
+local function enterFinalPhase(me)
 	debugLog("setting phase to final")
 	
 	playSfx("naijali1")
@@ -303,7 +303,7 @@ end
 
 v.stepTime = 2
 
-function flash()
+local function flash()
 end
 
 v.incut = false

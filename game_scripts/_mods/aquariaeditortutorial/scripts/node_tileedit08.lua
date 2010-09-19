@@ -30,7 +30,7 @@ function init(me)
 	node_setCursorActivation(me, true)
 end
 
-function sayNext()
+local function sayNext()
 	if v.thingSaying == 0 then
 		setControlHint("Tiles can have various visual properties, which are set using the number pad.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then

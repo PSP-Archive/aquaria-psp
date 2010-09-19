@@ -30,7 +30,7 @@ function init(me)
 	node_setCursorActivation(me, true)
 end
 
-function sayNext()
+local function sayNext()
 	if v.thingSaying == 0 then
 		setControlHint("This is a slightly thicker obstruction. Press 'O' again to make this.", 0, 0, 0, 16)
 	end

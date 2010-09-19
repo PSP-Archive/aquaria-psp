@@ -24,12 +24,12 @@ dofile("scripts/include/sporechildflowertemplate.lua")
 v.active = false
 v.done = false
 function init(me)
-	commonInit(me, "TubeFlower")
+	v.commonInit(me, "TubeFlower")
 	entity_setName(me, "TubeFlower")
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 	if entity_isEntityInRange(me, getNaija(), 356) then
 		if entity_isFlag(me, 0) then
 			pickupGem("tubeflower")
@@ -137,7 +137,7 @@ function update(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_OPENED) then		
 		v.active = true
 	elseif entity_isState(me, STATE_CLOSE) then

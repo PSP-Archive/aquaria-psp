@@ -23,6 +23,6 @@ dofile("scripts/entities/breakablecommon.lua")
 
 function init(me)
 	loadSound("sunkencrate-break")
-	commonInit(me, "Breakable/crate", 40, 3, 3, "sunkencrate-break", false, 1)
+	v.commonInit(me, "Breakable/crate", 40, 3, 3, "sunkencrate-break", false, 1)
 	entity_setEntityLayer(me, -2)
 end

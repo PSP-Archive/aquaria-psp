@@ -21,8 +21,6 @@ v = getVars()
 
 v.n = 0
 
-v.add = math.random(50)
-
 v.minCap = 400
 v.maxCap = 700
 v.cap = v.minCap
@@ -36,7 +34,7 @@ v.curNote = 0
 
 v.singing = false
 
-function commonInit(me, tex)	
+function v.commonInit(me, tex)	
 	setupEntity(me)
 	entity_setEntityType(me, ET_ENEMY)
 	entity_initSkeletal(me, "minnow")
@@ -75,6 +73,8 @@ function commonInit(me, tex)
 	entity_addRandomVel(me, 600)
 	
 	esetv(me, EV_LOOKAT, 0)
+
+	v.add = math.random(50)
 end
 
 function postInit(me)

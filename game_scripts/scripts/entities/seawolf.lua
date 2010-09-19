@@ -26,9 +26,9 @@ v.head = 0
 
 v.attached = 0
 
-STATE_LUNGE			= 1000
-STATE_BACK			= 1001
-STATE_WAIT2			= 1002
+local STATE_LUNGE		= 1000
+local STATE_BACK		= 1001
+local STATE_WAIT2		= 1002
 
 function init(me)
 	setupEntity(me)

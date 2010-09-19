@@ -19,7 +19,7 @@
 
 v = getVars()
 
-NOTE_TIME = 2.5
+local NOTE_TIME = 2.5
 
 v.myNote = 0
 v.timingNote = false
@@ -31,9 +31,24 @@ v.glow = 0
 
 v.myID = 0
 
-STATE_SHAKE		= 1000
+local STATE_SHAKE = 1000
 
-function commonInit(me, id)
+local function glowNormal(me)
+	bone_alpha(v.glow, 0.3)
+	bone_alpha(v.glow, 0.4, 1, -1, 1, 1)
+	bone_scale(v.glow, 6, 6)
+	bone_scale(v.glow, 8, 8, 1, -1, 1, 1)
+end
+
+local function glowSinging(me)
+	bone_alpha(v.glow, 0.5)
+	bone_alpha(v.glow, 0.7, 0.2, -1, 1, 1)
+
+	bone_scale(v.glow, 6, 6)
+	bone_scale(v.glow, 24, 24, 0.2, -1, 1, 1)
+end
+
+function v.commonInit(me, id)
 	-- set color based on note
 	setupEntity(me, "", "")
 	entity_setEntityType(me, ET_NEUTRAL)
@@ -82,21 +97,6 @@ function postInit(me)
 		entity_delete(me)
 	end
 	--end
-end
-
-function glowNormal(me)
-	bone_alpha(v.glow, 0.3)
-	bone_alpha(v.glow, 0.4, 1, -1, 1, 1)
-	bone_scale(v.glow, 6, 6)
-	bone_scale(v.glow, 8, 8, 1, -1, 1, 1)
-end
-
-function glowSinging(me)
-	bone_alpha(v.glow, 0.5)
-	bone_alpha(v.glow, 0.7, 0.2, -1, 1, 1)
-
-	bone_scale(v.glow, 6, 6)
-	bone_scale(v.glow, 24, 24, 0.2, -1, 1, 1)
 end
 
 v.incut = false

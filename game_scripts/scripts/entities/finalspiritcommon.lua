@@ -38,13 +38,13 @@ v.spinDir = 1
 
 v.index = 0
 
-function boneGroupAlpha(a, t)
+local function boneGroupAlpha(a, t)
 	for i=1,14 do
 		bone_alpha(v.boneGroup[i], a, t, 0, 0, 1)
 	end
 end
 
-function commonInit(me, skel, num, f, r, g, b)
+function v.commonInit(me, skel, num, f, r, g, b)
 	setupEntity(me)
 	entity_setEntityType(me, ET_NEUTRAL)
 	entity_initSkeletal(me, skel)

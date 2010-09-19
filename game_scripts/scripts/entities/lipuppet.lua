@@ -22,6 +22,11 @@ v = getVars()
 v.n = 0
 v.bone_head = 0
 
+local function doSkel(me, skel, skin)
+	entity_initSkeletal(me, skel, skin)	
+	v.bone_head = entity_getBoneByName(me, "Head")
+end
+
 function init(me)
 	setupEntity(me)
 	entity_setEntityType(me, ET_NEUTRAL)
@@ -37,11 +42,6 @@ function init(me)
 	esetv(me, EV_LOOKAT, 0)
 	
 	doSkel(me, "Li", "")
-end
-
-function doSkel(me, skel, skin)
-	entity_initSkeletal(me, skel, skin)	
-	v.bone_head = entity_getBoneByName(me, "Head")
 end
 
 function postInit(me)

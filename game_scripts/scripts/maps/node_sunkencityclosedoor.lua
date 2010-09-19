@@ -27,7 +27,7 @@ function init(me)
 	v.door = node_getNearestEntity(me, "EnergyDoor")
 end
 
-function doInit(me)
+local function doInit(me)
 	debugLog("Setting door to opened")
 	--entity_setState(v.door, STATE_OPENED, -1, true)
 	entity_setState(v.door, STATE_OPENED)
