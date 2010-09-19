@@ -51,11 +51,11 @@ function commonInit(me, st)
 	entity_setAllDamageTargets(me, false)
 	entity_setDamageTarget(me, DT_AVATAR_BITE, true)
 	
-	seedType = st
+	v.seedType = st
 	
-	if seedType == SEED_FLOWER then
+	if v.seedType == SEED_FLOWER then
 		entity_setTexture(me, "Naija/Seed")
-	elseif seedType == SEED_UBERVINE then
+	elseif v.seedType == SEED_UBERVINE then
 		entity_setTexture(me, "Naija/Uberseed")
 	end
 end
