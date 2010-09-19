@@ -50,6 +50,7 @@ static const char * const interfaceFunctions[] = {
 	"action",
 	"activate",
 	"animationKey",
+	"castSong",
 	"damage",
 	"dieEaten",
 	"dieNormal",
@@ -71,6 +72,7 @@ static const char * const interfaceFunctions[] = {
 	"songNoteDone",
 	"sporesDropped",
 	"update",
+	"useTreasure",
 	NULL
 };
 
