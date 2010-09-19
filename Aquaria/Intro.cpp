@@ -75,7 +75,7 @@ void Intro::applyState()
 	//core->sound->streamOgg("sc/theme", 0);
 	StateObject::applyState();
 
-	core->sound->stopMusic();
+	core->sound->fadeMusic(SFT_OUT, 1);
 
 	dsq->user.load(true);
 
@@ -856,9 +856,6 @@ void Intro::update(float dt)
 		if (waitQuit(8)) return; // 11.5
 
 		// -- end
-		dsq->sound->stopSfx(drone);
-		dsq->sound->stopSfx(windLoop);
-		dsq->sound->stopSfx(bgLoop);
 
 		endIntro();
 	}
