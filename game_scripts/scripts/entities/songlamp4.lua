@@ -22,5 +22,5 @@ v = getVars()
 dofile("scripts/entities/songlampcommon.lua")
 
 function init(me)
-	commonInit(me, 4)
+	v.commonInit(me, 4)
 end

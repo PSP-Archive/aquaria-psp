@@ -22,7 +22,7 @@ v = getVars()
 dofile("scripts/include/nodecollectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "CollectibleTurtleShell", FLAG_COLLECTIBLE_TURTLESHELL)
+	v.commonInit(me, "CollectibleTurtleShell", FLAG_COLLECTIBLE_TURTLESHELL)
 end
 
 function update(me, dt)

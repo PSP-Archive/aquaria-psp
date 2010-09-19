@@ -21,11 +21,11 @@ v = getVars()
 
 v.n = 0
 
-STATE_START			= 1000
-STATE_GRABATTACK	= 1001
-STATE_HOLDING		= 1002
-STATE_INHAND		= 1003
-STATE_BEAM			= 1004
+local STATE_START		= 1000
+local STATE_GRABATTACK	= 1001
+local STATE_HOLDING		= 1002
+local STATE_INHAND		= 1003
+local STATE_BEAM		= 1004
 
 v.bone_head			= 0
 v.bone_body			= 0

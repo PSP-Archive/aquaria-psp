@@ -21,9 +21,9 @@ v = getVars()
 
 v.n = 0
 
-STATE_HIDDEN 		= 1000
-STATE_REVEAL		= 1001
-STATE_FIRE			= 1002
+local STATE_HIDDEN 		= 1000
+local STATE_REVEAL		= 1001
+local STATE_FIRE		= 1002
 
 v.bone_shot = 0
 v.bone_body = 0

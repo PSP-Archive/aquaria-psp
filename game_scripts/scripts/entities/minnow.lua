@@ -22,5 +22,5 @@ v = getVars()
 dofile("scripts/entities/naijaswarmercommon.lua")
 
 function init(me)
-	commonInit(me, "")
+	v.commonInit(me, "")
 end

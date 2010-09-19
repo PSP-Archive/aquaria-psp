@@ -23,7 +23,7 @@ dofile("scripts/entities/currentswitch.lua")
 
 function init(me)
 	if entity_isFlag(me, 0) then
-		entity_setFlag(me, CURRENTSWITCH_ON)
+		entity_setFlag(me, v.CURRENTSWITCH_ON)
 	end	
-	commonInit(me)
+	v.commonInit(me)
 end

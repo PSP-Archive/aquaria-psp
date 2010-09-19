@@ -24,15 +24,15 @@ v = getVars()
 dofile("scripts/include/collectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "Collectibles/skull", FLAG_COLLECTIBLE_SKULL)
+	v.commonInit(me, "Collectibles/skull", FLAG_COLLECTIBLE_SKULL)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		--ent = createEntity("PullPlantNormal", "", entity_x(me)-100, entity_y(me)+220)
 		--entity_rotate(ent, entity_getRotation(ent)-35)
@@ -40,5 +40,5 @@ function enterState(me, state)
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

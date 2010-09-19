@@ -29,11 +29,11 @@ v = getVars()
 -- S T A T E S
 -- ================================================================================================
 
-STATE_FALLING = 1001
-STATE_THRUSTING = 1002
-STATE_BUMPED = 1003
-STATE_PULLED = 1004
-STATE_WIGGLING = 1005
+local STATE_FALLING = 1001
+local STATE_THRUSTING = 1002
+local STATE_BUMPED = 1003
+local STATE_PULLED = 1004
+local STATE_WIGGLING = 1005
 
 -- ================================================================================================
 -- L O C A L   V A R I A B L E S 

@@ -55,7 +55,7 @@ function postInit(me)
 end
 
 v.t = 0
-function rotflip(me)
+local function rotflip(me)
 	
 	entity_flipToVel(me)
 	if entity_isfh(me) then

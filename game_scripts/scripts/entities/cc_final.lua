@@ -80,7 +80,7 @@ end
 function songNoteDone(me, note)
 end
 
-function freeLi(me)
+local function freeLi(me)
 --[[
 	entity_flipToEntity(v.n, li)
 	if isFlag(FLAG_SPIRIT_ERULIAN, 1) and isFlag(FLAG_SPIRIT_KROTITE, 1) and isFlag(FLAG_SPIRIT_DRUNIAD, 1) and isFlag(FLAG_SPIRIT_DRASK, 1) then

@@ -28,8 +28,8 @@ v = getVars()
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-STATE_HIDE 		= 1000
-STATE_MOVING	= 1001
+local STATE_HIDE 		= 1000
+local STATE_MOVING	= 1001
 
 v.tailEnd = 0
 v.hits = 0

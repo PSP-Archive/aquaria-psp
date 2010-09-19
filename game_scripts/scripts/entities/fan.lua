@@ -20,7 +20,7 @@
 v = getVars()
 
 v.flag = 0
-STATE_BUSTED	= 1001
+local STATE_BUSTED	= 1001
 
 function init(me)
 	setupEntity(me, "Fan", ET_ENEMY)

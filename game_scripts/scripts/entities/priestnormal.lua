@@ -32,7 +32,7 @@ function init(me)
 
 end
 
-function checkNodeAnim(me, name)
+local function checkNodeAnim(me, name)
 	local node = entity_getNearestNode(me, name)
 	if node~=0 and node_isEntityIn(node, me) then
 		entity_animate(me, name, -1)

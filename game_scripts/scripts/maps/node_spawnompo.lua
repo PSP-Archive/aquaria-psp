@@ -23,11 +23,11 @@ v.ompo = 0
 v.n = 0
 v.doSetFlag = false
 
-function spawnOnNaija(me)
+local function spawnOnNaija(me)
 	v.ompo = createEntity("Ompo", "", entity_x(v.n)+10, entity_y(v.n)-16)
 end
 
-function spawnOnNode(me)
+local function spawnOnNode(me)
 	debugLog("spawning on nodeee")
 	v.ompo = createEntity("Ompo", "", node_x(me), node_y(me))
 end

@@ -29,8 +29,8 @@ v.fireDelay = 2
 v.moveTimer = 0
 v.charge = 0
 
-STATE_CHARGE = 1000
-STATE_DELAY = 1001
+local STATE_CHARGE = 1000
+local STATE_DELAY = 1001
 v.inited = false
 
 -- ================================================================================================
@@ -109,7 +109,7 @@ function enterState(me)
 	end
 end
 
-function fireShot(me, a)
+local function fireShot(me, a)
 	local s = createShot("WiskerShot", me, entity_getTarget(me))
 	shot_setAimVector(s, entity_getAimVector(me, a, 1))
 	shot_setOut(s, 32)

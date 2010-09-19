@@ -36,8 +36,8 @@ v.noteQuad = 0
 v.maxHits = 6
 v.hits = v.maxHits
 
-STATE_HURT				= 1000
-STATE_SING				= 1001
+local STATE_HURT			= 1000
+local STATE_SING			= 1001
 
 function init(me)
 	setupEntity(me)

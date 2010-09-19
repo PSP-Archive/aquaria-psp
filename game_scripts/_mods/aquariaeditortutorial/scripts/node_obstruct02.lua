@@ -30,7 +30,7 @@ function init(me)
 	node_setCursorActivation(me, true)
 end
 
-function sayNext()
+local function sayNext()
 	if v.thingSaying == 0 then
 		setControlHint("This is a normal obstruction.  To make this, press 'O' ('oh', not zero) on your keyboard.", 0, 0, 0, 16)
 	end

@@ -19,7 +19,7 @@
 
 v = getVars()
 
-function commonInit(me, object, flag)
+function v.commonInit(me, object, flag)
 	if isFlag(flag, 1) then
 		debugLog("CollectibleNode: Creating object")
 		debugLog(object)

@@ -24,10 +24,10 @@ v = getVars()
 -- ================================================================================================
 
 -- specific
-STATE_JUMP				= 1000
-STATE_TRANSITION		= 1001
-STATE_JUMPPREP			= 1002
-STATE_WALK				= 1003
+local STATE_JUMP			= 1000
+local STATE_TRANSITION		= 1001
+local STATE_JUMPPREP		= 1002
+local STATE_WALK			= 1003
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 

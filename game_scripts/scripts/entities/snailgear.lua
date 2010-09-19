@@ -22,8 +22,8 @@ v = getVars()
 -- SNAIL GEAR
 
 -- specific
-STATE_JUMP				= 1000
-STATE_TRANSITION		= 1001
+local STATE_JUMP			= 1000
+local STATE_TRANSITION		= 1001
 
 v.jumpDelay = 0
 v.moveTimer = 0

@@ -23,6 +23,6 @@ dofile("scripts/entities/breakablecommon.lua")
 
 function init(me)
 	loadSound("licage-shatter")
-	commonInit(me, "breakable/suncontainer", 64, 3, 1, "licage-shatter", true, 8)
+	v.commonInit(me, "breakable/suncontainer", 64, 3, 1, "licage-shatter", true, 8)
 	entity_scale(me, 1.65, 1.65)
 end

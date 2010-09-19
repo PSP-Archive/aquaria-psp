@@ -23,5 +23,5 @@ dofile("scripts/entities/titletextcommon.lua")
 
 
 function init(me)
-	commonInit(me, "TitleTextCenter")
+	v.commonInit(me, "TitleTextCenter")
 end

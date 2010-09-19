@@ -28,13 +28,13 @@ v.songNote3 = 0
 v.songNote4 = 0
 
 function init(me)
-	commonInit(me)
+	v.commonInit(me)
 	if isFlag(FLAG_SONGDOOR1, 1) then
 		entity_setState(me, STATE_OPENED)
 	else
 		entity_setState(me, STATE_CLOSED)
 	end
-	setWarpSceneNode("SongCave02", "SONGDOORENTER", "R")
+	v.setWarpSceneNode("SongCave02", "SONGDOORENTER", "R")
 end
 
 function songNote(me, note)

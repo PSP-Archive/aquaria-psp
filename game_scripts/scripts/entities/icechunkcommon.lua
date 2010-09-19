@@ -38,7 +38,7 @@ v.dir = -1
 -- F U N C T I O N S
 -- ================================================================================================
 
-function commonInit(me, size)
+function v.commonInit(me, size)
 	v.chunkSize = size
 
 	setupBasicEntity(

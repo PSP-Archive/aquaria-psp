@@ -22,7 +22,7 @@ v = getVars()
 dofile("scripts/include/nodecollectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "CollectibleJellyPlant", FLAG_COLLECTIBLE_JELLYPLANT)
+	v.commonInit(me, "CollectibleJellyPlant", FLAG_COLLECTIBLE_JELLYPLANT)
 end
 
 function update(me, dt)

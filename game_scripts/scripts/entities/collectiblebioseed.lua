@@ -24,15 +24,15 @@ v = getVars()
 dofile("scripts/include/collectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "Collectibles/bio-seed", FLAG_COLLECTIBLE_BIOSEED)
+	v.commonInit(me, "Collectibles/bio-seed", FLAG_COLLECTIBLE_BIOSEED)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		local ent
 		ent = createEntity("BioPlant", "", entity_x(me)-150, entity_y(me)-100)
@@ -45,5 +45,5 @@ function enterState(me, state)
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

@@ -21,8 +21,8 @@ v = getVars()
 
 v.n = 0
 
-STATE_CHASE			= 1000
-STATE_RUN			= 1001
+local STATE_CHASE		= 1000
+local STATE_RUN			= 1001
 
 function init(me)
 	setupEntity(me)

@@ -45,7 +45,7 @@ function postInit(me)
 	entity_setTarget(me, v.n)
 end
 
-function pop(me)
+local function pop(me)
 	spawnParticleEffect("bubble-release", entity_x(me), entity_y(me))
 	spawnParticleEffect("pop-big", entity_x(me), entity_y(me))
 	entity_delete(me)

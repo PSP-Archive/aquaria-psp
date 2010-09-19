@@ -73,7 +73,7 @@ function init(me)
 	v.hole = getNode("HOLE")
 end
 
-function checkCreateFish(i)
+local function checkCreateFish(i)
 	if v.spawnDelay == 0 then
 		local name = string.format("CaveFish%d", i)
 		local num = node_getNumEntitiesIn(v.tous, name)
@@ -120,7 +120,7 @@ function update(me, dt)
 	end
 end
 
-function doNode(nd, fx, nt)
+local function doNode(nd, fx, nt)
 	screenFadeCapture()
 	cam_toNode(nd)
 	screenFadeGo(0.5)

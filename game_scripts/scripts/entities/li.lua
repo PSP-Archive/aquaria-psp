@@ -64,18 +64,18 @@ v.followDelay = 0
 v.chaseTime = 0
 v.expressionTimer = 0
 
-STATE_HANG 			= 1000
-STATE_SWIM 			= 1001
-STATE_BURST 		= 1002
-STATE_CHASED 		= 1003
-STATE_RUNTOCAVE 	= 1004
-STATE_BEFOREMEET 	= 1005
-STATE_FADEOUT		= 1006
-STATE_FOLLOWING 	= 1007
-STATE_CORNERED		= 1008
-STATE_CHASEFOOD		= 1009
-STATE_EAT			= 1010
-STATE_PATH			= 1011
+local STATE_HANG 			= 1000
+local STATE_SWIM 			= 1001
+local STATE_BURST 		= 1002
+local STATE_CHASED 		= 1003
+local STATE_RUNTOCAVE 	= 1004
+local STATE_BEFOREMEET 	= 1005
+local STATE_FADEOUT		= 1006
+local STATE_FOLLOWING 	= 1007
+local STATE_CORNERED	= 1008
+local STATE_CHASEFOOD	= 1009
+local STATE_EAT			= 1010
+local STATE_PATH		= 1011
 
 v.naijaLastHealth = 0
 v.nearEnemyTimer = 0
@@ -92,13 +92,24 @@ v.breathTimer = 0
 
 v.ing = 0
 
-function distFlipTo(me, ent)
+local function distFlipTo(me, ent)
 	if math.abs(entity_x(me)-entity_x(ent)) > 32 then
 		entity_flipToEntity(me, ent)
 	end
 end
 
-function flipHug(me)
+local function setNaijaHugPosition(me)
+	entity_setPosition(v.n, entity_x(me)+v.hugOut, entity_y(me))
+	local fh = entity_isfh(me)
+	if fh then
+		fh = false
+	else
+		fh = true
+	end
+	entity_setRidingData(me, entity_x(me)+v.hugOut, entity_y(me), 0, fh)
+end
+
+local function flipHug(me)
 	debugLog("flipHug")
 	if v.hugOut < 0 then
 		v.hugOut = -v.naijaOut
@@ -108,6 +119,18 @@ function flipHug(me)
 	setNaijaHugPosition(me)
 	entity_flipToEntity(me, v.n)
 	entity_flipToEntity(v.n, me)
+end
+
+local function endHug(me)
+	if entity_getRiding(v.n) == me then
+		entity_setRiding(v.n, 0)
+		entity_idle(v.n)
+	end
+	if entity_isState(me, STATE_HUG) then
+		if not isForm(FORM_DUAL) then
+			entity_setState(me, STATE_IDLE)
+		end
+	end
 end
 
 function activate(me)
@@ -139,7 +162,7 @@ function activate(me)
 	end
 end
 
-function expression(me, ep, t)
+local function expression(me, ep, t)
 	v.expressionTimer = t
 	bone_showFrame(v.bone_head, ep)
 	--[[
@@ -228,7 +251,7 @@ function entityDied(me, ent)
 	end
 end
 
-function pathCheck(me, dt)
+local function pathCheck(me, dt)
 	-- messes up on small passages etc
 	--[[
 	if v.pathDelay > 0 then
@@ -243,6 +266,22 @@ function pathCheck(me, dt)
 	return false
 end
 
+local function refreshWeaponGlow(me)
+	local t = 0.5
+	local f = 3
+	if isFlag(FLAG_LICOMBAT, 1) then
+		bone_alpha(v.bone_weaponGlow, 1, 0.5)
+		bone_setColor(v.bone_weaponGlow, 1, 0.5, 0.5, t)
+	else
+		bone_alpha(v.bone_weaponGlow, 0.5, 0.5)
+		bone_setColor(v.bone_weaponGlow, 0.5, 0.5, 1, t)
+	end
+	--[[
+	bone_scale(v.bone_weaponGlow, v.bwgsz, v.bwgsz)
+	bone_scale(v.bone_weaponGlow, v.bwgsz*f, v.bwgsz*f, t*0.75, 1, 1)		
+	]]--
+end
+		
 
 function postInit(me)
 	v.n = getNaija()
@@ -269,7 +308,7 @@ function postInit(me)
 	end
 end
 
-function zap(me)
+local function zap(me)
 	--debugLog("Zap!")
 	--local attackRange = 256
 	local attackRange = 800
@@ -314,6 +353,269 @@ function zap(me)
 		spawnParticleEffect("LiZap", fx, fy)
 	end
 	]]--
+end
+
+local function cutscene(me)
+	setCutscene(1,1)
+	fadeOutMusic(4)
+	--watch(2)
+	--changeForm(FORM_NORMAL)
+	
+	setBeacon(BEACON_LI, false)
+	
+	toggleInput(0)
+	overrideZoom(0.8, 5)
+	entity_animate(me, "helmetFlyOff", 0, 3)
+	entity_idle(v.n)
+	
+	voiceInterupt("NAIJA_LIBINDSONG1")
+	
+	
+	watch(3)
+	
+	bone_alpha(v.bone_helmet, 0, 0.5)
+	
+	local node = entity_getNearestNode(me, "NAIJALI")
+	entity_swimToNode(v.n, node)	
+	
+	entity_animate(me, "choke", LOOP_INF)
+	
+	expression(me, EXPRESSION_HURT, 99)
+	
+	entity_watchForPath(v.n)
+	
+	entity_flipToEntity(me, v.n)
+	entity_flipToEntity(v.n, me)
+	
+	watchForVoice()
+
+
+	
+	
+	watch(2)
+	
+	voice("NAIJA_LIBINDSONG2")
+	-- naija floats forwards, kisses
+	entity_setPosition(v.n, entity_x(me)-30, entity_y(me), 1, 0, 0, 1)	
+	entity_animate(v.n, "kissLi")
+	cam_toNode(getNode("KISSCAM"))
+	watch(1)
+	expression(me, EXPRESSION_NORMAL, 99)
+	entity_animate(me, "getKissed")
+	entity_setPosition(v.n, entity_x(me)-23, entity_y(me), 1, 0, 0, 1)
+	watch(1)
+	--[[
+	entity_animate(v.n, "getKissed", LOOP_INF)
+	while entity_isAnimating(v.n) do
+		watch(FRAME_TIME)
+	end
+	]]--
+	--[[
+	entity_offset(v.n, 0, 8, 2, -1, 1)
+	entity_offset(me, 0, 8, 2, -1, 1)
+	]]--
+	setNaijaHeadTexture("blink")
+	expression(me, EXPRESSION_SURPRISE, 2)
+	entity_animate(v.n, "kissLiLoop", LOOP_INF)
+	entity_animate(me, "kissLiLoop", LOOP_INF)
+	--entity_animate(v.n, "getKissedLoop", LOOP_INF)
+	
+	watchForVoice()
+	
+	-- music
+	playMusic("Moment")
+
+	-- particle effects start
+	local kissNode = entity_getNearestNode(me, "KISSPRT")
+	spawnParticleEffect("Kiss", node_x(kissNode), node_y(kissNode))
+	
+	watch(3)
+	
+	voice("NAIJA_LIBINDSONG3")
+	
+	watch(3)
+	
+	watchForVoice()
+	watch(3)
+	
+	voice("NAIJA_LIBINDSONG4")
+	watchForVoice()
+	
+	watch(2)
+	-- drift apart
+
+	voice("NAIJA_LIBINDSONG5")
+	watch(3)
+	--entity_addVel(me, 200, 0)
+	entity_setPosition(me, entity_x(me)+200, entity_y(me), 10, 0, 0, 1)
+	entity_setPosition(v.n, entity_x(v.n)-250, entity_y(v.n), 10, 0, 0, 1)
+	
+	entity_animate(v.n, "kissFloat")
+	entity_animate(me, "kissFloat")
+	
+	--entity_addVel(v.n, -200, 0)
+	--watchForVoice()
+	
+	--watch()
+	watch(1)
+	
+	
+	
+	voice("NAIJA_LIBINDSONG6")
+	
+	watch(1)
+	
+	--watchForVoice()
+	
+	fade(1, 5)
+	watch(3)
+	
+	fadeOutMusic(8)
+	watch(8)
+	
+	watch(1)
+	
+	entity_offset(v.n)
+	entity_offset(me)
+	
+	cam_toEntity(v.n)
+	-- cutscene 2 goes here
+	
+	-- warp li outta here
+	entity_setPosition(me, 0, 0)
+	
+	-- warp naija to sleep position
+	setNaijaHeadTexture("")
+	local sleepNode = getNode("NAIJAWAKE")
+	entity_setPosition(v.n, node_x(sleepNode), node_y(sleepNode))
+	entity_animate(v.n, "sleep", -1)
+	node = getNode("PUPPETLI")
+	entity_setPosition(me, node_x(node), node_y(node))
+	entity_flipToEntity(v.n, me)	
+	entity_flipToEntity(me, v.n)
+	
+	entity_animate(me, "idle", -1)
+	
+	-- skip that interp
+	watch(0.5)
+	
+	fade(0, 5)
+	watch(6)
+	voice("Naija_NaijaAwakes1")
+	entity_animate(v.n, "slowWakeUp")
+	while entity_isAnimating(v.n) do
+		watch(FRAME_TIME)
+	end
+	entity_animate(v.n, "idle", -1)
+	
+	watchForVoice()
+	watch(1)
+	
+	node = getNode("NAIJAGETUP")
+	entity_setPosition(v.n, node_x(node), node_y(node), -500, 0, 0, 1)
+	
+	entity_stopAllAnimations(me)
+	entity_swimToNode(me, getNode("LISAYHI"))
+	entity_animate(me, "swim", -1)
+	voice("Naija_NaijaAwakes2")
+	watch(2)
+	entity_flipToEntity(me, v.n)
+	cam_toEntity(me)
+	entity_flipToEntity(me, v.n)
+	watchForVoice()
+	entity_flipToEntity(me, v.n)
+	watch(1)
+	voice("Naija_NaijaAwakes3")
+	watch(1)
+	cam_toEntity(v.n)
+	watch(3)
+	entity_animate(v.n, "ashamed", -1, LAYER_UPPERBODY)
+	watchForVoice()
+	entity_swimToNode(me, getNode("LIGETFISH"))
+	
+	entity_watchForPath(me)
+	
+	bone_alpha(v.bone_fish1, 1)
+	bone_alpha(v.bone_fish2, 1)
+
+	entity_swimToNode(me, getNode("LISAYHI"))
+	voice("Naija_NaijaAwakes4")
+	watchForVoice()	
+	entity_animate(me, "holdFish", -1, LAYER_UPPERBODY)
+	expression(me, EXPRESSION_HAPPY, 5)
+	entity_stopAllAnimations(v.n)
+	entity_idle(v.n)
+	cam_toEntity(me)
+	watch(2)
+	
+	fade(1, 1.5)
+	watch(1.5)
+	
+	--bone_alpha(v.bone_fish1)
+	bone_alpha(v.bone_fish2)
+	local n_fish2 = entity_getBoneByName(v.n, "Fish2")
+	bone_alpha(n_fish2, 1)
+
+	
+	cam_toEntity(v.n)
+	entity_stopAllAnimations(v.n)
+	entity_idle(v.n)
+	entity_stopAllAnimations(me)
+	
+	esetv(v.n, EV_LOOKAT, 0)
+	
+	local naijaSit = getNode("NAIJASIT")
+	local liSit = getNode("LISIT")
+	entity_setPosition(v.n, node_x(naijaSit), node_y(naijaSit))
+	entity_setPosition(me, node_x(liSit), node_y(liSit))
+	entity_animate(me, "sitAndEat", -1)
+	entity_animate(v.n, "sitAndEat", -1)
+	
+	cam_toNode(getNode("EATCAM"))
+	watch(1)
+	
+	fade(0, 1.5)
+	watch(1.5)	
+	
+	voice("Naija_NaijaAwakes5")
+	watchForVoice()
+	
+	fade(1, 3)
+	watch(3)
+	
+	bone_alpha(v.bone_fish1)
+	bone_alpha(n_fish2)
+	
+	cam_toEntity(v.n)
+	
+	
+	entity_idle(v.n)
+	-- and then:
+	
+	playMusic("LiCave")
+	watch(1)
+	
+	voice("Naija_NaijaAwakes6")
+	setFlag(FLAG_LI, 100)
+	entity_setState(me, STATE_IDLE)
+	-- get to end nodes
+	
+	esetv(v.n, EV_LOOKAT, 1)
+	
+	-- end test
+	fade(0, 1)
+	watch(1)
+	toggleInput(1)
+	
+	overrideZoom(0)
+	
+	setCutscene(0)
+	
+	learnSong(SONG_LI)
+	
+	setControlHint(getStringBank(42), 0, 0, 0, 10, "", SONG_LI)
+	
+	setLi(me)
 end
 
 function shiftWorlds(me, old, new)
@@ -369,22 +671,10 @@ function song(me, song)
 	end
 end
 
-function softFlipTo(me, ent)
+local function softFlipTo(me, ent)
 	if v.flipDelay < 0 then
 		entity_flipToEntity(me, ent)
 		v.flipDelay = 1
-	end
-end
-
-function endHug(me)
-	if entity_getRiding(v.n) == me then
-		entity_setRiding(v.n, 0)
-		entity_idle(v.n)
-	end
-	if entity_isState(me, STATE_HUG) then
-		if not isForm(FORM_DUAL) then
-			entity_setState(me, STATE_IDLE)
-		end
 	end
 end
 
@@ -818,280 +1108,6 @@ function damage(me, attacker, bone, damageType, dmg)
 	return false
 end
 
-function setNaijaHugPosition(me)
-	entity_setPosition(v.n, entity_x(me)+v.hugOut, entity_y(me))
-	local fh = entity_isfh(me)
-	if fh then
-		fh = false
-	else
-		fh = true
-	end
-	entity_setRidingData(me, entity_x(me)+v.hugOut, entity_y(me), 0, fh)
-end
-
-function cutscene(me)
-	setCutscene(1,1)
-	fadeOutMusic(4)
-	--watch(2)
-	--changeForm(FORM_NORMAL)
-	
-	setBeacon(BEACON_LI, false)
-	
-	toggleInput(0)
-	overrideZoom(0.8, 5)
-	entity_animate(me, "helmetFlyOff", 0, 3)
-	entity_idle(v.n)
-	
-	voiceInterupt("NAIJA_LIBINDSONG1")
-	
-	
-	watch(3)
-	
-	bone_alpha(v.bone_helmet, 0, 0.5)
-	
-	local node = entity_getNearestNode(me, "NAIJALI")
-	entity_swimToNode(v.n, node)	
-	
-	entity_animate(me, "choke", LOOP_INF)
-	
-	expression(me, EXPRESSION_HURT, 99)
-	
-	entity_watchForPath(v.n)
-	
-	entity_flipToEntity(me, v.n)
-	entity_flipToEntity(v.n, me)
-	
-	watchForVoice()
-
-
-	
-	
-	watch(2)
-	
-	voice("NAIJA_LIBINDSONG2")
-	-- naija floats forwards, kisses
-	entity_setPosition(v.n, entity_x(me)-30, entity_y(me), 1, 0, 0, 1)	
-	entity_animate(v.n, "kissLi")
-	cam_toNode(getNode("KISSCAM"))
-	watch(1)
-	expression(me, EXPRESSION_NORMAL, 99)
-	entity_animate(me, "getKissed")
-	entity_setPosition(v.n, entity_x(me)-23, entity_y(me), 1, 0, 0, 1)
-	watch(1)
-	--[[
-	entity_animate(v.n, "getKissed", LOOP_INF)
-	while entity_isAnimating(v.n) do
-		watch(FRAME_TIME)
-	end
-	]]--
-	--[[
-	entity_offset(v.n, 0, 8, 2, -1, 1)
-	entity_offset(me, 0, 8, 2, -1, 1)
-	]]--
-	setNaijaHeadTexture("blink")
-	expression(me, EXPRESSION_SURPRISE, 2)
-	entity_animate(v.n, "kissLiLoop", LOOP_INF)
-	entity_animate(me, "kissLiLoop", LOOP_INF)
-	--entity_animate(v.n, "getKissedLoop", LOOP_INF)
-	
-	watchForVoice()
-	
-	-- music
-	playMusic("Moment")
-
-	-- particle effects start
-	local kissNode = entity_getNearestNode(me, "KISSPRT")
-	spawnParticleEffect("Kiss", node_x(kissNode), node_y(kissNode))
-	
-	watch(3)
-	
-	voice("NAIJA_LIBINDSONG3")
-	
-	watch(3)
-	
-	watchForVoice()
-	watch(3)
-	
-	voice("NAIJA_LIBINDSONG4")
-	watchForVoice()
-	
-	watch(2)
-	-- drift apart
-
-	voice("NAIJA_LIBINDSONG5")
-	watch(3)
-	--entity_addVel(me, 200, 0)
-	entity_setPosition(me, entity_x(me)+200, entity_y(me), 10, 0, 0, 1)
-	entity_setPosition(v.n, entity_x(v.n)-250, entity_y(v.n), 10, 0, 0, 1)
-	
-	entity_animate(v.n, "kissFloat")
-	entity_animate(me, "kissFloat")
-	
-	--entity_addVel(v.n, -200, 0)
-	--watchForVoice()
-	
-	--watch()
-	watch(1)
-	
-	
-	
-	voice("NAIJA_LIBINDSONG6")
-	
-	watch(1)
-	
-	--watchForVoice()
-	
-	fade(1, 5)
-	watch(3)
-	
-	fadeOutMusic(8)
-	watch(8)
-	
-	watch(1)
-	
-	entity_offset(v.n)
-	entity_offset(me)
-	
-	cam_toEntity(v.n)
-	-- cutscene 2 goes here
-	
-	-- warp li outta here
-	entity_setPosition(me, 0, 0)
-	
-	-- warp naija to sleep position
-	setNaijaHeadTexture("")
-	local sleepNode = getNode("NAIJAWAKE")
-	entity_setPosition(v.n, node_x(sleepNode), node_y(sleepNode))
-	entity_animate(v.n, "sleep", -1)
-	node = getNode("PUPPETLI")
-	entity_setPosition(me, node_x(node), node_y(node))
-	entity_flipToEntity(v.n, me)	
-	entity_flipToEntity(me, v.n)
-	
-	entity_animate(me, "idle", -1)
-	
-	-- skip that interp
-	watch(0.5)
-	
-	fade(0, 5)
-	watch(6)
-	voice("Naija_NaijaAwakes1")
-	entity_animate(v.n, "slowWakeUp")
-	while entity_isAnimating(v.n) do
-		watch(FRAME_TIME)
-	end
-	entity_animate(v.n, "idle", -1)
-	
-	watchForVoice()
-	watch(1)
-	
-	node = getNode("NAIJAGETUP")
-	entity_setPosition(v.n, node_x(node), node_y(node), -500, 0, 0, 1)
-	
-	entity_stopAllAnimations(me)
-	entity_swimToNode(me, getNode("LISAYHI"))
-	entity_animate(me, "swim", -1)
-	voice("Naija_NaijaAwakes2")
-	watch(2)
-	entity_flipToEntity(me, v.n)
-	cam_toEntity(me)
-	entity_flipToEntity(me, v.n)
-	watchForVoice()
-	entity_flipToEntity(me, v.n)
-	watch(1)
-	voice("Naija_NaijaAwakes3")
-	watch(1)
-	cam_toEntity(v.n)
-	watch(3)
-	entity_animate(v.n, "ashamed", -1, LAYER_UPPERBODY)
-	watchForVoice()
-	entity_swimToNode(me, getNode("LIGETFISH"))
-	
-	entity_watchForPath(me)
-	
-	bone_alpha(v.bone_fish1, 1)
-	bone_alpha(v.bone_fish2, 1)
-
-	entity_swimToNode(me, getNode("LISAYHI"))
-	voice("Naija_NaijaAwakes4")
-	watchForVoice()	
-	entity_animate(me, "holdFish", -1, LAYER_UPPERBODY)
-	expression(me, EXPRESSION_HAPPY, 5)
-	entity_stopAllAnimations(v.n)
-	entity_idle(v.n)
-	cam_toEntity(me)
-	watch(2)
-	
-	fade(1, 1.5)
-	watch(1.5)
-	
-	--bone_alpha(v.bone_fish1)
-	bone_alpha(v.bone_fish2)
-	local n_fish2 = entity_getBoneByName(v.n, "Fish2")
-	bone_alpha(n_fish2, 1)
-
-	
-	cam_toEntity(v.n)
-	entity_stopAllAnimations(v.n)
-	entity_idle(v.n)
-	entity_stopAllAnimations(me)
-	
-	esetv(v.n, EV_LOOKAT, 0)
-	
-	local naijaSit = getNode("NAIJASIT")
-	local liSit = getNode("LISIT")
-	entity_setPosition(v.n, node_x(naijaSit), node_y(naijaSit))
-	entity_setPosition(me, node_x(liSit), node_y(liSit))
-	entity_animate(me, "sitAndEat", -1)
-	entity_animate(v.n, "sitAndEat", -1)
-	
-	cam_toNode(getNode("EATCAM"))
-	watch(1)
-	
-	fade(0, 1.5)
-	watch(1.5)	
-	
-	voice("Naija_NaijaAwakes5")
-	watchForVoice()
-	
-	fade(1, 3)
-	watch(3)
-	
-	bone_alpha(v.bone_fish1)
-	bone_alpha(n_fish2)
-	
-	cam_toEntity(v.n)
-	
-	
-	entity_idle(v.n)
-	-- and then:
-	
-	playMusic("LiCave")
-	watch(1)
-	
-	voice("Naija_NaijaAwakes6")
-	setFlag(FLAG_LI, 100)
-	entity_setState(me, STATE_IDLE)
-	-- get to end nodes
-	
-	esetv(v.n, EV_LOOKAT, 1)
-	
-	-- end test
-	fade(0, 1)
-	watch(1)
-	toggleInput(1)
-	
-	overrideZoom(0)
-	
-	setCutscene(0)
-	
-	learnSong(SONG_LI)
-	
-	setControlHint(getStringBank(42), 0, 0, 0, 10, "", SONG_LI)
-	
-	setLi(me)
-end
-
 function enterState(me, state)
 	--debugLog(string.format(%s%d, "li state: ", entity_getState(me)))
 	local timer = 0
@@ -1289,22 +1305,6 @@ end
 function hitSurface(me)
 end
 
-function refreshWeaponGlow(me)
-	local t = 0.5
-	local f = 3
-	if isFlag(FLAG_LICOMBAT, 1) then
-		bone_alpha(v.bone_weaponGlow, 1, 0.5)
-		bone_setColor(v.bone_weaponGlow, 1, 0.5, 0.5, t)
-	else
-		bone_alpha(v.bone_weaponGlow, 0.5, 0.5)
-		bone_setColor(v.bone_weaponGlow, 0.5, 0.5, 1, t)
-	end
-	--[[
-	bone_scale(v.bone_weaponGlow, v.bwgsz, v.bwgsz)
-	bone_scale(v.bone_weaponGlow, v.bwgsz*f, v.bwgsz*f, t*0.75, 1, 1)		
-	]]--
-end
-		
 function msg(me, msg, val)
 	-- switch to and from combat mode
 	if msg == "c" then

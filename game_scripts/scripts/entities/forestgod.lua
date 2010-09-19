@@ -19,16 +19,16 @@
 
 v = getVars()
 
-STATE_EYESOPEN 		= 1000
-STATE_DIE			= 1001
-STATE_TENTACLES 	= 1002
-STATE_SEED 			= 1003
-STATE_DONE			= 1004
-STATE_FIRESEEDS		= 1005
-STATE_FIRESPIKY		= 1006
-STATE_SINGNOTE		= 1007
-STATE_VINES			= 1008
-STATE_RAGE			= 1009
+local STATE_EYESOPEN 		= 1000
+local STATE_DIE			= 1001
+local STATE_TENTACLES 	= 1002
+local STATE_SEED 			= 1003
+local STATE_DONE		= 1004
+local STATE_FIRESEEDS	= 1005
+local STATE_FIRESPIKY	= 1006
+local STATE_SINGNOTE	= 1007
+local STATE_VINES		= 1008
+local STATE_RAGE		= 1009
 
 v.curCurrent = 0
 v.c1 = 0
@@ -88,7 +88,7 @@ v.b4 = 0
 
 v.bd = 1
 
-function clearVines()
+local function clearVines()
 	playSfx("vineshrink")
 	local e = getFirstEntity()
 	while e ~= 0 do
@@ -99,7 +99,7 @@ function clearVines()
 	end
 end
 
-function spawnVines(me, num)
+local function spawnVines(me, num)
 	local v1, v2, v3
 	if v.config == 0 then
 		v1 = getNode("V1")
@@ -230,7 +230,7 @@ function postInit(me)
 end
 
 v.inCutScene = false
-function cutscene(me)
+local function cutscene(me)
 	v.n = getNaija()
 	if not v.inCutScene then
 		v.inCutScene = true

@@ -82,7 +82,7 @@ function init(me)
 	entity_setCullRadius(me, 256)
 end
 
-function lunge(me)
+local function lunge(me)
 	v.lungeDelay = 0
 	
 	entity_setMaxSpeedLerp(me, 1.5)

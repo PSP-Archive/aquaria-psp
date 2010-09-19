@@ -27,16 +27,16 @@ v = getVars()
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-STATE_SCREECH			= 1000
+local STATE_SCREECH			= 1000
 
-STATE_FIREBOMBS			= 1001
-STATE_FALL				= 1002
-STATE_FLOAT				= 1003
-STATE_SHOOT				= 1004
-STATE_ATTACK			= 1005
-STATE_HURT				= 1006
-STATE_RECOVER			= 1007
-STATE_DIE				= 1008
+local STATE_FIREBOMBS		= 1001
+local STATE_FALL			= 1002
+local STATE_FLOAT			= 1003
+local STATE_SHOOT			= 1004
+local STATE_ATTACK			= 1005
+local STATE_HURT			= 1006
+local STATE_RECOVER			= 1007
+local STATE_DIE				= 1008
 
 v.n = 0
 v.fight = false
@@ -49,10 +49,10 @@ v.phaseDelay				= v.phaseDelayTime
 
 v.phase					= 0
 
-PHASE_NONE				= 0
-PHASE_SHOTS				= 2
-PHASE_FIREBOMBS			= 1
-PHASE_MAX				= 2
+local PHASE_NONE			= 0
+local PHASE_SHOTS			= 2
+local PHASE_FIREBOMBS		= 1
+local PHASE_MAX				= 2
 
 v.startx = 0
 v.starty = 0

@@ -30,7 +30,7 @@ v.dir = 0
 -- FUNCTIONS
 -- ================================================================================================
 
-function commonInit(me, initDir)
+function v.commonInit(me, initDir)
 	v.dir = initDir
 	setupBasicEntity(
 	me,

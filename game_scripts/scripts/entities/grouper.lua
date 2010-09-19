@@ -27,11 +27,11 @@ v.ing = 0
 
 v.mouthState = 0
 
-MOUTH_IDLE		= 0
-MOUTH_OPEN	 	= 1
-MOUTH_CLOSED	= 2
+local MOUTH_IDLE	= 0
+local MOUTH_OPEN 	= 1
+local MOUTH_CLOSED	= 2
 
-STATE_SPIT		= 1000
+local STATE_SPIT	= 1000
 
 v.holding = 0
 
@@ -80,11 +80,11 @@ function init(me)
 	--entity_addVel(me, randVector(500))
 end
 
-function doSetRenderPass(me, pass)
+local function doSetRenderPass(me, pass)
 	for i=0,5 do if i ~= 1 then bone_setRenderPass(entity_getBoneByIdx(me, i), pass) end end
 end
 
-function closeMouth(me)
+local function closeMouth(me)
 	entity_stopAllAnimations(me)
 	entity_animate(me, "idle", -1)
 	entity_animate(me, "close", 0, 1)
@@ -108,7 +108,7 @@ function entityDied(me, theIng)
 	end
 end
 
-function checkMouth(me)
+local function checkMouth(me)
 	local bx, by = bone_getWorldPosition(v.bite)
 	if v.mouthState == MOUTH_OPEN then
 		if entity_isPositionInRange(v.n, bx, by, 96) then

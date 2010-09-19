@@ -52,8 +52,5 @@ end
 function hitSurface(me)
 end
 
-function hit(me, attacker, bone, spellType, dmg)
-end
-
 function activate(me)
 end

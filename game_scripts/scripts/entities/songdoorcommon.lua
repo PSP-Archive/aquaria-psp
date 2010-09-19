@@ -26,7 +26,7 @@ v.sceneName = ""
 v.nodeName = ""
 v.flip = ""
 
-function commonInit(me)
+function v.commonInit(me)
 	setupEntity(me, "", -2)
 	entity_initSkeletal(me, "SongDoor")
 	v.glow = entity_getBoneByName(me, "Glow")
@@ -40,7 +40,7 @@ function commonInit(me)
 	bone_alpha(v.glow, 0)
 end
 
-function setWarpSceneNode(scene, node, f)
+function v.setWarpSceneNode(scene, node, f)
 	v.sceneName = scene
 	v.nodeName = node
 	v.flip = f

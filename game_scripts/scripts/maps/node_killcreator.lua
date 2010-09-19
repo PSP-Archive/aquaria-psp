@@ -25,7 +25,7 @@ function init(me)
 	end
 end
 	
-function kill(me, name)
+local function kill(me, name)
 	local ent = node_getNearestEntity(me, name)
 	if ent ~=0 then
 		entity_setState(ent, STATE_TRANSITION)

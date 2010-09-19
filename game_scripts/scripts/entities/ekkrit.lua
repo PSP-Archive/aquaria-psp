@@ -38,7 +38,7 @@ v.collisionSegs = 25
 v.avoidLerp = 0
 v.avoidDir = 1
 v.interest = false
-STATE_AROUND = 1001
+local STATE_AROUND = 1001
 v.dir = 0
 v.idleDelay = 3
 

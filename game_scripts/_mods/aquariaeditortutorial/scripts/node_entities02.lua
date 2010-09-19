@@ -30,7 +30,7 @@ function init(me)
 	node_setCursorActivation(me, true)
 end
 
-function sayNext()
+local function sayNext()
 	if v.thingSaying == 0 then
 		setControlHint("To enter Entity Edit Mode, press F6 in the level editor, or select it from the menu.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then

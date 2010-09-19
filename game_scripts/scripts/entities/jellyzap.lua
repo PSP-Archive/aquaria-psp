@@ -34,8 +34,8 @@ v.blupTime = 3.0
 v.sz = 1.0
 v.dir = 0
 
-MOVE_STATE_UP = 0
-MOVE_STATE_DOWN = 1
+local MOVE_STATE_UP = 0
+local MOVE_STATE_DOWN = 1
 
 v.moveState = 0
 v.moveTimer = 0
@@ -55,13 +55,13 @@ v.preZapTime = 0.34
 -- S T A T E S
 -- ================================================================================================
 
-STATE_ZAP		= 1001
-STATE_PRE_ZAP	= 1002
+local STATE_ZAP		= 1001
+local STATE_PRE_ZAP	= 1002
 
 -- ================================================================================================
 -- FUNCTIONS
 -- ================================================================================================
-function doIdleScale(me)	
+local function doIdleScale(me)	
 	entity_scale(me, 1.0*v.sz, 0.75*v.sz, v.blupTime, -1, 1, 1)
 end
 

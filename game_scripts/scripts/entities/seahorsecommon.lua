@@ -22,10 +22,10 @@ v = getVars()
 --SeaHorse
 
 -- specific
-STATE_JUMP				= 1000
-STATE_TRANSITION		= 1001
-STATE_RETURNTOWALL		= 1002
-STATE_SURFACE			= 1003
+local STATE_JUMP			= 1000
+local STATE_TRANSITION		= 1001
+local STATE_RETURNTOWALL	= 1002
+local STATE_SURFACE			= 1003
 
 v.moveTimer = 0
 v.moveDir = 0
@@ -49,9 +49,9 @@ v.n = 0
 
 v.naijaRideAnim = -1
 
-RIDEANIM_NORMAL 		= 0
-RIDEANIM_SLOW 			= 1
-RIDEANIM_OUTOFWATER		= 2
+local RIDEANIM_NORMAL 		= 0
+local RIDEANIM_SLOW 			= 1
+local RIDEANIM_OUTOFWATER		= 2
 
 v.waiting = false
 
@@ -59,7 +59,7 @@ v.incut = false
 
 v.seahorseCostume = false
 
-function commonInit(me, tex, sz)
+function v.commonInit(me, tex, sz)
 	if sz == 0 then
 		sz = 50
 	end
@@ -107,7 +107,7 @@ function postInit(me)
 	entity_update(me, math.random(100)/100.0)
 end
 
-function setRideSpeed(me)
+local function setRideSpeed(me)
 	if not entity_isUnderWater(me) then
 		entity_setMaxSpeedLerp(me, 8)
 	elseif entity_isState(me, STATE_RACE) then
@@ -123,7 +123,7 @@ function setRideSpeed(me)
 	end
 end
 
-function updateRideAnim(me, num)
+local function updateRideAnim(me, num)
 	if v.naijaRideAnim ~= num then
 		if num == RIDEANIM_NORMAL then
 			entity_animate(v.n, "rideSeaHorse", LOOP_INF, LAYER_OVERRIDE)
@@ -136,7 +136,7 @@ function updateRideAnim(me, num)
 	end
 end
 
-function getRidePosition(me)
+local function getRidePosition(me)
 	local x, y = entity_getPosition(me)
 	local ox, oy = entity_getOffset(me)
 	x = x + ox
@@ -151,7 +151,7 @@ function getRidePosition(me)
 	return x, y
 end
 
-function startRide(me)
+local function startRide(me)
 	v.incut = true
 	debugLog("start ride")
 	setRideSpeed(me)
@@ -200,7 +200,7 @@ function startRide(me)
 	v.incut = false
 end
 
-function stopRide(me)
+local function stopRide(me)
 	debugLog("stop ride")
 	if v.riding then
 		entity_sound(me, "SeahorseWhinny")

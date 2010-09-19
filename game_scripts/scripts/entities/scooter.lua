@@ -24,8 +24,8 @@ v = getVars()
 -- ================================================================================================
 
 -- specific
-STATE_JUMP				= 1000
-STATE_TRANSITION		= 1001
+local STATE_JUMP			= 1000
+local STATE_TRANSITION		= 1001
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
@@ -77,7 +77,7 @@ function init(me)
 	--entity_setDamageTarget(me, DT_AVATAR_PET, false)
 end
 
-function startEating(me, krill)
+local function startEating(me, krill)
 	v.eating = krill
 	v.hungry = false
 	entity_setState(krill, STATE_WAIT)
@@ -87,7 +87,7 @@ function startEating(me, krill)
 	entity_scale(me, 1,0.9, 0.2, -1, 1)	
 end
 
-function clearEating(me)
+local function clearEating(me)
 	entity_scale(me, 1,1)
 	v.fedTime = 2
 	v.eatTime = 0

@@ -22,7 +22,7 @@ v = getVars()
 v.flag = 0
 v.node = 0
 v.gfx = ""
-function commonInit(me, g, f)
+function v.commonInit(me, g, f)
 	v.gfx = g
 	v.flag = f
 	setupEntity(me, v.gfx)

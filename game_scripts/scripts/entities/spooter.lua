@@ -24,8 +24,8 @@ v = getVars()
 -- ================================================================================================
 
 -- specific
-STATE_JUMP				= 1000
-STATE_TRANSITION		= 1001
+local STATE_JUMP			= 1000
+local STATE_TRANSITION		= 1001
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
@@ -72,7 +72,7 @@ function init(me)
 	esetv(me, EV_ENTITYDIED, 1)
 end
 
-function startEating(me, krill)
+local function startEating(me, krill)
 	v.eating = krill
 	v.hungry = false
 	entity_setState(krill, STATE_WAIT)
@@ -82,7 +82,7 @@ function startEating(me, krill)
 	entity_scale(me, 1,0.5, 0.5, -1, 1)	
 end
 
-function clearEating(me)
+local function clearEating(me)
 	entity_scale(me, 1,1)
 	v.fedTime = 2
 	v.eatTime = 0

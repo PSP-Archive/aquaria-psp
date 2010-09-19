@@ -26,11 +26,11 @@ dofile("scripts/include/collectibletemplate.lua")
 v.glow = 0
 
 function init(me)
-	commonInit(me, "Collectibles/jellyplant", FLAG_COLLECTIBLE_JELLYPLANT)
+	v.commonInit(me, "Collectibles/jellyplant", FLAG_COLLECTIBLE_JELLYPLANT)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 	v.glow = createQuad("Naija/LightFormGlow", 13)
 	quad_scale(v.glow, 10, 10)
 
@@ -49,7 +49,7 @@ function update(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		createEntity("Triffle", "", entity_x(me)-150, entity_y(me)-200)
 		createEntity("Triffle", "", entity_x(me)+75, entity_y(me)-220)
@@ -58,5 +58,5 @@ function enterState(me, state)
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

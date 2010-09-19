@@ -50,7 +50,7 @@ end
 
 v.done = false
 v.inScene = false
-function cutScene(me)
+local function cutScene(me)
 	if v.inScene then return end
 	v.done = true
 	v.inScene = true

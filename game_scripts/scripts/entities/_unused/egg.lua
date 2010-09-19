@@ -20,7 +20,7 @@
 v = getVars()
 
 -- generic egg
-STATE_HATCH		= 1000
+local STATE_HATCH	= 1000
 
 function init()
 	setupConversationEntity("egg")

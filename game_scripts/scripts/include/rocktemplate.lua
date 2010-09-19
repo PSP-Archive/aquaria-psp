@@ -21,7 +21,7 @@ v = getVars()
 
 v.n = 0
 v.myWeight = 0
-function commonInit(me, gfx, r)
+function v.commonInit(me, gfx, r)
 	-- note: if you want to add different weight to each rock, then
 	-- send it through here
 	if r == 0 then
@@ -44,7 +44,7 @@ function postInit(me)
 	v.n = getNaija()
 end
 
-function commonUpdate(me, dt)
+function v.commonUpdate(me, dt)
 	
 	--entity_updateCurrents(me)
 	entity_updateMovement(me, dt)

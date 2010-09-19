@@ -23,9 +23,9 @@ v.n = 0
 
 v.delay = 0
 
-STATE_ATTACK1 		= 1000
-STATE_ATTACK2		= 1003
-STATE_ATTACK2LOOP	= 1004
+local STATE_ATTACK1 		= 1000
+local STATE_ATTACK2		= 1003
+local STATE_ATTACK2LOOP	= 1004
 
 
 v.bone_head = 0
@@ -78,7 +78,7 @@ function postInit(me)
 	v.node_creatorcutscene = getNode("CREATORCUTSCENE")
 end
 
-function getDelayTime()
+local function getDelayTime()
 	if v.hits > 48 then
 		return 6
 	elseif v.hits > 32 then
@@ -164,7 +164,7 @@ function update(me, dt)
 	--entity_addTargetPoint(me, bone_getWorldPosition(bone_hand))
 end
 
-function doIntroEnd(me)
+local function doIntroEnd(me)
 	shakeCamera(2, 1)
 	
 	voiceInterupt("CreatorLast12")
@@ -189,7 +189,7 @@ function doIntroEnd(me)
 	setCutscene(0)
 end
 
-function qws(me, t)
+local function qws(me, t)
 	local c = 0
 	
 	if t == -1 then

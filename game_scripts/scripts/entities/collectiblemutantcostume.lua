@@ -24,5 +24,5 @@ v = getVars()
 dofile("scripts/include/collectiblecostumetemplate.lua")
 
 function init(me)
-	commonInit2(me, "Collectibles/mutant-costume", FLAG_COLLECTIBLE_MUTANTCOSTUME, "mutant")
+	v.commonInit2(me, "Collectibles/mutant-costume", FLAG_COLLECTIBLE_MUTANTCOSTUME, "mutant")
 end

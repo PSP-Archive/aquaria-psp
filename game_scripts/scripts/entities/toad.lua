@@ -24,9 +24,9 @@ v = getVars()
 -- ================================================================================================
 
 -- specific
-STATE_JUMP				= 1000
-STATE_TRANSITION		= 1001
-STATE_JUMPPREP			= 1002
+local STATE_JUMP			= 1000
+local STATE_TRANSITION		= 1001
+local STATE_JUMPPREP		= 1002
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
@@ -38,8 +38,8 @@ v.rotateOffset = 0
 v.mouthOpen = 0
 v.fireDelay = 2
 
-STATE_FIREPREP = 1003
-STATE_FIRE	 = 1004
+local STATE_FIREPREP = 1003
+local STATE_FIRE = 1004
 
 -- ================================================================================================
 -- FUNCTIONS

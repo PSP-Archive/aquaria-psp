@@ -27,8 +27,8 @@ v = getVars()
 -- S T A T E S
 -- ================================================================================================
 
-MOVE_STATE_UP = 0
-MOVE_STATE_DOWN = 1
+local MOVE_STATE_UP = 0
+local MOVE_STATE_DOWN = 1
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
@@ -51,7 +51,7 @@ v.velx = 0
 
 v.soundDelay = 0
 
-function doIdleScale(me)	
+local function doIdleScale(me)	
 	entity_scale(me, 1.0*v.sz, 0.75*v.sz, v.blupTime, -1, 1, 1)
 end
 

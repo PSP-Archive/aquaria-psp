@@ -28,8 +28,8 @@ v = getVars()
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-STATE_SHOCKPREP 	= 1000
-STATE_SHOCK			= 1001
+local STATE_SHOCKPREP 	= 1000
+local STATE_SHOCK		= 1001
 
 v.moveStateTimer = 0
 v.moveState = 0
@@ -136,10 +136,6 @@ function enterState(me)
 	elseif entity_isState(me, STATE_SHOCK) then
 		playVisualEffect(VFX_SHOCK, entity_getPosition(me))
 	end
-end
-
-function hit(me, attacker, bone, spellType, dmg)
-	return true
 end
 
 function exitState(me)

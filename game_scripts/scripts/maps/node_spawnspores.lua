@@ -27,7 +27,7 @@ function init(me)
 	v.n = getNaija()
 end
 
-function spawnSpore(x, y)
+local function spawnSpore(x, y)
 	-- SLOW have to load a script each time
 	createSpore(x, y)
 	--[[

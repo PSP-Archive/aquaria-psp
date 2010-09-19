@@ -28,8 +28,8 @@ v = getVars()
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-STATE_HIDE 		= 1000
-STATE_MOVING	= 1001
+local STATE_HIDE 		= 1000
+local STATE_MOVING	= 1001
 
 v.delay = 1
 v.moveDelay = 0
@@ -100,7 +100,7 @@ function songNote(me, note)
 end
 
 v.block = 6
-function isBlocked(x, y)	
+local function isBlocked(x, y)	
 	if v.rangeNode ~= 0 then
 		return (isObstructedBlock(x, y, v.block)) or (not node_isPositionIn(v.rangeNode, x, y))
 	end

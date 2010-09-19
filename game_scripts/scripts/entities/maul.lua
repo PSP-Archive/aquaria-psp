@@ -24,9 +24,9 @@ v = getVars()
 -- ================================================================================================
 
 -- entity specific
-STATE_MAULATTACK 		= 1000
-STATE_PULLBACK 			= 1001
-STATE_ATTACKPREP		= 1002
+local STATE_MAULATTACK 		= 1000
+local STATE_PULLBACK 			= 1001
+local STATE_ATTACKPREP		= 1002
 
 v.n = 0
 

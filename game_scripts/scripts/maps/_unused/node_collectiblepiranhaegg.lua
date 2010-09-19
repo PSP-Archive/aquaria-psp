@@ -23,7 +23,7 @@ dofile("scripts/include/nodecollectibletemplate.lua")
 
 function init(me)
 	debugLog("CollectiblePiranhaEgg")
-	commonInit(me, "CollectiblePiranhaEgg", FLAG_COLLECTIBLE_PIRANHAEGG)
+	v.commonInit(me, "CollectiblePiranhaEgg", FLAG_COLLECTIBLE_PIRANHAEGG)
 end
 
 function update(me, dt)

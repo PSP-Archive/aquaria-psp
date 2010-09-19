@@ -35,12 +35,12 @@ v.rightx=0
 v.halfWidth = 32
 
 v.flicker 		= false
-FLICKER_TIME1 	= 1.2
-FLICKER_TIME2 	= 1.0
+local FLICKER_TIME1 	= 1.2
+local FLICKER_TIME2 	= 1.0
 v.flickerTimer 	= FLICKER_TIME1
 v.orient 			= ORIENT_NONE
 
-function commonInit(me)
+function v.commonInit(me)
 	setupEntity(me, "EnergyBarrier", 1)
 	entity_setActivationType(me, AT_NONE)
 	entity_setUpdateCull(me, 1024)

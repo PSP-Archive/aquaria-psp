@@ -34,7 +34,7 @@ v.followDelay = 0
 -- FUNCTIONS
 -- ================================================================================================
 
-function commonInit(me, note)
+function v.commonInit(me, note)
 	setupBasicEntity(
 	me,
 	"",					-- texture

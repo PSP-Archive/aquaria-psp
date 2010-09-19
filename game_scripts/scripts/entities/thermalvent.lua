@@ -24,7 +24,7 @@ v.targetBone = 0
 v.ventBone = 0
 
 
-STATE_OPT		= 1001
+local STATE_OPT		= 1001
 
 function init(me)
 	setupEntity(me)

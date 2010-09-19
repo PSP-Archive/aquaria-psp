@@ -26,12 +26,12 @@ dofile("scripts/include/collectibletemplate.lua")
 v.glow = 0
 
 function init(me)
-	commonInit(me, "Collectibles/goldstar", FLAG_COLLECTIBLE_STARFISH)
+	v.commonInit(me, "Collectibles/goldstar", FLAG_COLLECTIBLE_STARFISH)
 	entity_setEntityLayer(me, -3)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 	v.glow = createQuad("Naija/LightFormGlow", 13)
 	quad_scale(v.glow, 5, 5)
 
@@ -49,12 +49,12 @@ function update(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		--createEntity("Walker", "", entity_x(me), entity_y(me))
 	end	
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

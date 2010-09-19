@@ -21,8 +21,8 @@ v = getVars()
 
 -- P E T  N A U T I L U S
 
-STATE_ATTACKPREP		= 1000
-STATE_ATTACK			= 1001
+local STATE_ATTACKPREP		= 1000
+local STATE_ATTACK			= 1001
 
 v.lungeDelay = 0
 

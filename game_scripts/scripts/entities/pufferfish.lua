@@ -54,7 +54,7 @@ function postInit(me)
 	entity_addVel(me, x*500, y*500)
 end
 
-function rotflip(me)
+local function rotflip(me)
 	if entity_isfh(me) then
 		entity_rotateToVel(me, 0, -90)
 	else

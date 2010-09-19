@@ -23,6 +23,6 @@ v = getVars()
 dofile("scripts/entities/energybarrier.lua")
 
 function init(me)
-	commonInit(me)
+	v.commonInit(me)
 	entity_setState(me, STATE_IDLE)
 end

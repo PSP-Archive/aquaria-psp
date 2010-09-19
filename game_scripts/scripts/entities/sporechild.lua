@@ -39,8 +39,8 @@ v.myType = 1
 
 v.flowerTimer = 0
 
-STATE_MOVETOFLOWER 	= 1000
-STATE_OPENFLOWER	= 1001
+local STATE_MOVETOFLOWER 	= 1000
+local STATE_OPENFLOWER	= 1001
 
 v.state2 = 0
 
@@ -93,7 +93,7 @@ function songNote(me, note)
 	end
 end
 
-function hatch(me)
+local function hatch(me)
 	if v.myType == 0 then
 		entity_setState(me, STATE_SK_RED)
 	elseif v.myType == 1 then
@@ -106,7 +106,7 @@ function hatch(me)
 
 end
 
-function isHatched(me)
+local function isHatched(me)
 	return (entity_isState(me, STATE_SK_RED) or entity_isState(me, STATE_SK_BLUE)
 	or entity_isState(me, STATE_SK_GREEN) or entity_isState(me, STATE_SK_YELLOW))
 end

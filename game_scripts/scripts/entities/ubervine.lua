@@ -22,6 +22,5 @@ v = getVars()
 dofile("scripts/entities/ubervinecommon.lua")
 
 function init(me)
-	commonInit(me, true)
+	v.commonInit(me, true)
 end
-

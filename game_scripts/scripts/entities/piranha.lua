@@ -24,9 +24,9 @@ v = getVars()
 -- ================================================================================================
 
 -- entity specific
-STATE_FIRE				= 1000
-STATE_PULLBACK			= 1001
-STATE_REGROUP			= 1002
+local STATE_FIRE			= 1000
+local STATE_PULLBACK		= 1001
+local STATE_REGROUP			= 1002
 
 v.dir = 0
  

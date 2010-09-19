@@ -30,7 +30,7 @@ function init(me)
 	node_setCursorActivation(me, true)
 end
 
-function sayNext()
+local function sayNext()
 	if v.thingSaying == 0 then
 		setControlHint("There are three main editing modes: Tile Edit, Entity Edit and Node Edit.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then

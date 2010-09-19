@@ -30,8 +30,8 @@ v = getVars()
 v.fireDelay = 0
 v.moveTimer = 0
 
-STATE_MOVING = 1000
-STATE_FIRING = 1001
+local STATE_MOVING = 1000
+local STATE_FIRING = 1001
 v.rounds = 0
 v.orb = 0
 
@@ -41,7 +41,7 @@ v.fireRate = 0.75
 -- FUNCTIONS
 -- ================================================================================================
 
-LAYER_ORB = 1
+local LAYER_ORB = 1
 
 function init(me)
 	setupBasicEntity(

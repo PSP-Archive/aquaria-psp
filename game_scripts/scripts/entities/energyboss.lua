@@ -23,18 +23,18 @@ v = getVars()
 -- Energy Boss
 -- ================================================================================================
 
-STATE_MOVING				= 1001
-STATE_MOVEBACK				= 1002
-STATE_SHOCKED				= 1003
-STATE_FIRE					= 1004
-STATE_HITBARRIER			= 1005
-STATE_MOVEBACKFROMBARRIER 	= 1006
-STATE_COLLAPSE				= 1007
-STATE_COLLAPSED				= 1100
+local STATE_MOVING				= 1001
+local STATE_MOVEBACK			= 1002
+local STATE_SHOCKED				= 1003
+local STATE_FIRE				= 1004
+local STATE_HITBARRIER			= 1005
+local STATE_MOVEBACKFROMBARRIER 	= 1006
+local STATE_COLLAPSE			= 1007
+local STATE_COLLAPSED			= 1100
 
-ATTACK_UP					= 1
-ATTACK_DOWN					= 2
-ATTACK_BITE					= 3
+local ATTACK_UP					= 1
+local ATTACK_DOWN				= 2
+local ATTACK_BITE				= 3
 
 v.attacks = 0
 

@@ -25,5 +25,5 @@ v = getVars()
 dofile("scripts/entities/groundshockerattackcommon.lua")
 
 function init(me)
-	commonInit(me, 0)
+	v.commonInit(me, 0)
 end

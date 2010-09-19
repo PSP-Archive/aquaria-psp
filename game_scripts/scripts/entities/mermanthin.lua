@@ -34,11 +34,11 @@ v.playedSound = false
 v.attackDelay = 0
 v.maxAttackDelay = 1
 
-STATE_HANG 	= 1000
-STATE_SWIM 	= 1001
-STATE_BURST = 1002
-STATE_WALL = 1003
-STATE_WALLBURST = 1004
+local STATE_HANG 	= 1000
+local STATE_SWIM 	= 1001
+local STATE_BURST = 1002
+local STATE_WALL = 1003
+local STATE_WALLBURST = 1004
 
 v.burstDelay = 0
 v.checkSurfaceDelay = 0

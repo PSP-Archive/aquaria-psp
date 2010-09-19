@@ -24,21 +24,21 @@ v = getVars()
 dofile("scripts/include/collectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "Collectibles/babycrib", FLAG_COLLECTIBLE_BABYCRIB)
+	v.commonInit(me, "Collectibles/babycrib", FLAG_COLLECTIBLE_BABYCRIB)
 	entity_setEntityLayer(me, -1)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		--createEntity("Walker", "", entity_x(me), entity_y(me))
 	end	
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

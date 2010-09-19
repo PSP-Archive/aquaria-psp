@@ -23,10 +23,10 @@ v = getVars()
 
 
 
-STATE_CIRCLE			= 1000
-STATE_WANDER			= 1001		--Assumes bevy has no target
-STATE_SEEKTARGET		= 1002		--Everything is just dandy, following stuff
-STATE_SEEKBEVY			= 1003		--No bevy in range, find a bevy!
+local STATE_CIRCLE			= 1000
+local STATE_WANDER			= 1001		--Assumes bevy has no target
+local STATE_SEEKTARGET		= 1002		--Everything is just dandy, following stuff
+local STATE_SEEKBEVY		= 1003		--No bevy in range, find a bevy!
 
 v.targetDelay = 0.5				-- Time between checking targets
 v.wanderDelay = 2				-- Amount of time to wander in a given direction
@@ -37,13 +37,13 @@ v.segsOn = true
 -- M Y   F U N C T I O N S
 -- ================================================================================================
 
-function setSpookSegsOn(me)
+local function setSpookSegsOn(me)
 	bone_setSegs(v.body, 8, 2, 0.12, 0.42, 0, -0.03, 8, 0)
 	bone_setSegs(v.glow01, 8, 2, 0.12, 0.42, 0, -0.03, 8, 0)
 	bone_setSegs(v.glow02, 8, 2, 0.12, 0.42, 0, -0.03, 8, 0)
 end
 
-function setSpookSegsOff(me)
+local function setSpookSegsOff(me)
 	bone_setSegs(v.body, 8, 2, 0.23, 0.69, 0, -0.03, 8, 0)
 	bone_setSegs(v.glow01, 8, 2, 0.23, 0.69, 0, -0.03, 8, 0)
 	bone_setSegs(v.glow02, 8, 2, 0.23, 0.69, 0, -0.03, 8, 0)

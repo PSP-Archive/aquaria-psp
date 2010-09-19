@@ -22,6 +22,5 @@ v = getVars()
 dofile("scripts/entities/finalspiritcommon.lua")
 
 function init(me)
-	commonInit(me, "Drask", 1, FLAG_SPIRIT_DRASK, 0, 1, 1)
+	v.commonInit(me, "Drask", 1, FLAG_SPIRIT_DRASK, 0, 1, 1)
 end
-

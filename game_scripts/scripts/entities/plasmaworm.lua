@@ -44,6 +44,13 @@ v.segs = 64
 v.glowSegInt = 4
 v.glowSegs = v.segs/v.glowSegInt
 
+local function setNormalGlow()
+	for i=1,v.glowSegs do
+		quad_color(v.glow[i], 0.6, 0.6, 0.9)
+		quad_color(v.glow[i], 1, 1, 1, 2, -1, 1, 1)
+	end
+end
+
 -- initializes the entity
 function init(me)
 -- oldhealth : 40
@@ -114,13 +121,6 @@ function init(me)
 	setNormalGlow()
 	
 	entity_setDamageTarget(me, DT_AVATAR_LIZAP, false)
-end
-
-function setNormalGlow()
-	for i=1,v.glowSegs do
-		quad_color(v.glow[i], 0.6, 0.6, 0.9)
-		quad_color(v.glow[i], 1, 1, 1, 2, -1, 1, 1)
-	end
 end
 
 v.spin = 0

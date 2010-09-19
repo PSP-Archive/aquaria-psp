@@ -21,8 +21,8 @@ v = getVars()
 
 
 -- entity specific
-STATE_SUCK				= 1001
-STATE_BLOW				= 1002
+local STATE_SUCK			= 1001
+local STATE_BLOW			= 1002
  
 v.started = false
 v.chaseDelay = 0
