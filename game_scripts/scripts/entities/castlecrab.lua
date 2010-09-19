@@ -22,13 +22,14 @@ v = getVars()
 v.n = 0
 v.sx = 0
 v.sy = 0
-v.attackDelay = 1 + math.random(100)/100
 v.fireDelay = 0
 
 v.frontHand = 0
 v.backHand = 0
 
 function init(me)
+	v.attackDelay = 1 + math.random(100)/100
+
 	setupEntity(me)
 	entity_setEntityLayer(me, -2)
 	entity_setEntityType(me, ET_ENEMY)

@@ -32,7 +32,6 @@ local STATE_JUMPPREP		= 1002
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-v.jumpDelay = 0+math.random(3)
 v.moveTimer = 0
 v.rotateOffset = 0
 v.mouthOpen = 0
@@ -54,6 +53,7 @@ end
 ]]--
 
 function init(me)
+	v.jumpDelay = 0+math.random(3)
 
 	setupBasicEntity(
 	me,

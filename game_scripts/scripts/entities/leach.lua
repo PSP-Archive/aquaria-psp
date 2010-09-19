@@ -36,13 +36,14 @@ v.attachOffsetX	= 0
 v.attachOffsetY	= 0
 v.attachBone = 0
 v.rollTime = 0
-v.maxRollTime = math.random(10)/10.0 + 0.5
 
 -- ================================================================================================
 -- FUNCTIONS
 -- ================================================================================================
 
 function init(me)
+	v.maxRollTime = math.random(10)/10.0 + 0.5
+
 	setupBasicEntity(
 	me,
 	"Leach",						-- texture

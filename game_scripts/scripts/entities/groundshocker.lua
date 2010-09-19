@@ -27,10 +27,6 @@ v = getVars()
 -- L O C A L   V A R I A B L E S 
 -- ================================================================================================
 
-v.moveTimer = 3.2 + (math.random(432) * 0.01)
-
-v.shotTimer = 2.1 + (math.random(210) * 0.01)
-
 v.shellOn = true
 v.pullTime = 1.11
 
@@ -43,6 +39,9 @@ v.mT = 0
 -- ================================================================================================
 
 function init(me)
+	v.moveTimer = 3.2 + (math.random(432) * 0.01)
+	v.shotTimer = 2.1 + (math.random(210) * 0.01)
+
 	setupBasicEntity(
 	me,
 	"GroundShocker/Core",			-- texture

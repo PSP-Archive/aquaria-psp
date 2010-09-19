@@ -39,7 +39,6 @@ local STATE_TO_GLIDE = 1004
 v.sz = 1
 v.maxSpeed = 890
 
-v.swimTime = 0.34 + (math.random(42)*0.01)
 v.angle = 90
 
 v.turtle_type = 0
@@ -66,6 +65,8 @@ v.saveNode = 0
 -- ================================================================================================
 
 function v.commonInit(me, turType)
+	v.swimTime = 0.34 + (math.random(42)*0.01)
+
 	setupBasicEntity(
 	me,
 	"SeaTurtle/Head",				-- texture

@@ -29,7 +29,6 @@ v = getVars()
 
 v.n = 0
 
-v.maxSpeed = 321 + math.random(32)
 v.chunkSize = 0
 v.width = 0
 v.dir = -1
@@ -39,6 +38,7 @@ v.dir = -1
 -- ================================================================================================
 
 function v.commonInit(me, size)
+	v.maxSpeed = 321 + math.random(32)
 	v.chunkSize = size
 
 	setupBasicEntity(

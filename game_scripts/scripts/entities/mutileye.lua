@@ -31,8 +31,6 @@ v = getVars()
 v.orient = ORIENT_LEFT
 v.orientTimer = 0
 
-v.swimTimer = 0.28 + (math.random(34) * 0.01)
-
 v.node_mist = 0
 v.eMate = 0
 v.matingTimer = 0
@@ -43,6 +41,8 @@ v.mateCheckDelay = 4
 -- ================================================================================================
 
 function init(me)
+	v.swimTimer = 0.28 + (math.random(34) * 0.01)
+
 	setupBasicEntity(me, 
 	"Mutileye/Head",				-- texture
 	4 + math.random(4),				-- health

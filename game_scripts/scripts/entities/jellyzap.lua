@@ -43,7 +43,6 @@ v.velx = 0
 v.soundDelay = 0
 
 -- JellyZap-specific
-v.zapTimer = 3.21 + (math.random(321) * 0.01)
 v.ent_friendJelly = 0
 v.zapRange = 842
 v.stopTimer = 0
@@ -66,6 +65,8 @@ local function doIdleScale(me)
 end
 
 function init(me)
+	v.zapTimer = 3.21 + (math.random(321) * 0.01)
+
 	setupBasicEntity(
 	me,
 	"JellyZap/Head",				-- texture
