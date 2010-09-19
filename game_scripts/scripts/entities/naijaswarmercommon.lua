@@ -35,6 +35,8 @@ v.curNote = 0
 v.singing = false
 
 function v.commonInit(me, tex)	
+	v.add = math.random(50)
+
 	setupEntity(me)
 	entity_setEntityType(me, ET_ENEMY)
 	entity_initSkeletal(me, "minnow")
@@ -73,8 +75,6 @@ function v.commonInit(me, tex)
 	entity_addRandomVel(me, 600)
 	
 	esetv(me, EV_LOOKAT, 0)
-
-	v.add = math.random(50)
 end
 
 function postInit(me)

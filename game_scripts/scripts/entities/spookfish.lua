@@ -32,9 +32,6 @@ v.segsOn = true
 
 v.angle = 0
 
-v.swimTimer = 0.64 + (math.random(64) * 0.01)
-
-v.boostTimer = 4.56 + (math.random(640) * 0.01)
 v.boostLen = 0
 v.boostDir = 0
 
@@ -62,6 +59,9 @@ end
 -- ================================================================================================
 
 function init(me)
+	v.swimTimer = 0.64 + (math.random(64) * 0.01)
+	v.boostTimer = 4.56 + (math.random(640) * 0.01)
+
 	setupBasicEntity(me, 
 	"Spookfish/Body",				-- texture
 	2,								-- health

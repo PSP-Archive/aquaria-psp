@@ -63,8 +63,6 @@ v.bone_seg = {0, 0, 0, 0, 0, 0, 0, 0}		-- Bone
 v.mouth_seg = {0, 0, 0, 0, 0, 0, 0, 0}
 
 v.shotT = 2
-v.shotTimer_seg = {math.random(8)*0.5, math.random(8)*0.5, math.random(8)*0.5, math.random(8)*0.5, math.random(8)*0.5, math.random(8)*0.5, math.random(8)*0.5, math.random(8)*0.5}
---v.shotTimer_seg = {3, 3, 3, 3, 3, 3, 3, 3}
 
 v.health_seg = {3, 3, 3, 3, 3, 3, 3, 3}
 
@@ -141,6 +139,9 @@ end
 -- ================================================================================================
 
 function init(me)
+	v.shotTimer_seg = {math.random(8)*0.5, math.random(8)*0.5, math.random(8)*0.5, math.random(8)*0.5, math.random(8)*0.5, math.random(8)*0.5, math.random(8)*0.5, math.random(8)*0.5}
+	--v.shotTimer_seg = {3, 3, 3, 3, 3, 3, 3, 3}
+
 	setupBasicEntity(
 	me,
 	"Creator/Form3/Head",			-- texture

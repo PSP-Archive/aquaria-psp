@@ -21,7 +21,6 @@ v = getVars()
 
 v.attackDelay = 0
 v.dir = 1
-v.n = getNaija()
 v.jaw = 0
 
 v.go = false

@@ -20,7 +20,6 @@
 v = getVars()
 
 v.n = 0
-v.attackDelay = 1 + math.random(3)
 v.soundDelay = 0
 v.dir = 0
 v.dirTimer = 0
@@ -28,6 +27,8 @@ v.dirTimer = 0
 v.bubDelay = 0
 
 function init(me)
+	v.attackDelay = 1 + math.random(3)
+
 	setupEntity(me)
 	entity_setEntityType(me, ET_ENEMY)
 	entity_initSkeletal(me, "Tabar")	

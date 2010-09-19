@@ -27,7 +27,6 @@ v.swimTime = 0
 v.swimTimer = v.swimTime - v.swimTime/4
 v.dirTimer = 0
 v.dir = 0
-v.soundDelay = math.random(4)
 
 v.playedSound = false
 
@@ -50,9 +49,10 @@ v.lasty = 0
 
 v.bloated = false
 
-v.playSoundDelay = math.random(300)/300.0
-
 function init(me)
+	v.soundDelay = math.random(4)
+	v.playSoundDelay = math.random(300)/300.0
+
 	setupBasicEntity(me, 
 	"",					-- texture
 	9,								-- health
