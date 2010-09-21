@@ -88,38 +88,6 @@ local function checkCreateFish(i)
 	end
 end
 
-function update(me, dt)
-	if isFlag(FLAG_FISHCAVE, 0) then
-		local num1 = node_getNumEntitiesIn(v.n1, "CaveFish1")
-		local num2 = node_getNumEntitiesIn(v.n2, "CaveFish2")
-		local num3 = node_getNumEntitiesIn(v.n3, "CaveFish3")
-		local num4 = node_getNumEntitiesIn(v.n4, "CaveFish4")
-		--debugLog(string.format("%d, %d, %d, %d", num1, num2, num3, num4))
-		if 	num1 >= v.numFishNeeded and
-			num2 >= v.numFishNeeded and
-			num3 >= v.numFishNeeded and
-			num4 >= v.numFishNeeded then
-			activate(me)
-		end
-		
-		entity_msg(v.glow1, "g", num1/v.numFishNeeded)
-		entity_msg(v.glow2, "g", num2/v.numFishNeeded)
-		entity_msg(v.glow3, "g", num3/v.numFishNeeded)
-		entity_msg(v.glow4, "g", num4/v.numFishNeeded)
-	end
-	
-	if v.spawnDelay > 0 then
-		v.spawnDelay = v.spawnDelay - dt
-		if v.spawnDelay < 0 then
-			v.spawnDelay = 0
-		end
-	end
-	
-	for i=1,4 do
-		checkCreateFish(i)
-	end
-end
-
 local function doNode(nd, fx, nt)
 	screenFadeCapture()
 	cam_toNode(nd)
@@ -143,7 +111,7 @@ local function doNode(nd, fx, nt)
 	watch(2)
 end
 
-function activate(me)
+local function doScene(me)
 	if isFlag(FLAG_FISHCAVE, 0) then
 	--if true then
 		-- you win
@@ -194,4 +162,40 @@ function activate(me)
 		
 		overrideZoom(0)
 	end
+end
+
+function update(me, dt)
+	if isFlag(FLAG_FISHCAVE, 0) then
+		local num1 = node_getNumEntitiesIn(v.n1, "CaveFish1")
+		local num2 = node_getNumEntitiesIn(v.n2, "CaveFish2")
+		local num3 = node_getNumEntitiesIn(v.n3, "CaveFish3")
+		local num4 = node_getNumEntitiesIn(v.n4, "CaveFish4")
+		--debugLog(string.format("%d, %d, %d, %d", num1, num2, num3, num4))
+		if 	num1 >= v.numFishNeeded and
+			num2 >= v.numFishNeeded and
+			num3 >= v.numFishNeeded and
+			num4 >= v.numFishNeeded then
+			doScene(me)
+		end
+		
+		entity_msg(v.glow1, "g", num1/v.numFishNeeded)
+		entity_msg(v.glow2, "g", num2/v.numFishNeeded)
+		entity_msg(v.glow3, "g", num3/v.numFishNeeded)
+		entity_msg(v.glow4, "g", num4/v.numFishNeeded)
+	end
+	
+	if v.spawnDelay > 0 then
+		v.spawnDelay = v.spawnDelay - dt
+		if v.spawnDelay < 0 then
+			v.spawnDelay = 0
+		end
+	end
+	
+	for i=1,4 do
+		checkCreateFish(i)
+	end
+end
+
+function activate(me)
+	doScene(me)
 end

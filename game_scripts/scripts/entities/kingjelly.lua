@@ -103,7 +103,7 @@ function postInit(me)
 	end
 end
 
-function activate(me)
+local function activate(me)
 	entity_setActivationType(me, AT_NONE)
 	entity_setState(me, STATE_READY)
 end
