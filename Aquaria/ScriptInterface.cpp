@@ -151,6 +151,29 @@ static const char * const interfaceFunctions[] = {
 //    The script engine will take care of ensuring that different scripts'
 //    functions don't interfere with each other.
 //
+// -- DON'T call interface functions from within a script.
+//
+//    Interface functions, such as init() and update(), are treated
+//    specially by the script engine, and attempting to call them from
+//    other script functions will fail.  If you need to perform the same
+//    processing from two or more different interface functions, define
+//    a local function with the necessary code and call it from the
+//    interface functions.
+//
+//    It _is_ possible, though not recommended, to have a local function
+//    with the same name as an interface function.  For example, if you
+//    write a script containing:
+//
+//        local function activate(me)
+//            -- Do something.
+//        end
+//
+//    then you can call activate() from other functions without problems.
+//    The local function, activate() in this case, will naturally not be
+//    visible to the script engine.  (This is discouraged because someone
+//    reading the code may be confused at seeing what looks like an
+//    interface function defined locally.)
+//
 // -- DON'T call any functions from the outermost (file) scope of an
 //    instanced script file.
 //
@@ -179,6 +202,7 @@ static const char * const interfaceFunctions[] = {
 // -- Variables can have default values set when the script is loaded:
 //        v.countdown = 5
 //        function update(dt)  v.countdown = v.countdown - dt  end
+// -- Never call interface functions from other functions.
 // -- Always perform instance-specific setup in init(), not at file scope.
 //
 
