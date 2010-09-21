@@ -193,6 +193,7 @@ void WarpAreaRender::onRender()
 SceneEditor::SceneEditor() : ActionMapper(), on(false)
 {
 	autoSaveFile = 0;
+	selectedIdx = -1;
 }
 
 void SceneEditor::setBackgroundGradient()

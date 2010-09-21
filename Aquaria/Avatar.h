@@ -292,6 +292,7 @@ public:
 
 	void checkNearWall();
 	Vector getAim();
+	Vector getForwardAim();
 	void setWasUnderWater();
 	Quad *lightFormGlow, *lightFormGlowCone;
 	void setBlockSinging(bool v);
