@@ -798,12 +798,18 @@ void AnimationLayer::update(float dt)
 
 		if (timer > animationLength)
 		{
+			float leftover;
+			if (animationLength > 0)
+				leftover = fmodf(timer, animationLength);
+			else
+				leftover = 0;
 			timer = animationLength;
 			if (loop==-1 || loop > 0)
 			{
 				playAnimation(this->currentAnimation, loop);
 				if (loop > 0)
 					loop --;
+				timer = leftover;
 			}
 			else
 			{
