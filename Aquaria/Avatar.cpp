@@ -224,8 +224,17 @@ Vector Avatar::getAim()
 		d.z = 1;
 	}
 	if (d.isZero())
-		d = getNormal();
+		d = getForwardAim();
 	return d;
+}
+
+Vector Avatar::getForwardAim()
+{
+	Vector aim = getForward();
+	// getForward() points toward Naija's head, but it makes more sense
+	// to shoot in the direction she's facing, so rotate the aim vector.
+	aim = getRotatedVector(aim, isfh() ? 90 : -90);
+	return aim;
 }
 
 void Avatar::postInit()
@@ -2785,16 +2794,7 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 				if (!vel.isLength2DIn(2))
 					s->setAimVector(vel);
 				else // standing still
-				{
-					Vector dir = getForward();
-					if (isfh())
-					{
-						dir = dir.getPerpendicularRight();
-					}
-					else
-						dir = dir.getPerpendicularLeft();
-					s->setAimVector(dir);
-				}
+					s->setAimVector(getForwardAim());
 			}
 			else
 			{
@@ -3207,11 +3207,13 @@ void Avatar::formAbility(int ability)
 							s->position = this->position;
 						}
 
+						Vector aim = getVectorToCursor();
+						if (aim.isZero())
+							aim = getForwardAim();
 						if (num == 1)
-							s->setAimVector(this->getVectorToCursor());
+							s->setAimVector(aim);
 						else
 						{
-							Vector aim = this->getVectorToCursor();
 							aim.normalize2D();
 							s->setAimVector(getTendrilAimVector(i, num)*0.1 + aim*0.9);
 						}
