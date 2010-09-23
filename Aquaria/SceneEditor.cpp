@@ -3463,16 +3463,6 @@ void SceneEditor::update(float dt)
 		break;
 		}
 
-		float spd = 0.5;
-		if (isActing(ACTION_ZOOMOUT))
-			zoom -= Vector(spd,spd)*dt;
-		else if (isActing(ACTION_ZOOMIN))
-			zoom += Vector(spd,spd)*dt;
-		if (zoom.x < 0.04f)
-		{
-			zoom.x = zoom.y = 0.04f;
-		}
-		core->globalScale = zoom;
 		updateText();
 		ActionMapper::onUpdate(dt);
 
@@ -3483,34 +3473,44 @@ void SceneEditor::update(float dt)
 
 		//selectedIdx = idx;
 
-		int camSpeed = 1200;
+		int camSpeed = 500/zoom.x;
 		if (core->getShiftState())
-			camSpeed = 10000;
+			camSpeed = 5000/zoom.x;
 		if (isActing(ACTION_CAMLEFT))
-		{
 			dsq->cameraPos.x -= dt*camSpeed;
-		}
 		if (isActing(ACTION_CAMRIGHT))
 			dsq->cameraPos.x += dt*camSpeed;
 		if (isActing(ACTION_CAMUP))
 			dsq->cameraPos.y -= dt*camSpeed;
 		if (isActing(ACTION_CAMDOWN))
 			dsq->cameraPos.y += dt*camSpeed;
+		if (core->mouse.buttons.middle && !core->mouse.change.isZero())
+		{
+			dsq->cameraPos += core->mouse.change*(4/zoom.x);
+			core->setMousePosition(core->mouse.lastPosition);
+		}
 
-		if (core->mouse.buttons.middle)
-		{
-			dsq->cameraPos += core->mouse.change*20;
-			core->setMousePosition(core->center);
-			//core->mouse.position = Vector(400,300);
-		}
-		if (core->mouse.scrollWheelChange < 0)
-		{
-			zoom -= Vector(spd*0.05,spd*0.05);
-		}
+		float spd = 0.5;
+		const Vector oldZoom = zoom;
+		if (isActing(ACTION_ZOOMOUT))
+			zoom /= (1 + spd*dt);
+		else if (isActing(ACTION_ZOOMIN))
+			zoom *= (1 + spd*dt);
+		else if (core->mouse.scrollWheelChange < 0)
+			zoom /= 1.05f;
 		else if (core->mouse.scrollWheelChange > 0)
+			zoom *= 1.05f;
+		if (zoom.x < 0.04f)
+			zoom.x = zoom.y = 0.04f;
+		core->globalScale = zoom;
+		if (zoom.x != oldZoom.x)
 		{
-			zoom += Vector(spd*0.05,spd*0.05);
+			const float mouseX = core->mouse.position.x;
+			const float mouseY = core->mouse.position.y;
+			dsq->cameraPos.x += mouseX/oldZoom.x - mouseX/zoom.x;
+			dsq->cameraPos.y += mouseY/oldZoom.y - mouseY/zoom.y;
 		}
+
 		/*
 		for (int i = 0; i < dsq->elements.size(); i++)
 		{
