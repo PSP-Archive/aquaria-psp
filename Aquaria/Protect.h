@@ -18,24 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#include "Base.h"
-#include "Protect.h"
+#pragma once
 
-/*
-#include <windows.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-*/
-
-
-//#define AQUARIA_CUSTOMBUILD		1
-
-bool getRegistrationName(std::string &name)
-{
-    name = std::string("Aquaria Player");
-	return true;
-}
-
-
-
+extern bool getRegistrationName(std::string &name);
