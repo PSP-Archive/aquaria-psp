@@ -406,7 +406,7 @@ protected:
 	void onIdle();
 	void onHeal(int type);
 	ParticleEffect biteLeftEmitter, biteRightEmitter, swimEmitter, auraHitEmitter;
-	ParticleEffect auraEmitter, wakeEmitter, healEmitter, hitEmitter, rollLeftEmitter, rollRightEmitter, spiritBeaconEmitter, plungeEmitter;
+	ParticleEffect auraEmitter, auraLowEmitter, wakeEmitter, healEmitter, hitEmitter, rollLeftEmitter, rollRightEmitter, spiritBeaconEmitter, plungeEmitter;
 	ParticleEffect speedEmitter, defenseEmitter, invincibleEmitter, regenEmitter;
 	ParticleEffect *leftHandEmitter, *rightHandEmitter;
 	ParticleEffect *chargingEmitter, *chargeEmitter;
