@@ -2234,7 +2234,6 @@ void Entity::idle()
 	onIdle();
 
 	skeletalSprite.transitionAnimate(getIdleAnimName(), 0.3, -1);
-	rotateToVec(Vector(0,-1),0);
 	rotateToVec(Vector(0,-1),0.1);
 	vel.capLength2D(50);
 
