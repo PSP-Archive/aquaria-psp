@@ -225,9 +225,14 @@ void generate_palette(const uint32_t *imageptr, uint32_t width,
     }
     const unsigned int nboxes = i;
 
-    /* 各ボックスの平均色を求めてパレットに格納する */
+    /* 各ボックスの平均色を求めてパレットに格納する。ついでに、透明ピクセル
+     * があるかどうかも調べておく */
 
+    int have_transparent_pixel = 0;
     for (i = 0; i < nboxes; i++) {
+        if (box[i].amin == 0) {
+            have_transparent_pixel = 1;
+        }
         uint32_t atot = 0, rtot = 0, gtot = 0, btot = 0;
         uint32_t pixels = 0, alpha_pixels = 0;
         uint32_t j;
@@ -247,6 +252,28 @@ void generate_palette(const uint32_t *imageptr, uint32_t width,
             | ((rtot + alpha_pixels/2) / alpha_pixels) << 16
             | ((gtot + alpha_pixels/2) / alpha_pixels) <<  8
             | ((btot + alpha_pixels/2) / alpha_pixels) <<  0;
+    }
+
+    /* 透明ピクセルがある場合、必ず透明色を1つ以上確保する */
+
+    if (have_transparent_pixel) {
+        int have_transparent_color = 0;
+        for (i = 0; i < fixed_colors + nboxes; i++) {
+            if (palette[i]>>24 == 0) {
+                have_transparent_color = 1;
+                break;
+            }
+        }
+        if (!have_transparent_color) {
+            /* もっともアルファ値の低い色を透明にする */
+            int best = fixed_colors;
+            for (i = fixed_colors+1; i < fixed_colors + nboxes; i++) {
+                if (palette[i]>>24 < palette[best]>>24) {
+                    best = i;
+                }
+            }
+            palette[best] &= 0x00FFFFFF;
+        }
     }
 
     free(colortable);
@@ -295,7 +322,7 @@ static int compare_colors(const void * const a, const void * const b)
 
 /**
  * shrink_box:  色空間ボックスの各成分の最小・最大値を検出する。
- * generate_palette_quick()の補助関数。
+ * generate_palette()の補助関数。
  *
  * 【引　数】box: 処理するボックスの情報構造体へのポインタ
  * 【戻り値】なし
@@ -328,7 +355,7 @@ static void shrink_box(struct colorbox * const box)
 /*************************************************************************/
 
 /**
- * split_box:  色空間ボックスを分割する。generate_palette_quick()の補助関数。
+ * split_box:  色空間ボックスを分割する。generate_palette()の補助関数。
  *
  * 【引　数】box: 分割するボックスの情報構造体へのポインタ
  * 【戻り値】なし
@@ -844,7 +871,10 @@ static inline uint32_t colordiff_sq(uint32_t color1, uint32_t color2)
         "movd %[color2], %%xmm1\n"
         "pxor %%xmm7, %%xmm7\n"
         "pcmpeqw %%xmm6, %%xmm6\n"
+        "pxor %%xmm5, %%xmm5\n"
+        "psubb %%xmm6, %%xmm5\n"
         "psrlw $8, %%xmm6\n"
+        "psrlw $8, %%xmm5\n"              // XMM5 = {1,1,1,1,1,1,1,1}
         "pslldq $6, %%xmm6\n"             // XMM6 = {A=255, R=0, G=0, B=0}
         "punpcklbw %%xmm7, %%xmm0\n"      // XMM0 = {0,0,0,0,a1,r1,g1,b1}
         "punpcklbw %%xmm7, %%xmm1\n"      // XMM1 = {0,0,0,0,a2,r2,g2,b2}
@@ -855,9 +885,10 @@ static inline uint32_t colordiff_sq(uint32_t color1, uint32_t color2)
         "psubw %%xmm1, %%xmm0\n"          // XMM0 = {0,0,0,0,Da,Dr,Dg,Db}
         "pmullw %%xmm3, %%xmm2\n"         // XMM2 = {0,0,0,0,255*255,a1*a2,...}
         "pmullw %%xmm0, %%xmm0\n"         // XMM0 = {0,0,0,0,Da*Da,Dr*Dr,...}
+        "paddw %%xmm5, %%xmm2\n"          // XMM2 = {...,255*255+1,a1*a2+1,...}
         /* 16ビット符号無し乗算命令や32ビット並列乗算命令がないので、
          * ちょい面倒 */
-        "punpcklwd %%xmm7, %%xmm2\n"      // XMM2 = {255*255,a1*a2,a1*a2,a1*a2}
+        "punpcklwd %%xmm7, %%xmm2\n"      // XMM2 = {255*255+1,a1*a2+1,...}
         "punpcklwd %%xmm7, %%xmm0\n"      // XMM0 = {Da*Da,Dr*Dr,Dg*Dg,Db*Db}
         "movdqa %%xmm2, %%xmm3\n"         // XMM3 = {255*255,a1*a2,a1*a2,a1*a2}
         "movdqa %%xmm0, %%xmm1\n"         // XMM1 = {Da*Da,Dr*Dr,Dg*Dg,Db*Db}
@@ -873,7 +904,7 @@ static inline uint32_t colordiff_sq(uint32_t color1, uint32_t color2)
         "movd %%xmm0, %[result]\n"
         : [result] "=r" (result)
         : [color1] "r" (color1), [color2] "r" (color2)
-        : "xmm0", "xmm1", "xmm2", "xmm3", "xmm6", "xmm7"
+        : "xmm0", "xmm1", "xmm2", "xmm3", "xmm5", "xmm6", "xmm7"
     );
     return result;
 #else
@@ -885,10 +916,13 @@ static inline uint32_t colordiff_sq(uint32_t color1, uint32_t color2)
     const uint32_t r2 = (color2>>16 & 0xFF);
     const uint32_t g2 = (color2>> 8 & 0xFF);
     const uint32_t b2 = (color2>> 0 & 0xFF);
-    return ((a2-a1)*(a2-a1) * (255*255)) / 4
-         + ((r2-r1)*(r2-r1) * (a1*a2)) / 4
-         + ((g2-g1)*(g2-g1) * (a1*a2)) / 4
-         + ((b2-b1)*(b2-b1) * (a1*a2)) / 4;
+    /* アルファ0でも色成分の差を検出できるように、アルファ値の積に1を足す。
+     * 非透明ピクセルの隣にある透明ピクセルの色は補間処理で意味を持つので、
+     * 同じ透明ピクセルでもピクセル値を区別する必要がある */
+    return ((a2-a1)*(a2-a1) * (255*255+1)) / 4
+         + ((r2-r1)*(r2-r1) * (a1*a2+1)) / 4
+         + ((g2-g1)*(g2-g1) * (a1*a2+1)) / 4
+         + ((b2-b1)*(b2-b1) * (a1*a2+1)) / 4;
 #endif
 }
 
