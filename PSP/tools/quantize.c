@@ -188,7 +188,7 @@ void generate_palette(const uint32_t *imageptr, uint32_t width,
 
     /* 全ての色がパレット内に収まれば、そのまま格納して戻る */
 
-    if (ncolors < 256 - fixed_colors) {
+    if (ncolors <= 256 - fixed_colors) {
         for (i = 0; i < ncolors; i++) {
             palette[fixed_colors+i] = colortable[i].color;
         }
