@@ -32,7 +32,7 @@ static jmp_buf png_jmpbuf;
  * current Mercurial revision, which should be defined on the compilation
  * command line with e.g. -DHG_REVISION=\"revision\" (for GCC -- note the
  * backslashes!), to form the final version string. */
-#define VERSION  "1.5"
+#define VERSION  "1.6"
 
 #ifndef HG_REVISION
 # error Define HG_REVISION on the compilation command line.
@@ -41,7 +41,7 @@ static jmp_buf png_jmpbuf;
 #define VERSION_STRING  VERSION " (r" HG_REVISION ")"
 
 /* Data version, used to warn users if they need to regenerate the PSP data. */
-#define DATA_VERSION  4
+#define DATA_VERSION  5
 
 /* File into which the data version is written. */
 #define DATA_VERSION_FILE  "data-version.txt"
