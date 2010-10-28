@@ -3595,20 +3595,6 @@ luaFunc(entity_applySurfaceNormalForce)
 	luaReturnInt(0);
 }
 
-luaFunc(entity_applyRandomForce)
-{
-	Entity *e = entity(L);
-	if (e)
-	{
-		Vector f;
-		f.x = ((rand()%1000)-500)/500.0f;
-		f.y = ((rand()%1000)-500)/500.0f;
-		f.setLength2D(lua_tonumber(L, 1));
-		e->vel += f;
-	}
-	luaReturnInt(0);
-}
-
 luaFunc(entity_getRotation)
 {
 	Entity *e = entity(L);
@@ -7300,7 +7286,6 @@ static const struct {
 
 	luaRegister(entity_adjustPositionBySurfaceNormal),
 	luaRegister(entity_applySurfaceNormalForce),
-	luaRegister(entity_applyRandomForce),
 
 	luaRegister(createBeam),
 	luaRegister(beam_setAngle),

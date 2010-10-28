@@ -76,7 +76,7 @@ function init(me)
 	
 	entity_setDeathParticleEffect(me, "PurpleExplode")
 
-	entity_applyRandomForce(me, 500)
+	entity_addRandomVel(me, 500)
 	-- entity_scale(0.8, 0.8)
 end
 
@@ -87,7 +87,7 @@ function update(me, dt)
 		if v.gasTimer < 0 then
 			v.gasTimer = 8
 			entity_fireGas(me, 40, 4, 0.25, "Gas", 0, 0.8, 0.6, 0, 0, 2)
-			entity_applyRandomForce(me, 1000)
+			entity_addRandomVel(me, 1000)
 			spawnParticleEffect("tinygreenexplode", entity_x(me), entity_y(me))
 			entity_sound(me, "boil")
 		end
