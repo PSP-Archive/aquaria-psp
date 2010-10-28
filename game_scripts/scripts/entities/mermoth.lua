@@ -38,7 +38,7 @@ v.moveTimer = 0
 v.rotateOffset = 0
 v.angry = false
 v.enraged = false
-v.moving = 1
+v.moving = 0.2
 v.n = 0
 
 v.puffTimer = 0
