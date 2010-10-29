@@ -66,10 +66,11 @@ RenderObject *Segmented::getSegment(int seg)
 void Segmented::updateSegment(int i, const Vector &diff)
 {
 	const float sqrLength = diff.getSquaredLength2D();
+
 	if (sqrLength < sqrMinDist)
 		return;
 
-	if (diff.getSquaredLength2D() > sqrMaxDist)
+	if (sqrLength > sqrMaxDist)
 	{
 		Vector useDiff = diff;
 		useDiff.setLength2D(maxDist);
@@ -125,9 +126,8 @@ void Segmented::updateSegments(const Vector &position, bool reverse)
 		for (int i = 0; i <= top; i++)
 		{
 			const Vector diff = lastPosition - segments[i]->position;
-			lastPosition = segments[i]->position;
-
 			updateSegment(i, diff);
+			lastPosition = segments[i]->position;
 		}
 	}
 	else
@@ -135,9 +135,8 @@ void Segmented::updateSegments(const Vector &position, bool reverse)
 		for (int i = top; i >= 0; i--)
 		{
 			const Vector diff = lastPosition - segments[i]->position;
-			lastPosition = segments[i]->position;
-
 			updateSegment(i, diff);
+			lastPosition = segments[i]->position;
 		}
 	}
 	/*
