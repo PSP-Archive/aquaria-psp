@@ -323,6 +323,8 @@ void Entity::setCanLeaveWater(bool v)
 
 bool Entity::checkSplash(const Vector &o)
 {
+	Path *lastWaterBubble = waterBubble;
+
 	Vector check = position;
 	if (!o.isZero())
 		check = o;
@@ -342,7 +344,23 @@ bool Entity::checkSplash(const Vector &o)
 
 	if (changed)
 	{
-		dsq->spawnParticleEffect("Splash", check, rotation.z);
+		float angle;
+
+		if (!wasUnderWater && waterBubble)
+		{
+			Vector diff = position - waterBubble->nodes[0].position;
+			angle = MathFunctions::getAngleToVector(diff, 0) + 180;
+		}
+		else if (wasUnderWater && lastWaterBubble)
+		{
+			Vector diff = position - lastWaterBubble->nodes[0].position;
+			angle = MathFunctions::getAngleToVector(diff, 0);
+		}
+		else
+		{
+			angle = MathFunctions::getAngleToVector(vel+vel2, 0);
+		}
+		dsq->spawnParticleEffect("Splash", check, angle);
 	}
 
 	return changed;
