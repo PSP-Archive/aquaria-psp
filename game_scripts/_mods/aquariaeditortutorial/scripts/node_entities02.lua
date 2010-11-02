@@ -36,7 +36,7 @@ function sayNext()
 	elseif thingSaying == 1 then
 		setControlHint("You can move entities in the same way that you move tiles, by dragging them with the Left Mouse Button.", 0, 0, 0, 16)
 	elseif thingSaying == 2 then
-		setControlHint("You can also rotate them by holding Shift and delete then with Delete or Backspace.", 0, 0, 0, 16)
+		setControlHint("You can also rotate them by holding Shift and delete them with Delete or Backspace.", 0, 0, 0, 16)
 	elseif thingSaying == 3 then
 		setControlHint("Try it on these fish!", 0, 0, 0, 16)
 	end

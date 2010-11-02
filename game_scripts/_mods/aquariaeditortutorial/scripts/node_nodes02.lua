@@ -32,7 +32,7 @@ end
 
 function sayNext()
 	if thingSaying == 0 then
-		setControlHint("To drop a node, press Spacebar.", 0, 0, 0, 16)
+		setControlHint("To drop a node, hold Control and press Spacebar.", 0, 0, 0, 16)
 	elseif thingSaying == 1 then
 		setControlHint("To expand a node, hover your mouse over the center of the node.  Then hold down Shift.", 0, 0, 0, 16)
 	elseif thingSaying == 2 then
