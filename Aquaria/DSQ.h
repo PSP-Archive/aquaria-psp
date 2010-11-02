@@ -214,7 +214,7 @@ public:
 	void update(float dt);
 	void end();
 	
-	void forceOff();
+	void forceOff(float t = 0);
 
 	bool isVisible();
 

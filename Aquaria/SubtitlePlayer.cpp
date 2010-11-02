@@ -89,16 +89,15 @@ void SubtitlePlayer::go(const std::string &subs)
 
 void SubtitlePlayer::end()
 {
-	dsq->subtext->alpha.interpolateTo(0, 1);
-	dsq->subbox->alpha.interpolateTo(0, 1.2);
-
+	dsq->subtext->alpha.interpolateTo(0, 1.0f);
+	dsq->subbox->alpha.interpolateTo(0, 1.2f);
 	vis = false;
 }
 
-void SubtitlePlayer::forceOff()
+void SubtitlePlayer::forceOff(float t)
 {
-	dsq->subtext->alpha = 0;
-	dsq->subbox->alpha = 0;
+	dsq->subtext->alpha.interpolateTo(0, t/1.2f);
+	dsq->subbox->alpha.interpolateTo(0, t);
 	vis = false;
 }
 

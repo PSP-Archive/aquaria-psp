@@ -10880,9 +10880,11 @@ void Game::setGrid(ElementTemplate *et, Vector position, float rot360)
 
 void Game::removeState()
 {
+	const float fadeTime = 0.25;
+
 	dsq->toggleVersionLabel(false);
 	
-	dsq->subtitlePlayer.forceOff();
+	dsq->subtitlePlayer.forceOff(fadeTime);
 
 	dropIngrNames.clear();
 
@@ -10907,7 +10909,7 @@ void Game::removeState()
 
 	debugLog("toggleCursor");
 
-	dsq->toggleCursor(0, 0.25);
+	dsq->toggleCursor(0, fadeTime);
 
 	if (!isInGameMenu())
 		avatar->disableInput();
@@ -10922,8 +10924,8 @@ void Game::removeState()
 		avatarTransit = dsq->game->avatar->attachedTo->name;
 
 	//dsq->overlay->alpha = 0;
-	dsq->overlay->alpha.interpolateTo(1, 0.25);
-	dsq->main(0.25);
+	dsq->overlay->alpha.interpolateTo(1, fadeTime);
+	dsq->main(fadeTime);
 
 	/*
 	// to block on voice overs
