@@ -74,6 +74,12 @@ function init(me)
 	entity_setDamageTarget(me, DT_AVATAR_PET, false)
 end
 
+function postInit(me)
+	if isFlag(FLAG_PET_BLASTER, 1) then
+		entity_delete(me)
+	end
+end
+
 function update(me, dt)
 
 	if entity_isState(me, STATE_WAITING) then

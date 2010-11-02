@@ -587,6 +587,7 @@ protected:
 	Quad *placer;
 	DebugFont *text;
 	bool on;
+	InterpolatedVector oldGlobalScale;
 };
 
 #endif  // AQUARIA_BUILD_SCENEEDITOR
@@ -803,6 +804,7 @@ public:
 	bool optionsOnly;
 
 	MenuPage currentMenuPage;
+	int currentFoodPage, currentTreasurePage;
 
 	Precacher tileCache;
 
