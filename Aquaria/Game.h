@@ -586,6 +586,7 @@ protected:
 	Quad *placer;
 	DebugFont *text;
 	bool on;
+	InterpolatedVector oldGlobalScale;
 };
 typedef std::vector<Quad*> QuadList;
 typedef std::vector<QuadList> QuadArray;

@@ -3257,6 +3257,12 @@ void SceneEditor::toggle(bool on)
 		{
 			dsq->getRenderObjectLayer(i)->update = true;
 		}
+
+		oldGlobalScale = core->globalScale;
+		const float cameraOffset = 1/oldGlobalScale.x - 1/zoom.x;
+		core->cameraPos.x += cameraOffset * core->getVirtualWidth()/2;
+		core->cameraPos.y += cameraOffset * core->getVirtualHeight()/2;
+		core->globalScale = zoom;
 	}
 	else
 	{
@@ -3283,6 +3289,11 @@ void SceneEditor::toggle(bool on)
 		dsq->darkLayer.toggle(true);
 
 		dsq->game->rebuildElementUpdateList();
+
+		const float cameraOffset = 1/oldGlobalScale.x - 1/zoom.x;
+		core->cameraPos.x -= cameraOffset * core->getVirtualWidth()/2;
+		core->cameraPos.y -= cameraOffset * core->getVirtualHeight()/2;
+		core->globalScale = oldGlobalScale;
 	}
 }
 
