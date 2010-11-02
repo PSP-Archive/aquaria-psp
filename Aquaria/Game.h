@@ -783,6 +783,7 @@ public:
 	void removePath(int idx);
 
 	MenuPage currentMenuPage;
+	int currentFoodPage, currentTreasurePage;
 
 	Precacher tileCache;
 	Path *getNearestPath(const Vector &pos, const std::string &name="");
