@@ -3168,6 +3168,9 @@ void Continuity::reset()
 	
 	if (dsq->game)
 	{
+		dsq->game->currentMenuPage = MENUPAGE_NONE;
+		dsq->game->currentFoodPage = 0;
+		dsq->game->currentTreasurePage = 0;
 		dsq->game->recipeMenu.currentPage = 0;
 	}
 

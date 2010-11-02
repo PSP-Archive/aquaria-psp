@@ -51,13 +51,10 @@ const float bgSfxVol	= 1.0;
 
 const float MENUPAGETRANSTIME		= 0.2; // 0.2
 
+const int foodPageSize = 16;
+const int treasurePageSize = 16;
+
 int FoodSlot::foodSlotIndex = -1;
-
-int foodPage = 0;
-int foodPageSize = 16;
-
-int treasurePage = 0;
-int treasurePageSize = 16;
 
 int selectedTreasureFlag = -1;
 
@@ -393,7 +390,7 @@ void FoodSlot::toggle(bool f)
 
 void FoodSlot::refresh(bool effects)
 {
-	int offset = foodPage*foodPageSize;
+	int offset = game->currentFoodPage*foodPageSize;
 	IngredientData *i = dsq->continuity.getIngredientByIndex(offset+slot);
 	if (i)
 	{
@@ -896,7 +893,7 @@ void TreasureSlot::onUpdate(float dt)
 
 void TreasureSlot::refresh()
 {
-	flag = (treasurePage*treasurePageSize) + index + treasureFlagStart;
+	flag = (game->currentTreasurePage*treasurePageSize) + index + treasureFlagStart;
 	if (flag >= FLAG_COLLECTIBLE_START && flag < FLAG_COLLECTIBLE_END && dsq->continuity.getFlag(flag)>0)
 	{
 		// get treasure image somehow
@@ -3340,7 +3337,6 @@ void Game::sortFood()
 	
 	dsq->continuity.sortFood();
 	
-	foodPage = 0;
 	// rebuild the page
 	
 	refreshFoodSlots(false);
@@ -6382,9 +6378,6 @@ void Game::applyState()
 	cameraOffBounds = false;
 
 
-	foodPage = 0;
-	treasurePage = 0;
-
 	ingOffY = 0;
 	ingOffYTimer = 0;
 
@@ -6402,8 +6395,6 @@ void Game::applyState()
 
 	firstSchoolFish = true;
 	invincibleOnNested = true;
-
-	currentMenuPage = MENUPAGE_NONE;
 
 
 	controlHintNotes.clear();
@@ -7249,44 +7240,45 @@ const int numTreasures = 16*2;
 
 void Game::onPrevTreasurePage()
 {
-	if ((treasurePage-1) * treasurePageSize >= 0)
+	if (currentTreasurePage > 0)
 	{
 		dsq->sound->playSfx("menu-switch", 0.5);
 		dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
 
-		treasurePage--;
+		currentTreasurePage--;
 		refreshTreasureSlots();
 	}
 	else
 	{
-		dsq->sound->playSfx("menu-switch", 0.5);
-		dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
+		if (numTreasures > 0)
+		{
+			dsq->sound->playSfx("menu-switch", 0.5);
+			dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
 
-		treasurePage = ((numTreasures-1)/treasurePageSize);
-		if (treasurePage < 0)
-			treasurePage = 0;
-		refreshTreasureSlots();
+			currentTreasurePage = ((numTreasures-1)/treasurePageSize);
+			refreshTreasureSlots();
+		}
 	}
 }
 
 void Game::onNextTreasurePage()
 {
-	if ((treasurePage+1)*treasurePageSize < numTreasures)
+	if ((currentTreasurePage+1)*treasurePageSize < numTreasures)
 	{
 		dsq->sound->playSfx("menu-switch", 0.5);
 		dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
 
-		treasurePage++;
+		currentTreasurePage++;
 		refreshTreasureSlots();
 	}
 	else
 	{
-		if (treasurePage != 0)
+		if (currentTreasurePage != 0)
 		{
 			dsq->sound->playSfx("menu-switch", 0.5);
 			dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
 
-			treasurePage = 0;
+			currentTreasurePage = 0;
 			refreshTreasureSlots();
 		}
 	}
@@ -7294,29 +7286,26 @@ void Game::onNextTreasurePage()
 
 void Game::onPrevFoodPage()
 {
-	int lastFoodPage = foodPage;
-	if ((foodPage-1) * foodPageSize >= 0)
+	int lastFoodPage = currentFoodPage;
+	if (currentFoodPage > 0)
 	{
-		foodPage--;
+		currentFoodPage--;
 		refreshFoodSlots(false);
 	}
 	else
 	{
 		if (!dsq->continuity.ingredients.empty())
 		{
-			foodPage = ((dsq->continuity.ingredients.size()-1)/foodPageSize);
-			if (foodPage < 0)
-				foodPage = 0;
-
+			currentFoodPage = ((dsq->continuity.ingredients.size()-1)/foodPageSize);
 			refreshFoodSlots(false);
 		}
 	}
 
 	std::ostringstream os;
-	os << "food page: " << foodPage;
+	os << "food page: " << currentFoodPage;
 	debugLog(os.str());
 
-	if (foodPage != lastFoodPage)
+	if (currentFoodPage != lastFoodPage)
 	{
 		dsq->sound->playSfx("menu-switch", 0.5);
 		dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
@@ -7325,22 +7314,22 @@ void Game::onPrevFoodPage()
 
 void Game::onNextFoodPage()
 {
-	int lastFoodPage = foodPage;
-	if ((foodPage+1)*foodPageSize < dsq->continuity.ingredients.size())
+	int lastFoodPage = currentFoodPage;
+	if ((currentFoodPage+1)*foodPageSize < dsq->continuity.ingredients.size())
 	{
-		foodPage++;
+		currentFoodPage++;
 		refreshFoodSlots(false);
 	}
 	else
 	{
-		if (foodPage != 0)
+		if (currentFoodPage != 0)
 		{
-			foodPage = 0;
+			currentFoodPage = 0;
 			refreshFoodSlots(false);
 		}
 	}
 
-	if (foodPage != lastFoodPage)
+	if (currentFoodPage != lastFoodPage)
 	{
 		dsq->sound->playSfx("menu-switch", 0.5);
 		dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
@@ -9305,7 +9294,6 @@ void Game::toggleTreasureMenu(bool f)
 	else if (!f && treasureMenu)
 	{
 		treasureMenu = false;
-		toggleMainMenu(true);
 
 		for (int i = 0; i < treasureTips.size(); i++)
 			treasureTips[i]->alpha = 0;
@@ -9448,8 +9436,6 @@ void Game::toggleFoodMenu(bool f)
 	{
 		recipeMenu.toggle(false);
 		foodMenu = false;
-
-		toggleMainMenu(true);
 
 		cook->alpha = 0;
 		recipes->alpha = 0;
@@ -9902,7 +9888,7 @@ void Game::updateInGameMenu(float dt)
 
 			if (!dsq->continuity.ingredients.empty())
 			{
-				int pageNum = (foodPage+1);
+				int pageNum = (currentFoodPage+1);
 				int numPages = ((dsq->continuity.ingredients.size()-1)/foodPageSize)+1;
 
 				std::ostringstream os;
@@ -9922,7 +9908,7 @@ void Game::updateInGameMenu(float dt)
 		if (treasureMenu)
 		{
 			std::ostringstream os;
-			os << (treasurePage+1) << "/" << (numTreasures/treasurePageSize);
+			os << (currentTreasurePage+1) << "/" << (numTreasures/treasurePageSize);
 			circlePageNum->setText(os.str());
 		}
 		// HACK: move this later

@@ -800,6 +800,7 @@ public:
 	bool optionsOnly;
 
 	MenuPage currentMenuPage;
+	int currentFoodPage, currentTreasurePage;
 
 	Precacher tileCache;
 
