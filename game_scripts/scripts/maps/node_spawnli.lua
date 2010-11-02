@@ -24,12 +24,6 @@ function init(me)
 	or (isFlag(FLAG_LI, 1) and isMapName("LICAVE")) then
 		createEntity("Li", "", node_x(me), node_y(me))
 	end
-	if isFlag(FLAG_LI, 101) and isMapName("LICAVE") then
-		createEntity("Li", "", node_x(me), node_y(me))
-	end
-	if isFlag(FLAG_LI, 102) and isMapName("VEDHACAVE") then
-		createEntity("Li", "", node_x(me), node_y(me))
-	end	
 end
 
 function update(me, dt)
