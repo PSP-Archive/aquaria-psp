@@ -6944,6 +6944,10 @@ void Game::applyState()
 	debugLog("Updating bgSfxLoop");
 	updateBgSfxLoop(false);
 
+	// Must be _before_ the init script, since some init scripts run
+	// cutscenes immediately.  --achurch
+	dsq->subtitlePlayer.show(0.25);
+
 	if (verbose) debugLog("loading map init script");
 	dsq->runScript("scripts/maps/map_"+sceneName+".lua", "init");
 
@@ -10884,7 +10888,7 @@ void Game::removeState()
 
 	dsq->toggleVersionLabel(false);
 	
-	dsq->subtitlePlayer.forceOff(fadeTime);
+	dsq->subtitlePlayer.hide(fadeTime);
 
 	dropIngrNames.clear();
 

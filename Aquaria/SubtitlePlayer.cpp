@@ -27,8 +27,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 SubtitlePlayer::SubtitlePlayer()
 {
-	curLine =0;
+	curLine = 0;
 	vis = false;
+	hidden = false;
 }
 
 bool SubtitlePlayer::isVisible()
@@ -94,11 +95,24 @@ void SubtitlePlayer::end()
 	vis = false;
 }
 
-void SubtitlePlayer::forceOff(float t)
+void SubtitlePlayer::hide(float t)
 {
-	dsq->subtext->alpha.interpolateTo(0, t/1.2f);
-	dsq->subbox->alpha.interpolateTo(0, t);
-	vis = false;
+	if (vis && !hidden)
+	{
+		dsq->subtext->alpha.interpolateTo(0, t/1.2f);
+		dsq->subbox->alpha.interpolateTo(0, t);
+	}
+	hidden = true;
+}
+
+void SubtitlePlayer::show(float t)
+{
+	if (vis && hidden)
+	{
+		dsq->subtext->alpha.interpolateTo(1, t/1.2f);
+		dsq->subbox->alpha.interpolateTo(1, t);
+	}
+	hidden = false;
 }
 
 void SubtitlePlayer::update(float dt)
@@ -123,13 +137,18 @@ void SubtitlePlayer::update(float dt)
 			debugLog(subLines[curLine].line);
 			dsq->subtext->scrollText(subLines[curLine].line, 0.02);
 			//dsq->subtext->scrollText(subLines[curLine].line, 0.1);
-			dsq->subtext->alpha.interpolateTo(1, 1);
-			dsq->subbox->alpha.interpolateTo(1, 0.1);
-
-			vis = true;
-
 			// advance
 			curLine++;
+		}
+
+		if (!vis)
+		{
+			if (!hidden)
+			{
+				dsq->subtext->alpha.interpolateTo(1, 1);
+				dsq->subbox->alpha.interpolateTo(1, 0.1);
+			}
+			vis = true;
 		}
 	}
 #endif
