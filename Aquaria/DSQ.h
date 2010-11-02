@@ -222,7 +222,8 @@ public:
 	void update(float dt);
 	void end();
 	
-	void forceOff();
+	void hide(float t = 0);
+	void show(float t = 0);
 
 	bool isVisible();
 
@@ -231,7 +232,7 @@ public:
 
 	int curLine;
 protected:
-	bool vis;
+	bool vis, hidden;
 };
 
 struct ModEntry
