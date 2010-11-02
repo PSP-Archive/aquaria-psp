@@ -6271,8 +6271,6 @@ void Game::applyState()
 	firstSchoolFish = true;
 	invincibleOnNested = true;
 
-	currentMenuPage = MENUPAGE_NONE;
-
 
 	controlHintNotes.clear();
 
@@ -9138,7 +9136,6 @@ void Game::toggleTreasureMenu(bool f)
 	else if (!f && treasureMenu)
 	{
 		treasureMenu = false;
-		toggleMainMenu(true);
 
 		for (int i = 0; i < treasureTips.size(); i++)
 			treasureTips[i]->alpha = 0;
@@ -9281,8 +9278,6 @@ void Game::toggleFoodMenu(bool f)
 	{
 		recipeMenu.toggle(false);
 		foodMenu = false;
-
-		toggleMainMenu(true);
 
 		cook->alpha = 0;
 		recipes->alpha = 0;
