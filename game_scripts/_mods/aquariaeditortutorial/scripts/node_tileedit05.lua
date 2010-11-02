@@ -32,7 +32,7 @@ end
 
 local function sayNext()
 	if v.thingSaying == 0 then
-		setControlHint("There are also 3 parallax layers, mapped to 'B', 'N', and 'M'.", 0, 0, 0, 16)
+		setControlHint("There are also 6 parallax layers, mapped to 'B', 'N', 'M', ',', '.', and '/'.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then
 		setControlHint("The amount of parallax scrolling for each of these layers is defined in the map file.", 0, 0, 0, 16)
 	end

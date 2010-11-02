@@ -633,7 +633,7 @@ void StatsAndAchievements::EvaluateAchievement( Achievement &achievement )
 		if (dsq->continuity.getFlag(FLAG_SPIRIT_ERULIAN) > 0
 			&& dsq->continuity.getFlag(FLAG_SPIRIT_KROTITE) > 0
 			&& dsq->continuity.getFlag(FLAG_SPIRIT_DRASK) > 0
-			&& dsq->continuity.getFlag(FLAG_TRANSTURTLE_OPENWATER03) > 0)
+			&& dsq->continuity.getFlag(FLAG_SPIRIT_DRUNIAD) > 0)
 		{
 			UnlockAchievement(achievement);
 		}

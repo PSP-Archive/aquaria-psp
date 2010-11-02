@@ -32,7 +32,7 @@ end
 
 local function sayNext()
 	if v.thingSaying == 0 then
-		setControlHint("All the backdrop objects in Aquaria are on one of 13 layers.", 0, 0, 0, 16)
+		setControlHint("All the backdrop objects in Aquaria are on one of 16 layers.", 0, 0, 0, 16)
 	elseif v.thingSaying == 1 then
 		setControlHint("The first nine layers are mapped to the 1-9 keys on your keyboard.", 0, 0, 0, 16)
 	elseif v.thingSaying == 2 then
