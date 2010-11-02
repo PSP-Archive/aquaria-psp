@@ -6294,6 +6294,8 @@ void Avatar::activateAura(AuraType aura)
 	if (aura == AURA_SHIELD)
 	{
 		shieldPoints = maxShieldPoints;
+		if (auraLowEmitter.isRunning())
+			auraLowEmitter.stop();
 		auraEmitter.load("AuraShield");
 		auraEmitter.start();
 		if (dsq->loops.shield == BBGE_AUDIO_NOCHANNEL)
