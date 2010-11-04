@@ -5351,6 +5351,11 @@ bool Game::loadSceneXML(std::string scene)
 	rebuildElementUpdateList();
 	setElementLayerFlags();
 
+	// HACK: Don't try to optimize the barrier layer in Mithalas Cathedral
+	// since elements are turned off dynamically.
+	if (nocasecmp(scene, "cathedral02") == 0)
+		dsq->getRenderObjectLayer(LR_ELEMENTS3)->setOptimizeStatic(false);
+
 	findMaxCameraValues();
 
 	endProgress();
