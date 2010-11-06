@@ -2483,7 +2483,7 @@ Entity *Entity::findTarget(int dist, int type)
 	else
 	{
 		int closestDist = -1;
-		Entity *target = 0;
+		Entity *newTarget = 0;
 		FOR_ENTITIES(i)
 		{
 			Entity *e = *i;
@@ -2493,13 +2493,13 @@ Entity *Entity::findTarget(int dist, int type)
 				if (d < sqr(dist) && (d < closestDist || closestDist == -1))
 				{
 					closestDist = d;
-					target = e;
+					newTarget = e;
 				}
 			}
 		}
-		if (target)
+		if (newTarget)
 		{
-			target = target;
+			target = newTarget;
 		}
 	}
 	return target;
