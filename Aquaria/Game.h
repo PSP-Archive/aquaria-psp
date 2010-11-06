@@ -918,7 +918,7 @@ public:
 	void entityDied(Entity *e);
 
 	bool isShuttingDownGameState() { return shuttingDownGameState; }
-	void warpToSceneNode(std::string scene, std::string node, int toFlip=-1);
+	void warpToSceneNode(std::string scene, std::string node);
 
 	AquariaProgressBar *progressBar;
 	void addProgress();

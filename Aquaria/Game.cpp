@@ -1834,7 +1834,7 @@ void Game::warpPrep()
 	fromPosition = avatar->position;
 }
 
-void Game::warpToSceneNode(std::string scene, std::string node, int toFlip)
+void Game::warpToSceneNode(std::string scene, std::string node)
 {
 	warpPrep();
 
