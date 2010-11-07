@@ -4973,6 +4973,8 @@ void Avatar::destroy()
 		core->sound->fadeSfx(dsq->loops.current, SFT_OUT, 1);
 		dsq->loops.current = BBGE_AUDIO_NOCHANNEL;
 	}
+
+	avatar = 0;
 }
 
 void Avatar::fireRope()

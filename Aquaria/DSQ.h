@@ -1232,6 +1232,7 @@ class DSQ : public Core
 {
 public:
 	DSQ(std::string fileSystem);
+	~DSQ();
 
 	void init();
 	void shutdown();
