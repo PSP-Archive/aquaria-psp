@@ -1257,6 +1257,7 @@ Game::Game() : StateObject()
 Game::~Game()
 {
 	tileCache.clean();
+	game = 0;
 }
 /*
 void Game::doChoiceMenu(Vector position, std::vector<std::string> choices)
