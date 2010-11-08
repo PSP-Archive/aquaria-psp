@@ -2255,7 +2255,7 @@ void Entity::idle()
 	rotateToVec(Vector(0,-1),0.1);
 	vel.capLength2D(50);
 
-	setRiding(false);
+	setRiding(0);
 }
 
 void Entity::updateLance(float dt)
