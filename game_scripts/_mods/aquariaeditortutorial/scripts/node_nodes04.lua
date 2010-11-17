@@ -34,7 +34,7 @@ function sayNext()
 	if thingSaying == 0 then
 		setControlHint("Here are some other fun nodes.", 0, 0, 0, 16)
 	elseif thingSaying == 1 then
-		setControlHint("To see what they're called, press 'N' while you hover your mouse over them.", 0, 0, 0, 16)
+		setControlHint("To see what they're called, press 'N' or check the edit mode status line while you hover your mouse over them.", 0, 0, 0, 16)
 	elseif thingSaying == 2 then
 		setControlHint("You can do all kinds of things with nodes, like set waypoints and script your own cutscenes!", 0, 0, 0, 16)
 	end
