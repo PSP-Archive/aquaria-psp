@@ -684,6 +684,8 @@ public:
 	std::vector<ElementTemplate> elementTemplates;
 	std::string sceneName;
 
+	ElementTemplate *getElementTemplateByIdx(int idx);
+
 	void saveScene(std::string scene);
 	typedef std::vector<WarpArea> WarpAreas;
 	WarpAreas warpAreas;
@@ -1111,9 +1113,6 @@ protected:
 
 	void updateCurrentVisuals(float dt);
 	std::string lastTileset;
-
-	ElementTemplate *getElementTemplateByIdx(int idx);
-
 
 
 	void createLi();

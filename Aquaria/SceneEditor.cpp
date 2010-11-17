@@ -3316,28 +3316,46 @@ void SceneEditor::updateText()
 		(int)dsq->cameraPos.x << ", " << (int)dsq->cameraPos.y << ") ("
 		//<< (int)dsq->game->avatar->position.x
 		//<< ", " << (int)dsq->game->avatar->position.y << ", " << (int)dsq->game->avatar->position.z << ")" << " ("
-		<< (int)dsq->getGameCursorPosition().x << ", " << (int)dsq->getGameCursorPosition().y << ")"
-		<< " - " << selectedEntity.name << " - v[" << selectedVariation << "]"
-		<< " ";
+		<< (int)dsq->getGameCursorPosition().x << ", " << (int)dsq->getGameCursorPosition().y << ")" << " ";
 	switch(editType)
 	{
 	case ET_ELEMENTS:
 		os << "elements";
+		if (selectedElements.size() > 1)
+		{
+			os << " - " << selectedElements.size() << " selected";
+		}
+		else
+		{
+			Element *e;
+			if (!selectedElements.empty())
+				e = selectedElements[0];
+			else
+				e = editingElement;
+			if (e)
+			{
+				os << " id: " << e->templateIdx;
+				ElementTemplate *et = game->getElementTemplateByIdx(e->templateIdx);
+				if (et)
+					os << " gfx: " << et->gfx;
+			}
+		}
 	break;
 	case ET_ENTITIES:
+		os << "entities";
 		if (editingEntity)
 		{
-			os << "id: " << editingEntity->getID() << " name: " << editingEntity->name << " flag: " << dsq->continuity.getEntityFlag(dsq->game->sceneName, editingEntity->getID());
+			os << " id: " << editingEntity->getID() << " name: " << editingEntity->name << " flag: " << dsq->continuity.getEntityFlag(dsq->game->sceneName, editingEntity->getID());
 			os << " groupID: " << editingEntity->getGroupID() << " ";
-			os << " state: " << editingEntity->getState() << " ";
+			os << " state: " << editingEntity->getState();
 		}
-		os << "entities";
 	break;
 	case ET_PATHS:
-		os << "paths";
+		os << "paths si[" << selectedIdx << "]";
+		if (getSelectedPath())
+			os << " name: " << getSelectedPath()->name;
 	break;
 	}
-	os << " si[" << selectedIdx << "]";
 	text->setText(os.str());
 }
 
