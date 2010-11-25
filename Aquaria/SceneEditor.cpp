@@ -3306,10 +3306,10 @@ void SceneEditor::updateText()
 {
 	std::ostringstream os;
 	os << dsq->game->sceneName << " bgL[" << bgLayer << "] (" <<
-		(int)dsq->cameraPos.x << ", " << (int)dsq->cameraPos.y << ") ("
+		(int)dsq->cameraPos.x << "," << (int)dsq->cameraPos.y << ") ("
 		//<< (int)dsq->game->avatar->position.x
-		//<< ", " << (int)dsq->game->avatar->position.y << ", " << (int)dsq->game->avatar->position.z << ")" << " ("
-		<< (int)dsq->getGameCursorPosition().x << ", " << (int)dsq->getGameCursorPosition().y << ")" << " ";
+		//<< "," << (int)dsq->game->avatar->position.y << "," << (int)dsq->game->avatar->position.z << ")" << " ("
+		<< (int)dsq->getGameCursorPosition().x << "," << (int)dsq->getGameCursorPosition().y << ")" << " ";
 	switch(editType)
 	{
 	case ET_ELEMENTS:
