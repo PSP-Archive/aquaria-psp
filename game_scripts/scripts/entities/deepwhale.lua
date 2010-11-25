@@ -22,8 +22,8 @@ v = getVars()
 v.n = 0
 v.seen = false
 
-v.notes = { 4, 2, 3, 2, 1 }
-v.numNotes = 5
+local notes = { 4, 2, 3, 2, 1 }
+local numNotes = 5
 v.curNote = 1
 
 v.warpLoc = 0
@@ -127,12 +127,12 @@ end
 function songNoteDone(me, note)
 	if entity_isState(me, STATE_IDLE) then
 		debugLog(string.format("curNote: %d", v.curNote))
-		if v.notes[v.curNote] == note then
+		if notes[v.curNote] == note then
 			v.curNote = v.curNote + 1
 		else
 			v.curNote = 1
 		end
-		if v.curNote > v.numNotes then
+		if v.curNote > numNotes then
 			entity_setState(me, STATE_OPEN)
 		end
 	end

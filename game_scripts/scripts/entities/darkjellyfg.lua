@@ -38,7 +38,7 @@ v.velx = 0
 v.waveDir = 1
 v.waveTimer = 0
 v.soundDelay = 0
-v.glows = {}
+v.glows = nil
 
 v.n = 0
 
@@ -50,6 +50,8 @@ local function doIdleScale(me)
 end
 
 function init(me)
+	v.glows = {}
+
 	setupBasicEntity(
 	me,
 	"",								-- texture

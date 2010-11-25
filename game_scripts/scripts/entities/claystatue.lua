@@ -28,7 +28,7 @@ v.legs = 0
 v.feet = 0
 v.chest = 0
 
-v.b = {}
+v.b = nil
 v.cb = 1
 v.maxb = 6
 
@@ -41,6 +41,7 @@ function init(me)
 	entity_initSkeletal(me, "ClayStatue")	
 	entity_setAllDamageTargets(me, false)
 		
+	v.b = {}
 	v.b[6] = entity_getBoneByName(me, "Head")
 	v.b[4] = entity_getBoneByName(me, "LeftArm")
 	v.b[5] = entity_getBoneByName(me, "RightArm")

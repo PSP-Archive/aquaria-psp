@@ -24,8 +24,8 @@ v.n = 0
 v.waitTimeMax = 5
 v.waitTimer = v.waitTimeMax
 
-v.notes = { 3, 2, 7, 1 }
-v.numNotes = 4
+-- local notes = { 3, 2, 7, 1 }  -- not used
+-- local numNotes = 4            -- not used
 v.curNote = 0
 
 v.noteDelay = 0

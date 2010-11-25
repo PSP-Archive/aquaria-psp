@@ -25,10 +25,12 @@ v.inCurrent = false
 v.updateDelay = 0
 v.updateDelayTime = 0.5
 v.groupNode = 0
-v.bounceGroup = {}
+v.bounceGroup = nil
 v.bounceGroupSize = 1
 
 function init(me)
+	v.bounceGroup = {}
+
 	setupEntity(me)
 	entity_setEntityType(me, ET_ENEMY)
 	entity_initSkeletal(me, "UpsideDownJelly")	

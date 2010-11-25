@@ -31,7 +31,7 @@ v.nqtimer = 0
 v.noteQuad = 0
 v.delay = 0
 
-v.boneGroup = {}
+v.boneGroup = nil
 
 v.noteBone = 0
 v.spinDir = 1
@@ -45,6 +45,8 @@ local function boneGroupAlpha(a, t)
 end
 
 function v.commonInit(me, skel, num, f, r, g, b)
+	v.boneGroup = {}
+
 	setupEntity(me)
 	entity_setEntityType(me, ET_NEUTRAL)
 	entity_initSkeletal(me, skel)
