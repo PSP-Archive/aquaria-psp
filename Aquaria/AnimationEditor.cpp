@@ -185,6 +185,8 @@ AnimationEditor::AnimationEditor() : StateObject()
 
 void AnimationEditor::resetScale()
 {
+	if (dsq->isNested()) return;
+
 	editSprite->scale = Vector(1,1);
 }
 
