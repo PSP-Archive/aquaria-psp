@@ -3757,6 +3757,10 @@ void Core::print(int x, int y, const char *str, float sz)
 		case '.':
 			_VLN(xx+0.4f, y+1, xx+0.6f, y+1)
 		break;
+		case ',':
+			_VLN(xx+0.5f, y+0.75f, xx+0.5f, y+1.0f);
+			_VLN(xx+0.5f, y+1.0f, xx+0.2f, y+1.25f);
+		break;
 		case ' ':
 		break;
 		case '(':
