@@ -21,8 +21,8 @@ v = getVars()
 
 v.n = 0
 
-v.notes = { 1, 3, 4, 5 }
-v.numNotes = 4
+local notes = { 1, 3, 4, 5 }
+local numNotes = 4
 v.curNote = 1
 
 v.g1 = 0
@@ -260,12 +260,12 @@ function songNoteDone(me, note)
 	if isFlag(FLAG_SPIRIT_ERULIAN, 1) and isFlag(FLAG_SPIRIT_KROTITE, 1) and isFlag(FLAG_SPIRIT_DRUNIAD, 1) and isFlag(FLAG_SPIRIT_DRASK, 1) then
 		if entity_isState(me, STATE_IDLE) then
 			--debugLog(string.format("curNote: %d", v.curNote))
-			if v.notes[v.curNote] == note then
+			if notes[v.curNote] == note then
 				v.curNote = v.curNote + 1
 			else
 				v.curNote = 1
 			end
-			if v.curNote > v.numNotes then
+			if v.curNote > numNotes then
 				entity_setState(me, STATE_OPEN)
 			end
 		end

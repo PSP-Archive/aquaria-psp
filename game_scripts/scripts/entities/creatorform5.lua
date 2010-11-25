@@ -38,7 +38,7 @@ local STATE_SPAWNSPHERES	= 1007
 
 v.delay = 0
 
-v.songNotes 				= {}
+v.songNotes 				= nil
 
 v.songSize 				= 0
 v.curNote 				= 1
@@ -63,6 +63,8 @@ local function getHitPerc()
 end
 
 function init(me)
+	v.songNotes = {}
+
 	setupEntity(me)
 	entity_setEntityType(me, ET_ENEMY)
 	entity_initSkeletal(me, "CreatorForm5")	

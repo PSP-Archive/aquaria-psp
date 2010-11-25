@@ -22,7 +22,7 @@ v = getVars()
 v.minNode = 1
 v.maxNodes = 7
 
-v.nodes = {}
+v.nodes = nil
 v.raceStarted = false
 v.avatarNode = 1
 v.n = 0
@@ -50,6 +50,7 @@ v.doStartRace = false
 
 function init(me)
 	-- this could be odd.. if you add nodes after... postinit for nodes??
+	v.nodes = {}
 	for i=v.minNode, v.maxNodes do
 		local nodeName = string.format("R0%d", i)
 		v.nodes[i] = getNode(nodeName)

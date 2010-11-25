@@ -38,7 +38,7 @@ v.collisionSegs = 64
 v.avoidLerp = 0
 v.avoidDir = 1
 v.interest = false
-v.glow = {}
+v.glow = nil
 
 v.segs = 64
 v.glowSegInt = 4
@@ -53,6 +53,8 @@ end
 
 -- initializes the entity
 function init(me)
+	v.glow = {}
+
 -- oldhealth : 40
 	setupBasicEntity(
 	me,

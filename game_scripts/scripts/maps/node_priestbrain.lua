@@ -21,11 +21,13 @@ v = getVars()
 
 v.n = 0
 v.started = false
-v.priests = {}
+v.priests = nil
 v.numPriests = 0
 v.door = 0
 
 function init(me)
+	v.priests = {}
+
 	v.n = getNaija()
 
 	local e = getFirstEntity()

@@ -27,7 +27,7 @@ v.n = 0
 v.head = 0
 v.mergog = 0
 
-v.shot_bones = {0,0,0,0,0}
+v.shot_bones = nil
 
 v.shot = 1
 
@@ -43,6 +43,8 @@ v.beam = 0
 v.pokeTimer = 0
 
 function init(me)
+	v.shot_bones = {0,0,0,0,0}
+
 	setupBasicEntity(
 	me,
 	"Mergog/Mergog",				-- texture
