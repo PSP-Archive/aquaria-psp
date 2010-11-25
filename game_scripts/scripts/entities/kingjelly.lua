@@ -33,8 +33,8 @@ local STATE_MOVECORE		= 1002
 
 v.maxHealth = 60
 
-v.zaps = {}
-v.zapGlows = {}
+v.zaps = nil
+v.zapGlows = nil
 
 v.nZaps = 3
 
@@ -52,6 +52,9 @@ v.spread = 120
 v.hardLevel = 0
 
 function init(me)
+	v.zaps = {}
+	v.zapGlows = {}
+
 	setupEntity(me)
 	--entity_setEntityLayer(me, 1)
 	entity_initSkeletal(me, "KingJelly")

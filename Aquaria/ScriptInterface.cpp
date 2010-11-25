@@ -191,6 +191,21 @@ static const char * const interfaceFunctions[] = {
 //    program state should not be called from file scope.  Call them from
 //    init() instead.
 //
+// -- DON'T declare non-constant Lua tables at file scope in instanced
+//    scripts.
+//
+//    One non-obvious result of the above restrictions is that tables
+//    intended to be modified by the script cannot be declared at file
+//    scope, even as instance variables.  The reason for this is that
+//    table variables in Lua are actually pointers; the Lua statement
+//    "v.table = {}" is functionally the same as "v.table = newtable()",
+//    where the hypothetical newtable() function allocates and returns a
+//    pointer to a table object, and thus falls under the restriction
+//    that functions must not be called at file scope.  Table variables
+//    in instanced scripts must therefore be initialized in the init()
+//    function, even if you're only setting the variable to an empty
+//    table.
+//
 // In summary:
 //
 // -- Never use global variables or functions, except interface functions.
@@ -199,9 +214,12 @@ static const char * const interfaceFunctions[] = {
 //        local function getMyConstant()  return MY_CONSTANT  end
 // -- Variables should be stored in the "v" table:
 //        function update(dt)  v.timer = v.timer + dt  end
-// -- Variables can have default values set when the script is loaded:
+// -- Variables (except table variables) can have default values set when
+//    the script is loaded:
 //        v.countdown = 5
 //        function update(dt)  v.countdown = v.countdown - dt  end
+// -- Non-constant tables must be initialized in init(), even if the
+//    variable is always set to the same thing (such as an empty table).
 // -- Never call interface functions from other functions.
 // -- Always perform instance-specific setup in init(), not at file scope.
 //

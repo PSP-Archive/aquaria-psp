@@ -43,7 +43,7 @@ v.angle = 90
 
 v.turtle_type = 0
 
-v.song = { 0, 0, 0 }
+v.song = nil
 
 v.songNoteTimer = 0
 v.songNoteDelay = 1.2
@@ -65,6 +65,7 @@ v.saveNode = 0
 -- ================================================================================================
 
 function v.commonInit(me, turType)
+	v.song = { 0, 0, 0 }
 	v.swimTime = 0.34 + (math.random(42)*0.01)
 
 	setupBasicEntity(

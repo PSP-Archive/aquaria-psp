@@ -39,8 +39,8 @@ v.onNote = 1
 v.noteDelay = 0
 v.userNote = 1
 
-v.song = {}
-v.eye = {}
+v.song = nil
+v.eye = nil
 v.center = 0
 v.centerEye = 0
 v.body = 0
@@ -55,6 +55,9 @@ local function generateSong()
 end
 
 function init(me)
+	v.song = {}
+	v.eye = {}
+
 	setupEntity(me)
 	entity_initSkeletal(me, "Simon")
 	entity_setEntityType(me, ET_NEUTRAL)	

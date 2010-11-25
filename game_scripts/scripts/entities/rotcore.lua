@@ -22,9 +22,9 @@ v = getVars()
 local STATE_MOVING 	= 1001
 
 v.n = 0
-v.eyes = {}
-v.eyeHits = {}
-v.beams = {}
+v.eyes = nil
+v.eyeHits = nil
+v.beams = nil
 v.nut = 0
 v.node = 0
 v.door = 0
@@ -50,6 +50,10 @@ local function clearBarriers()
 end
 
 function init(me)
+	v.eyes = {}
+	v.eyeHits = {}
+	v.beams = {}
+
 	setupEntity(me)
 	entity_setEntityType(me, ET_ENEMY)
 	entity_initSkeletal(me, "RotCore")	
