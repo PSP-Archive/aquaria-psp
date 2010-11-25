@@ -683,7 +683,6 @@ void AnimationEditor::update(float dt)
 	{
 		editSprite->scale += Vector(spd*0.05,spd*0.05);
 	}
-
 	if (core->getKeyState(KEY_PGDN))
 	{
 		editSprite->scale -= Vector(spd*0.05,spd*0.05);
@@ -691,6 +690,10 @@ void AnimationEditor::update(float dt)
 	if (core->getKeyState(KEY_PGUP))
 	{
 		editSprite->scale += Vector(spd*0.05,spd*0.05);
+	}
+	if (editSprite->scale.x < 0.05)
+	{
+		editSprite->scale = Vector(0.05,0.05);
 	}
 
 	if (boneEdit == 0)
