@@ -252,6 +252,10 @@ void AnimationEditor::applyState()
 
 	addAction(MakeFunctionEvent(AnimationEditor, editStripKey), KEY_E, 0);
 
+	addAction(MakeFunctionEvent(AnimationEditor, prevAnim), KEY_PGUP, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, nextAnim), KEY_PGDN, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, animateOrStop), KEY_RETURN, 0);
+
 
 
 	/*
@@ -299,13 +303,13 @@ void AnimationEditor::applyState()
 
 	DebugButton *a = new DebugButton(0, 0, 150);
 	a->position = Vector(10, 60);
-	a->label->setText("prevKey   (LEFT)");
+	a->label->setText("prevKey  (LEFT)");
 	a->event.set(MakeFunctionEvent(AnimationEditor, prevKey));
 	addRenderObject(a, LR_HUD);
 
 	DebugButton *a2 = new DebugButton(0, 0, 150);
 	a2->position = Vector(10, 90);
-	a2->label->setText("nextKey  (RIGHT)");
+	a2->label->setText("nextKey (RIGHT)");
 	a2->event.set(MakeFunctionEvent(AnimationEditor, nextKey));
 	addRenderObject(a2, LR_HUD);
 
@@ -317,27 +321,27 @@ void AnimationEditor::applyState()
 
 	DebugButton *animate = new DebugButton(0, 0, 150);
 	animate->position = Vector(10, 200);
-	animate->label->setText("animate");
+	animate->label->setText("animate (ENTER)");
 	animate->event.set(MakeFunctionEvent(AnimationEditor, animate));
 	addRenderObject(animate, LR_HUD);
 
 	DebugButton *stop = new DebugButton(0, 0, 150);
 	stop->position = Vector(10, 230);
-	stop->label->setText("stop");
+	stop->label->setText("stop  (S-ENTER)");
 	stop->event.set(MakeFunctionEvent(AnimationEditor, stop));
 	addRenderObject(stop, LR_HUD);
 
-	DebugButton *nextAnimation = new DebugButton(0, 0, 150);
-	nextAnimation->label->setText("nextAnim");
-	nextAnimation->position = Vector(10, 330);
-	nextAnimation->event.set(MakeFunctionEvent(AnimationEditor, nextAnim));
-	addRenderObject(nextAnimation, LR_MENU);
-
 	DebugButton *prevAnimation = new DebugButton(0, 0, 150);
-	prevAnimation->label->setText("prevAnim");
-	prevAnimation->position = Vector(10, 360);
+	prevAnimation->label->setText("prevAnim (PGUP)");
+	prevAnimation->position = Vector(10, 330);
 	prevAnimation->event.set(MakeFunctionEvent(AnimationEditor, prevAnim));
 	addRenderObject(prevAnimation, LR_MENU);
+
+	DebugButton *nextAnimation = new DebugButton(0, 0, 150);
+	nextAnimation->label->setText("nextAnim (PGDN)");
+	nextAnimation->position = Vector(10, 360);
+	nextAnimation->event.set(MakeFunctionEvent(AnimationEditor, nextAnim));
+	addRenderObject(nextAnimation, LR_MENU);
 
 	DebugButton *copyKey = new DebugButton(0, 0, 150);
 	copyKey->label->setText("copyKey");
@@ -683,11 +687,11 @@ void AnimationEditor::update(float dt)
 	{
 		editSprite->scale += Vector(spd*0.05,spd*0.05);
 	}
-	if (core->getKeyState(KEY_PGDN))
+	if (core->getKeyState(KEY_PGDN) && core->getShiftState())
 	{
 		editSprite->scale -= Vector(spd*0.05,spd*0.05);
 	}
-	if (core->getKeyState(KEY_PGUP))
+	if (core->getKeyState(KEY_PGUP) && core->getShiftState())
 	{
 		editSprite->scale += Vector(spd*0.05,spd*0.05);
 	}
@@ -916,6 +920,16 @@ void AnimationEditor::stop()
 	editSprite->stopAnimation();
 }
 
+void AnimationEditor::animateOrStop()
+{
+	if (dsq->isNested()) return;
+
+	if (core->getShiftState())
+		editSprite->stopAnimation();
+	else
+		editSprite->playCurrentAnimation(-1);
+}
+
 void AnimationEditor::lmbd()
 {
 	pushUndo();
@@ -1106,18 +1120,24 @@ void AnimationEditor::nextAnim()
 {
 	if (dsq->isNested()) return;
 
-	editSprite->nextAnimation();
-	currentKey = 0;
-	rebuildKeyframeWidgets();
+	if (!core->getShiftState())
+	{
+		editSprite->nextAnimation();
+		currentKey = 0;
+		rebuildKeyframeWidgets();
+	}
 }
 
 void AnimationEditor::prevAnim()
 {
 	if (dsq->isNested()) return;
 
-	editSprite->prevAnimation();
-	currentKey = 0;
-	rebuildKeyframeWidgets();
+	if (!core->getShiftState())
+	{
+		editSprite->prevAnimation();
+		currentKey = 0;
+		rebuildKeyframeWidgets();
+	}
 }
 
 void AnimationEditor::ignoreBone0()
