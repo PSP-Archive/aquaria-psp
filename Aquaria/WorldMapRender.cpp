@@ -62,6 +62,8 @@ namespace WorldMapRenderNamespace
 	Quad *lastVisQuad=0, *visQuad=0;
 	WorldMapTile *lastVisTile=0;
 
+	float xMin, yMin, xMax, yMax;
+
 	float zoomMin = 0.2;
 	float zoomMax = 1;
 	const float exteriorZoomMax = 1;
@@ -1300,6 +1302,15 @@ void WorldMapRender::onUpdate(float dt)
 			scale.x = scale.y = zoomMax;
 		}
 
+		if (-internalOffset.x < xMin - 300/scale.x)
+			internalOffset.x = -(xMin - 300/scale.x);
+		else if (-internalOffset.x > xMax + 300/scale.x)
+			internalOffset.x = -(xMax + 300/scale.x);
+		if (-internalOffset.y < yMin - 225/scale.x)
+			internalOffset.y = -(yMin - 225/scale.x);
+		else if (-internalOffset.y > yMax + 150/scale.x)
+			internalOffset.y = -(yMax + 150/scale.x);
+
 		if (dsq->isDeveloperKeys() || dsq->mod.isActive())
 		{
 			if (editorActive)
@@ -1520,6 +1531,27 @@ void WorldMapRender::toggle(bool turnON)
 				// Texture isn't updated while moving, so force an update here
 				clearVis(activeTile);
 				setVis(activeTile);
+			}
+		}
+
+		xMin = xMax = -internalOffset.x;
+		yMin = yMax = -internalOffset.y;
+		for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
+		{
+			WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
+			if (tile && (tile->revealed || tile->prerevealed) && tile->q)
+			{
+				Quad *q = tile->q;
+				const float width = q->getWidth() * q->scale.x;
+				const float height = q->getHeight() * q->scale.y;
+				if (xMin > tile->gridPos.x - width/2)
+					xMin = tile->gridPos.x - width/2;
+				if (xMax < tile->gridPos.x + width/2)
+					xMax = tile->gridPos.x + width/2;
+				if (yMin > tile->gridPos.y - height/2)
+					yMin = tile->gridPos.y - height/2;
+				if (yMax < tile->gridPos.y + height/2)
+					yMax = tile->gridPos.y + height/2;
 			}
 		}
 
