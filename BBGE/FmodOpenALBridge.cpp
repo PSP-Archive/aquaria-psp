@@ -1211,7 +1211,7 @@ FMOD_RESULT OpenALSystem::playSound(FMOD_CHANNELINDEX channelid, Sound *_sound, 
     alSourceStop(sid);  // stop any playback, set to AL_INITIAL.
     alSourceRewind(sid);  // stop any playback, set to AL_INITIAL.
     SANITY_CHECK_OPENAL_CALL();
-    alSourcei(sid, AL_BUFFER, NULL);  // Reset state to AL_UNDETERMINED.
+    alSourcei(sid, AL_BUFFER, 0);  // Reset state to AL_UNDETERMINED.
     SANITY_CHECK_OPENAL_CALL();
 
     if (!channels[channelid].start(sound))
