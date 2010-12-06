@@ -4090,7 +4090,7 @@ void DSQ::watch(float t, int canQuit)
 	if (t != 0.0f)
 		core->main(t);
 	else
-		errorLog("Called Watch with time == 0 (forgot to include entityInclude?)");
+		errorLog("Called Watch with time == 0");
 
 	if (canQuit && watchQuitFlag)
 	{
