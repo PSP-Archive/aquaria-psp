@@ -492,7 +492,7 @@ void SongIcon::onUpdate(float dt)
 				}
 			}
 		}
-		else
+		else if (openedFromMicInput || !isCoordinateInRadius(core->mouse.position, NOTE_ACCEPT_DISTANCE*1.25f))
 		{
 			if (cursorIsIn)
 			{
