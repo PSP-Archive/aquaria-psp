@@ -450,10 +450,8 @@ luaFunc(getVars)
 	return 1;
 }
 
-// Set the global "v" to the instance's local variable table.
-// Must be called when starting a script and after any code which may
-// allow a function in another script to be called (notably, after any
-// call to Core::main() or DSQ::watch()).
+// Set the global "v" to the instance's local variable table.  Must be
+// called when starting a script.
 static void fixupLocalVars(lua_State *L)
 {
 	l_getVars(L);
@@ -9103,6 +9101,9 @@ void Script::lookupFunc(const char *name)
 
 bool Script::doCall(int nparams, int nrets)
 {
+	// Push the current value of the "v" global onto the Lua stack,
+	// so we can restore the current script's instance variable table
+	// before returning.
 	lua_getglobal(L, "v");
 	lua_insert(L, -(nparams+2));
 	fixupLocalVars(L);
