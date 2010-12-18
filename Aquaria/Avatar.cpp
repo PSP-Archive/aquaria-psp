@@ -467,7 +467,7 @@ void SongIcon::onUpdate(float dt)
 				}
 			}
 		}
-		else
+		else if (openedFromMicInput || !isCoordinateInRadius(core->mouse.position, 25*1.25))
 		{
 			if (cursorIsIn)
 			{
