@@ -2463,6 +2463,7 @@ void Game::loadEntityTypeList()
 	}
 	in.close();
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	entityGroups.clear();
 
 	std::string fn = "scripts/entities/entitygroups.txt";
@@ -2500,7 +2501,6 @@ void Game::loadEntityTypeList()
 	}
 	in2.close();
 
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 	game->sceneEditor.entityPageNum = 0;
 	//game->sceneEditor.page = entityGroups.begin();
 #endif
