@@ -110,6 +110,7 @@ class ToolTip;
 
 #include "Path.h"
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 struct EntityGroupEntity
 {
 	std::string name;
@@ -126,7 +127,6 @@ struct EntityGroup
 
 typedef std::vector<EntityGroup> EntityGroups;
 
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 enum EditTypes
 {
 	ET_NONE			=-1,
@@ -891,7 +891,9 @@ public:
 	WaterSurfaceRender *waterSurfaceRender;
 	Quad *shapeDebug;
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	EntityGroups entityGroups;
+#endif
 
 	std::string getNoteName(int n, const std::string &pre="");
 
