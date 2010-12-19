@@ -2759,7 +2759,7 @@ Entity *Entity::findTarget(int dist, int type, int t)
 		FOR_ENTITIES(i)
 		{
 			Entity *e = *i;
-			if (e != this && e->getEntityType() == type && e->isEntityDead() && e->health > 0)
+			if (e != this && e->getEntityType() == type && e->health > 0)
 			{
 				int d = (e->position - this->position).getSquaredLength2D();
 				if (d < sqr(dist) && (d < closestDist || closestDist == -1))
