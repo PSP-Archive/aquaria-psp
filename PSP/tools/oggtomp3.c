@@ -204,7 +204,9 @@ static int convert_to_mp3(const char *path)
     /* Encode the audio as MP3 and write it to the output file. */
 
     const int blocksize = 8192;
+#define blocksize 8192 //Avoid a spurious error from GCC 4.5 (bugzilla #46028).
     uint8_t mp3_buffer[blocksize*5/4 + 7200];
+#undef blocksize
     uint32_t pos;
 
     for (pos = 0; pos < num_samples; pos += blocksize) {
