@@ -40,7 +40,7 @@ end
 
 function update(me, dt)
 	if not v.done and isFlag(FLAG_SECRET02, 0) then 
-		if node_isEntityIn(v.me, v.n) then
+		if node_isEntityIn(me, v.n) then
 			v.done = true
 			
 			changeForm(FORM_NORMAL)
