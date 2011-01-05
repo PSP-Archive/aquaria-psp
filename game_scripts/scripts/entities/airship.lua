@@ -53,7 +53,7 @@ function postInit(me)
 end
 
 function update(me, dt)
-	if v.attached then
+	if v.attached ~= 0 then
 		local bx, by = bone_getWorldPosition(v.bone_attach)
 		entity_setPosition(v.attached, bx, by)
 	end

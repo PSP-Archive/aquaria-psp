@@ -3589,7 +3589,10 @@ luaFunc(entity_msg)
 	Entity *e = entity(L);
 	if (e)
 	{
-		e->message(getString(L, 2), lua_tonumber(L, 3));
+		if (lua_isuserdata(L, 3))
+			e->message(getString(L, 2), lua_touserdata(L, 3));
+		else
+			e->message(getString(L, 2), lua_tonumber(L, 3));
 	}
 	luaReturnNum(0);
 }
@@ -9176,6 +9179,15 @@ bool Script::call(const char *name, void *param1, const char *param2, float para
 	luaPushPointer(L, param1);
 	lua_pushstring(L, param2);
 	lua_pushnumber(L, param3);
+	return doCall(3);
+}
+
+bool Script::call(const char *name, void *param1, const char *param2, void *param3)
+{
+	lookupFunc(name);
+	luaPushPointer(L, param1);
+	lua_pushstring(L, param2);
+	luaPushPointer(L, param3);
 	return doCall(3);
 }
 
