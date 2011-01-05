@@ -1173,6 +1173,8 @@ function enterState(me, state)
 		--debugLog("setting flag to 1")
 		setFlag(FLAG_LI, 1)
 		entity_alpha(me, 0, 1)
+		-- Make sure we don't see the head through the fading helmet.
+		bone_showFrame(bone_head, -1)
 	elseif entity_getState(me)==STATE_BURST then
 		debugLog("burst")
 		burstDelay = 6
