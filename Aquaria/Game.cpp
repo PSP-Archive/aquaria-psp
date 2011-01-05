@@ -9267,6 +9267,7 @@ void Game::toggleFoodMenu(bool f)
 		circlePageNum->alpha = 1;
 
 		previewRecipe->alpha = 0;
+		updatePreviewRecipe();
 	}
 	else if (!f && foodMenu)
 	{
