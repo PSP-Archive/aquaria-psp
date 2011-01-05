@@ -48,6 +48,7 @@ public:
 	void lightFlare();
 	void entityDied(Entity *e);
 	void message(const std::string &msg, int v);
+	void message(const std::string &msg, void *v);
 	
 	static bool runningActivation;
 

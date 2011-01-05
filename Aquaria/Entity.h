@@ -271,6 +271,7 @@ public:
 	bool canSetState(int state);
 	
 	virtual void message(const std::string &msg, int v);
+	virtual void message(const std::string &msg, void *v) {}
 	bool isUnderWater(const Vector &o=Vector());
 
 	//virtual void onHitBySpell(Spell *spell) {}

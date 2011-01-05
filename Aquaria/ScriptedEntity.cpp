@@ -102,6 +102,16 @@ void ScriptedEntity::message(const std::string &msg, int v)
 	Entity::message(msg, v);
 }
 
+void ScriptedEntity::message(const std::string &msg, void *v)
+{
+	if (script)
+	{
+		if (!script->call("msg", this, msg.c_str(), v))
+			luaDebugMsg("msg", script->getLastError());
+	}
+	Entity::message(msg, v);
+}
+
 void ScriptedEntity::warpSegments()
 {
 	Segmented::warpSegments(position);
