@@ -53,7 +53,7 @@ function postInit(me)
 end
 
 function update(me, dt)
-	if attached then
+	if attached ~= 0 then
 		bx, by = bone_getWorldPosition(bone_attach)
 		entity_setPosition(attached, bx, by)
 	end
