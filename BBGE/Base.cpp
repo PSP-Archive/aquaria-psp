@@ -781,12 +781,17 @@ bool isTouchingLine(Vector lineStart, Vector lineEnd, Vector point, int radius, 
 {
     Vector dir = lineEnd - lineStart;
     Vector diff = point - lineStart;
-    float t = diff.dot2D(dir) / dir.dot2D(dir);
-    if (t < 0.0f)
-        t = 0.0f;
-    if (t > 1.0f)
-        t = 1.0f;
-    Vector closest = lineStart + t * dir;
+    Vector closest;
+    if (!dir.isZero()) {
+	float t = diff.dot2D(dir) / dir.dot2D(dir);
+	if (t < 0.0f)
+	    t = 0.0f;
+	if (t > 1.0f)
+	    t = 1.0f;
+	closest = lineStart + t * dir;
+    } else {
+	closest = lineStart;
+    }
     Vector d = point - closest;
     float distsqr = d.dot2D(d);
 	if (closestP)
