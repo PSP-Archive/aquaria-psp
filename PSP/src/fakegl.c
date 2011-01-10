@@ -2338,20 +2338,41 @@ void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type,
 
     const Texture * const texture = texture_array[bound_texture].texture;
 
-    if (texture->swizzled && (texture->height & 7) != 0) {
+    /* These combinations should be impossible, but check anyway to avoid
+     * overrunning the source buffer. */
+    if (texture->swizzled
+     && ((texture->height & 7) != 0
+         || (texture->indexed
+             ? (texture->stride & 15) != 0
+             : (texture->stride & 3) != 0))
+    ) {
         DMSG("Can't handle getting swizzled textures with unaligned height"
-             " (%p, %dx%d, stride=%d)", texture, texture->width,
+             "or stride (%p, %dx%d, stride=%d)", texture, texture->width,
              texture->height, texture->stride);
         SET_ERROR(GL_INVALID_OPERATION);
         return;
     }
 
-    uint32_t *dest = (uint32_t *)pixels;
-    const uint32_t width       = texture->width;
-    const uint32_t height      = texture->height;
-    const uint32_t src_stride  = texture->stride;
-    const uint32_t dest_stride = texture->width;
-    const uint32_t *palette    = texture->palette;
+    /* If the width is unaligned for a swizzled texture, we'll overflow
+     * the destination buffer, so allocate a temporary, aligned-width
+     * buffer for unswizzling. */
+    uint32_t *temp_buffer = NULL;
+    if (texture->width != texture->stride) {
+        const uint32_t size = texture->stride * texture->height * 4;
+        temp_buffer = mem_alloc(size, 64, MEM_ALLOC_TEMP);
+        if (UNLIKELY(!temp_buffer)) {
+            DMSG("Can't allocate temporary buffer for unswizzling (%u bytes)",
+                 size);
+            SET_ERROR(GL_OUT_OF_MEMORY);
+            return;
+        }
+    }
+
+    uint32_t *dest = temp_buffer ? temp_buffer : (uint32_t *)pixels;
+    const unsigned int width       = texture->width;
+    const unsigned int height      = texture->height;
+    const unsigned int stride      = texture->stride;
+    const uint32_t * const palette = texture->palette;
 
     if (texture->swizzled) {
 
@@ -2359,12 +2380,12 @@ void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type,
 
             const uint8_t *src = texture->pixels;
             unsigned int y;
-            for (y = 0; y < height; y += 8, dest += dest_stride*7) {
+            for (y = 0; y < height; y += 8, dest += stride*7) {
                 unsigned int x;
                 for (x = 0; x < width; x += 16, dest += 16) {
                     uint32_t *destline = dest;
                     unsigned int line;
-                    for (line = 0; line < 8; line++, destline += dest_stride) {
+                    for (line = 0; line < 8; line++, destline += stride) {
                         unsigned int i;
                         for (i = 0; i < 16; i += 4, src += 4) {
                             const uint8_t pixel0 = src[0];
@@ -2384,12 +2405,12 @@ void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type,
 
             const uint32_t *src = (const uint32_t *)texture->pixels;
             unsigned int y;
-            for (y = 0; y < height; y += 8, dest += dest_stride*7) {
+            for (y = 0; y < height; y += 8, dest += stride*7) {
                 unsigned int x;
                 for (x = 0; x < width; x += 16, dest += 16) {
                     uint32_t *destline = dest;
                     unsigned int line;
-                    for (line = 0; line < 8; line++, destline += dest_stride) {
+                    for (line = 0; line < 8; line++, destline += stride) {
                         const uint32_t pixel0 = src[0];
                         const uint32_t pixel1 = src[1];
                         const uint32_t pixel2 = src[2];
@@ -2410,7 +2431,7 @@ void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type,
 
             const uint8_t *src = texture->pixels;
             unsigned int y;
-            for (y = 0; y < height; y++, src += src_stride, dest += dest_stride) {
+            for (y = 0; y < height; y++, src += stride, dest += stride) {
                 unsigned int x;
                 for (x = 0; x < width; x++) {
                     dest[x] = palette[src[x]];
@@ -2422,13 +2443,23 @@ void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type,
             const uint32_t *src =
                 (const uint32_t *)texture->pixels;
             unsigned int y;
-            for (y = 0; y < height; y++, src += src_stride, dest += dest_stride) {
+            for (y = 0; y < height; y++, src += stride, dest += stride) {
                 memcpy(dest, src, width*4);
             }
 
         }  // if (indexed)
 
     }  // if (swizzled)
+
+    if (temp_buffer) {
+        const uint32_t *copy_src = temp_buffer;
+        uint32_t *copy_dest = (uint32_t *)pixels;
+        unsigned int y;
+        for (y = 0; y < height; y++, copy_src += stride, copy_dest += width) {
+            memcpy(copy_dest, copy_src, width*4);
+        }
+        mem_free(temp_buffer);
+    }
 }
 
 /*************************************************************************/
