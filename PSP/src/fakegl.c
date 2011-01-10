@@ -3148,6 +3148,7 @@ void glEndList(void)
     texture_changed = 1;
     texture_filter_changed = 1;
     texture_wrap_mode_changed = 1;
+    blend_sfactor = blend_dfactor = -1;
 }
 
 /*************************************************************************/
@@ -3173,6 +3174,12 @@ void glCallList(GLuint list)
 
     update_render_state();
     ge_call_sublist(dlist_array[list].list);
+
+    modelview_matrix_changed = 1;
+    texture_changed = 1;
+    texture_filter_changed = 1;
+    texture_wrap_mode_changed = 1;
+    blend_sfactor = blend_dfactor = -1;
 }
 
 /*************************************************************************/
