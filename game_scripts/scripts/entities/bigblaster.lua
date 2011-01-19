@@ -32,6 +32,8 @@ v.motherChance = 10
 v.soundDelay = 0
 
 v.shotsFired = 0
+
+v.n = 0
  
 -- ================================================================================================
 -- FUNCTIONS
@@ -72,6 +74,10 @@ function init(me)
 	loadSound("BigBlasterLaugh")
 	
 	entity_setDamageTarget(me, DT_AVATAR_PET, false)
+end
+
+function postInit(me)
+	v.n = getNaija()
 end
 
 function update(me, dt)

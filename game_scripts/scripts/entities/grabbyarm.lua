@@ -117,13 +117,12 @@ function update(me, dt)
 		if v.grabDelay > 0 then v.grabDelay = v.grabDelay - dt
 		elseif v.grabDelay <= 0 then
 			v.grabDelay = 0
-			
-			v.grabRange = 74
-			if entity_isEntityInRange(me, v.n, v.grabRange) then
+			local grabRange = 74
+			if entity_isEntityInRange(me, v.n, grabRange) then
 				v.grabbedEnt = v.n
 				entity_setState(me, STATE_TRAP)
 				
-			elseif entity_isEntityInRange(me, v.li, v.grabRange) then
+			elseif entity_isEntityInRange(me, v.li, grabRange) then
 				v.grabbedEnt = v.li
 				entity_setState(me, STATE_TRAP)
 				
@@ -132,8 +131,8 @@ function update(me, dt)
 	elseif entity_isState(me, STATE_IN) then
 		if v.grabDelay > 0 then v.grabDelay = v.grabDelay - dt
 		elseif v.grabDelay <= 0 then
-			v.grabRange = 128
-			if entity_isEntityInRange(me, v.n, v.grabRange) then
+			grabRange = 128
+			if entity_isEntityInRange(me, v.n, grabRange) then
 				entity_setState(me, STATE_OUT)
 			end
 		end

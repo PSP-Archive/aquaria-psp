@@ -394,7 +394,7 @@ function damage(me, attacker, bone, damageType, dmg)
 		end
 	end
 	]]--
-	if v.damageType == DT_ENEMY_BEAM then
+	if damageType == DT_ENEMY_BEAM then
 		return false
 	end
 	if bone == v.eyeCover then

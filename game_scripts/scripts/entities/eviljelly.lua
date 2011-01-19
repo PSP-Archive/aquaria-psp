@@ -103,9 +103,9 @@ function update(me, dt)
 		entity_setMaxSpeedLerp(me, 6, 0.5, 1, 1)
 		v.burstTimer = 0
 	end
-	v.avoid = false
+	local avoid = false
 	if not avatar_isOnWall() and entity_isNearObstruction(getNaija(), 5) then
-		v.avoid = true
+		avoid = true
 	end
 	if entity_isState(me, STATE_IDLE) and not v.transition and not entity_isScaling(me) then
 		entity_scale(me, 0.75*v.sz, 1*v.sz, 0.2)
@@ -134,7 +134,7 @@ function update(me, dt)
 	if not avatar_isBursting() then
 		entity_doEntityAvoidance(me, dt, 64, 0.8)
 	end
-	if entity_hasTarget(me) and not v.avoid then			
+	if entity_hasTarget(me) and not avoid then			
 		if entity_isTargetInRange(me, 1000) then
 			if not entity_isTargetInRange(me, 64) then				
 				entity_moveTowardsTarget(me, dt, 1000)

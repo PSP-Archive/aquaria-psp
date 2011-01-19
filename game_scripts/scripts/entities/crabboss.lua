@@ -76,8 +76,6 @@ v.bone_lw = 0
 v.bone_rw = 0
 v.bone_squid = 0
 
-v.moveDir = 1
-
 v.inity = 0
 
 v.leave = 0
@@ -203,19 +201,20 @@ function update(me, dt)
 	if v.naija ~= 0 then
 		if entity_isState(me, STATE_BASIC) then
 			--entity_rotateToSurfaceNormal(me, 0.1, 20)
-			v.moving = false
+			local moving = false
+			local moveDir
 			if entity_x(v.naija) > entity_x(me) + 256 and entity_x(me) < node_x(v.rightNode) then
-				v.moving = true
-				v.moveDir = 1
+				moving = true
+				moveDir = 1
 				--entity_switchSurfaceDirection(me, 0)
 				--entity_rotateToSurfaceNormal(me, 1)
 			elseif entity_x(v.naija) < entity_x(me) - 256 and entity_x(me) > node_x(v.leftNode) then
-				v.moving = true
-				v.moveDir = -1
+				moving = true
+				moveDir = -1
 				--entity_switchSurfaceDirection(me, 1)
 				--entity_rotateToSurfaceNormal(me, 1)
 			end
-			if not v.moving then
+			if not moving then
 				if not v.leftArmAlive and not v.rightArmAlive then
 					if entity_x(v.naija) > entity_x(me)-256 and entity_x(v.naija) < entity_x(me)+256 then
 						if entity_y(v.naija) < entity_y(me)-512 then
@@ -229,17 +228,17 @@ function update(me, dt)
 					end
 				end
 			end
-			if v.moving then
+			if moving then
 				--debugLog("Moving")
 				--entity_moveAlongSurface(me, dt, 300, 6, 200) --64 (32)
-				entity_setPosition(me, entity_x(me)+v.moveDir*300*dt, entity_y(me))
+				entity_setPosition(me, entity_x(me)+moveDir*300*dt, entity_y(me))
 			end
-			if v.moving and not v.wasMoving then
+			if moving and not v.wasMoving then
 				entity_animate(me, "walk", -1, LAYER_LEGSANDBODY)
-			elseif not v.moving and v.wasMoving then
+			elseif not moving and v.wasMoving then
 				entity_animate(me, "idle", -1, LAYER_LEGSANDBODY)
 			end
-			v.wasMoving = v.moving
+			v.wasMoving = moving
 			
 			v.fireDelay = v.fireDelay - dt
 			if v.fireDelay < 0 then
@@ -262,18 +261,18 @@ function update(me, dt)
 			]]--
 		end
 		if entity_isState(me, STATE_BASIC) then
-			v.didArmAttack = false
+			local didArmAttack = false
 			
 			if v.leftArmHealth > 0 then
 				if entity_x(v.naija) < entity_x(me)-64 and entity_isEntityInRange(me, v.naija, 680) and entity_y(v.naija) > entity_y(me)-200 then
 					entity_setState(me, STATE_LEFTCLAWSWIPE)
-					v.didArmAttack = true
+					didArmAttack = true
 				end
 			end
-			if not v.didArmAttack and v.rightArmHealth > 0 then
+			if not didArmAttack and v.rightArmHealth > 0 then
 				if entity_x(v.naija) > entity_x(me)+64 and entity_isEntityInRange(me, v.naija, 680) and entity_y(v.naija) > entity_y(me)-200 then
 					entity_setState(me, STATE_RIGHTCLAWSWIPE)
-					v.didArmAttack = true
+					didArmAttack = true
 				end
 			end
 		end
@@ -281,8 +280,8 @@ function update(me, dt)
 	
 	
 	entity_handleShotCollisionsSkeletal(me)
-	v.bone = entity_collideSkeletalVsCircle(me, v.naija)
-	if v.bone ~= 0 then
+	local bone = entity_collideSkeletalVsCircle(me, v.naija)
+	if bone ~= 0 then
 		avatar_fallOffWall()
 		if entity_x(v.naija) < entity_x(me) then
 			--entity_push(v.naija, -1200, -100, 0.5)
