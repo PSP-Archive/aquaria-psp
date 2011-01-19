@@ -131,13 +131,13 @@ function songNote(me, note)
 	
 	entity_setMaxSpeed(me, v.excitedSpeed)
 	v.revertTimer = 3
-	v.transTime = 0.5
+	transTime = 0.5
 	local r,g,b = getNoteColor(note)
-	bone_setColor(v.bulb, r,g,b, v.transTime)
+	bone_setColor(v.bulb, r,g,b, transTime)
 	r = (r+1.0)/2.0
 	g = (g+1.0)/2.0
 	b = (b+1.0)/2.0
-	bone_setColor(v.shell, r,g,b, v.transTime)
+	bone_setColor(v.shell, r,g,b, transTime)
 end
 
 function update(me, dt)

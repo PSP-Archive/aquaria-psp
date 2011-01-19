@@ -28,11 +28,11 @@ function init(me)
 	entity_scale(me, 0.7, 0.7)
 	
 	
-	v.noteBone = entity_getBoneByName(me, "Note")
-	v.glow = entity_getBoneByName(me, "Glow")
+	local noteBone = entity_getBoneByName(me, "Note")
+	local glow = entity_getBoneByName(me, "Glow")
 	
-	bone_setVisible(v.noteBone, false)
-	bone_setVisible(v.glow, false)
+	bone_setVisible(noteBone, false)
+	bone_setVisible(glow, false)
 	
 	entity_setState(me, STATE_IDLE)
 end

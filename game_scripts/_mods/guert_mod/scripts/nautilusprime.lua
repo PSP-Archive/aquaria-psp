@@ -189,11 +189,11 @@ function update(me, dt)
 					shot_setAimVector(s, velx, vely)
 					v.shotsFired = v.shotsFired + 1
 				end
-				v.maxShots = 3
+				local maxShots = 3
 				if v.beserk then
-					v.maxShots = 14
+					maxShots = 14
 				end
-				if v.shotsFired >= v.maxShots then
+				if v.shotsFired >= maxShots then
 					v.bigFireDelay = 4
 					v.shotsFired = 0
 				end

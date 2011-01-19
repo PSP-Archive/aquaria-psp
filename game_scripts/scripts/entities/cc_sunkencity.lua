@@ -129,9 +129,8 @@ local function updateLocation(me)
 			--e = entity_getNearestEntity(me, "FinalTongue")
 			--entity_setState(e, STATE_OPEN)
 			
-			v.nd = getNode("CCLEADSTART")
-			
-			entity_setPosition(me, node_x(v.nd), node_y(v.nd))
+			local nd = getNode("CCLEADSTART")
+			entity_setPosition(me, node_x(nd), node_y(nd))
 			
 			entity_animate(me, "float", -1)
 			
@@ -638,9 +637,9 @@ function exitState(me)
 			entity_alpha(me, 0, 2)
 			entity_setPosition(me, 0, 0, 10)
 		end
-		v.statue = entity_getNearestEntity(me, "ClayStatue")
-		if v.statue ~= 0 then
-			entity_msg(v.statue, "p")
+		local statue = entity_getNearestEntity(me, "ClayStatue")
+		if statue ~= 0 then
+			entity_msg(statue, "p")
 		end
 		entity_setState(me, STATE_IDLE)
 	end
