@@ -126,15 +126,15 @@ function update(me, dt)
 			entity_setState(me, STATE_SING) 
 		end
 	elseif entity_isState(me, STATE_WAIT) then
-		v.shots = 0
+		local shots = 0
 		local e = getFirstEntity()
 		while e ~= 0 do
 			if eisv(e, EV_TYPEID, EVT_DARKLISHOT) then
-				v.shots = v.shots + 1
+				shots = shots + 1
 			end
 			e = getNextEntity()
 		end
-		if v.shots == 0 then
+		if shots == 0 then
 			entity_setState(me, STATE_IDLE)
 		end
 	elseif entity_isState(me, STATE_PLAYSEG) then

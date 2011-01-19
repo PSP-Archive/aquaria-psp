@@ -31,11 +31,11 @@ function init(me)
 	entity_setState(me, STATE_IDLE)
 	
 		
-	v.glow = entity_getBoneByName(me, "Glow")
-	v.noteBone = entity_getBoneByName(me, "Note")
+	local glow = entity_getBoneByName(me, "Glow")
+	local noteBone = entity_getBoneByName(me, "Note")
 	
-	bone_setVisible(v.glow, 0)
-	bone_setVisible(v.noteBone, 0)
+	bone_setVisible(glow, 0)
+	bone_setVisible(noteBone, 0)
 end
 
 function postInit(me)

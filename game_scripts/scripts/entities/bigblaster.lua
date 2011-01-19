@@ -32,6 +32,8 @@ v.motherChance = 10
 v.soundDelay = 0
 
 v.shotsFired = 0
+
+v.n = 0
  
 -- ================================================================================================
 -- FUNCTIONS
@@ -75,6 +77,7 @@ function init(me)
 end
 
 function postInit(me)
+	v.n = getNaija()
 	if isFlag(FLAG_PET_BLASTER, 1) then
 		entity_delete(me)
 	end

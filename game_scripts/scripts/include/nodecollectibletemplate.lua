@@ -23,9 +23,9 @@ function v.commonInit(me, object, flag)
 	if isFlag(flag, 1) then
 		debugLog("CollectibleNode: Creating object")
 		debugLog(object)
-		v.collectible = createEntity(object, "", node_x(me), node_y(me))
+		local collectible = createEntity(object, "", node_x(me), node_y(me))
 		debugLog("seting state to inhouse")
-		entity_setState(v.collectible, STATE_COLLECTEDINHOUSE)
+		entity_setState(collectible, STATE_COLLECTEDINHOUSE)
 	else
 		debugLog("CollectibleNode: Flag not set")
 	end
