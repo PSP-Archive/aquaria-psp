@@ -45,7 +45,7 @@ GTKSYS = x11
 endif
 CFLAGS_gtk  = $(shell pkg-config --cflags gtk+-$(GTKSYS)-2.0)
 LDFLAGS_gtk =
-LIBS_gtk    = $(shell pkg-config --libs gtk+-$(GTKSYS)-2.0)
+LIBS_gtk    = $(filter-out -lpng%,$(shell pkg-config --libs gtk+-$(GTKSYS)-2.0))
 
 CFLAGS_png  =
 LDFLAGS_png =
