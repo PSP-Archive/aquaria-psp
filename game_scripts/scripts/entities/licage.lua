@@ -262,6 +262,8 @@ function songNoteDone(me, note)
 			--debugLog(string.format("curNote: %d", curNote))
 			if notes[curNote] == note then
 				curNote = curNote + 1
+			elseif notes[1] == note then
+				curNote = 2
 			else
 				curNote = 1
 			end
