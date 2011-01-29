@@ -19,32 +19,33 @@
 
 v = getVars()
 
-v.chargeIDOffset = 5000
+local chargeIDOffset = 5000
+
 function init(me)
 	node_setCursorActivation(me, false)
 	if getFlag(v.flag) > 0 then
-		v.charged = true
-		v.id = getFlag(v.flag)
-		if v.id > v.chargeIDOffset then
-			v.charged = false
-			v.id = v.id - v.chargeIDOffset
+		local charged = true
+		local id = getFlag(v.flag)
+		if id > chargeIDOffset then
+			charged = false
+			id = id - chargeIDOffset
 		end
 		--[[
 		if getFlag(chargeFlag) == 0 then
-			v.charged = false
+			charged = false
 		end
 		]]--
 		
 		v.orbHolder = getEntityByID(v.holderID)		
-		v.energyOrb = getEntityByID(v.id)
+		v.energyOrb = getEntityByID(id)
 		if v.energyOrb ~= 0 and v.orbHolder ~= 0 then
 			--debugLog(string.format("%s : setting orb to %d, %d", node_getName(me), entity_x(v.orbHolder), entity_y(v.orbHolder)))
 			entity_setPosition(v.energyOrb, entity_x(v.orbHolder), entity_y(v.orbHolder))
-			if v.charged then
+			if charged then
 				entity_setState(v.energyOrb, STATE_CHARGED)
 			end
 		end
-		if v.charged then
+		if charged then
 			v.door = getEntityByID(v.doorID)
 			if v.door ~= 0 then
 				entity_setState(v.door, STATE_OPENED)
@@ -54,7 +55,7 @@ function init(me)
 end
 
 function activate(me)
-	if getFlag(v.flag) == 0 or getFlag(v.flag) >= v.chargeIDOffset then
+	if getFlag(v.flag) == 0 or getFlag(v.flag) >= chargeIDOffset then
 		v.energyOrb = node_getNearestEntity(me, "EnergyOrb")
 		if v.energyOrb ~= 0 then
 			if entity_isState(v.energyOrb, STATE_CHARGED) then
@@ -68,7 +69,7 @@ function activate(me)
 				end
 			else
 				debugLog("Saving orb in slot, not charged")
-				setFlag(v.flag, entity_getID(v.energyOrb)+v.chargeIDOffset)				
+				setFlag(v.flag, entity_getID(v.energyOrb)+chargeIDOffset)				
 			end
 		else
 			debugLog("Could not find orb")
