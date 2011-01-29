@@ -21,7 +21,6 @@ v = getVars()
 
 v.n = 0
 
-v.a = 0
 v.off = 0
 v.glow = 0
 v.flag = 0
@@ -184,9 +183,9 @@ function update(me, dt)
 		end
 		]]--
 		
-		v.a = t + v.off
-		x = x + math.sin(v.a)*dist
-		y = y + math.cos(v.a)*dist
+		local a = t + v.off
+		x = x + math.sin(a)*dist
+		y = y + math.cos(a)*dist
 		entity_setPosition(me, entity_x(v.n)+x, entity_y(v.n)+y, 0.2)
 		
 		--[[
