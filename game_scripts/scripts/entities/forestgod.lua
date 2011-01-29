@@ -586,7 +586,7 @@ function enterState(me, state)
 		fadeOutMusic(4)
 		
 	elseif entity_isState(me, STATE_SINGNOTE) then
-		v.sungNote = math.random(7)
+		v.sungNote = math.random(8)-1
 		entity_sound(me, string.format("Note%d", v.sungNote), 500, entity_getStateTime(me))
 		v.noteQuad = createQuad(string.format("Song/NoteSymbol%d", v.sungNote), 6)
 		quad_alpha(v.noteQuad, 0)

@@ -129,6 +129,8 @@ function songNoteDone(me, note)
 		debugLog(string.format("curNote: %d", v.curNote))
 		if notes[v.curNote] == note then
 			v.curNote = v.curNote + 1
+		elseif notes[1] == note then
+			v.curNote = 2
 		else
 			v.curNote = 1
 		end
