@@ -34,33 +34,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 
-void UserSettings::fixShittyVista()
-{
-	// load
-	load(false);
-
-	// check version #, is it equal to ours?
-	if (version.settingsVersion != VERSION_USERSETTINGS)
-	{
-#ifdef BBGE_BUILD_WINDOWS
-		//debugLog("User settings out of date, overwriting with defaults...");
-		MessageBox(0, "User settings out of date, overwriting with defaults...", "Aquaria", MB_OK);
-#endif
-		//errorLog("User settings out of date, updating...");
-
-		// if not, load the default settings for this version #
-		loadDefaults(false);
-
-		// then save over top of "usersettings.xml"
-		save();
-
-		/*
-		// then reload
-		load(false);
-		*/
-	}
-}
-
 void UserSettings::save()
 {
 	//initInputCodeMap();
@@ -389,7 +362,19 @@ void UserSettings::loadDefaults(bool doApply)
 
 	std::ostringstream os;
 	os << "default-" << VERSION_USERSETTINGS << ".xml";
-	load(doApply, os.str());
+	if (exists(os.str()))
+	{
+		load(doApply, os.str());
+		return;
+	}
+
+	if (exists("default_usersettings.xml"))
+	{
+		load(doApply, "default_usersettings.xml");
+		return;
+	}
+
+	errorLog("No default user settings file found! Controls may be broken.");
 }
 
 void UserSettings::load(bool doApply, const std::string &overrideFile)
