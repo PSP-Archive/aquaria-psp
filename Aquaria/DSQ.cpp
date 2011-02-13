@@ -953,7 +953,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 	voiceOversEnabled = true;
 
 
-	user.fixShittyVista();
 	//core->messageBox("info", "loading user settings");
 	user.load(false);
 	
