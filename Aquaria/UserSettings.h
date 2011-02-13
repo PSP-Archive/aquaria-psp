@@ -169,7 +169,6 @@ public:
 		int settingsVersion;
 	} version;
 
-	void fixShittyVista();
 	void loadDefaults(bool doApply=true);
 	void load(bool doApply=true, const std::string &overrideFile="");
 	void save();
