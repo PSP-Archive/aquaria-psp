@@ -338,7 +338,10 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 		if (checkError()) goto get_out;
     }
 
-	
+#ifdef BBGE_BUILD_FMOD_OPENAL_BRIDGE
+	SoundCore::system->getNumChannels(&channels);
+#endif
+
 	//FMOD::Debug_SetLevel(FMOD_DEBUG_LEVEL_ALL);
 
 	/*
