@@ -509,7 +509,7 @@ class OpenALSystem
 public:
     OpenALSystem();
     ~OpenALSystem();
-    FMOD_RESULT init(const int maxchannels, const FMOD_INITFLAGS flags, const void *extradriverdata);
+    FMOD_RESULT init(int maxchannels, const FMOD_INITFLAGS flags, const void *extradriverdata);
     FMOD_RESULT update();
     FMOD_RESULT release();
     FMOD_RESULT getVersion(unsigned int *version);
@@ -523,6 +523,8 @@ public:
     FMOD_RESULT getDriverCaps(const int id, FMOD_CAPS *caps, int *minfrequency, int *maxfrequency, FMOD_SPEAKERMODE *controlpanelspeakermode);
     FMOD_RESULT getMasterChannelGroup(ChannelGroup **channelgroup);
     FMOD_RESULT playSound(FMOD_CHANNELINDEX channelid, Sound *sound, bool paused, Channel **channel);
+
+    FMOD_RESULT getNumChannels(int *maxchannels_ret);
 
 private:
     OpenALChannelGroup *master_channel_group;
@@ -732,17 +734,66 @@ FMOD_RESULT OpenALSystem::getVersion(unsigned int *version)
 }
 
 ALBRIDGE(System,init,(int maxchannels, FMOD_INITFLAGS flags, void *extradriverdata),(maxchannels,flags,extradriverdata))
-FMOD_RESULT OpenALSystem::init(const int maxchannels, const FMOD_INITFLAGS flags, const void *extradriverdata)
+FMOD_RESULT OpenALSystem::init(int maxchannels, const FMOD_INITFLAGS flags, const void *extradriverdata)
 {
     ALCdevice *dev = alcOpenDevice(NULL);
     if (!dev)
         return FMOD_ERR_INTERNAL;
 
-    ALCcontext *ctx = alcCreateContext(dev, NULL);
+    // OpenAL doesn't provide a way to request sources that can be either
+    // mono or stereo, so we need to request both separately (thus allocating
+    // twice the theoretical requirement -- oh well).  --achurch
+    ALCint requested_attributes[5];
+    requested_attributes[0] = ALC_MONO_SOURCES;
+    requested_attributes[1] = maxchannels;
+    requested_attributes[2] = ALC_STEREO_SOURCES;
+    requested_attributes[3] = maxchannels;
+    requested_attributes[4] = 0;
+    ALCcontext *ctx = alcCreateContext(dev, requested_attributes);
     if (!ctx)
     {
         alcCloseDevice(dev);
         return FMOD_ERR_INTERNAL;
+    }
+
+    ALCint num_attributes = 0;
+    alcGetIntegerv(dev, ALC_ATTRIBUTES_SIZE, 1, &num_attributes);
+    if (num_attributes > 0) {
+        ALCint *attributes = new ALCint[num_attributes];
+        alcGetIntegerv(dev, ALC_ALL_ATTRIBUTES, num_attributes, attributes);
+        int i;
+        for (i = 0; i < num_attributes; i += 2) {
+            if (attributes[i] == ALC_MONO_SOURCES) {
+                if (attributes[i+1] <= 0) {
+                    debugLog("Couldn't get any mono sources, aborting");
+                    alcDestroyContext(ctx);
+                    alcCloseDevice(dev);
+                    return FMOD_ERR_INTERNAL;
+                } else if (attributes[i+1] < num_channels) {
+                    std::ostringstream os;
+                    os << "Only got " << attributes[i+1] << " of "
+                       << maxchannels << " mono sources";
+                    debugLog(os.str());
+                    maxchannels = attributes[i+1];
+                }
+            } else if (attributes[i] == ALC_STEREO_SOURCES) {
+                if (attributes[i+1] <= 0) {
+                    debugLog("Couldn't get any stereo sources, aborting");
+                    alcDestroyContext(ctx);
+                    alcCloseDevice(dev);
+                    return FMOD_ERR_INTERNAL;
+                } else if (attributes[i+1] < num_channels) {
+                    std::ostringstream os;
+                    os << "Only got " << attributes[i+1] << " of "
+                       << maxchannels << " stereo sources";
+                    debugLog(os.str());
+                    maxchannels = attributes[i+1];
+                }
+            }
+        }
+        delete[] attributes;
+    } else {
+        debugLog("WARNING: couldn't get device attributes!");
     }
 
     alcMakeContextCurrent(ctx);
@@ -786,6 +837,13 @@ FMOD_RESULT OpenALSystem::init(const int maxchannels, const FMOD_INITFLAGS flags
         channels[i].setSourceName(sid);
         channels[i].setChannelGroup((ChannelGroup *) master_channel_group);
     }
+    return FMOD_OK;
+}
+
+ALBRIDGE(System,getNumChannels,(int *maxchannels_ret),(maxchannels_ret))
+FMOD_RESULT OpenALSystem::getNumChannels(int *maxchannels_ret)
+{
+    *maxchannels_ret = num_channels;
     return FMOD_OK;
 }
 
