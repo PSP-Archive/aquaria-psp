@@ -407,6 +407,7 @@ public:
 	void update(float dt);
 	void prevElement();
 	void nextElement();
+	void doPrevElement();
 	Element *cycleElementNext(Element *e);
 	Element *cycleElementPrev(Element *e);
 	void selectZero();
