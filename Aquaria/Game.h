@@ -604,9 +604,10 @@ enum ObsType
 struct EntitySaveData
 {
 public:
-	EntitySaveData(Entity *e, int idx, int x, int y, int rot, int group, int id) : e(e), idx(idx), x(x), y(y), rot(rot), group(group), id(id) {}
+	EntitySaveData(Entity *e, int idx, int x, int y, int rot, int group, int id, const std::string &name) : e(e), idx(idx), x(x), y(y), rot(rot), group(group), id(id), name(name) {}
 	Entity *e;
 	int idx, x, y, rot, group, id;
+	std::string name;
 };
 
 class Game : public StateObject
