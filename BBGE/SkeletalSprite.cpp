@@ -1290,8 +1290,6 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 		return;
 	}
 
-	stringToLower(file);
-
 	loaded = true;
 	
 	TiXmlDocument xml;
