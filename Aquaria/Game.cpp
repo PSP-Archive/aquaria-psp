@@ -2722,7 +2722,7 @@ Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool 
 	if (createSaveData)
 	{
 		int idx = dsq->game->getIdxForEntityType(type);
-		entitySaveData.push_back(EntitySaveData(e, idx, usePos.x, usePos.y, rot, e->getGroupID(), e->getID()));
+		entitySaveData.push_back(EntitySaveData(e, idx, usePos.x, usePos.y, rot, e->getGroupID(), e->getID(), e->name));
 	}
 
 	addRenderObject(e, e->layer);
@@ -5661,8 +5661,8 @@ void Game::saveScene(std::string scene)
 
 			if (e->idx == -1)
 			{
-				if (!e->e->name.empty())
-					os << e->e->name << " ";
+				if (!e->name.empty())
+					os << e->name << " ";
 				else
 					os << "INVALID" << " ";
 			}
