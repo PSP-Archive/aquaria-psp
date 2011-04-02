@@ -777,7 +777,7 @@ void SceneEditor::init()
 
 	updateText();
 
-	prevElement();
+	doPrevElement();
 }
 
 void SceneEditor::alignHorz()
@@ -2986,21 +2986,26 @@ void SceneEditor::prevElement()
 		}
 		else 
 		{
-			int oldCur = curElement;
-			curElement--;
-			if (curElement < 0)
-				curElement = dsq->game->elementTemplates.size()-1;
-
-			if (dsq->game->elementTemplates[curElement].idx < 1024)
-			{
-				//int idx = dsq->game->elementTemplates[curElement].idx;
-				placer->setTexture(dsq->game->elementTemplates[curElement].gfx);
-			}
-			else
-			{
-				curElement = oldCur;
-			}
+			doPrevElement();
 		}
+	}
+}
+
+void SceneEditor::doPrevElement()
+{
+	int oldCur = curElement;
+	curElement--;
+	if (curElement < 0)
+		curElement = dsq->game->elementTemplates.size()-1;
+
+	if (dsq->game->elementTemplates[curElement].idx < 1024)
+	{
+		//int idx = dsq->game->elementTemplates[curElement].idx;
+		placer->setTexture(dsq->game->elementTemplates[curElement].gfx);
+	}
+	else
+	{
+		curElement = oldCur;
 	}
 }
 
