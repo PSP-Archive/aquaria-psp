@@ -70,7 +70,8 @@ function init(me)
 					elseif isMapName("veil03") then
 						commonInit(me, "horseshoe", "")
 						
-					elseif isMapName("vedhacave") then
+					elseif isMapName("vedhacave")
+						or isMapName("forestspritecave") then
 						commonInit(me, "", "PlantLeaf")
 						
 					else
