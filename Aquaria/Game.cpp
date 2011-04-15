@@ -6109,7 +6109,7 @@ void Game::setElementLayerFlags()
 		if (i == LR_ELEMENTS11)
 			continue;
 
-		dsq->getRenderObjectLayer(i)->setOptimizeStatic(!isSceneEditorActive());
+		dsq->getRenderObjectLayer(i)->setOptimizeStatic(!isSceneEditorActive() && dsq->user.video.displaylists);
 	}
 }
 

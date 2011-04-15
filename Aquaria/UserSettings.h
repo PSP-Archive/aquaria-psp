@@ -109,6 +109,7 @@ public:
 			bits = 32;
 			vsync = 1;
 			darkbuffersize = 256;
+			displaylists = 1;
 		}
 		int shader;
 		int blur;
@@ -118,6 +119,7 @@ public:
 		int saveSlotScreens;
 		int parallaxOn0, parallaxOn1, parallaxOn2;
 		int numParticles;
+		int displaylists;
 	} video;
 
 	struct Control
