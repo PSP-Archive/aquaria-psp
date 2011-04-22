@@ -8721,7 +8721,7 @@ static const struct {
 
 void ScriptInterface::init()
 {
-    baseState = createLuaVM();
+	baseState = createLuaVM();
 }
 
 lua_State *ScriptInterface::createLuaVM()
