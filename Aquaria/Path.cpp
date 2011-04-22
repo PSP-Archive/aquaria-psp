@@ -19,13 +19,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Game.h"
-extern "C"
-{
-	#include "lua.h"
-	#include "lauxlib.h"
-	#include "lualib.h"
-}
-
 #include "Avatar.h"
 
 Path::Path()
@@ -48,7 +41,7 @@ Path::Path()
 	pathType = PATH_NONE;
 	neverSpawned = true;
 	spawnedEntity = 0;
-	L = 0;
+	script = 0;
 	updateFunction = activateFunction = false;
 	cursorActivation = false;
 	rect.setWidth(64);
@@ -72,7 +65,7 @@ void Path::clampPosition(Vector *pos, int radius)
 	if (pathShape == PATHSHAPE_CIRCLE)
 	{
 		Vector diff = (*pos) - nodes[0].position;
-		float rad = rect.getWidth()*0.5;
+		float rad = rect.getWidth()*0.5f;
 		diff.capLength2D(rad-2-radius);
 		*pos = nodes[0].position + diff;
 	}
@@ -122,7 +115,7 @@ bool Path::isCoordinateInside(const Vector &pos, int radius)
 	if (pathShape == PATHSHAPE_CIRCLE)
 	{
 		Vector diff = pos - nodes[0].position;
-		return diff.isLength2DIn(this->rect.getWidth()*0.5 - radius);
+		return diff.isLength2DIn(this->rect.getWidth()*0.5f - radius);
 	}
 	else
 	{
@@ -222,10 +215,10 @@ void Path::destroy()
 		emitter->safeKill();
 		emitter = 0;
 	}
-	if (L)
+	if (script)
 	{
-		lua_close(L);
-		L = 0;
+		dsq->scriptInterface.closeScript(script);
+		script = 0;
 	}
 }
 
@@ -235,21 +228,17 @@ Path::~Path()
 
 bool Path::hasScript()
 {
-	return L != 0;
+	return script != 0;
 }
 
 void Path::song(SongType songType)
 {
 	if (hasScript() && songFunc)
 	{
-		lua_getfield(L, LUA_GLOBALSINDEX, "song");
-		luaPushPointer(L, this);
-		lua_pushnumber(L, int(songType));
-		int fail = lua_pcall(L, 2, 0, 0);
-		if (fail)
+		if (!script->call("song", this, int(songType)))
 		{
 			songFunc = false;
-			debugLog("Path [" + name + "] " + lua_tostring(L, -1));
+			debugLog("Path [" + name + "] " + script->getLastError());
 		}
 	}
 }
@@ -258,14 +247,10 @@ void Path::songNote(int note)
 {
 	if (hasScript() && songNoteFunc)
 	{
-		lua_getfield(L, LUA_GLOBALSINDEX, "songNote");
-		luaPushPointer(L, this);
-		lua_pushnumber(L, note);
-		int fail = lua_pcall(L, 2, 0, 0);
-		if (fail)
+		if (!script->call("songNote", this, note))
 		{
 			songNoteFunc = false;
-			debugLog("Path [" + name + "] " + lua_tostring(L, -1) + " songNote");
+			debugLog("Path [" + name + "] " + script->getLastError() + " songNote");
 		}
 	}
 }
@@ -274,15 +259,10 @@ void Path::songNoteDone(int note, float len)
 {
 	if (hasScript() && songNoteDoneFunc)
 	{
-		lua_getfield(L, LUA_GLOBALSINDEX, "songNoteDone");
-		luaPushPointer(L, this);
-		lua_pushnumber(L, note);
-		lua_pushnumber(L, len);
-		int fail = lua_pcall(L, 3, 0, 0);
-		if (fail)
+		if (!script->call("songNoteDone", this, note, len))
 		{
 			songNoteDoneFunc = false;
-			debugLog("Path [" + name + "] " + lua_tostring(L, -1) + " songNoteDone");
+			debugLog("Path [" + name + "] " + script->getLastError() + " songNoteDone");
 		}
 	}
 }
@@ -311,7 +291,7 @@ void Path::refreshScript()
 
 	// HACK: clean up
 	/*+ dsq->game->sceneName + "_"*/
-	L = 0;
+	script = 0;
 	warpMap = warpNode = "";
 	toFlip = -1;
 
@@ -324,12 +304,7 @@ void Path::refreshScript()
 		scr = "scripts/maps/node_" + name + ".lua";
 	if (exists(scr))
 	{
-		dsq->scriptInterface.initLuaVM(&L);
-		std::string fname(core->adjustFilenameCase(scr));
-		int fail = (luaL_loadfile(L, fname.c_str()));
-		if (fail) debugLog(lua_tostring(L, -1));
-		fail = lua_pcall(L, 0, 0, 0);
-		if (fail)	debugLog(lua_tostring(L, -1));
+		script = dsq->scriptInterface.openScript(scr);
 		updateFunction = activateFunction = true;
 	}
 	std::string topLabel;
@@ -531,14 +506,11 @@ void Path::refreshScript()
 
 void Path::init()
 {
-	if (L)
+	if (hasScript())
 	{
-		lua_getfield(L, LUA_GLOBALSINDEX, "init");
-		luaPushPointer(L, this);
-		int fail = lua_pcall(L, 1, 0, 0);
-		if (fail)
+		if (!script->call("init", this))
 		{
-			debugLog(name + " : " + lua_tostring(L, -1) + " init");
+			debugLog(name + " : " + script->getLastError() + " init");
 		}
 	}
 }
@@ -557,15 +529,11 @@ void Path::update(float dt)
 		{
 			emitter->position = nodes[0].position;
 		}
-		if (L && updateFunction)
+		if (hasScript() && updateFunction)
 		{
-			lua_getfield(L, LUA_GLOBALSINDEX, "update");
-			luaPushPointer(L, this);
-			lua_pushnumber(L, dt);
-			int fail = lua_pcall(L, 2, 0, 0);
-			if (fail)
+			if (!script->call("update", this, dt))
 			{
-				debugLog(name + " : " + lua_tostring(L, -1) + " update");
+				debugLog(name + " : " + script->getLastError() + " update");
 				updateFunction = false;
 			}
 		}
@@ -584,7 +552,7 @@ void Path::update(float dt)
 				spawnedEntity = dsq->game->createEntity(spawnEnemyName, 0, nodes[0].position, 0, false, "");
 			}
 		}
-		if (spawnedEntity && spawnedEntity->life < 1.0)
+		if (spawnedEntity && spawnedEntity->life < 1.0f)
 		{
 			spawnedEntity = 0;
 		}
@@ -592,8 +560,8 @@ void Path::update(float dt)
 		{
 			animOffset -= currentMod*(dt/830);
 			/*
-			while (animOffset < -1.0)
-				animOffset += 1.0;
+			while (animOffset < -1.0f)
+				animOffset += 1.0f;
 			*/
 		}
 		if (pathType == PATH_GEM && dsq->game->avatar)
@@ -626,7 +594,7 @@ void Path::update(float dt)
 
 		if (pathType == PATH_STEAM && dsq->continuity.getWorldType() == WT_NORMAL && effectOn)
 		{
-			animOffset -= 1000*0.00002;
+			animOffset -= 1000*0.00002f;
 
 
 			if (nodes.size() >= 2)
@@ -646,7 +614,7 @@ void Path::update(float dt)
 						if (e->getEntityType() == ET_AVATAR && dsq->continuity.form == FORM_SPIRIT)
 							continue;
 						*/
-						if (dsq->game->collideCircleVsLine(e, start, end, rect.getWidth()*0.5))
+						if (dsq->game->collideCircleVsLine(e, start, end, rect.getWidth()*0.5f))
 						{
 							if (e->getEntityType() == ET_AVATAR)
 							{
@@ -686,7 +654,7 @@ void Path::update(float dt)
 								e->vel2 += v;
 							}
 							e->vel2 += push;
-							if (dsq->game->collideCircleVsLine(e, start, end, rect.getWidth()*0.25))
+							if (dsq->game->collideCircleVsLine(e, start, end, rect.getWidth()*0.25f))
 							{
 								push.setLength2D(100);
 								/*
@@ -707,20 +675,11 @@ void Path::update(float dt)
 
 bool Path::action(int id, int state)
 {
-	if (L)
+	if (hasScript())
 	{
 		bool dontRemove = true;
-		lua_getfield(L, LUA_GLOBALSINDEX, "action");
-		luaPushPointer(L, this);
-		lua_pushnumber(L, id);
-		lua_pushnumber(L, int(state));
-		int fail = lua_pcall(L, 3, 1, 0);
-		if (fail)
-			debugLog(name + " : " + lua_tostring(L, -1) + " action");
-		else
-		{
-			dontRemove = lua_toboolean(L, -1);
-		}
+		if (!script->call("action", this, id, state, &dontRemove))
+			debugLog(name + " : " + script->getLastError() + " action");
 		return dontRemove;
 	}
 	return true;
@@ -728,15 +687,11 @@ bool Path::action(int id, int state)
 
 void Path::activate(Entity *e)
 {
-	if (L && activateFunction)
+	if (hasScript() && activateFunction)
 	{
-		lua_getfield(L, LUA_GLOBALSINDEX, "activate");
-		luaPushPointer(L, this);
-		luaPushPointer(L, e);
-		int fail = lua_pcall(L, 2, 0, 0);
-		if (fail)
+		if (!script->call("activate", this, e))
 		{
-			debugLog(name + " : " + lua_tostring(L, -1) + " activate");
+			debugLog(name + " : " + script->getLastError() + " activate");
 			activateFunction = false;
 		}
 	}

@@ -17,18 +17,18 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-glow = 0
-eyes = 0
-maxRun = 1
-runTimer = maxRun
-moving = 0
-upRate = 1
+v.n = 0
+v.glow = 0
+v.eyes = 0
+v.maxRun = 1
+v.runTimer = v.maxRun
+v.moving = 0
+v.upRate = 1
 
 
-STATE_RUNAWAY = 1001
+local STATE_RUNAWAY = 1001
 
 function init(me)
 	setupEntity(me)
@@ -39,14 +39,14 @@ function init(me)
 	--entity_generateCollisionMask(me)
 	entity_setCollideRadius(me, 50)
 	
-	glow = createQuad("Naija/LightFormGlow", 13)
-	eyes = entity_getBoneByName(me, "Eyes")
+	v.glow = createQuad("Naija/LightFormGlow", 13)
+	v.eyes = entity_getBoneByName(me, "Eyes")
 	--[[
-	quad_alpha(glow, 0.8)
-	quad_alpha(glow, 1, 1, -1, 1, 1)
+	quad_alpha(v.glow, 0.8)
+	quad_alpha(v.glow, 1, 1, -1, 1, 1)
 	]]--
-	quad_scale(glow, 0.6, 0.3)
-	--quad_scale(glow, 2, 1, 1, -1, 1, 1)
+	quad_scale(v.glow, 0.6, 0.3)
+	--quad_scale(v.glow, 2, 1, 1, -1, 1, 1)
 	
 	entity_setState(me, STATE_IDLE)
 	
@@ -60,40 +60,40 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
-	dt = dt * upRate
+	dt = dt * v.upRate
 	-- ugly slow hack
 	entity_updateSkeletal(me, dt*0.5)
 	entity_handleShotCollisions(me)
-	--bone = entity_collideSkeletalVsCircle(me, n)
+	--bone = entity_collideSkeletalVsCircle(me, v.n)
 	if entity_touchAvatarDamage(me, entity_getCollideRadius(me), 0.5, 800) then
 		avatar_fallOffWall()
 	end
 	--entity_updateMovement(me, dt)
 	
 	if entity_isState(me, STATE_IDLE) then
-		if entity_isEntityInRange(me, n, 500) then
-			runTimer = runTimer - dt
-			if runTimer <= 0 then
-				runTimer = maxRun
+		if entity_isEntityInRange(me, v.n, 500) then
+			v.runTimer = v.runTimer - dt
+			if v.runTimer <= 0 then
+				v.runTimer = v.maxRun
 				entity_setState(me, STATE_RUNAWAY, 8)
 			end
 		end
 	elseif entity_isState(me, STATE_RUNAWAY) then		
 		entity_rotateToSurfaceNormal(me)
-		entity_moveAlongSurface(me, dt, 600*moving, 6, 10)
+		entity_moveAlongSurface(me, dt, 600*v.moving, 6, 10)
 	end
-	quad_setPosition(glow, bone_getWorldPosition(eyes))
-	quad_rotate(glow, bone_getWorldRotation(eyes))
+	quad_setPosition(v.glow, bone_getWorldPosition(v.eyes))
+	quad_rotate(v.glow, bone_getWorldRotation(v.eyes))
 end
 
 function lightFlare(me)
-	if entity_isEntityInRange(me, n, 600) then
-		upRate = 1.5
+	if entity_isEntityInRange(me, v.n, 600) then
+		v.upRate = 1.5
 		entity_setState(me, STATE_RUNAWAY, 4)
 	end
 end
@@ -101,29 +101,29 @@ end
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_animate(me, "idle", -1)
-		if glow ~= 0 then
-			quad_alpha(glow, 1, 0.5)
+		if v.glow ~= 0 then
+			quad_alpha(v.glow, 1, 0.5)
 		end
-		if eyes ~= 0 then
-			quad_alpha(eyes, 1, 0.5)
+		if v.eyes ~= 0 then
+			quad_alpha(v.eyes, 1, 0.5)
 		end
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_RUNAWAY) then
-		if upRate == 1.0 then
+		if v.upRate == 1.0 then
 			entity_switchSurfaceDirection(me)
 			entity_flipHorizontal(me)
 			entity_clampToSurface(me)
 		end
 		
-		quad_alpha(glow, 0, 3)
-		quad_alpha(eyes, 0, 3)
+		quad_alpha(v.glow, 0, 3)
+		quad_alpha(v.eyes, 0, 3)
 		entity_animate(me, "runAway", -1)
 	end
 end
 
 function exitState(me)
 	if entity_isState(me, STATE_RUNAWAY) then
-		upRate = 1
+		v.upRate = 1
 		entity_setState(me, STATE_IDLE)
 	end
 end
@@ -137,9 +137,9 @@ end
 
 function animationKey(me, key)
 	if entity_isState(me, STATE_RUNAWAY) and ((key > 2 and key < 5) or (key == 1)) then
-		moving = 1
+		v.moving = 1
 	else
-		moving = 0.6
+		v.moving = 0.6
 	end
 	if entity_isState(me, STATE_RUNAWAY) and (key == 3) then
 		entity_sound(me, "Scuttle", math.random(200)+900)

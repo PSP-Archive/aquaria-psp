@@ -155,17 +155,14 @@ public:
 	//void damage(int amount);
 	bool isCharging();
 	void slowToRest();
-	//Entity *convoEntity;
 	void debugMsg(const std::string &msg);
 	DFSprite *burstBar;
 	void setBlind(float time);
 	void onBlindTest();
 
-	bool disableConversationStart;
 	void revive();
 
 	bool canWarp;
-	void startConversation();
 	void entityDied(Entity *e);
 	void onCollide(Entity *e);
 	bool zoomOverriden;
@@ -174,7 +171,6 @@ public:
 	bool isMiniMapCursorOkay();
 
 	void splash(bool down);
-	bool isInConvArea();
 	InterpolatedVector myZoom;
 
 	Entity *entityToActivate;
@@ -235,6 +231,7 @@ public:
 
 	void startCharge(int ability);
 	int currentMaxSpeed;
+	Vector getFakeCursorPosition();
 	Vector getVectorToCursor(bool trueMouse=false);
 	Vector getVectorToCursorFromScreenCentre();
 
@@ -295,6 +292,7 @@ public:
 
 	void checkNearWall();
 	Vector getAim();
+	Vector getForwardAim();
 	void setWasUnderWater();
 	Quad *lightFormGlow, *lightFormGlowCone;
 	void setBlockSinging(bool v);
@@ -408,7 +406,7 @@ protected:
 	void onIdle();
 	void onHeal(int type);
 	ParticleEffect biteLeftEmitter, biteRightEmitter, swimEmitter, auraHitEmitter;
-	ParticleEffect auraEmitter, wakeEmitter, healEmitter, hitEmitter, rollLeftEmitter, rollRightEmitter, spiritBeaconEmitter, plungeEmitter;
+	ParticleEffect auraEmitter, auraLowEmitter, wakeEmitter, healEmitter, hitEmitter, rollLeftEmitter, rollRightEmitter, spiritBeaconEmitter, plungeEmitter;
 	ParticleEffect speedEmitter, defenseEmitter, invincibleEmitter, regenEmitter;
 	ParticleEffect *leftHandEmitter, *rightHandEmitter;
 	ParticleEffect *chargingEmitter, *chargeEmitter;
@@ -479,12 +477,12 @@ protected:
 	float spellCastDelay;
 	float spellChargeMin;
 	bool checkWarpAreas();
-	void checkConvAreas();
 	void checkSpecial();
 	void toggleZoom();
 
 	float ignoreInputDelay;
 	float idleAnimDelay;
+	float splashDelay;
 	//Hair *hair;
 
 	BitmapText *text;

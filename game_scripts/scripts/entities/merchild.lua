@@ -17,12 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-STATE_CHASE			= 1000
-STATE_RUN			= 1001
+local STATE_CHASE		= 1000
+local STATE_RUN			= 1001
 
 function init(me)
 	setupEntity(me)
@@ -35,16 +35,16 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 	
 
 	
-	nd = entity_getNearestNode(me, "skin1")
+	local nd = entity_getNearestNode(me, "skin1")
 	if nd~=0 and node_isEntityIn(nd, me) then
 		entity_initSkeletal(me, "merchild", "merchild-skin1")
 	end
 	
-	nd = entity_getNearestNode(me, "flip")
+	local nd = entity_getNearestNode(me, "flip")
 	if nd~=0 and node_isEntityIn(nd, me) then
 		entity_fh(me)
 	end
@@ -53,9 +53,9 @@ function postInit(me)
 		entity_animate(me, "idle", -1)
 	end
 	
-	nd = entity_getNearestNode(me, "chase")
+	local nd = entity_getNearestNode(me, "chase")
 	if nd~=0 and node_isEntityIn(nd, me) then
-		ent = entity_getNearestEntity(me, "merchild")
+		local ent = entity_getNearestEntity(me, "merchild")
 		entity_setTarget(me, ent)
 		entity_msg(ent, "run", me)
 		entity_setState(me, STATE_CHASE)
@@ -91,9 +91,9 @@ function enterState(me)
 	end
 end
 
-function msg(me, str, v)
+function msg(me, str, val)
 	if str == "run" then
-		entity_setTarget(me, v)
+		entity_setTarget(me, val)
 		entity_setState(me, STATE_RUN, -1, 1)
 		entity_setMaxSpeed(me, 350)
 		

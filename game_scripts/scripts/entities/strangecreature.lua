@@ -17,18 +17,19 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-waitTimeMax = 5
-waitTimer = waitTimeMax
+v.waitTimeMax = 5
+v.waitTimer = v.waitTimeMax
 
-notes = { 3, 2, 7, 1 }
-numNotes = 4
+-- local notes = { 3, 2, 7, 1 }  -- not used
+-- local numNotes = 4            -- not used
+v.curNote = 0
 
-noteDelay = 0
-noteDelayMax = 1
+v.noteDelay = 0
+v.noteDelayMax = 1
 
 function init(me)
 	setupEntity(me)
@@ -44,42 +45,42 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 	if entity_isState(me, STATE_IDLE) then
-		if entity_isEntityInRange(me, n, 256) then
-			waitTimer = waitTimer - dt
-			if waitTimer <= 0 then
+		if entity_isEntityInRange(me, v.n, 256) then
+			v.waitTimer = v.waitTimer - dt
+			if v.waitTimer <= 0 then
 				entity_setState(me, STATE_ON)
 			end
 		else
-			waitTimer = waitTimer + dt
-			if waitTimer > waitTimeMax then
-				waitTimer = waitTimeMax
+			v.waitTimer = v.waitTimer + dt
+			if v.waitTimer > v.waitTimeMax then
+				v.waitTimer = v.waitTimeMax
 			end
 		end
 	elseif entity_isState(me, STATE_ON) then
-		noteDelay = noteDelay - dt
-		if noteDelay < 0 then
-			playNote = 0
-			if curNote == 0 then
+		v.noteDelay = v.noteDelay - dt
+		if v.noteDelay < 0 then
+			local playNote = 0
+			if v.curNote == 0 then
 				playNote = 3
-			elseif curNote == 1 then
+			elseif v.curNote == 1 then
 				playNote = 2
-			elseif curNote == 2 then
+			elseif v.curNote == 2 then
 				playNote = 7
-			elseif curNote == 3 then
+			elseif v.curNote == 3 then
 				playNote = 1
 				entity_setState(me, STATE_IDLE)
 			end
 			
-			h = playSfx(getNoteName(playNote, "low-"))
+			local h = playSfx(getNoteName(playNote, "low-"))
 			fadeSfx(h, 3)
 			
-			q = createQuad("Particles/BigGlow")
+			local q = createQuad("Particles/BigGlow")
 			quad_setBlendType(q, BLEND_ADD)
 			quad_scale(q, 0.2, 0.2)
 			quad_scale(q, 1, 1, 1)
@@ -88,11 +89,11 @@ function update(me, dt)
 			quad_setPosition(q, entity_x(me), entity_y(me)-512, 4)
 			quad_delete(q, 4)
 			
-			curNote = curNote + 1
-			if curNote == 3 then
-				noteDelay = noteDelayMax*1.2
+			v.curNote = v.curNote + 1
+			if v.curNote == 3 then
+				v.noteDelay = v.noteDelayMax*1.2
 			else
-				noteDelay = noteDelayMax
+				v.noteDelay = v.noteDelayMax
 			end
 		end
 	end
@@ -100,10 +101,10 @@ end
 
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
-		waitTimer = waitTimeMax
+		v.waitTimer = v.waitTimeMax
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_ON) then
-		curNote = 0
+		v.curNote = 0
 	end
 end
 

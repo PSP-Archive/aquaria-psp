@@ -22,14 +22,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../BBGE/DFSprite.h"
 #include "../BBGE/StateMachine.h"
-#include "../BBGE/tinyxml.h"
+#include "../ExternalLibs/tinyxml.h"
 #include "../BBGE/SkeletalSprite.h"
 
 #include "DSQ.h"
 #include "Path.h"
 #include "Hair.h"
 
-class WaterFont;
 class ManaBall;
 class Path;
 
@@ -141,14 +140,6 @@ enum ObsCheck
 	OBSCHECK_8DIR	= 3
 };
 
-enum SayType
-{
-	SAY_NORMAL			= 0,
-	SAY_QUEUE			= 1,
-	SAY_INTERUPT		= 2,
-	SAY_MAX
-};
-
 class Shot;
 
 struct DamageData
@@ -256,12 +247,11 @@ public:
 	};
 	void destroy();
 	//void damage(int amount, Spell *spell=0, Entity *attacker=0);
-	bool isEntityDead();
+	bool isEntityDead() const {return entityDead;}
 	std::string name;
 	Vector vel;
 	InterpolatedVector vel2;
-	int convoRadius;
-	//int convoAvatarRadius;
+	int activationRadius;
 	void render();
 	void update(float dt);
 
@@ -281,6 +271,7 @@ public:
 	bool canSetState(int state);
 	
 	virtual void message(const std::string &msg, int v);
+	virtual void message(const std::string &msg, void *v) {}
 	bool isUnderWater(const Vector &o=Vector());
 
 	//virtual void onHitBySpell(Spell *spell) {}
@@ -298,7 +289,10 @@ public:
 
 	bool isInDarkness();
 
-	bool isPresent();
+	bool isPresent() const
+	{
+		return !isDead() && !isEntityDead() && life == 1 && alpha.x != 0;
+	}
 
 	void frozenUpdate(float dt);
 	void rotateToSurfaceNormal(float t, int n=0, int rot=0);
@@ -421,7 +415,10 @@ public:
 	void doFriction(float dt);
 	void doFriction(float dt, int len);
 
-	bool isNormalLayer();
+	bool isNormalLayer() const
+	{
+		return layer == LR_ENTITIES || layer == LR_ENTITIES0 || layer == LR_ENTITIES2 || layer == LR_ENTITIES_MINUS2 || layer == LR_ENTITIES_MINUS3;
+	}
 	void watchEntity(Entity *e);
 	void idle();
 	int followPos;
@@ -451,8 +448,6 @@ public:
 	bool isInvincible();
 
 	InterpolatedVector maxSpeedLerp;
-	void setPauseInConversation(bool v);
-	bool isPauseInConversation();
 	Hair *hair;
 	void setGroupID(int gid);
 	int getGroupID();
@@ -533,15 +528,12 @@ public:
 	std::string naijaReaction;
 	Vector lookAtPoint;
 	Vector getLookAtPoint();
-	void say(const std::string &dialogue, SayType st=SAY_NORMAL);
-	bool isSaying();
 
 	void setv(EV ev, int v);
 	void setvf(EV ev, float v);
 	int getv(EV ev);
 	float getvf(EV ev);
 	bool isv(EV ev, int v);
-	Vector sayOffset, sayPosition;
 	void setIngredientData(const std::string &name);
 
 	void postUpdate(float dt);
@@ -580,13 +572,9 @@ protected:
 	virtual void onDieNormal() {}
 	virtual void onDieEaten() {}
 	IngredientData *ingredientData;
-	typedef std::queue<std::string> SayQueue;
-	SayQueue sayQueue;
 	int vs[EV_MAX];
 	void onEndOfLife();
-	void deathNotify(RenderObject *r);
 
-	WaterFont *saytext;
 	bool invincible;
 	PauseQuad *lanceGfx;
 	float lanceTimer;
@@ -621,7 +609,6 @@ protected:
 	virtual void onIdle() {}
 	int groupID;
 	virtual void onHeal(int type){}
-	bool pauseInConversation;
 	virtual void onDamage(DamageData &d){}
 	virtual void onHealthChange(float change){}
 	bool inCurrent;
@@ -677,7 +664,6 @@ protected:
 	void onUpdate(float dt);
 
 	Vector pushVec;
-	Vector lastVel;
 	float pushDamage;
 
 

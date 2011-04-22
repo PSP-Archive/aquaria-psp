@@ -146,6 +146,7 @@ StateManager::StateManager()
 	stateManager = this;
 	stateChangeFlag = false;
 	enqueuedStateStage = -1;
+	statesTopIndex = -1;
 }
 
 StateManager::~StateManager()
@@ -155,27 +156,11 @@ StateManager::~StateManager()
 
 StateData *StateManager::getState (const std::string &state)
 {
-	StateData *sender = 0;
-	std::stack<StateData*> copy;
-	while (!states.empty())
-	{
-		StateData* s = states.top();
+	for (int i = 0; i <= statesTopIndex; i++) {
+		StateData *s = states[i];
 		if (s->name == state)
-		{
-			sender = s;
-		}
-		states.pop();
-		copy.push (s);
+			return s;
 	}
-
-	while(!copy.empty()) 
-	{
-		states.push(copy.top());
-		copy.pop();
-	}
-
-	if (sender)
-		return sender;
 
 	return 0;
 }
@@ -189,11 +174,8 @@ void StateManager::jumpState (const std::string &state)
 {
 	if (canChangeState())
 	{
-		while (!states.empty())
-		{
-			popState ();
-		}
-		pushState (state);
+		popAllStates();
+		pushState(state);
 	}
 }
 
@@ -218,6 +200,11 @@ void StateManager::enqueueJumpState (const std::string &state, bool force, bool 
 	}
 }
 
+bool StateManager::isStateJumpPending()
+{
+	return !enqueuedJumpState.empty();
+}
+
 void StateManager::pushState(const std::string &s)
 {
 	std::string state = s;
@@ -225,9 +212,14 @@ void StateManager::pushState(const std::string &s)
 
 	if (canChangeState())
 	{
+		if (states_full())
+		{
+			debugLog("state stack overflow!!");
+			return;
+		}
 		StateData *s = new StateData;
 		s->name = state;
-		states.push (s);
+		states[++statesTopIndex] = s;
 
 		applyState(state);
 
@@ -243,7 +235,7 @@ void StateManager::pushState(const std::string &s)
 
 void StateManager::popAllStates()
 {
-	if (!states.empty())
+	if (!states_empty())
 	{
 		popState();
 		popAllStates();
@@ -252,53 +244,20 @@ void StateManager::popAllStates()
 
 void StateManager::popState()
 {
-	if (canChangeState() && !states.empty())
+	if (canChangeState() && !states_empty())
 	{
-		if (stateObjects[(*(states.top())).name])
-			stateObjects[(*(states.top())).name]->removeState();
-		//states.top()->eraseRenderObjects();
-		std::string n = (*(states.top())).name;
+		if (stateObjects[(*(states_top())).name])
+			stateObjects[(*(states_top())).name]->removeState();
+		//states_top()->eraseRenderObjects();
+		std::string n = (*(states_top())).name;
 		removeState(n);
-		delete states.top();
+		delete states_top();
 		if (core->getNestedMains()==1)
 			core->clearGarbage();
-		states.pop();
+		statesTopIndex--;
 		stateChangeFlag = true;
 	}
 }
-
-void StateManager::popState(const std::string &n)
-{
-	if (canChangeState() && !states.empty())
-	{
-		if (stateObjects[(*(states.top())).name])
-			stateObjects[(*(states.top())).name]->removeState();
-		//states.top()->eraseRenderObjects();
-		std::string n = (*(states.top())).name;
-		removeState(n);
-		delete states.top();
-		if (core->getNestedMains()==1)
-			core->clearGarbage();
-
-		// HACK: Fugly, fugly code
-		for (int i = 0; i < 2; i++)
-		{
-			std::stack<StateData*>copy;
-			copy = states;
-			while (!states.empty())
-				states.pop();
-			while (!copy.empty())
-			{
-				if (copy.top()->name != n)
-					states.push(copy.top());
-				copy.pop();
-			}
-		}
-
-		stateChangeFlag = true;
-	}
-}
-
 
 std::string StateManager::getNameFromDerivedClassTypeName(const std::string &typeidName)
 {
@@ -365,13 +324,11 @@ void StateManager::clearStateObjects()
 
 void StateManager::onUpdate(float dt)
 {
-	std::stack<StateData*>copy;
-	copy = states;
-	while (!copy.empty())
+	for (int i = 0; i <= statesTopIndex; i++)
 	{
-		if (stateObjects[copy.top()->name])
-			stateObjects[copy.top()->name]->update(dt);
-		copy.pop();
+		StateObject *obj = stateObjects[states[i]->name];
+		if (obj)
+			obj->update(dt);
 	}
 
 	if (canChangeState() && !enqueuedJumpState.empty())
@@ -392,8 +349,8 @@ void StateManager::onUpdate(float dt)
 
 StateData *StateManager::getTopStateData()
 {
-	if (!states.empty())
-		return states.top();
+	if (!states_empty())
+		return states_top();
 	else
 		return 0;
 }

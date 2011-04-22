@@ -17,12 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-target = 0
-body = 0
-moving = 0
+v.n = 0
+v.target = 0
+v.body = 0
+v.moving = 0
 
 function init(me)
 	setupEntity(me)
@@ -35,10 +35,10 @@ function init(me)
 	
 	entity_setState(me, STATE_IDLE)
 	
-	target = entity_getBoneByName(me, "Target")
-	body = entity_getBoneByName(me, "Body")
+	v.target = entity_getBoneByName(me, "Target")
+	v.body = entity_getBoneByName(me, "Body")
 	
-	bone_alpha(target)
+	bone_alpha(v.target)
 	
 	entity_setCanLeaveWater(me, true)
 	
@@ -47,33 +47,33 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 
 	--entity_updateMovement(me, dt)
-	entity_checkSplash(me, bone_getWorldPosition(body))
+	entity_checkSplash(me, bone_getWorldPosition(v.body))
 	if entity_isState(me, STATE_IDLE) then
-		x, y = entity_getPosition(me)
-		x2,y2 = bone_getWorldPosition(target)
-		if entity_collideCircleVsLine(n, x, y, x2, y2, 100) then
+		local x, y = entity_getPosition(me)
+		local x2,y2 = bone_getWorldPosition(v.target)
+		if entity_collideCircleVsLine(v.n, x, y, x2, y2, 100) then
 			entity_setState(me, STATE_ATTACK)
 		end
 	end
 	entity_handleShotCollisions(me)
 	
 	--[[
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if bone ~= 0 then
-		entity_damage(n, me, 0.5)
+		entity_damage(v.n, me, 0.5)
 	end
 	]]--
 	entity_touchAvatarDamage(me, entity_getCollideRadius(me), 0.5, 500)	
 	
 	entity_clearTargetPoints(me)
-	entity_addTargetPoint(me, bone_getWorldPosition(body))
+	entity_addTargetPoint(me, bone_getWorldPosition(v.body))
 end
 
 function enterState(me)
@@ -81,9 +81,9 @@ function enterState(me)
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_ATTACK) then
 		entity_setStateTime(me, entity_animate(me, "attack"))
-		len = 400
-		x, y = entity_getPosition(me)
-		nx, ny = entity_getNormal(me)
+		local len = 400
+		local x, y = entity_getPosition(me)
+		local nx, ny = entity_getNormal(me)
 		nx = nx * len
 		ny = ny * len
 		entity_setPosition(me, x+nx,y+ny,0.9, 1, -1, 1)		

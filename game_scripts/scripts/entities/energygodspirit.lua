@@ -17,27 +17,27 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-curNote = -1
-noteTimer = 0
+v.curNote = -1
+v.noteTimer = 0
 
-delayTime = 2
-delay = delayTime
+v.delayTime = 2
+v.delay = v.delayTime
 
-attackDelay = 0
+v.attackDelay = 0
 
-noteQuad = 0
+v.noteQuad = 0
 
 
 
-maxHits = 6
-hits = maxHits
+v.maxHits = 6
+v.hits = v.maxHits
 
-STATE_HURT				= 1000
-STATE_SING				= 1001
+local STATE_HURT			= 1000
+local STATE_SING			= 1001
 
 function init(me)
 	setupEntity(me)
@@ -70,8 +70,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
 	playSfx("spirit-enter")
 	entity_alpha(me, 1, 1.5)
@@ -85,33 +85,33 @@ function update(me, dt)
 	entity_doCollisionAvoidance(me, dt, 10, 0.2)
 	
 	if entity_isState(me, STATE_IDLE) then
-		delay = delay - dt
-		if delay < 0 then
-			delay = delayTime
+		v.delay = v.delay - dt
+		if v.delay < 0 then
+			v.delay = v.delayTime
 			entity_setState(me, STATE_SING) 
 		end
 	end
 	
 	if entity_isState(me, STATE_SING) then
-		if holdingNote then
-			noteTimer = noteTimer + dt
-			if noteTimer > 1 then
+		if v.holdingNote then
+			v.noteTimer = v.noteTimer + dt
+			if v.noteTimer > 1 then
 				-- hit it!
-				holdingNote = false
+				v.holdingNote = false
 				entity_setState(me, STATE_HURT)
 			end
 		end
-		if noteQuad~=0 then
-			quad_setPosition(noteQuad, entity_x(me), entity_y(me))
+		if v.noteQuad ~= 0 then
+			quad_setPosition(v.noteQuad, entity_x(me), entity_y(me))
 		end
 	end
 	
 	if entity_isState(me, STATE_ATTACK) then
 		entity_doEntityAvoidance(me, dt, 128, 0.2)
-		attackDelay = attackDelay + (dt * (1.0-(hits/maxHits))*3)
-		if attackDelay > 1 then
-			s = createShot("energygodspirit", me, n, entity_x(me), entity_y(me))
-			attackDelay = 0
+		v.attackDelay = v.attackDelay + (dt * (1.0-(v.hits/v.maxHits))*3)
+		if v.attackDelay > 1 then
+			local s = createShot("energygodspirit", me, v.n, entity_x(me), entity_y(me))
+			v.attackDelay = 0
 		end
 	end
 end
@@ -128,33 +128,33 @@ function enterState(me)
 		playSfx("secret")
 		playSfx("energyorbcharge")
 		entity_setStateTime(me, 3)
-		if hits == 1 then
+		if v.hits == 1 then
 			entity_setStateTime(me, 0.5)
 		end
-		curNote = -1
+		v.curNote = -1
 		spawnParticleEffect("energygodspirithit", entity_x(me), entity_y(me))
-		entity_heal(n, 0.5)
+		entity_heal(v.n, 0.5)
 		setSceneColor(0.5, 0.5, 1, 0.5)
 		
 		entity_setMaxSpeed(me, entity_getMaxSpeed(me)+50)
 	elseif entity_isState(me, STATE_SING) then
 		
 		entity_setStateTime(me, 5)
-		curNote = getRandNote()
-		r, g, b = getNoteColor(curNote)
+		v.curNote = getRandNote()
+		local r, g, b = getNoteColor(v.curNote)
 		entity_color(me, r*0.9 + 0.1, g*0.9 + 0.1, b*0.9 + 0.1, 1)
 		
-		playSfx(getNoteName(curNote, "low-"))
+		playSfx(getNoteName(v.curNote, "low-"))
 		
 		
-		t = 6
-		noteQuad = createQuad(string.format("Song/NoteSymbol%d", curNote), 6)
-		quad_alphaMod(noteQuad, 0.2)
-		quad_scale(noteQuad, 1, 1)
-		quad_scale(noteQuad, 3, 3, t, 0, 0, 1)
-		quad_setPosition(noteQuad, entity_x(me), entity_y(me))
-		quad_setBlendType(noteQuad, BLEND_ADD)
-		quad_delete(noteQuad, t)
+		local t = 6
+		v.noteQuad = createQuad(string.format("Song/NoteSymbol%d", v.curNote), 6)
+		quad_alphaMod(v.noteQuad, 0.2)
+		quad_scale(v.noteQuad, 1, 1)
+		quad_scale(v.noteQuad, 3, 3, t, 0, 0, 1)
+		quad_setPosition(v.noteQuad, entity_x(me), entity_y(me))
+		quad_setBlendType(v.noteQuad, BLEND_ADD)
+		quad_delete(v.noteQuad, t)
 		
 		setSceneColor(r*0.5 + 0.5, g*0.5 + 0.5, b*0.5 + 0.5, 1)
 		
@@ -166,7 +166,7 @@ function enterState(me)
 		entity_setMaxSpeedLerp(me, 1, 5)
 		entity_setStateTime(me, 4)
 		setSceneColor(1, 0.5, 0.5, 1)
-		attackDelay = 0
+		v.attackDelay = 0
 	elseif entity_isState(me, STATE_DEATHSCENE) then
 
 	end
@@ -177,20 +177,20 @@ function exitState(me)
 		entity_color(me, 1, 1, 1, 1)
 		--voice("laugh1")
 		entity_setState(me, STATE_ATTACK)
-		if noteQuad ~= 0 then
-			quad_delete(noteQuad, 1)
-			noteQuad = 0
+		if v.noteQuad ~= 0 then
+			quad_delete(v.noteQuad, 1)
+			v.noteQuad = 0
 		end
 	elseif entity_isState(me, STATE_ATTACK) then
 		entity_setState(me, STATE_IDLE)
 	elseif entity_isState(me, STATE_HURT) then
 		
 		
-		hits = hits - 1
+		v.hits = v.hits - 1
 		
-		if hits <= 0 then
+		if v.hits <= 0 then
 			setFlag(FLAG_ENERGYGODENCOUNTER, 2)
-			entity_damage(me, n, 10000)
+			entity_damage(me, v.n, 10000)
 			
 			setSceneColor(1, 1, 1, 5)
 			fadeOutMusic(6)
@@ -207,7 +207,7 @@ function exitState(me)
 			watch(2)
 			cam_toEntity(getNaija())
 		
-			node = entity_getNearestNode(me, "energygodencounter")
+			local node = entity_getNearestNode(me, "energygodencounter")
 			if node ~= 0 then
 				node_activate(node)
 			end
@@ -228,14 +228,14 @@ function hitSurface(me)
 end
 
 function songNote(me, note)
-	if curNote == note then
-		holdingNote = true
-		noteTimer = 0
+	if v.curNote == note then
+		v.holdingNote = true
+		v.noteTimer = 0
 	end
 end
 
 function songNoteDone(me, note)
-	holdingNote = false
+	v.holdingNote = false
 end
 
 function song(me, song)

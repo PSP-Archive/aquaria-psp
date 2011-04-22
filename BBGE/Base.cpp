@@ -102,7 +102,7 @@ void sizePowerOf2Texture(int &v)
 	int p = 8, use=0;
 	do 
 	{
-		use = pow(2.0, (double)p);
+		use = 1 << p;
 		p++;
 	}
 	while(v > use);
@@ -236,7 +236,8 @@ void stringToLowerUserData(std::string &s)
 	}
 }
 
-int nocasecmp(const std::string & s1, const std::string& s2)
+#ifndef HAVE_STRCASECMP
+int nocasecmp(const std::string &s1, const std::string &s2)
 {
 	std::string::const_iterator it1=s1.begin();
 	std::string::const_iterator it2=s2.begin();
@@ -257,6 +258,7 @@ int nocasecmp(const std::string & s1, const std::string& s2)
       return 0;
     return (size1<size2) ? -1 : 1;
 }
+#endif  // #if !HAVE_STRCASECMP
 
 std::string upperCase(const std::string &s1)
 {
@@ -306,7 +308,7 @@ void drawCircle(float radius, int stepSize)
 	{
 		for(int i=0;i < 360; i+=stepSize) {
 			const float degInRad = i*PI/180.0f;
-			glVertex3f(cos(degInRad)*radius, sin(degInRad)*radius,0.0);
+			glVertex3f(cosf(degInRad)*radius, sinf(degInRad)*radius,0.0);
 		}
 	}
 	glEnd();
@@ -438,6 +440,56 @@ void debugLog(const std::string &s)
 	}
 }
 
+
+// Read the given file into memory and return a pointer to the allocated
+// buffer.  The buffer will be null-terminated, like a C string; you can
+// also obtain the data length by passing a pointer to an unsigned long
+// as the (optional) second parameter.  The buffer should be freed with
+// delete[] when no longer needed.
+char *readFile(std::string path, unsigned long *size_ret)
+{
+	FILE *f = fopen(path.c_str(), "rb");
+	if (!f)
+		return NULL;
+
+	long fileSize;
+	if (fseek(f, 0, SEEK_END) != 0
+	 || (fileSize = ftell(f)) < 0
+	 || fseek(f, 0, SEEK_SET) != 0)
+	{
+		debugLog(path + ": Failed to get file size");
+		fclose(f);
+		return NULL;
+	}
+
+	char *buffer = new char[fileSize + 1];
+	if (!buffer)
+	{
+		std::ostringstream os;
+		os << path << ": Not enough memory for file ("
+		   << (fileSize+1) << " bytes)";
+		debugLog(os.str());
+		fclose(f);
+		return NULL;
+	}
+
+	long bytesRead = fread(buffer, 1, fileSize, f);
+	if (bytesRead != fileSize)
+	{
+		std::ostringstream os;
+		os << path << ": Failed to read file (only got "
+		   << bytesRead << " of " << fileSize << " bytes)";
+		debugLog(os.str());
+		fclose(f);
+		return NULL;
+	}
+
+	fclose(f);
+	if (size_ret)
+		*size_ret = fileSize;
+	buffer[fileSize] = 0;
+	return buffer;
+}
 
 /*
 void pForEachFile(std::string path, std::string type, void callback(const std::string &filename, int param), int param)
@@ -729,12 +781,17 @@ bool isTouchingLine(Vector lineStart, Vector lineEnd, Vector point, int radius, 
 {
     Vector dir = lineEnd - lineStart;
     Vector diff = point - lineStart;
-    float t = diff.dot2D(dir) / dir.dot2D(dir);
-    if (t < 0.0f)
-        t = 0.0f;
-    if (t > 1.0f)
-        t = 1.0f;
-    Vector closest = lineStart + t * dir;
+    Vector closest;
+    if (!dir.isZero()) {
+	float t = diff.dot2D(dir) / dir.dot2D(dir);
+	if (t < 0.0f)
+	    t = 0.0f;
+	if (t > 1.0f)
+	    t = 1.0f;
+	closest = lineStart + t * dir;
+    } else {
+	closest = lineStart;
+    }
     Vector d = point - closest;
     float distsqr = d.dot2D(d);
 	if (closestP)
@@ -787,8 +844,11 @@ GLuint generateEmptyTexture(int quality)											// Create An Empty Texture
 
 Vector randVector(int mag)
 {
+	// FIXME: Is this really what you wanted?  I'd suggest:
+	//     float angle = (rand() / (float)RAND_MAX) * PI;
+        // --achurch
 	float angle = (rand()&314);
-	float x = sin(angle), y = cos(angle);
+	float x = sinf(angle), y = cosf(angle);
 	return Vector(x*mag, y*mag);
 }
 
@@ -799,7 +859,7 @@ float lerp(const float &v1, const float &v2, float dt, int lerpType)
 		case LERP_EASE:
 		{
 			// ease in and out
-			return v1*(2*pow(dt, 3)-3*pow(dt,2)+1) + v2*(3*pow(dt,2) - 2*pow(dt,3));
+			return v1*(2*(dt*dt*dt)-3*sqr(dt)+1) + v2*(3*sqr(dt) - 2*(dt*dt*dt));
 		}
 		case LERP_EASEIN:
 		{
@@ -974,14 +1034,16 @@ void crunchFile(const std::string &file, const std::string &out, bool deleteOrig
 
 		while (true)
 		{
-			if (feof(f) != 0)
+			if (fread(&buf, sizeof(char), 1, f) != 1)
 				break;
-
-			fread(&buf, sizeof(char), 1, f);
 
 			buf += encode[rot] + add;
 
-			fwrite(&buf, sizeof(char), 1, o);
+			if (fwrite(&buf, sizeof(char), 1, o) != 1)
+			{
+				errorLog("Failed to write to " + out);
+				break;
+			}
 
 			rot++;
 			if (rot>=8)
@@ -1012,15 +1074,17 @@ void uncrunchFile(const std::string &file, const std::string &out)
 		int rot=0, add=0;
 		while (true)
 		{
-			if (feof(f) != 0)
+			if (fread(&buf, sizeof(char), 1, f) != 1)
 				break;
-
-			fread(&buf, sizeof(char), 1, f);
 
 			buf -= encode[rot] + add;
 
-			fwrite(&buf, sizeof(char), 1, o);
-			
+			if (fwrite(&buf, sizeof(char), 1, o) != 1)
+			{
+				errorLog("Failed to write to " + out);
+				break;
+			}
+
 			rot++;
 			if (rot>=8)
 			{ rot=0; add++; }
@@ -1052,7 +1116,8 @@ void openURL(const std::string &url)
 	std::string cmd("PATH=$PATH:. xdg-open '");
 	cmd += url;
 	cmd += "'";
-	system(cmd.c_str());
+	if (system(cmd.c_str()) != 0)
+		debugLog("system(xdg_open '" + url + "') failed");
 #endif
 }
 

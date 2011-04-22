@@ -17,9 +17,9 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
 function init(me)
 	setupEntity(me)
@@ -38,23 +38,23 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 end
 
-function msg(me, s, v)
+function msg(me, s, val)
 	if s == "g" then
 		--debugLog("fishcaveglow")
-		tv = v
-		if v < 1 then
-			tv = v * 0.5
+		local tv = val
+		if val < 1 then
+			tv = val * 0.5
 		else
 			tv = 0.75
 		end
-		entity_alpha(me, v, 0.2)
+		entity_alpha(me, val, 0.2)
 	end
 end
 

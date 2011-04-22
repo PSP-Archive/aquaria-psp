@@ -17,29 +17,29 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-head = 0
+v.head = 0
 
-STATE_SWIM			= 1000
-STATE_BURST			= 1001
+local STATE_SWIM		= 1000
+local STATE_BURST		= 1001
 
-burstDelay 			= 0
+v.burstDelay		= 0
 
-singDelay 			= 4
+v.singDelay			= 4
 
-fireDelay 			= 3
-fired				= 0
-fireShotDelay		= 0
+v.fireDelay			= 3
+v.fired				= 0
+v.fireShotDelay		= 0
 
-function idle(me)
+local function idle(me)
 	entity_setState(me, STATE_IDLE, math.random(1)+0.5)
 end
 
-function doBurstDelay()
-	burstDelay = math.random(4) + 2
+local function doBurstDelay()
+	v.burstDelay = math.random(4) + 2
 end
 
 function init(me)
@@ -57,7 +57,7 @@ function init(me)
 	bone_alpha(entity_getBoneByName(me, "Fish2"),0)
 	bone_alpha(entity_getBoneByName(me, "DualFormGlow"),0)
 	
-	head = entity_getBoneByName(me, "Head")
+	v.head = entity_getBoneByName(me, "Head")
 	
 	entity_setDeathScene(me, true)
 	
@@ -70,8 +70,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -79,14 +79,14 @@ function update(me, dt)
 	
 	entity_handleShotCollisions(me)
 	
-	entity_setLookAtPoint(me, bone_getWorldPosition(head))
+	entity_setLookAtPoint(me, bone_getWorldPosition(v.head))
 	
 	if entity_isState(me, STATE_IDLE) then
 		entity_rotate(me, 0, 0.1)
 	elseif entity_isState(me, STATE_SWIM) then
 		entity_moveTowardsTarget(me, dt, 500)
-		burstDelay = burstDelay - dt
-		if burstDelay < 0 then
+		v.burstDelay = v.burstDelay - dt
+		if v.burstDelay < 0 then
 			doBurstDelay()
 			entity_setMaxSpeedLerp(me, 2)
 			entity_setMaxSpeedLerp(me, 1, 4)
@@ -99,41 +99,41 @@ function update(me, dt)
 	entity_doCollisionAvoidance(me, dt, 4, 0.5)
 	
 	--[[
-	singDelay = singDelay - dt
-	if singDelay < 0 then
-		singDelay = math.random(3) + 3
+	v.singDelay = v.singDelay - dt
+	if v.singDelay < 0 then
+		v.singDelay = math.random(3) + 3
 		entity_sound(me, getNoteName(math.random(8)), 1, 3)
-		x = entity_x(n) - entity_x(me)
-		y = entity_y(n) - entity_y(me)
+		local x = entity_x(v.n) - entity_x(me)
+		local y = entity_y(v.n) - entity_y(me)
 		x, y = vector_setLength(x, y, 1000)
-		entity_addVel(n, x, y)
+		entity_addVel(v.n, x, y)
 	end
 	]]--
 	
 	if entity_isState(me, STATE_SWIM) then
-		if fired == -1 then
-			fireDelay = fireDelay - dt
-			if fireDelay < 0 then
-				fired = 3
-				fireDelay = math.random(2) + 3
-				fireShotDelay = 0
+		if v.fired == -1 then
+			v.fireDelay = v.fireDelay - dt
+			if v.fireDelay < 0 then
+				v.fired = 3
+				v.fireDelay = math.random(2) + 3
+				v.fireShotDelay = 0
 			end
 		end
 	end
 	
-	if fired > -1 then
-		fireShotDelay = fireShotDelay - dt
-		if fireShotDelay < 0 then
-			s = createShot("MutantNaija", me, n, bone_getWorldPosition(head))
-			fired = fired - 1
-			if fired == 0 then
-				fired = -1 
+	if v.fired > -1 then
+		v.fireShotDelay = v.fireShotDelay - dt
+		if v.fireShotDelay < 0 then
+			local s = createShot("MutantNaija", me, v.n, bone_getWorldPosition(v.head))
+			v.fired = v.fired - 1
+			if v.fired == 0 then
+				v.fired = -1 
 			end
-			fireShotDelay = 0.2
+			v.fireShotDelay = 0.2
 		end
 	end
 	
-	thresh = 10
+	local thresh = 10
 	if entity_velx(me) > thresh and not entity_isfh(me) then
 		entity_fh(me)
 	end

@@ -17,91 +17,91 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-bone_tongue = 0
-bone_hand = 0
-bone_head = 0
-bone_body = 0
-bone_upperLeg = 0
-bone_tongue = 0
-bone_jaw = 0
-bone_target = 0
+v.bone_tongue = 0
+v.bone_hand = 0
+v.bone_head = 0
+v.bone_body = 0
+v.bone_upperLeg = 0
+v.bone_tongue = 0
+v.bone_jaw = 0
+v.bone_target = 0
 
-naijaPit = 0
+v.naijaPit = 0
 
-inHand = false
-node_right = 0
-node_left = 0
-node_hang = 0
-node_middle = 0
-node_check = 0
-node_mermanSpawn = 0
-node_nostomp = 0
+v.inHand = false
+v.node_right = 0
+v.node_left = 0
+v.node_hang = 0
+v.node_middle = 0
+v.node_check = 0
+v.node_mermanSpawn = 0
+v.node_nostomp = 0
 
-handSpin = 0
+v.handSpin = 0
 
-sx = 0
-sy = 0 
+v.sx = 0
+v.sy = 0 
 
-holding = 0
+v.holding = 0
 
-soundDelay = 0
+v.soundDelay = 0
 
-skull = false
+v.skull = false
 
-STATE_ATTACK1 		= 1000
-STATE_ATTACK2 		= 1001
-STATE_ATTACK3 		= 1002
-STATE_HOLDING 		= 1003
-STATE_ATTACK4 		= 1004
-STATE_ACIDSPRAY 	= 1005
-STATE_PAIN 			= 1006
-STATE_DIE 			= 1007
-STATE_DONE 			= 1008
-STATE_MOVERIGHT		= 1009
-STATE_MOVELEFT		= 1010
-STATE_ATTACK5		= 1011
-STATE_TRANSFORM		= 1012
-STATE_CREATEMERMAN	= 1013
+local STATE_ATTACK1 		= 1000
+local STATE_ATTACK2 		= 1001
+local STATE_ATTACK3 		= 1002
+local STATE_HOLDING 		= 1003
+local STATE_ATTACK4 		= 1004
+local STATE_ACIDSPRAY 	= 1005
+local STATE_PAIN 			= 1006
+local STATE_DIE 			= 1007
+local STATE_DONE 			= 1008
+local STATE_MOVERIGHT	= 1009
+local STATE_MOVELEFT	= 1010
+local STATE_ATTACK5		= 1011
+local STATE_TRANSFORM	= 1012
+local STATE_CREATEMERMAN= 1013
 -- yer done!
 
-attacksToGo = 3
+v.attacksToGo = 3
 
-lastAcid = false
+v.lastAcid = false
 
-getHitDelay = 0
+v.getHitDelay = 0
 
--- initial attackDelay value set below
-attackDelay = 0
+-- initial v.attackDelay value set below
+v.attackDelay = 0
 
 
-hurtDelay =0
+v.hurtDelay =0
 
-hits = 0
-maxHeadHits = 3
-headHits = maxHeadHits
-maxHandHits = 6
-handHits = 0
+v.hits = 0
+v.maxHeadHits = 3
+v.headHits = v.maxHeadHits
+v.maxHandHits = 6
+v.handHits = 0
 
-minPullSpd = 100
-maxPullSpd = 1800
-pullSpdRate = 1000
+v.minPullSpd = 100
+v.maxPullSpd = 1800
+v.pullSpdRate = 1000
 
-grabPoint = 0
+v.grabPoint = 0
 
-started = false
+v.started = false
 
-fireDelay = 0
+v.fireDelay = 0
 
-n = 0
+v.n = 0
 
-beam = 0
-canMove = true
+v.beam = 0
+v.canMove = true
 
-skullHits = 80
-lessThan = skullHits*0.6
-finalStage = false
+v.skullHits = 80
+v.lessThan = v.skullHits*0.6
+v.finalStage = false
 
 function init(me)
 	setupBasicEntity(
@@ -130,34 +130,34 @@ function init(me)
 	
 	--entity_setState(me, STATE_IDLE)
 	
-	bone_tongue = entity_getBoneByName(me, "Tongue")
-	bone_hand = entity_getBoneByName(me, "Hand")
+	v.bone_tongue = entity_getBoneByName(me, "Tongue")
+	v.bone_hand = entity_getBoneByName(me, "Hand")
 	--bone_leftThumb = entity_getBoneByName(me, "LeftThumb")
-	bone_head = entity_getBoneByName(me, "Head")
-	bone_body = entity_getBoneByName(me, "Body")
-	bone_upperLeg = entity_getBoneByName(me, "UpperLeg")
-	bone_tongue = entity_getBoneByName(me, "Tongue")
-	bone_jaw = entity_getBoneByName(me, "Jaw")
+	v.bone_head = entity_getBoneByName(me, "Head")
+	v.bone_body = entity_getBoneByName(me, "Body")
+	v.bone_upperLeg = entity_getBoneByName(me, "UpperLeg")
+	v.bone_tongue = entity_getBoneByName(me, "Tongue")
+	v.bone_jaw = entity_getBoneByName(me, "Jaw")
 	
-	bone_target = entity_getBoneByName(me, "Target")
+	v.bone_target = entity_getBoneByName(me, "Target")
 	
-	bone_setSegs(bone_tongue, 2, 12, 0.4, 0.3, -0.02, 0, 8, 0)
+	bone_setSegs(v.bone_tongue, 2, 12, 0.4, 0.3, -0.02, 0, 8, 0)
 	
-	node_left = entity_getNearestNode(me, "HELLBEAST_LEFT")
-	node_right = entity_getNearestNode(me, "HELLBEAST_RIGHT")
-	node_middle = entity_getNearestNode(me, "HELLBEAST_MIDDLE")
-	node_hang = entity_getNearestNode(me, "HELLBEAST_HANG")
+	v.node_left = entity_getNearestNode(me, "HELLBEAST_LEFT")
+	v.node_right = entity_getNearestNode(me, "HELLBEAST_RIGHT")
+	v.node_middle = entity_getNearestNode(me, "HELLBEAST_MIDDLE")
+	v.node_hang = entity_getNearestNode(me, "HELLBEAST_HANG")
 	
-	node_nostomp = getNode("NOSTOMP")
+	v.node_nostomp = getNode("NOSTOMP")
 	
-	node_check = entity_getNearestNode(me, "HELLBEAST_CHECK")
-	node_mermanSpawn = entity_getNearestNode(me, "MERMAN_SPAWN")
+	v.node_check = entity_getNearestNode(me, "HELLBEAST_CHECK")
+	v.node_mermanSpawn = entity_getNearestNode(me, "MERMAN_SPAWN")
 	
-	grabPoint = entity_getBoneByName(me, "GrabPoint")
-	bone_alpha(grabPoint, 0)
+	v.grabPoint = entity_getBoneByName(me, "GrabPoint")
+	bone_alpha(v.grabPoint, 0)
 	
 	
-	naijaPit = getNode("NAIJAPIT")
+	v.naijaPit = getNode("NAIJAPIT")
 	
 	entity_setState(me, STATE_IDLE)
 	
@@ -165,9 +165,9 @@ function init(me)
 	
 	entity_setTargetPriority(me, 2)
 	entity_setTargetRange(me, 1024)
-	n = getNaija()
+	v.n = getNaija()
 	
-	hits = 3
+	v.hits = 3
 	
 	loadSound("HellBeast-Beam")
 	loadSound("HellBeast-Die")
@@ -190,9 +190,9 @@ end
 function postInit(me)
 	if getFlag(FLAG_BOSS_MITHALA) > 0 then
 		entity_setState(me, STATE_DONE)
-		bone_setTexture(bone_head, "hellbeast/skull")
-		bone_setTexture(bone_jaw, "hellbeast/skulljaw")
-		bone_alpha(bone_tongue, 0)
+		bone_setTexture(v.bone_head, "hellbeast/skull")
+		bone_setTexture(v.bone_jaw, "hellbeast/skulljaw")
+		bone_alpha(v.bone_tongue, 0)
 		entity_animate(me, "done", -1, true)
 		if entity_isFlag(me, 0) then
 			voice("naija_song_beastform")
@@ -202,20 +202,20 @@ function postInit(me)
 		entity_setAllDamageTargets(me, false)
 		entity_setColor(me, 0.6, 0.2, 0.2)
 	end
-	sx = entity_x(me)
-	sy = entity_y(me)
+	v.sx = entity_x(me)
+	v.sy = entity_y(me)
 	
 	-- cache
 	createEntity("mermanthin", "", -100, -100)
-	e = createEntity("mermanthin", "", -100, -100)
+	local e = createEntity("mermanthin", "", -100, -100)
 	entity_setState(e, STATE_BLOATED)
 end
 
 function damage(me, attacker, bone, damageType, dmg)
 --[[
-	hits = hits + 1
-	if hits > 5 then
-		hits = 0
+	v.hits = v.hits + 1
+	if v.hits > 5 then
+		v.hits = 0
 		if entity_isState(me, STATE_THREE) then
 			entity_setState(me, STATE_TWO)
 		else
@@ -226,30 +226,30 @@ function damage(me, attacker, bone, damageType, dmg)
 	]]-- 
 
 	if entity_isState(me, STATE_HOLDING) then
-		handHits = handHits - dmg
-		if handHits <= 0 then
+		v.handHits = v.handHits - dmg
+		if v.handHits <= 0 then
 			-- move to some hurt state instead
-			inHand = false
+			v.inHand = false
 			entity_setState(me, STATE_IDLE)
 		end
 	end	
 	
-	if skull then
-		if bone == bone_head or bone == bone_jaw then
+	if v.skull then
+		if bone == v.bone_head or bone == v.bone_jaw then
 			debugLog("skull hit")
-			bone_damageFlash(bone_head)
-			bone_damageFlash(bone_jaw)
+			bone_damageFlash(v.bone_head)
+			bone_damageFlash(v.bone_jaw)
 			bone_damageFlash(entity_getBoneByIdx(me, 0))
-			bone_offset(bone_head, 0, 0)
-			bone_offset(bone_head, 20, 0, 0.1, 1, 1)
+			bone_offset(v.bone_head, 0, 0)
+			bone_offset(v.bone_head, 20, 0, 0.1, 1, 1)
 			
 			playSfx("hellbeast-skullhit")
-			skullHits = skullHits - dmg
-			if skullHits < lessThan and not finalStage then
-				finalStage = true
+			v.skullHits = v.skullHits - dmg
+			if v.skullHits < v.lessThan and not v.finalStage then
+				v.finalStage = true
 				playMusicStraight("mithalapeace")
 			end
-			if skullHits <= 0 then
+			if v.skullHits <= 0 then
 				entity_setState(me, STATE_DIE)
 			end
 			shakeCamera(2, 1)
@@ -259,15 +259,15 @@ function damage(me, attacker, bone, damageType, dmg)
 	else
 		
 		if not (entity_isState(me, STATE_MOVELEFT) or entity_isState(me, STATE_ATTACK4)) then
-			if (damageType == DT_AVATAR_ENERGYBLAST or damageType == DT_AVATAR_SHOCK) and (bone == bone_head or bone == bone_jaw or bone == bone_tongue) then
-				headHits = headHits - dmg
+			if (damageType == DT_AVATAR_ENERGYBLAST or damageType == DT_AVATAR_SHOCK) and (bone == v.bone_head or bone == v.bone_jaw or bone == v.bone_tongue) then
+				v.headHits = v.headHits - dmg
 			end
 		end
 	end
 	
-	if not skull then
-		bone_damageFlash(bone_head, 1)
-		bone_damageFlash(bone_jaw, 1)
+	if not v.skull then
+		bone_damageFlash(v.bone_head, 1)
+		bone_damageFlash(v.bone_jaw, 1)
 		--playNoEffect()
 	end
 	
@@ -296,36 +296,36 @@ function animationKey(me, key)
 		then
 			playSfx("HellBeast-Stomp")
 			shakeCamera(30, 0.5)
-			if not skull then
+			if not v.skull then
 				setSceneColor(0.7, 0.7, 0.7)
 				setSceneColor(1, 1, 1, 0.5)
 			end
 	end
 	if entity_isState(me, STATE_MOVERIGHT) or entity_isState(me, STATE_MOVELEFT) then
 		if key == 0 or key == 2 or key == 3 or key == 6 or key == 7 then
-			canMove = false
+			v.canMove = false
 		else
-			canMove = true
+			v.canMove = true
 		end
 	end
 	if entity_isState(me, STATE_ACIDSPRAY) and key == 3 then
 		--playSfx("HellBeast-Beam")
-		x,y = bone_getPosition(bone_tongue)
-		--beam = createBeam(x, y, 90)
+		local x, y = bone_getPosition(v.bone_tongue)
+		--v.beam = createBeam(x, y, 90)
 	end
 	if entity_isState(me, STATE_CREATEMERMAN) then	
-		lastAcid = false
+		v.lastAcid = false
 		if key == 1 then
-			bx, by = bone_getWorldPosition(bone_tongue)
+			local bx, by = bone_getWorldPosition(v.bone_tongue)
 			spawnParticleEffect("mermanspawn", bx, by)
 			playSfx("mia-appear")
 		elseif key == 3 then
-			bx, by = bone_getWorldPosition(grabPoint)
+			local bx, by = bone_getWorldPosition(v.grabPoint)
 			
-			holding = createEntity("mermanthin", "", bx, by)
+			v.holding = createEntity("mermanthin", "", bx, by)
 			
 		elseif key == 4 then
-			holding = 0
+			v.holding = 0
 		end
 	end
 end
@@ -335,26 +335,26 @@ function update(me, dt)
 		return
 	end
 	if not(entity_isState(me, STATE_DONE) or entity_isState(me, STATE_DIE)) then
-		if entity_isEntityInRange(me, n, 2848) then
-			if not started then
+		if entity_isEntityInRange(me, v.n, 2848) then
+			if not v.started then
 				emote(EMOTE_NAIJAUGH)
 				playMusic("Mithala")
 				playSfx("HellBeast-Roar")
-				started = true
-				attackDelay = -2
-				nd = getNode("MERSPAWN")
+				v.started = true
+				v.attackDelay = -2
+				local nd = getNode("MERSPAWN")
 				createEntity("mermanthin", "", node_x(nd), node_y(nd))
 			end
-			soundDelay = soundDelay - dt
-			if soundDelay < 0 then
+			v.soundDelay = v.soundDelay - dt
+			if v.soundDelay < 0 then
 				entity_playSfx(me, "HellBeast-Idle")
-				soundDelay = (math.random(100)/100.0)*1 + 0.5
+				v.soundDelay = (math.random(100)/100.0)*1 + 0.5
 			end
 		end
 	end
 	entity_clearTargetPoints(me)
-	entity_addTargetPoint(me, bone_getWorldPosition(bone_head))
-	entity_addTargetPoint(me, bone_getWorldPosition(bone_jaw))
+	entity_addTargetPoint(me, bone_getWorldPosition(v.bone_head))
+	entity_addTargetPoint(me, bone_getWorldPosition(v.bone_jaw))
 	
 	
 	--[[
@@ -363,33 +363,33 @@ function update(me, dt)
 	end
 	]]--
 	--[[
-	entity_addTargetPoint(me, bone_getWorldPosition(bone_body))
-	entity_addTargetPoint(me, bone_getWorldPosition(bone_upperLeg))
+	entity_addTargetPoint(me, bone_getWorldPosition(v.bone_body))
+	entity_addTargetPoint(me, bone_getWorldPosition(v.bone_upperLeg))
 	]]--
 	if not entity_isState(me, STATE_DIE) and not entity_isState(me, STATE_DONE) then
 		overrideZoom(0.3, 1)
 		
 		--[[
-		if node_getNumEntitiesIn(node_check, "MermanThin")<=0 then
-			createEntity("MermanThin", "", node_x(node_mermanSpawn), node_y(node_mermanSpawn))
+		if node_getNumEntitiesIn(v.node_check, "MermanThin")<=0 then
+			createEntity("MermanThin", "", node_x(v.node_mermanSpawn), node_y(v.node_mermanSpawn))
 		end
 		]]--
 	end
 	entity_handleShotCollisionsSkeletal(me)	
 	
 	if entity_isState(me, STATE_IDLE) then
-		if headHits <= 0 then
-			headHits = maxHeadHits
+		if v.headHits <= 0 then
+			v.headHits = v.maxHeadHits
 			debugLog("HeadHits exceeded")
 			
-			if entity_x(me) < node_x(node_left)+100 then
-				if node_getNumEntitiesIn(node_check, "MermanThin")>0 then
+			if entity_x(me) < node_x(v.node_left)+100 then
+				if node_getNumEntitiesIn(v.node_check, "MermanThin") > 0 then
 					entity_setState(me, STATE_ATTACK4, -1, true)
 				else
 					entity_setState(me, STATE_MOVERIGHT)
 				end
 			else
-				if node_getNumEntitiesIn(node_check, "MermanThin")<=0 then
+				if node_getNumEntitiesIn(v.node_check, "MermanThin") <= 0 then
 					entity_setState(me, STATE_MOVERIGHT)
 				else
 					entity_setState(me, STATE_MOVELEFT)
@@ -398,81 +398,81 @@ function update(me, dt)
 			return
 		end	
 		
-		attackDelay = attackDelay + dt
-		if attackDelay > 1.8 then
-			attackDelay = (3-hits)*0.2
-			my_x = entity_x(me)
-			my_y = entity_y(me)
+		v.attackDelay = v.attackDelay + dt
+		if v.attackDelay > 1.8 then
+			v.attackDelay = (3-v.hits)*0.2
+			local my_x = entity_x(me)
+			local my_y = entity_y(me)
 			
-			if not skull then
-				attacksToGo = attacksToGo - 1
+			if not v.skull then
+				v.attacksToGo = v.attacksToGo - 1
 				
-				if node_getNumEntitiesIn(node_check, "MermanThin")<=0 then
-					if attacksToGo <= 0 then
-						attacksToGo = hits + 3
+				if node_getNumEntitiesIn(v.node_check, "MermanThin")<=0 then
+					if v.attacksToGo <= 0 then
+						v.attacksToGo = v.hits + 3
 						entity_setState(me, STATE_CREATEMERMAN)
 						return
 					end
 				else
-					attacksToGo = 2
+					v.attacksToGo = 2
 				end
 			end
 			
-			if node_isEntityIn(naijaPit, n) then
+			if node_isEntityIn(v.naijaPit, v.n) then
 				debugLog("in pit")
-				if node_isEntityIn(node_nostomp, me) then
+				if node_isEntityIn(v.node_nostomp, me) then
 					debugLog("no stomp")
-					lastAcid = false
+					v.lastAcid = false
 					entity_setState(me, STATE_ATTACK5)
 				else
 					debugLog("not no stomp")
-					if not lastAcid then
+					if not v.lastAcid then
 						if chance(50) then
 							entity_setState(me, STATE_ACIDSPRAY)
-							lastAcid = true
+							v.lastAcid = true
 						else
-							lastAcid = false
+							v.lastAcid = false
 							entity_setState(me, STATE_MOVERIGHT)
 						end
 					else
-						lastAcid = false
+						v.lastAcid = false
 						entity_setState(me, STATE_MOVERIGHT)
 					end
 				end
 			else
-				if entity_y(n) < my_y+50 and entity_y(n) > my_y-200 and entity_x(n) < my_x+1024 then
+				if entity_y(v.n) < my_y+50 and entity_y(v.n) > my_y-200 and entity_x(v.n) < my_x+1024 then
 					entity_setState(me, STATE_ATTACK2)
-				elseif entity_y(n) >= my_y  and entity_x(n) < my_x + 750 then
-					if not node_isEntityIn(me, nostomp) then
+				elseif entity_y(v.n) >= my_y and entity_x(v.n) < my_x + 750 then
+					if not node_isEntityIn(v.node_nostomp, me) then
 						entity_setState(me, STATE_ATTACK3)
 					else
-						attackDelay = 2
+						entity_setState(me, STATE_ATTACK2)
 					end
-				elseif entity_y(n) < my_y-200 then
-					if entity_x(n) < entity_x(me)+ 300 then
+				elseif entity_y(v.n) < my_y-200 then
+					if entity_x(v.n) < entity_x(me)+ 300 then
 						entity_setState(me, STATE_ATTACK1)
 					else
 						entity_setState(me, STATE_ACIDSPRAY)
 					end
-				--elseif entity_y(n) < my_y+800 then
+				--elseif entity_y(v.n) < my_y+800 then
 				else
 
 					if chance(55) then
-						if my_x < node_x(node_right)-100 or lastAcid then
-							lastAcid = false
+						if my_x < node_x(v.node_right)-100 or v.lastAcid then
+							v.lastAcid = false
 							entity_setState(me, STATE_MOVERIGHT)
 						else
-							if node_isEntityIn(naijaPit, n) then
+							if node_isEntityIn(v.naijaPit, v.n) then
 								entity_setState(me, STATE_ATTACK5)
-								lastAcid = false
+								v.lastAcid = false
 							else
-								lastAcid = true
+								v.lastAcid = true
 								entity_setState(me, STATE_ACIDSPRAY)
 							end
 						end
 					else
-						if not lastAcid then
-							lastAcid = true
+						if not v.lastAcid then
+							v.lastAcid = true
 							entity_setState(me, STATE_ACIDSPRAY)
 						else
 							entity_setState(me, STATE_MOVERIGHT)
@@ -486,20 +486,20 @@ function update(me, dt)
 	end
 	
 	if entity_isState(me, STATE_ATTACK4) then
-		pullSpd = pullSpd + pullSpdRate * dt
-		if pullSpd > maxPullSpd then
-			pullSpd = maxPullSpd
+		v.pullSpd = v.pullSpd + v.pullSpdRate * dt
+		if v.pullSpd > v.maxPullSpd then
+			v.pullSpd = v.maxPullSpd
 		end
-		x,y = bone_getWorldPosition(bone_tongue)
-		radius = 1500
-		length = pullSpd
+		local x, y = bone_getWorldPosition(v.bone_tongue)
+		local radius = 1500
+		local length = v.pullSpd
 		entity_pullEntities(me, x, y, radius, length, dt)
 		
-		if getHitDelay > 0 then
-			getHitDelay = getHitDelay - dt
+		if v.getHitDelay > 0 then
+			v.getHitDelay = v.getHitDelay - dt
 		else
 			--ent = entity_getNearestEntity(me, "MermanThin")
-			ent = getFirstEntity()
+			local ent = getFirstEntity()
 			while ent ~= 0 do
 				if entity_getEntityType(ent)==ET_ENEMY or entity_getEntityType(ent)==ET_AVATAR then
 					if entity_isPositionInRange(ent, x, y, 180) then
@@ -507,25 +507,25 @@ function update(me, dt)
 						entity_stopPull(ent)						
 						
 						if entity_isState(ent, STATE_BLOATED) then
-							attackDelay = 0
+							v.attackDelay = 0
 							spawnParticleEffect("mermanexplode", entity_x(ent), entity_y(ent))
 							playSfx("merman-bloat-explode")
 							entity_delete(ent)
-							--debugLog(string.format("%s %d", "hits: ", hits))
+							--debugLog(string.format("%s %d", "hits: ", v.hits))
 							setSceneColor(0.7, 1, 0.5)
 							setSceneColor(1, 1, 1, 1)
-							hits = hits - 1
-							if hits == 1 then
+							v.hits = v.hits - 1
+							if v.hits == 1 then
 								playMusic("mithalaanger")
 								entity_setColor(me, 1, 0.5, 0.5, 4)
 							end
-							getHitDelay = 3
-							if hits <= 0 then
+							v.getHitDelay = 3
+							if v.hits <= 0 then
 								--entity_delete(me)
 								fade2(1, 0, 1, 1, 1)
-								bone_setTexture(bone_head, "hellbeast/skull")
-								bone_setTexture(bone_jaw, "hellbeast/skulljaw")
-								bone_alpha(bone_tongue, 0)
+								bone_setTexture(v.bone_head, "hellbeast/skull")
+								bone_setTexture(v.bone_jaw, "hellbeast/skulljaw")
+								bone_alpha(v.bone_tongue, 0)
 								fade2(0, 0.5, 1, 1, 1)
 								playSfx("mia-appear")
 								entity_setState(me, STATE_TRANSFORM, -1, true)
@@ -534,9 +534,9 @@ function update(me, dt)
 							else
 								entity_setState(me, STATE_PAIN)
 							end
-							bone_damageFlash(bone_head)
-							bone_damageFlash(bone_jaw)
-							bone_damageFlash(bone_body)
+							bone_damageFlash(v.bone_head)
+							bone_damageFlash(v.bone_jaw)
+							bone_damageFlash(v.bone_body)
 						elseif entity_isName(ent, "mermanthin") then
 							entity_delete(ent)
 						else
@@ -554,66 +554,66 @@ function update(me, dt)
 	end
 	
 	if entity_isState(me, STATE_ACIDSPRAY) then
-		if beam ~= 0 then
-			beam_setAngle(beam, bone_getWorldRotation(bone_tongue)+90)
-			beam_setPosition(beam, bone_getWorldPosition(bone_tongue))
+		if v.beam ~= 0 then
+			beam_setAngle(v.beam, bone_getWorldRotation(v.bone_tongue)+90)
+			beam_setPosition(v.beam, bone_getWorldPosition(v.bone_tongue))
 		end
-		fireDelay = fireDelay + dt
-		amount = 0.5
-		if skull then
+		v.fireDelay = v.fireDelay + dt
+		local amount = 0.5
+		if v.skull then
 			amount = 0.2
 		end
-		if fireDelay > amount then
-			fireDelay = 0
-			x,y = bone_getWorldPosition(bone_tongue)
-			tx,ty = bone_getWorldPosition(bone_target)
-			vx = tx - x
-			vy = (ty - y)*1.5
-			if skull then
-				dx = entity_x(n) - x
-				dy = entity_y(n) - y
-				vx,vy = vector_normalize(vx, vy)
-				dx,dy = vector_normalize(dx,dy)
+		if v.fireDelay > amount then
+			v.fireDelay = 0
+			local x, y = bone_getWorldPosition(v.bone_tongue)
+			local tx, ty = bone_getWorldPosition(v.bone_target)
+			local vx = tx - x
+			local vy = (ty - y)*1.5
+			if v.skull then
+				local dx = entity_x(v.n) - x
+				local dy = entity_y(v.n) - y
+				vx, vy = vector_normalize(vx, vy)
+				dx, dy = vector_normalize(dx, dy)
 				vx = dx
 				vy = dy
 			end
-			if skull then
+			if v.skull then
 				playSfx("hellbeast-shot-skull")
-				createShot(string.format("hellbeast-skull", 4-hits), me, n, x, y, vx, vy)
+				createShot(string.format("hellbeast-skull", 4-v.hits), me, v.n, x, y, vx, vy)
 			else
 				playSfx("hellbeast-shot")
-				createShot(string.format("hellbeast%d", 4-hits), me, n, x, y, vx, vy)
+				createShot(string.format("hellbeast%d", 4-v.hits), me, v.n, x, y, vx, vy)
 			end
 		end
 	end
 	--[[
 	if entity_isState(me, STATE_ACIDSPRAY) then
-		fireDelay = fireDelay - dt
-		if fireDelay < 0 then
-			x,y = bone_getWorldPosition(bone_tongue)
-			entity_setTarget(me, n)
+		v.fireDelay = v.fireDelay - dt
+		if v.fireDelay < 0 then
+			x,y = bone_getWorldPosition(v.bone_tongue)
+			entity_setTarget(me, v.n)
 			entity_fireAtTarget(me, "Purple", 1, 1000, 100, 0, 0, offx, offy, 0, 0, x, y)
-			fireDelay = fireDelay + 0.2
+			v.fireDelay = v.fireDelay + 0.2
 		end
 	end
 	]]--
 
-	if hurtDelay > 0 then
-		hurtDelay = hurtDelay - dt
+	if v.hurtDelay > 0 then
+		v.hurtDelay = v.hurtDelay - dt
 	else
-		if not inHand and
+		if not v.inHand and
 		not entity_isState(me, STATE_DONE) and not entity_isState(me, STATE_DIE)
 		then
-			bone = entity_collideSkeletalVsCircle(me, n)
+			local bone = entity_collideSkeletalVsCircle(me, v.n)
 			if bone ~= 0 then
 				if not entity_isState(me, STATE_IDLE) then
-					if bone == bone_hand then
+					if bone == v.bone_hand then
 						if (entity_isState(me, STATE_ATTACK2) or entity_isState(me, STATE_ATTACK5)) then
-							inHand = true
+							v.inHand = true
 							avatar_fallOffWall()
 							entity_setState(me, STATE_HOLDING)
-							entity_animate(n, "trapped", -1, LAYER_OVERRIDE)
-							handSpin = 4
+							entity_animate(v.n, "trapped", -1, LAYER_OVERRIDE)
+							v.handSpin = 4
 							return
 						end
 					end
@@ -621,24 +621,24 @@ function update(me, dt)
 				if entity_isState(me, STATE_ATTACK4) then
 					entity_setState(me, STATE_IDLE)
 				end
-				if not inHand then
+				if not v.inHand then
 					if not entity_isState(me, STATE_PAIN) and not entity_isState(me, STATE_DIE) and not entity_isState(me, STATE_CREATEMERMAN)
 					and not entity_isState(me, STATE_TRANSFORM) then
-						entity_damage(n, me, 1)
+						entity_damage(v.n, me, 1)
 					end
-					entity_push(n, 1200, 0, 0)
+					entity_push(v.n, 1200, 0, 0)
 				end
 			end
-			if entity_x(n) < entity_x(me) then
-				entity_setPosition(n, entity_x(me) + 1, entity_y(n))
-				if entity_velx(n) < 0 then
-					vx = entity_velx(n)
-					vy = entity_vely(n)
+			if entity_x(v.n) < entity_x(me) then
+				entity_setPosition(v.n, entity_x(me) + 1, entity_y(v.n))
+				if entity_velx(v.n) < 0 then
+					local vx = entity_velx(v.n)
+					local vy = entity_vely(v.n)
 					if vx < 0 then
 						vx = -vx
 					end
-					entity_clearVel(n)
-					entity_addVel(n, vx, vy)
+					entity_clearVel(v.n)
+					entity_addVel(v.n, vx, vy)
 				end
 			end
 		end
@@ -647,41 +647,41 @@ function update(me, dt)
 	
 	--[[
 	if entity_isState(me, STATE_TWO) then
-		x,y = bone_getWorldPosition(bone_tongue)
+		x,y = bone_getWorldPosition(v.bone_tongue)
 		entity_velTowards(getNaija(), x, y, 1200*dt, 1000)
 	end
 	]]--
 
-	if inHand then
-		--debugLog(string.format("%s %d", "handHits: ", handHits))
-		entity_setPosition(n, bone_getWorldPosition(grabPoint))
-		entity_rotate(n, bone_getWorldRotation(grabPoint))
-		entity_flipToEntity(n, me)
-		hurtDelay = 1
+	if v.inHand then
+		--debugLog(string.format("%s %d", "handHits: ", v.handHits))
+		entity_setPosition(v.n, bone_getWorldPosition(v.grabPoint))
+		entity_rotate(v.n, bone_getWorldRotation(v.grabPoint))
+		entity_flipToEntity(v.n, me)
+		v.hurtDelay = 1
 		
 		if avatar_isRolling() then
-			handSpin = handSpin - dt
+			v.handSpin = v.handSpin - dt
 			
-			if handSpin < 0 then
-				handSpin = 0
-				inHand = false
+			if v.handSpin < 0 then
+				v.handSpin = 0
+				v.inHand = false
 				entity_setState(me, STATE_IDLE)
 			end
 		end
 		
 		if entity_isState(me, STATE_IDLE) then
-			inHand = false
-			entity_idle(n)
+			v.inHand = false
+			entity_idle(v.n)
 		end
 	end
 	
-	if holding ~= 0 then
-		entity_setPosition(holding, bone_getWorldPosition(grabPoint))
-		entity_rotate(n, bone_getWorldRotation(grabPoint))
+	if v.holding ~= 0 then
+		entity_setPosition(v.holding, bone_getWorldPosition(v.grabPoint))
+		entity_rotate(v.n, bone_getWorldRotation(v.grabPoint))
 	end
 	
-	moveSpd = 500
-	if canMove then
+	local moveSpd = 500
+	if v.canMove then
 		if entity_isState(me, STATE_MOVERIGHT) then
 			entity_setPosition(me, entity_x(me)+moveSpd*dt, entity_y(me))
 		end
@@ -692,10 +692,10 @@ function update(me, dt)
 	if entity_isState(me, STATE_ATTACK1) or entity_isState(me, STATE_ATTACK2) or entity_isState(me, STATE_ATTACK3) or entity_isState(me, STATE_HOLDING) or entity_isState(me, STATE_ATTACK4) or entity_isState(me, STATE_ACIDSPRAY) or entity_isState(me, STATE_PAIN) then
 		if not entity_isAnimating(me) then
 			if entity_isState(me, STATE_PAIN) then
-				lastAcid = true
+				v.lastAcid = true
 				entity_setState(me, STATE_ACIDSPRAY)
 				--entity_setState(me, STATE_MOVERIGHT)
-				attackDelay = -1
+				v.attackDelay = -1
 			else
 				entity_setState(me, STATE_IDLE)
 			end
@@ -705,27 +705,27 @@ function update(me, dt)
 		entity_setState(me, STATE_DONE)
 	end
 	
-	if entity_isState(me, STATE_MOVERIGHT) and entity_x(me) > node_x(node_right) then
+	if entity_isState(me, STATE_MOVERIGHT) and entity_x(me) > node_x(v.node_right) then
 		entity_setState(me, STATE_IDLE)
 	end
 	
-	if entity_isState(me, STATE_MOVELEFT) and entity_x(me) < node_x(node_left) then
+	if entity_isState(me, STATE_MOVELEFT) and entity_x(me) < node_x(v.node_left) then
 		entity_setState(me, STATE_IDLE)
 	end	
 end
 
-inCutScene = false
-function cutscene(me)
-	n = getNaija()
-	if not inCutScene then		
-		inCutScene = true
+v.inCutScene = false
+local function cutscene(me)
+	v.n = getNaija()
+	if not v.inCutScene then		
+		v.inCutScene = true
 		
 
 		setCameraLerpDelay(1)
 		
-		pn = getNode("NAIJADONE")
+		local pn = getNode("NAIJADONE")
 		setFlag(FLAG_BOSS_MITHALA, 1)
-		ent = getFirstEntity()
+		local ent = getFirstEntity()
 		while ent ~= 0 do
 			if entity_isName(ent, "MermanThin") then
 				entity_setDieTimer(ent, 0.1)
@@ -736,15 +736,15 @@ function cutscene(me)
 		
 		
 		setSceneColor(0.5, 0.1, 0.1, 1)
-		entity_idle(n)
-		entity_flipToEntity(n, me)
+		entity_idle(v.n)
+		entity_flipToEntity(v.n, me)
 		fade2(1, 1, 1, 0, 0)
 		watch(1)
 		
 		cam_toNode(getNode("WATCHDIE"))
 
-		entity_setPosition(me, sx, sy)
-		entity_setPosition(n, node_x(pn), node_y(pn))
+		entity_setPosition(me, v.sx, v.sy)
+		entity_setPosition(v.n, node_x(pn), node_y(pn))
 		playMusicOnce("mithalaend")
 		
 		entity_animate(me, "pain", -1)
@@ -775,27 +775,27 @@ function cutscene(me)
 		fade(0, 0.5, 1, 1, 1)
 		entity_offset(me, 0, 0, 0.1)
 		
-		entity_heal(n, 1)
-		entity_idle(n)
-		entity_flipToEntity(n, me)
+		entity_heal(v.n, 1)
+		entity_idle(v.n)
+		entity_flipToEntity(v.n, me)
 		watch(5)
 		--debugLog("playing agony")
 		
-		entity_idle(n)
+		entity_idle(v.n)
 		emote(EMOTE_NAIJASADSIGH)
 		
-		cam_toEntity(n)
-		--entity_setPosition(n, node_x(pn), node_y(pn), 2, 0, 0, 1)
+		cam_toEntity(v.n)
+		--entity_setPosition(v.n, node_x(pn), node_y(pn), 2, 0, 0, 1)
 		
 		--cam_toNode(getNode("WATCHDIE"))
 		setSceneColor(1, 1, 1, 6)
 		watch(2)
-		--entity_setPosition(n, node_x(pn), node_y(pn), 2, 0, 0, 1)
+		--entity_setPosition(v.n, node_x(pn), node_y(pn), 2, 0, 0, 1)
 		overrideZoom(0.8, 5)
 		fade2(1,5,1,1,1)
 		watch(2)
-		cam_toEntity(n)
-		entity_animate(n, "agony", -1)
+		cam_toEntity(v.n)
+		entity_animate(v.n, "agony", -1)
 		watch(4)
 		--[[
 		fade2(1, 1, 1, 1, 1)
@@ -807,7 +807,7 @@ function cutscene(me)
 		--[[
 		fade(0,0.5,1,1,1)
 		fade2(0,0.5,1,1,1)
-		entity_animate(n, "agony", LOOP_INF)
+		entity_animate(v.n, "agony", LOOP_INF)
 		
 		showImage("Visions/Mithalas/00")
 		watch(0.5)
@@ -816,11 +816,11 @@ function cutscene(me)
 		hideImage()
 		learnSong(SONG_BEASTFORM)
 		watch(1)
-		entity_idle(n)
+		entity_idle(v.n)
 		changeForm(FORM_BEAST)
-		entity_addVel(n, 0, -100)
-		entity_animate(n, "beast", 4)
-		while entity_isAnimating(n) do
+		entity_addVel(v.n, 0, -100)
+		entity_animate(v.n, "beast", 4)
+		while entity_isAnimating(v.n) do
 			watch(FRAME_TIME)
 		end
 		voice("naija_song_beastform")
@@ -828,7 +828,7 @@ function cutscene(me)
 		setControlHint(getStringBank(38), 0, 0, 0, 10, "", SONG_BEASTFORM)
 
 		overrideZoom(0)
-		entity_idle(n)
+		entity_idle(v.n)
 		
 		setCameraLerpDelay(0)
 		]]--
@@ -841,10 +841,10 @@ function enterState(me, state)
 	if entity_isState(me, STATE_IDLE) then
 		entity_animate(me, "idle", LOOP_INF)
 	elseif entity_isState(me, STATE_TRANSFORM) then
-		skull = true
+		v.skull = true
 		entity_setStateTime(me, entity_animate(me, "transform"))
 		setSceneColor(1, 0.5, 0.5, 2)
-		attackDelay = -1
+		v.attackDelay = -1
 	elseif entity_isState(me, STATE_ATTACK1) then
 		entity_animate(me, "attack1")
 	elseif entity_isState(me, STATE_ATTACK2) then
@@ -852,28 +852,28 @@ function enterState(me, state)
 	elseif entity_isState(me, STATE_ATTACK3) then
 		entity_animate(me, "attack3")
 	elseif entity_isState(me, STATE_ATTACK4) then
-		if skull then
+		if v.skull then
 			entity_setState(me, STATE_IDLE)
 		else
 			playSfx("HellBeast-Suck")
-			pullSpd = minPullSpd
+			v.pullSpd = v.minPullSpd
 			entity_animate(me, "attack4")
 		end
 	elseif entity_isState(me, STATE_ATTACK5) then
 		entity_setStateTime(me, entity_animate(me, "attack5"))
 	elseif entity_isState(me, STATE_ACIDSPRAY) then	
-		if skull then
-			bx, by = bone_getWorldPosition(bone_tongue)
+		if v.skull then
+			local bx, by = bone_getWorldPosition(v.bone_tongue)
 			spawnParticleEffect("mermanspawn", bx, by)
 		end
 		entity_animate(me, "acidSpray")
-		fireDelay = -1.5
+		v.fireDelay = -1.5
 	elseif entity_isState(me, STATE_PAIN) then	
 		playSfx("HellBeast-Roar")	
 		entity_animate(me, "pain")
 	elseif entity_isState(me, STATE_HOLDING) then
 		entity_animate(me, "holding")
-		handHits = maxHandHits
+		v.handHits = v.maxHandHits
 	elseif entity_isState(me, STATE_DIE) then
 
 		cutscene(me)
@@ -881,14 +881,14 @@ function enterState(me, state)
 		debugLog("DONE")
 		overrideZoom(0)
 	elseif entity_isState(me, STATE_MOVERIGHT) then
-		lastAcid = false
+		v.lastAcid = false
 		entity_animate(me, "move", -1)
 		--entity_setPosition(me, entity_x(me)+800, entity_y(me), 3)
 		entity_setStateTime(me, 3)
 	elseif entity_isState(me, STATE_MOVELEFT) then
-		attackDelay = attackDelay - 1
-		if attackDelay < -1 then
-			attackDelay = -1
+		v.attackDelay = v.attackDelay - 1
+		if v.attackDelay < -1 then
+			v.attackDelay = -1
 		end
 		
 		entity_animate(me, "move", -1)
@@ -901,24 +901,24 @@ end
 
 function exitState(me, state)
 	if entity_isState(me, STATE_HOLDING) then
-		if inHand then
-			entity_damage(n, me, 1.5, DT_ENEMY)
+		if v.inHand then
+			entity_damage(v.n, me, 1.5, DT_ENEMY)
 		end
-		inHand = false
-		entity_idle(n)
-		hurtDelay = 2
+		v.inHand = false
+		entity_idle(v.n)
+		v.hurtDelay = 2
 	elseif entity_isState(me, STATE_MOVERIGHT) or entity_isState(me, STATE_MOVELEFT) then
 		playSfx("HellBeast-Stomp")
 		shakeCamera(10, 1)
 		entity_setState(me, STATE_IDLE)
 	elseif entity_isState(me, STATE_ATTACK4) then
 	elseif entity_isState(me, STATE_ATTACK5) then
-		attackDelay = -4
+		v.attackDelay = -4
 		entity_setState(me, STATE_IDLE)
 	elseif entity_isState(me, STATE_ACIDSPRAY) then
-		if beam ~= 0 then
-			beam_delete(beam)
-			beam = 0
+		if v.beam ~= 0 then
+			beam_delete(v.beam)
+			v.beam = 0
 		end
 	elseif entity_isState(me, STATE_TRANSFORM) then
 		entity_setState(me, STATE_ACIDSPRAY)

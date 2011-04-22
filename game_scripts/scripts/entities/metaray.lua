@@ -17,29 +17,29 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- M E T A   R A Y
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 -- ================================================================================================
 -- L O C A L   V A R I A B L E S
 -- ================================================================================================
 
-dir = 0
-switchDirDelay = 0
-wiggleTime = 0
-wiggleDir = 1
-interestTimer = 0
-colorRevertTimer = 0
+v.dir = 0
+v.switchDirDelay = 0
+v.wiggleTime = 0
+v.wiggleDir = 1
+v.interestTimer = 0
+v.colorRevertTimer = 0
 
-collisionSegs = 50
-avoidLerp = 0
-avoidDir = 1
-interest = false
+v.collisionSegs = 50
+v.avoidLerp = 0
+v.avoidDir = 1
+v.interest = false
 
-jumpDelay = 0
+v.jumpDelay = 0
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -65,8 +65,6 @@ function init(me)
 	
 	entity_setDropChance(me, 50)
 	
-	lungeDelay = 1.0				-- prevent the nautilus from attacking right away
-
 	entity_initHair(me, 32, 8, 32, "MetaRay/tail")
 	--[[
 	entity_initSegments(
@@ -83,16 +81,16 @@ function init(me)
 	]]--
 	
 	if chance(50) then
-		dir = 0
+		v.dir = 0
 	else
-		dir = 1
+		v.dir = 1
 	end
 	
 	if chance(50) then
-		interest = true
+		v.interest = true
 	end
-	switchDirDelay = math.random(800)/100.0
-	naija = getNaija()
+	v.switchDirDelay = math.random(800)/100.0
+	v.naija = getNaija()
 	
 	entity_addVel(me, math.random(1000)-500, math.random(1000)-500)
 	entity_setDeathParticleEffect(me, "TinyRedExplode")
@@ -109,7 +107,7 @@ end
 
 -- the entity's main update function
 function update(me, dt)
-	dmg = 0
+	local dmg = 0
 	if not entity_isUnderWater(me) and getForm() ~= FORM_BEAST then
 		dmg = 0.5	
 	end
@@ -122,7 +120,7 @@ function update(me, dt)
 		entity_doCollisionAvoidance(me, dt, 10, 0.1)
 		entity_doCollisionAvoidance(me, dt, 4, 0.5)
 	end
-	bone = entity_collideSkeletalVsCircle(me, naija)
+	local bone = entity_collideSkeletalVsCircle(me, v.naija)
 	if bone ~= 0 then		
 		entity_touchAvatarDamage(me, 0, dmg, 500)
 	end
@@ -132,7 +130,7 @@ function update(me, dt)
 		-- has target
 		if entity_isUnderWater(me) then
 			if not entity_isNearObstruction(entity_getTarget(me), 5) then
-				if interest then
+				if v.interest then
 					entity_moveTowardsTarget(me, dt, 500)
 				end
 			end
@@ -146,22 +144,22 @@ function update(me, dt)
 	entity_updateHair(me, dt)
 	
 	if entity_isUnderWater(me) then
-		jumpDelay = jumpDelay - dt
-		if jumpDelay <= 0 then
-			jumpDelay = 0
+		v.jumpDelay = v.jumpDelay - dt
+		if v.jumpDelay <= 0 then
+			v.jumpDelay = 0
 			entity_setCanLeaveWater(me, true)
 			if entity_y(me) - getWaterLevel() < 400 then
 				entity_addVel(me, 0, -1000*dt)
 			end
 		end
-		interestTimer = interestTimer + dt
-		if interestTimer > 12 then
-			if interest then
-				interest = false
+		v.interestTimer = v.interestTimer + dt
+		if v.interestTimer > 12 then
+			if v.interest then
+				v.interest = false
 			else
-				interest = true
+				v.interest = true
 			end
-			interestTimer = math.random(3)
+			v.interestTimer = math.random(3)
 		end
 	end
 	if entity_checkSplash(me) then
@@ -174,7 +172,7 @@ function update(me, dt)
 				entity_addVel(me, 200, -500)
 			end
 			entity_setWeight(me, 600)
-			jumpDelay = 2+math.random(5)
+			v.jumpDelay = 2+math.random(5)
 		else
 			entity_setCanLeaveWater(me, false)
 			entity_setWeight(me, 0)

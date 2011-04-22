@@ -17,27 +17,26 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-mia = 0
-done = false
-head = 0
+v.n = 0
+v.mia = 0
+v.done = false
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 	
 	-- get start conditions
 	
-	mia = createEntity("13_Progression", "", node_x(me), node_y(me))
-	entity_alpha(mia)
+	v.mia = createEntity("13_Progression", "", node_x(me), node_y(me))
+	entity_alpha(v.mia)
 	
 	loadSound("mia-appear")
 end
 
 function update(me, dt)
-	if not done then 
-		if node_isEntityIn(me, n) then
+	if not v.done then 
+		if node_isEntityIn(me, v.n) then
 			--debugLog(string.format("mithala flag: %d", getFlag(FLAG_BOSS_MITHALA)))
 			if isFlag(FLAG_BOSS_MITHALA, 1) then
 				setFlag(FLAG_BOSS_MITHALA, 2)
@@ -52,23 +51,23 @@ function update(me, dt)
 				return
 			end
 			
-			offx = 80
-			offy = -20
-			if entity_x(n) < node_x(me) then
+			local offx = 80
+			local offy = -20
+			if entity_x(v.n) < node_x(me) then
 				offx = -offx
 			end
 			
-			entity_setPosition(n, node_x(me)+offx, node_y(me)+offy, 1, 0, 0, 1)
+			entity_setPosition(v.n, node_x(me)+offx, node_y(me)+offy, 1, 0, 0, 1)
 		
 			debugLog("running script")
-			done = true
+			v.done = true
 			
-			entity_idle(n)
-			entity_setPosition(mia, node_x(me), node_y(me))
-			entity_flipToEntity(mia, n)
-			entity_flipToEntity(n, mia)
+			entity_idle(v.n)
+			entity_setPosition(v.mia, node_x(me), node_y(me))
+			entity_flipToEntity(v.mia, v.n)
+			entity_flipToEntity(v.n, v.mia)
 			
-			cam_toEntity(mia)
+			cam_toEntity(v.mia)
 			
 			playSfx("mia-appear")
 			
@@ -80,7 +79,7 @@ function update(me, dt)
 			
 			playMusic("Mystery")
 			
-			entity_alpha(mia, 1, 2)
+			entity_alpha(v.mia, 1, 2)
 			
 			watch(2)
 			watch(4)
@@ -94,11 +93,11 @@ function update(me, dt)
 			watch(1)
 			fadeOutMusic(3)
 			setSceneColor(1, 1, 1, 3)
-			entity_alpha(mia, 0, 1)
+			entity_alpha(v.mia, 0, 1)
 			watch(2)
-			entity_setPosition(mia, 0, 0)
+			entity_setPosition(v.mia, 0, 0)
 			
-			cam_toEntity(n)
+			cam_toEntity(v.n)
 			
 			updateMusic()
 		

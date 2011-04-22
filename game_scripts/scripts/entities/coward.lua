@@ -17,11 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-drop = 1
-STATE_COWARD = 1000
+v.n = 0
+v.drop = 1
+local STATE_COWARD = 1000
 
 function init(me)
 	setupEntity(me)
@@ -45,8 +45,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	--entity_setTarget(me, n)
+	v.n = getNaija()
+	--entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -62,10 +62,10 @@ function update(me, dt)
 		entity_findTarget(me, 2000)
 	end
 
-	rangeNode = entity_getNearestNode(me, "KILLENTITY")
+	local rangeNode = entity_getNearestNode(me, "KILLENTITY")
 	if node_isPositionIn(rangeNode, entity_x(me), entity_y(me)) then
-		drop = 0
-		entity_setState(me, STATE_DIE)	
+		v.drop = 0
+		entity_setState(me, STATE_DEAD)	
 	end
 
 	entity_doEntityAvoidance(me, dt, 32, 0.5)
@@ -115,7 +115,7 @@ end
 
 function dieNormal(me)
 
-	if drop == 1 then
+	if v.drop == 1 then
 
 	if chance(1) then
 		spawnIngredient("LoafOfLife", entity_x(me), entity_y(me))

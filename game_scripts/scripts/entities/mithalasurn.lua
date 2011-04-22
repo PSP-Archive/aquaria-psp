@@ -17,9 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/breakablecommon.lua")
 
 function init(me)
 	loadSound("mithalasurn-break")
-	commonInit(me, "Breakable/urn", 40, 3, 5, "mithalasurn-break", false, 1, 0.6)
+	v.commonInit(me, "Breakable/urn", 40, 3, 5, "mithalasurn-break", false, 1, 0.6)
 end

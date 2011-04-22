@@ -17,62 +17,62 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
 
 --function bASDFASDF () ()A {}}A SDFASJDF end end end
 
-n = 0
-mia = 0
-baby = 0
+v.n = 0
+v.mia = 0
+v.baby = 0
 
-done = false
+v.done = false
 
 function init(me)
-	n = getNaija()
-	mia = getEntity("MiaGhost")
-	baby = getEntity("NaijaBabyGhost")
+	v.n = getNaija()
+	v.mia = getEntity("MiaGhost")
+	v.baby = getEntity("NaijaBabyGhost")
 	
-	entity_alpha(mia, 0)
-	entity_alpha(baby, 0)
+	entity_alpha(v.mia, 0)
+	entity_alpha(v.baby, 0)
 end
 
 function update(me, dt)
-	if not done then 
-		if node_isEntityIn(me, n) then
-			done = true
+	if not v.done then 
+		if node_isEntityIn(me, v.n) then
+			v.done = true
 			
 			changeForm(FORM_NORMAL)
 			
-			entity_animate(mia, "baby", -1)
+			entity_animate(v.mia, "baby", -1)
 			
-			entity_idle(n)
+			entity_idle(v.n)
 			
-			cam_toEntity(mia)
+			cam_toEntity(v.mia)
 			
 			setSceneColor(0.5, 0.5, 1, 2)
 			watch(2)
 			
 			--playMusic("Mystery")
 		
-			entity_alpha(mia, 1, 2)
+			entity_alpha(v.mia, 1, 2)
 			
 			watch(4)
 			
-			entity_alpha(baby, 1, 2)
+			entity_alpha(v.baby, 1, 2)
 			watch(4)
 			
-			entity_animate(mia, "babyLookUp")
+			entity_animate(v.mia, "babyLookUp")
 			
 			watch(2.5)
 			--fadeOutMusic(3)
 			setSceneColor(1, 1, 1, 3)
-			entity_alpha(mia, 0, 1)
+			entity_alpha(v.mia, 0, 1)
 			watch(2)
-			entity_alpha(baby, 0, 1)
+			entity_alpha(v.baby, 0, 1)
 			watch(2)
 			
-			cam_toEntity(n)
+			cam_toEntity(v.n)
 			
 			if isFlag(FLAG_SECRET01, 0) then
 				setFlag(FLAG_SECRET01, 1)

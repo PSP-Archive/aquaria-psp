@@ -17,11 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-small = 32
-big = 90
+v.n = 0
+v.small = 32
+v.big = 90
 
 function init(me)
 	setupEntity(me)
@@ -44,17 +44,17 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
-	x, y = entity_getNormal(me)
-	sw = y
+	local x, y = entity_getNormal(me)
+	local sw = y
 	y = -x
 	x = sw
 	entity_addVel(me, x*500, y*500)
 end
 
-function rotflip(me)
+local function rotflip(me)
 	if entity_isfh(me) then
 		entity_rotateToVel(me, 0, -90)
 	else
@@ -65,7 +65,7 @@ end
 
 function update(me, dt)
 	if entity_isState(me, STATE_IDLE) then
-		if entity_isEntityInRange(me, n, big*2) then
+		if entity_isEntityInRange(me, v.n, v.big*2) then
 			entity_setState(me, STATE_OPEN)
 		end
 		entity_doCollisionAvoidance(me, dt, 8, 0.1)
@@ -73,17 +73,17 @@ function update(me, dt)
 		rotflip(me)
 	end
 	if entity_isState(me, STATE_OPENED) then
-		if not entity_isEntityInRange(me, n, big+400) then
+		if not entity_isEntityInRange(me, v.n, v.big+400) then
 			entity_setState(me, STATE_CLOSE)
 		end
 		if not entity_isBeingPulled(me) then
 			rotflip(me)
 		end
 
-		e = getFirstEntity()
+		local e = getFirstEntity()
 		while e ~= 0 do
 			if e ~= me and entity_getEntityType(e) == ET_ENEMY then
-				if entity_isEntityInRange(me, e, big + entity_getCollideRadius(e)) then
+				if entity_isEntityInRange(me, e, v.big + entity_getCollideRadius(e)) then
 					entity_damage(e, me, dt*10, DT_CRUSH)
 				end
 			end
@@ -102,7 +102,7 @@ function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_setProperty(me, EP_MOVABLE, false)
 		entity_animate(me, "idle", -1)
-		entity_setCollideRadius(me, small)
+		entity_setCollideRadius(me, v.small)
 		entity_setMaxSpeed(me, 100)
 	elseif entity_isState(me, STATE_OPEN) then
 		entity_setStateTime(me, entity_animate(me, "grow"))
@@ -111,7 +111,7 @@ function enterState(me)
 	elseif entity_isState(me, STATE_OPENED) then
 		entity_clearVel(me)
 		entity_setProperty(me, EP_MOVABLE, true)
-		entity_setCollideRadius(me, big)
+		entity_setCollideRadius(me, v.big)
 		entity_animate(me, "idleBig", -1)
 	end
 end

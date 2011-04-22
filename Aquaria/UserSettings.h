@@ -86,14 +86,31 @@ public:
 		Audio() { micOn = 0; octave=0; musvol=voxvol=sfxvol=1.0; subtitles=false; }
 		int micOn;
 		int octave;
-		double voxvol, sfxvol, musvol;
+		float voxvol, sfxvol, musvol;
 		int subtitles;
 		std::string deviceName;
 	} audio;
 
 	struct Video
 	{
-		Video() { numParticles=2048; parallaxOn0=parallaxOn1=parallaxOn2=1; saveSlotScreens=1; shader= 0; blur=1; noteEffects=0; fpsSmoothing=30; resx=800; resy=600; full=1; fbuffer=1; darkfbuffer=1; bits=32; vsync=1; darkbuffersize=256;}
+		Video() {
+			numParticles = 2048;
+			parallaxOn0 = parallaxOn1 = parallaxOn2 = 1;
+			saveSlotScreens = 1;
+			shader = 0;
+			blur = 1;
+			noteEffects = 0;
+			fpsSmoothing = 30;
+			resx = 800;
+			resy = 600;
+			full = 1;
+			fbuffer = 1;
+			darkfbuffer = 1;
+			bits = 32;
+			vsync = 1;
+			darkbuffersize = 256;
+			displaylists = 1;
+		}
 		int shader;
 		int blur;
 		int noteEffects;
@@ -102,19 +119,33 @@ public:
 		int saveSlotScreens;
 		int parallaxOn0, parallaxOn1, parallaxOn2;
 		int numParticles;
+		int displaylists;
 	} video;
 
 	struct Control
 	{
-		Control() { toolTipsOn=1; autoAim=1; targeting=1; joyCursorSpeed=4.0; flipInputButtons=0; s1ax=0; s1ay=0; s2ax=0; s2ay=0; s1dead=0.3; s2dead=0.3; joystickEnabled=0;}
+		Control() {
+			toolTipsOn = 1;
+			autoAim = 1;
+			targeting = 1;
+			joyCursorSpeed = 4.0;
+			flipInputButtons = 0;
+			s1ax = 0;
+			s1ay = 0;
+			s2ax = 0;
+			s2ay = 0;
+			s1dead = 0.3;
+			s2dead = 0.3;
+			joystickEnabled = 0;
+		}
 		int joystickEnabled;
 		int autoAim;
 		int targeting;
-		double joyCursorSpeed;
+		float joyCursorSpeed;
 		int flipInputButtons;
 		ActionSet actionSet;
 		int s1ax, s1ay, s2ax, s2ay;
-		double s1dead, s2dead;
+		float s1dead, s2dead;
 		int toolTipsOn;
 	} control;
 
@@ -128,8 +159,9 @@ public:
 
 	struct Data
 	{
-		Data() { savePage=0; lastSelectedMod=0; }
+		Data() { savePage=0; saveSlot=0; lastSelectedMod=0; }
 		int savePage;
+		int saveSlot;
 		int lastSelectedMod;
 	} data;
 
@@ -139,7 +171,6 @@ public:
 		int settingsVersion;
 	} version;
 
-	void fixShittyVista();
 	void loadDefaults(bool doApply=true);
 	void load(bool doApply=true, const std::string &overrideFile="");
 	void save();

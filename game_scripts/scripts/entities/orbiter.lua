@@ -17,13 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-dir = 0
-fireDelay = 1 + math.random(3)
+v.n = 0
+v.dir = 0
 
 function init(me)
+	v.fireDelay = 1 + math.random(3)
+
 	setupEntity(me)
 	entity_setEntityType(me, ET_ENEMY)
 	entity_initSkeletal(me, "Orbiter")	
@@ -36,8 +37,8 @@ function init(me)
 	entity_setHealth(me, 4)
 	entity_setUpdateCull(me, 3000)
 	entity_setDeathParticleEffect(me, "TinyGreenExplode")
-	dir = math.random(2)-1
-	if dir == 0 then
+	v.dir = math.random(2)-1
+	if v.dir == 0 then
 		entity_rotateOffset(me, 90)
 		--entity_rotateOffset(me, 80)
 		--entity_rotateOffset(me, 110, 1, -1)
@@ -53,7 +54,7 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 	
 end
 
@@ -66,12 +67,12 @@ function update(me, dt)
 			end
 			
 			entity_setMaxSpeedLerp(me, 2, 0.5)
-			entity_moveAroundTarget(me, dt, 3000, dir)
-			fireDelay = fireDelay - dt*1.5
+			entity_moveAroundTarget(me, dt, 3000, v.dir)
+			v.fireDelay = v.fireDelay - dt*1.5
 			entity_doEntityAvoidance(me, dt, 8, 0.5)
 			entity_rotateToVel(me, 0.1)
 		else
-			fireDelay = fireDelay - dt
+			v.fireDelay = v.fireDelay - dt
 			entity_doEntityAvoidance(me, dt, 16, 1)
 			entity_doEntityAvoidance(me, dt, 32, 0.6)
 			
@@ -79,9 +80,9 @@ function update(me, dt)
 			entity_moveTowardsTarget(me, dt, 1000)
 			entity_rotate(me, 90, 0.5)
 		end
-		if fireDelay < 0 then
-			fireDelay = 5 + math.random(2)
-			s = createShot("Orbiter", me, entity_getTarget(me))
+		if v.fireDelay < 0 then
+			v.fireDelay = 5 + math.random(2)
+			local s = createShot("Orbiter", me, entity_getTarget(me))
 			shot_setOut(s, 32)
 		end
 		

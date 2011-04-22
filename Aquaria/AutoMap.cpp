@@ -101,7 +101,7 @@ void AutoMap::toggle(bool on)
 
 		Vector c(dsq->game->cameraMax.x/2, dsq->game->cameraMax.y/2);
 		int drawsz = AUTOMAP_GRIDTILE/TILE_SIZE;
-		int hsz = drawsz*0.5;
+		int hsz = drawsz*0.5f;
 
 		c *= AUTOMAP_GRIDTILE;
 		c /= TILE_SIZE;
@@ -247,11 +247,11 @@ void AutoMap::onUpdate(float dt)
 		float spd = 0.5;
 		if (core->mouse.scrollWheelChange < 0)
 		{
-			scale -= Vector(spd*0.05,spd*0.05);
+			scale -= Vector(spd*0.05f,spd*0.05f);
 		}
 		else if (core->mouse.scrollWheelChange > 0)
 		{
-			scale += Vector(spd*0.05,spd*0.05);
+			scale += Vector(spd*0.05f,spd*0.05f);
 		}
 		if (scale.x < minScale)
 			scale = Vector(minScale, minScale);
@@ -311,8 +311,8 @@ void AutoMap::onRender()
 		for (int y = 0; y < ysz; y += skip)
 		{
 			float f = float(y)/float(ysz);
-			f = 0.8-(f*0.5);
-			glColor4f(0.5*f, 0.75*f, 1*f, alphaValue);
+			f = 0.8f-(f*0.5f);
+			glColor4f(0.5f*f, 0.75f*f, 1*f, alphaValue);
 
 			glBegin(GL_LINES);
 			int rowStart = -1;
@@ -352,7 +352,7 @@ void AutoMap::onRender()
 		glEnable(GL_TEXTURE_2D);
 		glBegin(GL_QUADS);
 		int rx=0,ry=0;
-		int sz = (AUTOMAP_GRIDTILE/TILE_SIZE)*0.5;
+		int sz = (AUTOMAP_GRIDTILE/TILE_SIZE)*0.5f;
 		for (int x = 0; x < MAX_AUTOMAP_GRID; x++)
 		{
 			for (int y = 0; y < MAX_AUTOMAP_GRID; y++)
@@ -396,7 +396,7 @@ void AutoMap::onRender()
 		glVertex2f(0,0);
 	glEnd();
 
-	glColor4f(0.5,0.75,1, alphaValue*0.5);
+	glColor4f(0.5,0.75,1, alphaValue*0.5f);
 	drawCircle(blip.x*16, 8);
 
 #endif

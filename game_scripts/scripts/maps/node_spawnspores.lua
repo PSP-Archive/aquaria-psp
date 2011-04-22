@@ -17,22 +17,24 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-n=0
-sz = 64
-delay = 0
+v = getVars()
+
+v.n = 0
+v.sz = 64
+v.delay = 0
 		
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
-function spawnSpore(x, y)
+local function spawnSpore(x, y)
 	-- SLOW have to load a script each time
 	createSpore(x, y)
 	--[[
-	ent = createEntity("Spore", "", x, y)
-	e = entity_getNearestEntity(ent, "Spore")
+	local ent = createEntity("Spore", "", x, y)
+	local e = entity_getNearestEntity(ent, "Spore")
 	if e ~= 0 then
-		if entity_isEntityInRange(ent, e, sz/2) then
+		if entity_isEntityInRange(ent, e, v.sz/2) then
 			entity_delete(ent)
 		end
 	end
@@ -40,29 +42,29 @@ function spawnSpore(x, y)
 end
 
 function update(me, dt)
-	delay = delay - dt
-	if delay < 0 then
-		if node_isEntityIn(me, n) then
+	v.delay = v.delay - dt
+	if v.delay < 0 then
+		if node_isEntityIn(me, v.n) then
 			-- spawn around on a grid
-			x,y = entity_getPosition(n)
+			local x, y = entity_getPosition(v.n)
 
-			x = math.floor(x / sz)
-			y = math.floor(y / sz)
-			x = x * sz + sz/2
-			y = y * sz + sz/2
+			x = math.floor(x / v.sz)
+			y = math.floor(y / v.sz)
+			x = x * v.sz + v.sz/2
+			y = y * v.sz + v.sz/2
 			
-			out = 4
-			spawnSpore(x, y-sz*out)
-			spawnSpore(x+sz*out, y-sz*out)
-			spawnSpore(x-sz*out, y-sz*out)
+			local out = 4
+			spawnSpore(x, y-v.sz*out)
+			spawnSpore(x+v.sz*out, y-v.sz*out)
+			spawnSpore(x-v.sz*out, y-v.sz*out)
 			
-			spawnSpore(x, y+sz*out)
-			spawnSpore(x+sz*out, y+sz*out)
-			spawnSpore(x-sz*out, y+sz*out)
+			spawnSpore(x, y+v.sz*out)
+			spawnSpore(x+v.sz*out, y+v.sz*out)
+			spawnSpore(x-v.sz*out, y+v.sz*out)
 			
-			spawnSpore(x+sz*out, y)
-			spawnSpore(x-sz*out, y)
+			spawnSpore(x+v.sz*out, y)
+			spawnSpore(x-v.sz*out, y)
 		end
-		delay = 0.5
+		v.delay = 0.5
 	end
 end

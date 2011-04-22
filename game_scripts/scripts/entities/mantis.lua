@@ -17,51 +17,51 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- M A N T I S
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-STATE_SCREECH			= 1000
+local STATE_SCREECH			= 1000
 
-STATE_FIREBOMBS			= 1001
-STATE_FALL				= 1002
-STATE_FLOAT				= 1003
-STATE_SHOOT				= 1004
-STATE_ATTACK			= 1005
-STATE_HURT				= 1006
-STATE_RECOVER			= 1007
-STATE_DIE				= 1008
+local STATE_FIREBOMBS		= 1001
+local STATE_FALL			= 1002
+local STATE_FLOAT			= 1003
+local STATE_SHOOT			= 1004
+local STATE_ATTACK			= 1005
+local STATE_HURT			= 1006
+local STATE_RECOVER			= 1007
+local STATE_DIE				= 1008
 
-n = 0
-fight = false
+v.n = 0
+v.fight = false
 
-spawnPoint = 0
+v.spawnPoint = 0
 
 
-phaseDelayTime			= 1.5
-phaseDelay				= phaseDelayTime
+v.phaseDelayTime			= 1.5
+v.phaseDelay				= v.phaseDelayTime
 
-phase					= 0
+v.phase					= 0
 
-PHASE_NONE				= 0
-PHASE_SHOTS				= 2
-PHASE_FIREBOMBS			= 1
-PHASE_MAX				= 2
+local PHASE_NONE			= 0
+local PHASE_SHOTS			= 2
+local PHASE_FIREBOMBS		= 1
+local PHASE_MAX				= 2
 
-startx = 0
-starty = 0
+v.startx = 0
+v.starty = 0
 
-hits = 3
+v.hits = 3
 
-body = 0
+v.body = 0
 
-item = 0
+v.item = 0
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -113,76 +113,76 @@ function init(me)
 	loadSound("mantis-roar")
 	
 	
-	body = entity_getBoneByName(me, "body")
-	spawnPoint = entity_getBoneByName(me, "spawnpoint")
+	v.body = entity_getBoneByName(me, "body")
+	v.spawnPoint = entity_getBoneByName(me, "spawnpoint")
 	
-	bone_alpha(spawnPoint, 0)
+	bone_alpha(v.spawnPoint, 0)
 	
 
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 	
-	item = entity_getNearestEntity(me, "healthupgrade4")
-	--debugLog(string.format("item: %d", item))
+	v.item = entity_getNearestEntity(me, "healthupgrade4")
+	--debugLog(string.format("item: %d", v.item))
 	
 	if not entity_isFlag(me, 0) then
 		entity_delete(me)
 	else
-		entity_alpha(item, 0)
+		entity_alpha(v.item, 0)
 	end
 	
-	startx = entity_x(me)
-	starty = entity_y(me)
+	v.startx = entity_x(me)
+	v.starty = entity_y(me)
 end
 
 function update(me, dt)
 	--entity_updateMovement(me, dt)
-	if not fight and entity_isEntityInRange(me, n, 1400) then
-		if not cut then
-			cut = true
-			fight = true
-			entity_idle(n)
+	if not v.fight and entity_isEntityInRange(me, v.n, 1400) then
+		if not v.cut then
+			v.cut = true
+			v.fight = true
+			entity_idle(v.n)
 			playMusic("MiniBoss")
 			cam_toEntity(me)
 			watch(0.5)
 			playSfx("mantis-roar")
 			watch(1.5)
-			cam_toEntity(n)
-			cut = false
+			cam_toEntity(v.n)
+			v.cut = false
 		end
 	end
 	
-	if fight and not entity_isEntityInRange(me, getNaija(), 3800) then
-		fight = false
+	if v.fight and not entity_isEntityInRange(me, getNaija(), 3800) then
+		v.fight = false
 		updateMusic()
-		phase = 0
+		v.phase = 0
 	end
 	
 	
-	if fight then
+	if v.fight then
 		if entity_isState(me, STATE_IDLE) then
-			phaseDelay = phaseDelay - dt
-			if phaseDelay < 0 then
+			v.phaseDelay = v.phaseDelay - dt
+			if v.phaseDelay < 0 then
 				debugLog("phaseDelay 0")
-				phase = phase + 1
-				if phase == PHASE_FIREBOMBS then
+				v.phase = v.phase + 1
+				if v.phase == PHASE_FIREBOMBS then
 					debugLog("firebombs")
 					entity_setState(me, STATE_FIREBOMBS)
 				end
-				if phase == PHASE_MAX then
-					phase = 0
+				if v.phase == PHASE_MAX then
+					v.phase = 0
 				end
-				phaseDelay = phaseDelayTime
+				v.phaseDelay = v.phaseDelayTime
 			end
 		end
 	end
 	
-	if fight then
+	if v.fight then
 		entity_handleShotCollisionsSkeletal(me)
 		
-		bone = entity_collideSkeletalVsCircle(me, n)
+		local bone = entity_collideSkeletalVsCircle(me, v.n)
 		if bone ~= 0 then
 			entity_touchAvatarDamage(me, 0, 1, 500)
 		end
@@ -207,9 +207,9 @@ function enterState(me)
 		playSfx("mantis-fall")
 	
 		entity_animate(me, "hurt", 4, 1)
-		nd = getNode("mantisfall")
-		nx = node_x(nd)
-		ny = node_y(nd)
+		local nd = getNode("mantisfall")
+		local nx = node_x(nd)
+		local ny = node_y(nd)
 		entity_setPosition(me, nx, ny, 1)
 		
 		entity_setStateTime(me, 6)
@@ -217,7 +217,7 @@ function enterState(me)
 
 		
 	elseif entity_isState(me, STATE_RECOVER) then
-		entity_setPosition(me, startx, starty, 1, 0, 0, 1)
+		entity_setPosition(me, v.startx, v.starty, 1, 0, 0, 1)
 		entity_setStateTime(me, 1)
 		for i=1,3 do
 			v = entity_getNearestEntity(me, "UberVine")
@@ -230,17 +230,17 @@ function enterState(me)
 		
 		entity_offset(me, -10, 0)
 		entity_offset(me, 10, 0, 0.1, -1, 1)
-		bone_damageFlash(body)
-		hits = hits - 1
+		bone_damageFlash(v.body)
+		v.hits = v.hits - 1
 		
 		shakeCamera(10, 3)
 		
 		entity_setStateTime(me, 1)
 	elseif entity_isState(me, STATE_DIE) then
-		entity_idle(n)
-		entity_flipToEntity(n, me)
+		entity_idle(v.n)
+		entity_flipToEntity(v.n, me)
 		
-		e = getFirstEntity()
+		local e = getFirstEntity()
 		while e ~= 0 do
 			if entity_isName(e, "mantis-bomb") then
 				entity_msg(e, "exp")
@@ -264,7 +264,7 @@ function exitState(me)
 		entity_setState(me, STATE_IDLE, -1)
 	elseif entity_isState(me, STATE_HURT) then
 		entity_offset(me, 0, 0, 0.1)
-		if hits <= 0 then
+		if v.hits <= 0 then
 			entity_setState(me, STATE_DIE)
 		else
 			entity_setState(me, STATE_RECOVER)
@@ -276,7 +276,7 @@ function exitState(me)
 		cam_toEntity(getNaija())
 		entity_delete(me)
 		
-		entity_alpha(item, 1)
+		entity_alpha(v.item, 1)
 		
 		pickupGem("boss-mantis")
 	elseif entity_isState(me, STATE_FALL) then
@@ -289,10 +289,10 @@ function animationKey(me, key)
 		if key == 1 or key == 3 or (key == 5 and chance(100)) or (key==6 and chance(50)) then
 			
 			
-			sx, sy = bone_getWorldPosition(spawnPoint)
-			e = createEntity("mantis-bomb", "", sx, sy)
+			local sx, sy = bone_getWorldPosition(v.spawnPoint)
+			local e = createEntity("mantis-bomb", "", sx, sy)
 			if key == 1 then
-				entity_moveTowards(e, entity_x(n), entity_y(n), 1000, 1)
+				entity_moveTowards(e, entity_x(v.n), entity_y(v.n), 1000, 1)
 			else
 				entity_addVel(e, math.random(500)-250, 300)
 			end

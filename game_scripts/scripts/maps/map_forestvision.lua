@@ -17,7 +17,7 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
 function init()
 	setCutscene(1,1)
@@ -30,17 +30,17 @@ function init()
 	entity_setPosition(getNaija(), 0, 0)
 
 	
-	camDummy = createEntity("Empty")
-	cam1 = getNode("CAM1")
-	cam2 = getNode("CAM2")
-	cam3 = getNode("CAM3")
+	local camDummy = createEntity("Empty")
+	local cam1 = getNode("CAM1")
+	local cam2 = getNode("CAM2")
+	local cam3 = getNode("CAM3")
 	
-	campan1 = getNode("CAMPAN1")
-	campan2 = getNode("CAMPAN2")
-	campan3 = getNode("CAMPAN3")
+	local campan1 = getNode("CAMPAN1")
+	local campan2 = getNode("CAMPAN2")
+	local campan3 = getNode("CAMPAN3")
 	
-	camdestroy1 = getNode("CAMDESTROY1")
-	camdestroy2 = getNode("CAMDESTROY2")
+	local camdestroy1 = getNode("CAMDESTROY1")
+	local camdestroy2 = getNode("CAMDESTROY2")
 	
 		
 	-- 1
@@ -55,7 +55,7 @@ function init()
 	fadeIn(1)
 	watch(1)
 	
-	n = getNaija()
+	local n = getNaija()
 	entity_setPosition(n, 0, 0)
 	playMusicOnce("DruniadDance")
 	
@@ -126,9 +126,9 @@ function init()
 	shakeCamera(20, 10)
 	
 	for i = 1,(8/FRAME_TIME) do
-		x,y = getScreenCenter()
-		node = getNode("DESTROY")
-		ent = getFirstEntity()
+		local x, y = getScreenCenter()
+		local node = getNode("DESTROY")
+		local ent = getFirstEntity()
 		while ent ~= 0 do
 			if not entity_isState(ent, STATE_DONE) and node_isEntityIn(node, ent) and entity_x(ent) < x+200 then
 				entity_setState(ent, STATE_DONE)

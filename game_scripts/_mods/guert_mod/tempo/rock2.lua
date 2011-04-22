@@ -17,11 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- R O C K 2
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
  
 -- ================================================================================================
@@ -34,7 +34,6 @@ function init(me)
 	entity_setProperty(me, EP_MOVABLE, true)
 	entity_setWeight(me, 100)
 	entity_setCollideRadius(me, 32)
-	entity_setAffectedBySpells(me, 1)
 	
 	--entity_setProperty(me, EP_BATTERY, true)
 end

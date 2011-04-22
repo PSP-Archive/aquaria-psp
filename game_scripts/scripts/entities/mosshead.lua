@@ -17,14 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-tongueTarget = 0
-tongue = 0
-sx=0
-sy=0
-attackDelay = 1
+v.n = 0
+v.tongueTarget = 0
+v.tongue = 0
+v.sx = 0
+v.sy = 0
+v.attackDelay = 1
 
 function init(me)
 	setupEntity(me)
@@ -41,12 +41,12 @@ function init(me)
 	
 	entity_setState(me, STATE_IDLE)
 	
-	tongueTarget = entity_getBoneByName(me, "TongueTarget")
-	tongue = entity_getBoneByName(me, "Tongue")
-	bone_alpha(tongueTarget)
+	v.tongueTarget = entity_getBoneByName(me, "TongueTarget")
+	v.tongue = entity_getBoneByName(me, "Tongue")
+	bone_alpha(v.tongueTarget)
 	
 	entity_scale(me, 1.5, 1.5)
-	sx,sy = entity_getScale(me)	
+	v.sx, v.sy = entity_getScale(me)	
 	entity_setCullRadius(me, 1024)
 	entity_setUpdateCull(me, 2000)
 	
@@ -61,9 +61,9 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
-	node = entity_getNearestNode(me, "FLIP")
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
+	local node = entity_getNearestNode(me, "FLIP")
 	if node ~=0 then
 		if node_isEntityIn(node, me) then
 			entity_fh(me)
@@ -74,24 +74,24 @@ end
 function update(me, dt)
 	entity_clearTargetPoints(me)
 	if entity_isState(me, STATE_IDLE) then
-		attackDelay = attackDelay - dt
-		if attackDelay < 0 then
-			if entity_isEntityInRange(me, n, 280*sx)
+		v.attackDelay = v.attackDelay - dt
+		if v.attackDelay < 0 then
+			if entity_isEntityInRange(me, v.n, 280*v.sx)
 			and not isForm(FORM_FISH) then
 				entity_setState(me, STATE_ATTACK)
 			end			
 		end
 	elseif entity_isState(me, STATE_ATTACK) then
 		entity_handleShotCollisionsSkeletal(me)
-		bone = entity_collideSkeletalVsCircle(me, n)
+		local bone = entity_collideSkeletalVsCircle(me, v.n)
 		-- do damage to avatar
 		if bone~= 0 then
 			if avatar_isTouchHit() then
-				entity_damage(n, me, 0.5, 500)
+				entity_damage(v.n, me, 0.5, 500)
 			end
 		end
 			
-		x,y = bone_getWorldPosition(tongueTarget)
+		local x, y = bone_getWorldPosition(v.tongueTarget)
 		entity_addTargetPoint(me, x, y)
 	end
 end
@@ -109,14 +109,14 @@ end
 
 function exitState(me)
 	if entity_isState(me, STATE_ATTACK) then
-		attackDelay = 1+math.random(2)
+		v.attackDelay = 1+math.random(2)
 		entity_setState(me, STATE_IDLE)
 	end
 end
 
 function damage(me, attacker, bone, damageType, dmg)
 	if entity_isState(me, STATE_ATTACK) then
-		if bone == tongue then
+		if bone == v.tongue then
 			if damageType == DT_AVATAR_BITE then
 				entity_changeHealth(me, -6)
 			end

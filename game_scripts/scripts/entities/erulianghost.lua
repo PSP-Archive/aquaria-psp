@@ -17,9 +17,9 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
--- energy door
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
+-- energy door
 function init(me)
 	setupEntity(me, "")
 	entity_initSkeletal(me, "Erulian")
@@ -44,17 +44,6 @@ function init(me)
 	entity_setSpiritFreeze(me, false)
 	
 	bone_alpha(entity_getBoneByName(me, "Glow"), 0)
-end
-
-function setWarpSceneNode(scene, node)
-	sceneName = scene
-	nodeName = node
-end
-
-function update(me, dt)
-	if isForm(FORM_SPIRIT) then
-		--entity_say(me, "...naija...")
-	end
 end
 
 function enterState(me)

@@ -17,22 +17,24 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
 
-n= 0
-isenergylearned=false
+
+v.n = 0
+v.isenergylearned = false
 
 function init(me)
-	n = getNaija()     
+	v.n = getNaija()     
 end
 
 
 function update(me, dt)
 
-if isenergylearned==false then
- if node_isEntityIn(me, n) then
+if v.isenergylearned == false then
+ if node_isEntityIn(me, v.n) then
    setControlHint("You've found a new song! You can now use ENERGY form!", 0, 0, 0, 16)
    learnSong(1)
-   isenergylearned=True
+   v.isenergylearned = true
  end
 end 
 

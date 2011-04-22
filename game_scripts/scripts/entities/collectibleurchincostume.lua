@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- veil collectible: urchin costume
 
 dofile("scripts/include/collectiblecostumetemplate.lua")
 
 function init(me)
-	commonInit2(me, "Collectibles/urchin-costume", FLAG_COLLECTIBLE_URCHINCOSTUME, "URCHIN")
+	v.commonInit2(me, "Collectibles/urchin-costume", FLAG_COLLECTIBLE_URCHINCOSTUME, "URCHIN")
 end

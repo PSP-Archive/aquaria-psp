@@ -83,9 +83,9 @@ public:
 
 	
 	void enqueueJumpState (const std::string &state, bool force = false, bool staged = false);
+	bool isStateJumpPending();
 	void pushState(const std::string &state);
 	void popState();
-	void popState(const std::string &n);
 	void popAllStates();
 	
 
@@ -107,7 +107,16 @@ protected:
 	std::string getNameFromDerivedClassTypeName(const std::string &typeidName);
 	void registerStateObject(StateObject *stateObject, const std::string &name="");
 	virtual void onUpdate(float dt);
-	std::stack<StateData*>states;
+
+	// std::stack is horrendously overweight, so we use a simple stack
+	// implementation instead.
+	#define STATE_STACK_SIZE 64
+	StateData *states[STATE_STACK_SIZE];
+	int statesTopIndex;
+	bool states_empty()     {return statesTopIndex == -1;}
+	bool states_full()      {return statesTopIndex == STATE_STACK_SIZE-1;}
+	StateData *states_top() {return statesTopIndex >= 0 ? states[statesTopIndex] : 0;}
+
 	typedef std::map<std::string, StateObject*> StateObjectMap;
 	StateObjectMap stateObjects;
 

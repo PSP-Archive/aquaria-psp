@@ -17,15 +17,15 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-d1 = 0
-d2 = 0
-d3 = 0
+v.d1 = 0
+v.d2 = 0
+v.d3 = 0
 
-firstSet = true
+v.firstSet = true
 
 function init(me)
 	setupEntity(me)
@@ -43,16 +43,16 @@ function init(me)
 	
 	entity_setCullRadius(me, 256)
 	
-	d1 = entity_getBoneByName(me, "d1")
-	d2 = entity_getBoneByName(me, "d2")
-	d3 = entity_getBoneByName(me, "d3")
+	v.d1 = entity_getBoneByName(me, "d1")
+	v.d2 = entity_getBoneByName(me, "d2")
+	v.d3 = entity_getBoneByName(me, "d3")
 	
-	firstSet = true
+	v.firstSet = true
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -71,26 +71,26 @@ function damage(me, attacker, bone, damageType, dmg)
 	return false
 end
 
-function msg(me, s, v)
+function msg(me, s, val)
 	if s == "time" then
 		if entity_isEntityInRange(me, getNaija(), 3500) then
 			spawnParticleEffect("tinyredexplode", entity_x(me), entity_y(me))
 			playSfx("saved")
 		end
 		
-		mins = math.floor(v/60)
-		secs = v - (mins*60)
+		local mins = math.floor(val/60)
+		local secs = val - (mins*60)
 		
-		secs1 = math.floor(secs/10)
-		secs2 = secs - (secs1*10)
+		local secs1 = math.floor(secs/10)
+		local secs2 = secs - (secs1*10)
 		
 		if mins > 9 then mins = 9 end
 		
 		debugLog(string.format("timerock %d : %d%d", mins, secs1, secs2))
 		
-		bone_setTexture(d1, string.format("seahorse/num-%d", mins))
-		bone_setTexture(d2, string.format("seahorse/num-%d", secs1))
-		bone_setTexture(d3, string.format("seahorse/num-%d", secs2))
+		bone_setTexture(v.d1, string.format("seahorse/num-%d", mins))
+		bone_setTexture(v.d2, string.format("seahorse/num-%d", secs1))
+		bone_setTexture(v.d3, string.format("seahorse/num-%d", secs2))
 	end
 end
 

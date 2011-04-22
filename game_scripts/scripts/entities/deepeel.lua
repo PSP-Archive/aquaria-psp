@@ -17,28 +17,28 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- EEL
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 -- ================================================================================================
 -- FUNCTIONS
 -- ================================================================================================
 
-dir = 0
-switchDirDelay = 0
-wiggleTime = 0
-wiggleDir = 1
-interestTimer = 0
-colorRevertTimer = 0
+v.dir = 0
+v.switchDirDelay = 0
+v.wiggleTime = 0
+v.wiggleDir = 1
+v.interestTimer = 0
+v.colorRevertTimer = 0
 
-collisionSegs = 32
-avoidLerp = 0
-avoidDir = 1
-glow = 0
-glowBone = 0
+v.collisionSegs = 32
+v.avoidLerp = 0
+v.avoidDir = 1
+v.glow = 0
+v.glowBone = 0
 
 function init(me)
 -- oldhealth : 40
@@ -60,14 +60,12 @@ function init(me)
 	
 	entity_setDropChance(me, 50)
 	
-	lungeDelay = 1.0				-- prevent the nautilus from attacking right away
-
 	entity_initHair(me, 64, 8, 32, "DeepEel/Tail")
 	
 	entity_initSkeletal(me, "DeepEel")
 
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
 	entity_addVel(me, math.random(1000)-500, math.random(1000)-500)
 	entity_setDeathParticleEffect(me, "TinyBlueExplode")
@@ -76,10 +74,10 @@ function init(me)
 	
 	entity_setDeathScene(me, true)
 	
-	glow = createQuad("Naija/LightFormGlow", 13)
-	quad_scale(glow, 1.5, 1.5)
-	--quad_scale(glow, 1.8, 1.8, 1, -1, 1, 1)
-	glowBone = entity_getBoneByName(me, "Glow")	
+	v.glow = createQuad("Naija/LightFormGlow", 13)
+	quad_scale(v.glow, 1.5, 1.5)
+	--quad_scale(v.glow, 1.8, 1.8, 1, -1, 1, 1)
+	v.glowBone = entity_getBoneByName(me, "Glow")
 end
 
 function dieNormal(me)
@@ -91,7 +89,7 @@ end
 function update(me, dt)
 	
 	if entity_getState(me)==STATE_IDLE then
-		if entity_isEntityInRange(me, n, 800) then
+		if entity_isEntityInRange(me, v.n, 800) then
 			entity_moveTowardsTarget(me, dt, 500)
 			entity_setMaxSpeedLerp(me, 0.8, 0.5)
 		else
@@ -105,15 +103,15 @@ function update(me, dt)
 	entity_updateMovement(me, dt)	
 	entity_setHairHeadPosition(me, entity_x(me), entity_y(me))
 	entity_updateHair(me, dt)
-	entity_handleShotCollisionsHair(me, collisionSegs)
+	entity_handleShotCollisionsHair(me, v.collisionSegs)
 	--entity_handleShotCollisions(me)
-	if entity_collideHairVsCircle(me, n, collisionSegs) then
+	if entity_collideHairVsCircle(me, v.n, v.collisionSegs) then
 		entity_touchAvatarDamage(me, 0, 0.5, 500)
 	end
 	entity_rotateToVel(me)
 	entity_flipToVel(me)
 	
-	quad_setPosition(glow, bone_getWorldPosition(glowBone))
+	quad_setPosition(v.glow, bone_getWorldPosition(v.glowBone))
 end
 
 function enterState(me)
@@ -124,11 +122,11 @@ function enterState(me)
 		entity_clearVel(me)
 		entity_setStateTime(me, 1.5)
 		for i=32,1,-6 do
-			x, y = entity_getHairPosition(me, i)
+			local x, y = entity_getHairPosition(me, i)
 			spawnParticleEffect("TinyBlueExplode", x, y, 0.2*((32-i)/6.0))
 		end
 	elseif entity_isState(me, STATE_DEAD) then
-		quad_delete(glow)
+		quad_delete(v.glow)
 	end
 end
 

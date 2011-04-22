@@ -17,58 +17,57 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
 
 -- entity specific
-STATE_SOMETHING			= 1000
-STATE_SUCK				= 1001
-STATE_BLOW				= 1002
+local STATE_SUCK			= 1001
+local STATE_BLOW			= 1002
  
-started = false
-chaseDelay = 0
-suckDelay = 0
-full = false
-wasUnderWater = false
-outOfWaterSpeed = 1000
-n=0
-door = 0
-enter = 0
-maxy = 0
+v.started = false
+v.chaseDelay = 0
+v.suckDelay = 0
+v.full = false
+v.wasUnderWater = false
+v.outOfWaterSpeed = 1000
+v.n = 0
+v.door = 0
+v.enter = 0
+v.maxy = 0
 
-biteDelay = 0
-gruntDelay = 0
+v.biteDelay = 0
+v.gruntDelay = 0
 
-suckTime = 6 --3
-blowTime = 4 --2
+v.suckTime = 6 --3
+v.blowTime = 4 --2
 
-fireDelayTime = 0.9
-fireDelay = 4
+v.fireDelayTime = 0.9
+v.fireDelay = 4
 
-mainHealth = 280
-rageHealth = 200
+v.mainHealth = 280
+v.rageHealth = 200
 -- NOTE: rage health is not a separate bar, its just a marker of where rage starts
 
 
 -- stuff.
 --[[
-mainHealth = 380
-rageHealth = 200
+v.mainHealth = 380
+v.rageHealth = 200
 ]]--
 
 
-waterLevelMin = 0
-waterLevelMax = 0
+v.waterLevelMin = 0
+v.waterLevelMax = 0
 
-a = 0
+v.a = 0
 
-rage = false
+v.rage = false
 
 function init(me)
 --140
 	setupBasicEntity(me, 
 	"",								-- texture
-	mainHealth,						-- health
+	v.mainHealth,						-- health
 	1,								-- manaballamount
 	2,								-- exp
 	1,								-- money
@@ -105,7 +104,7 @@ function init(me)
 	
 	entity_setCanLeaveWater(me, true)
 	
-	wasUnderWater = entity_isUnderWater(me)
+	v.wasUnderWater = entity_isUnderWater(me)
 	
 	entity_setTargetRange(me, 1024)
 	entity_setDeathScene(me, true)
@@ -123,11 +122,11 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 	
-	enter = getNode("NAIJAENTER")
-	door = entity_getNearestEntity(me, "EnergyDoor")
-	entity_setState(door, STATE_OPENED)
+	v.enter = getNode("NAIJAENTER")
+	v.door = entity_getNearestEntity(me, "EnergyDoor")
+	entity_setState(v.door, STATE_OPENED)
 	if not entity_isFlag(me, 0) then
 		entity_alpha(me, 0)
 		entity_delete(me)
@@ -135,11 +134,11 @@ function postInit(me)
 		--setCanWarp(false)
 	end
 	
-	node = getNode("SUNWORMMAX")
-	maxy = node_y(node)
+	local node = getNode("SUNWORMMAX")
+	v.maxy = node_y(node)
 	
-	waterLevelMin = getNode("sunwormwaterlevelmin")
-	waterLevelMax = getNode("sunwormwaterlevelmax")
+	v.waterLevelMin = getNode("sunwormwaterlevelmin")
+	v.waterLevelMax = getNode("sunwormwaterlevelmax")
 	
 	if entity_isFlag(me, 1) then
 		setControlHint(getStringBank(41), 0, 0, 0, 10, "", SONG_SUNFORM)
@@ -149,16 +148,16 @@ function postInit(me)
 end
 
 function update(me, dt)
-	odt = dt
-	if rage then
+	local odt = dt
+	if v.rage then
 		dt = dt * 1.3
 	end
-	if started then
-		if entity_isUnderWater(me) ~= wasUnderWater and not entity_isState(me, STATE_SUCK) then
-			wasUnderWater = entity_isUnderWater(me)
+	if v.started then
+		if entity_isUnderWater(me) ~= v.wasUnderWater and not entity_isState(me, STATE_SUCK) then
+			v.wasUnderWater = entity_isUnderWater(me)
 			spawnParticleEffect("Splash", entity_x(me), entity_y(me))
 			if not entity_isUnderWater(me) then
-				--//entity_setMaxSpeed(me, outOfWaterSpeed)
+				--//entity_setMaxSpeed(me, v.outOfWaterSpeed)
 				entity_setMaxSpeedLerp(me, 2, 0.1)
 				entity_addVel(me, 0, -800)
 			else
@@ -179,46 +178,46 @@ function update(me, dt)
 				avatar_fallOffWall()
 			end
 		end
-		if chaseDelay > 0 then
-			chaseDelay = chaseDelay - dt
-			if chaseDelay < 0 then
-				chaseDelay = 0
+		if v.chaseDelay > 0 then
+			v.chaseDelay = v.chaseDelay - dt
+			if v.chaseDelay < 0 then
+				v.chaseDelay = 0
 			end
 		end
 	end
 	if entity_isState(me, STATE_IDLE) then
-		biteDelay = biteDelay + dt
-		if biteDelay > 0.6 then
-			dist = entity_getDistanceToEntity(me, n)
+		v.biteDelay = v.biteDelay + dt
+		if v.biteDelay > 0.6 then
+			local dist = entity_getDistanceToEntity(me, v.n)
 			dist = 1 - (dist / 1024)
 			if dist < 0.01 then dist = 0.01 end
 			if dist > 1 then dist = 1 end
 			playSfx("sunworm-bite", 0, dist)
-			biteDelay = 0
+			v.biteDelay = 0
 		end
 		
-		gruntDelay = gruntDelay + dt
-		if gruntDelay > 2 then
-			dist = entity_getDistanceToEntity(me, n)
+		v.gruntDelay = v.gruntDelay + dt
+		if v.gruntDelay > 2 then
+			local dist = entity_getDistanceToEntity(me, v.n)
 			dist = 1 - (dist / 1024)
 			if dist < 0.01 then dist = 0.01 end
 			if dist > 1 then dist = 1 end
 			playSfx("sunworm-grunt", 0, dist)
 			spawnParticleEffect("bubble-release", entity_x(me), entity_y(me))
-			gruntDelay = 0
+			v.gruntDelay = 0
 		end
 	end
 	if entity_getState(me)==STATE_IDLE or entity_isState(me, STATE_BLOW) then
-		if not started then
+		if not v.started then
 			if not entity_hasTarget(me) then
 				--entity_findTarget(me, 2000)
-				--if not started then
-				if node_isEntityIn(enter, n) then
-					started = true
+				--if not v.started then
+				if node_isEntityIn(v.enter, v.n) then
+					v.started = true
 					playSfx("sunworm-roar")
 					shakeCamera(10, 2)
-					entity_setTarget(me, n)
-					entity_setState(door, STATE_CLOSE)
+					entity_setTarget(me, v.n)
+					entity_setState(v.door, STATE_CLOSE)
 					playMusic("bigboss")	
 					emote(EMOTE_NAIJAUGH)
 				end
@@ -226,9 +225,9 @@ function update(me, dt)
 		else
 
 			overrideZoom(0.3, 1)
-			--if chaseDelay==0 then
+			--if v.chaseDelay==0 then
 			if not entity_isUnderWater(me) then
-				entity_setMaxSpeed(me, outOfWaterSpeed)
+				entity_setMaxSpeed(me, v.outOfWaterSpeed)
 				entity_addVel(me, -2000*dt)
 			end			
 			if entity_isUnderWater(me) then
@@ -278,9 +277,9 @@ function update(me, dt)
 	entity_updateMovement(me, dt)
 	entity_rotateToVel(me, 0.1)
 
-	if started then
-		if rage then
-			mult = 1
+	if v.started then
+		if v.rage then
+			local mult = 1
 			if entity_getHealth(me) < 75 then
 				mult = 1.5
 			elseif entity_getHealth(me) < 50 then
@@ -290,15 +289,15 @@ function update(me, dt)
 			elseif entity_getHealth(me) < 20 then
 				mult = 20
 			end
-			fireDelay = fireDelay - dt * mult
+			v.fireDelay = v.fireDelay - dt * mult
 			
-			if fireDelay < 0 then
-				fireDelay = 0
-				fireDelay = fireDelayTime
+			if v.fireDelay < 0 then
+				v.fireDelay = 0
+				v.fireDelay = v.fireDelayTime
 				
-				s = createShot("sunworm", me, n)
-				shot_setAimVector(s, math.sin(a), math.cos(a))
-				a = a + 3.14*0.25
+				local s = createShot("sunworm", me, v.n)
+				shot_setAimVector(s, math.sin(v.a), math.cos(v.a))
+				v.a = v.a + 3.14*0.25
 			end
 		end
 		
@@ -313,8 +312,8 @@ function update(me, dt)
 					entity_setPosition(me, entity_x(me), getWaterLevel() + entity_getCollideRadius(me) + 1)
 					entity_addVel(me, 0, 10)
 				end
-				if getWaterLevel() > node_y(waterLevelMax) then
-					setWaterLevel(node_y(waterLevelMax))
+				if getWaterLevel() > node_y(v.waterLevelMax) then
+					setWaterLevel(node_y(v.waterLevelMax))
 				end
 				entity_pullEntities(me, entity_x(me), entity_y(me), 2000, 1600, odt) -- 1700
 			end
@@ -325,8 +324,8 @@ function update(me, dt)
 				entity_addVel(me, 0, 10)
 			end
 			setWaterLevel(getWaterLevel() - 120*dt)
-			if getWaterLevel() < node_y(waterLevelMin) then
-				setWaterLevel(node_y(waterLevelMin))
+			if getWaterLevel() < node_y(v.waterLevelMin) then
+				setWaterLevel(node_y(v.waterLevelMin))
 			end
 			
 			entity_pullEntities(me, entity_x(me), entity_y(me), 2000, -1600, odt) -- 1700
@@ -335,29 +334,29 @@ function update(me, dt)
 		if not entity_isUnderWater(me) then
 			
 		else
-			if entity_isState(me, STATE_IDLE) and not full and entity_isUnderWater(me) then
-				suckDelay = suckDelay + dt
-				if suckDelay > 8 then
-					suckDelay = 0
-					entity_setState(me, STATE_SUCK, suckTime)
+			if entity_isState(me, STATE_IDLE) and not v.full and entity_isUnderWater(me) then
+				v.suckDelay = v.suckDelay + dt
+				if v.suckDelay > 8 then
+					v.suckDelay = 0
+					entity_setState(me, STATE_SUCK, v.suckTime)
 				end
 			end
 	
 		end
-		if full then
-			suckDelay = suckDelay + dt
-			if suckDelay > 10 then
+		if v.full then
+			v.suckDelay = v.suckDelay + dt
+			if v.suckDelay > 10 then
 				if entity_isUnderWater(me) then
-					suckDelay = 0
-					entity_setState(me, STATE_BLOW, blowTime)
+					v.suckDelay = 0
+					entity_setState(me, STATE_BLOW, v.blowTime)
 				end
 			end
 		end		
 	end
-	if entity_y(me) < maxy then
-		entity_setPosition(me, entity_x(me), maxy)
-		vx = entity_velx(me)
-		vy = entity_vely(me)
+	if entity_y(me) < v.maxy then
+		entity_setPosition(me, entity_x(me), v.maxy)
+		local vx = entity_velx(me)
+		local vy = entity_vely(me)
 		if vy < 0 then
 			vy = -vy
 		end
@@ -366,7 +365,7 @@ function update(me, dt)
 	end
 end
 
-inCutScene = false
+v.inCutScene = false
 function enterState(me)
 	if entity_getState(me)==STATE_IDLE then
 		entity_setCanLeaveWater(me, true)
@@ -381,8 +380,8 @@ function enterState(me)
 		entity_animate(me, "suck", LOOP_INF)
 		avatar_fallOffWall()
 	elseif entity_isState(me, STATE_DEATHSCENE) then
-		if not inCutScene then
-			inCutScene = true
+		if not v.inCutScene then
+			v.inCutScene = true
 			
 			entity_setStateTime(me, 99)
 			
@@ -426,21 +425,21 @@ function enterState(me)
 			if not isForm(FORM_NORMAL) then
 				changeForm(FORM_NORMAL)
 			end
-			entity_setState(door, STATE_OPEN)
-			-- this'll get set by SUNWORCAVEBRAIN:
+			entity_setState(v.door, STATE_OPEN)
+			-- this'll get set by SUNWORMCAVEBRAIN:
 			--setWaterLevel(node_y(getNode("ENDWATERLEVEL")), 3)
 			setFlag(FLAG_BOSS_SUNWORM, 1)
 			entity_setFlag(me, 1)
 			
 			
-			entity_idle(n)
+			entity_idle(v.n)
 			watch(2)
 			pickupGem("Boss-SunWorm")
-			entity_idle(n)
+			entity_idle(v.n)
 			overrideZoom(1, 3)
 			watch(3)
 			emote(EMOTE_NAIJAUGH)
-			entity_animate(n, "agony", -1)
+			entity_animate(v.n, "agony", -1)
 			watch(3)
 			fade2(1, 1, 1, 1, 1)
 			watch(1)
@@ -453,29 +452,29 @@ function enterState(me)
 			hideImage()
 			learnSong(SONG_SUNFORM)
 			watch(1)
-			entity_idle(n)
+			entity_idle(v.n)
 			changeForm(FORM_SUN)
 			voice("Naija_Song_SunForm")
-			inCutScene = true
+			v.inCutScene = true
 			]]--
-			inCutScene = false
+			v.inCutScene = false
 		end
 	end
 end
 
 function exitState(me)
 	if entity_isState(me, STATE_SUCK) then
-		full = true
+		v.full = true
 		entity_setState(me, STATE_IDLE)
 	elseif entity_isState(me, STATE_BLOW) then
-		full = false
+		v.full = false
 		entity_setState(me, STATE_IDLE)
 	end
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if started and entity_getHealth(me) < rageHealth and not rage then
-		rage = true
+	if v.started and entity_getHealth(me) < v.rageHealth and not v.rage then
+		v.rage = true
 		--entity_setColor(me, 1, 0.5, 0.6, 1)
 		playSfx("sunworm-roar")
 		shakeCamera(10, 3)
@@ -484,16 +483,16 @@ function damage(me, attacker, bone, damageType, dmg)
 		setSceneColor(1, 0.6, 0.7, 4)
 		playMusic("sunworm")
 		
-		node = getNode("boss2ndwaterlevel")
+		local node = getNode("boss2ndwaterlevel")
 		setWaterLevel(node_y(node), 0.1)
 	end
 	if damageType == DT_AVATAR_VINE then
 		entity_changeHealth(me, -0.5)
 	end
-	if rage == true and damageType == DT_AVATAR_LIZAP then
+	if v.rage == true and damageType == DT_AVATAR_LIZAP then
 		return false
 	end
-	return started
+	return v.started
 end
 
 function hitSurface(me)

@@ -24,11 +24,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 Segmented::Segmented(float minDist, float maxDist) : minDist(minDist), maxDist(maxDist)
 {
+	sqrMinDist = sqr(minDist);
+	sqrMaxDist = sqr(maxDist);
 }
 
 void Segmented::setMaxDist(float m)
 {
 	maxDist = m;
+	sqrMaxDist = sqr(maxDist);
 }
 
 void Segmented::initSegments(const Vector &position)
@@ -62,28 +65,26 @@ RenderObject *Segmented::getSegment(int seg)
 
 void Segmented::updateSegment(int i, const Vector &diff)
 {
-	if (diff.getSquaredLength2D() > sqr(maxDist))
+	const float sqrLength = diff.getSquaredLength2D();
+
+	if (sqrLength < sqrMinDist)
+		return;
+
+	if (sqrLength > sqrMaxDist)
 	{
 		Vector useDiff = diff;
 		useDiff.setLength2D(maxDist);
 		Vector reallyUseDiff = diff - useDiff;
 		segments[i]->position += reallyUseDiff;
-
-		float angle;
-		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
-
-		segments[i]->rotation.interpolateTo(Vector(0,0,angle), 0.2);
-
 	}
-	else if (diff.getSquaredLength2D() > sqr(minDist)) // 6.3
+	else
 	{
-		segments[i]->position += diff*0.05;
-
-		float angle;
-		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
-
-		segments[i]->rotation.interpolateTo(Vector(0,0,angle), 0.2);
+		segments[i]->position += diff*0.05f;
 	}
+
+	float angle;
+	MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
+	segments[i]->rotation.interpolateTo(Vector(0,0,angle), 0.2);
 }
 
 void Segmented::updateAlpha(float a)
@@ -118,31 +119,24 @@ void Segmented::updateSegments(const Vector &position, bool reverse)
 		}
 	}
 	*/
+	const int top = segments.size()-1;
+	Vector lastPosition = position;
 	if (!reverse)
 	{
-		for (int i = 0; i < segments.size(); i++)
+		for (int i = 0; i <= top; i++)
 		{
-			Vector diff;
-			if (i == 0)
-				diff = position - segments[i]->position;
-			else
-				diff = segments[i-1]->position - segments[i]->position;
-
+			const Vector diff = lastPosition - segments[i]->position;
 			updateSegment(i, diff);
+			lastPosition = segments[i]->position;
 		}
 	}
 	else
 	{
-		int top = segments.size()-1;
 		for (int i = top; i >= 0; i--)
 		{
-			Vector diff;
-			if (i == top)
-				diff = position - segments[i]->position;
-			else
-				diff = segments[i+1]->position - segments[i]->position;
-
+			const Vector diff = lastPosition - segments[i]->position;
 			updateSegment(i, diff);
+			lastPosition = segments[i]->position;
 		}
 	}
 	/*

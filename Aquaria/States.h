@@ -150,6 +150,7 @@ public:
 	void deleteKey();
 	void animate();
 	void stop();
+	void animateOrStop();
 	void newAnim();
 
 	void lmbu();

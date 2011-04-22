@@ -82,6 +82,16 @@ void ShotData::bankLoad(const std::string &file, const std::string &path)
 {
 	std::string usef = path + file + ".txt";
 
+	// FIXME: Li's attack and the pet blaster's energy balls are missing
+	// the CheckDamageTarget flag, preventing entities (such as seahorses)
+	// from properly ignoring the shots.  In lieu of modifying the
+	// separately-distributed data files, we add a hack here to set the
+	// flag on those two shot types.
+	if (nocasecmp(file,"li") == 0 || nocasecmp(file,"petblasterfire") == 0)
+	{
+		checkDamageTarget = true;
+	}
+
 	debugLog(usef);
 	std::ifstream inf(usef.c_str());
 	std::string token;
@@ -759,13 +769,13 @@ void Shot::onUpdate(float dt)
 		else if (target->alpha == 0)
 			target = 0;
 	}
-	if (life >= 1.0)
+	if (life >= 1.0f)
 	{
 		if (velocity.isZero())
 		{
 			//velocity = Vector(rand()%100-50, rand()%100-50);
 		}
-		else if (velocity.isLength2DIn(maxSpeed*0.75))
+		else if (velocity.isLength2DIn(maxSpeed*0.75f))
 		{
 			velocity.setLength2D(maxSpeed);
 		}
@@ -793,7 +803,7 @@ void Shot::onUpdate(float dt)
 	if (shotData->waveMag)
 	{
 		waveTimer += shotData->waveSpeed * dt;
-		float off = sin(waveTimer)*shotData->waveMag;
+		float off = sinf(waveTimer)*shotData->waveMag;
 		Vector side = velocity.getPerpendicularLeft();
 		side.setLength2D(off);
 		offset = side;

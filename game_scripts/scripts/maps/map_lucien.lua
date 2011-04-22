@@ -17,10 +17,10 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-doScene = true
-debugEnd = false
+v.doScene = true
+v.debugEnd = false
 
 function init()
 	fade2(0, 1, 1, 1, 1)
@@ -31,16 +31,16 @@ function init()
 	loadSound("airship-boost")
 	loadSound("airship-onboard")
 	
-	if doScene then
+	if v.doScene then
 	
-		ship = getEntityByName("airship")
+		local ship = getEntity("airship")
 		
-		start = getNode("naijastart")
-		l1 = getNode("l1")
-		lu = getEntity("lucien")
+		local start = getNode("naijastart")
+		local l1 = getNode("l1")
+		local lu = getEntity("lucien")
 		entity_setPosition(getNaija(), node_x(start), node_y(start))
 		
-		camDummy = createEntity("Empty")
+		local camDummy = createEntity("Empty")
 		
 		overrideZoom(1.2)
 		
@@ -81,7 +81,7 @@ function init()
 		overrideZoom(0.9)
 		overrideZoom(0.6, 10)
 		
-		sfx = playSfx("proploop", 0, 0.1)
+		local sfx = playSfx("proploop", 0, 0.1)
 		
 		fade(0, 3)
 		watch(3)
@@ -113,7 +113,7 @@ function init()
 		playSfx("airship-onboard")
 		watch(2.2)
 		
-		engineLoop = playSfx("airship-engineloop", 0, 0.4)
+		local engineLoop = playSfx("airship-engineloop", 0, 0.4)
 		
 		
 		entity_fh(lu)
@@ -129,14 +129,14 @@ function init()
 		
 		overrideZoom(0.3, 30)
 		
-		flyNode = getNode("fly")
+		local flyNode = getNode("fly")
 		entity_setPosition(ship, node_x(flyNode), node_y(flyNode), 30, 0, 0, 1) 
 		
 		sfx = playSfx("proploop", 0, 0.2)
 		
 		playSfx("airship-boost")
 		
-		node = getNode("airshipboost")
+		local node = getNode("airshipboost")
 		spawnParticleEffect("tinyredexplode", node_x(node), node_y(node))
 		
 		fade(0, 3)
@@ -160,7 +160,7 @@ function init()
 		
 		watch(4)
 		
-		if debugEnd then
+		if v.debugEnd then
 			fade(0, 1)
 			cam_toEntity(getNaija())
 		else

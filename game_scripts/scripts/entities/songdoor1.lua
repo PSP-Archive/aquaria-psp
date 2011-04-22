@@ -17,34 +17,36 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- energy door
 dofile("scripts/entities/songdoorcommon.lua")
 
-songNote1 = 0
-songNote2 = 0
-songNote3 = 0
-songNote4 = 0
+v.songNote1 = 0
+v.songNote2 = 0
+v.songNote3 = 0
+v.songNote4 = 0
 
 function init(me)
-	commonInit(me)
+	v.commonInit(me)
 	if isFlag(FLAG_SONGDOOR1, 1) then
 		entity_setState(me, STATE_OPENED)
 	else
 		entity_setState(me, STATE_CLOSED)
 	end
-	setWarpSceneNode("SongCave02", "SONGDOORENTER", "R")
+	v.setWarpSceneNode("SongCave02", "SONGDOORENTER", "R")
 end
 
 function songNote(me, note)
 	if entity_isState(me, STATE_CLOSED) then
-		songNote1 = songNote2
-		songNote2 = songNote3
-		songNote3 = songNote4
-		songNote4 = note
+		v.songNote1 = v.songNote2
+		v.songNote2 = v.songNote3
+		v.songNote3 = v.songNote4
+		v.songNote4 = note
 		--[[
-		debugLog(string.format("%d, %d, %d, %d", songNote1, songNote2, songNote3, songNote4))
+		debugLog(string.format("%d, %d, %d, %d", v.songNote1, v.songNote2, v.songNote3, v.songNote4))
 		]]--
-		if songNote1 == 1 and songNote2 == 3 and songNote3 == 7 and songNote4 == 5 then
+		if v.songNote1 == 1 and v.songNote2 == 3 and v.songNote3 == 7 and v.songNote4 == 5 then
 			voiceInterupt("SongDoor1Open")
 			setFlag(FLAG_SONGDOOR1, 1)
 			entity_setState(me, STATE_OPEN)

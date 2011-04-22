@@ -17,14 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- HEALTH PLANT
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
-particleDelay = 0
-out = 32
+v.particleDelay = 0
+v.out = 32
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
@@ -55,12 +55,12 @@ end
 
 function update(me, dt)
 	if entity_isState(me, STATE_IDLE) then
-		particleDelay = particleDelay - dt
-		if particleDelay < 0 then
-			particleDelay = 0.6
-			nx, ny = entity_getNormal(me)
-			nx = nx * out
-			ny = ny * out
+		v.particleDelay = v.particleDelay - dt
+		if v.particleDelay < 0 then
+			v.particleDelay = 0.6
+			local nx, ny = entity_getNormal(me)
+			nx = nx * v.out
+			ny = ny * v.out
 			spawnParticleEffect("HealthPlantGlow", entity_x(me)+nx, entity_y(me)+ny)
 		end
 		
@@ -68,9 +68,9 @@ function update(me, dt)
 			spawnManaBall(entity_x(getNaija()), entity_y(getNaija()), 1)
 			entity_setState(me, STATE_USED)
 		elseif entity_isEntityInRange(me, getNaija(), 580) and avatar_isRolling() then
-			nx, ny = entity_getNormal(me)			
-			nx = nx * out
-			ny = ny * out		
+			local nx, ny = entity_getNormal(me)			
+			nx = nx * v.out
+			ny = ny * v.out		
 			spawnManaBall(entity_x(me)+nx, entity_y(me)+ny, 1)
 			entity_setState(me, STATE_USED)		
 		end

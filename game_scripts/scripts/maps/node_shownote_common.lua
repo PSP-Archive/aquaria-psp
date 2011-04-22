@@ -17,36 +17,36 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-myNote = 0
-noteQuad = 0
+v.myNote = 0
+v.noteQuad = 0
 
-function commonInit(me, note)
-	myNote = note
+function v.commonInit(me, note)
+	v.myNote = note
 end
 
 function update(me, dt)
 end
 
 function songNote(me, note)
-	if note == myNote then
-		if noteQuad ~= 0 then
-			quad_delete(noteQuad)
-			noteQuad = 0
+	if note == v.myNote then
+		if v.noteQuad ~= 0 then
+			quad_delete(v.noteQuad)
+			v.noteQuad = 0
 		end
 		
-		noteQuad = createQuad(string.format("Song/NoteSymbol%d", myNote), 6)
-		quad_alpha(noteQuad, 1)
-		quad_alpha(noteQuad, 0, 0.5)
-		--quad_scale(noteQuad, 3, 3, 0.5, 0, 0, 1)
-		--quad_setBlendType(noteQuad, BLEND_ADD)
+		v.noteQuad = createQuad(string.format("Song/NoteSymbol%d", v.myNote), 6)
+		quad_alpha(v.noteQuad, 1)
+		quad_alpha(v.noteQuad, 0, 0.5)
+		--quad_scale(v.noteQuad, 3, 3, 0.5, 0, 0, 1)
+		--quad_setBlendType(v.noteQuad, BLEND_ADD)
 		
-		r,g,b = getNoteColor(myNote)
-		quad_color(noteQuad, r, g, b)
+		local r,g,b = getNoteColor(v.myNote)
+		quad_color(v.noteQuad, r, g, b)
 		
-		x,y = node_getPosition(me)
-		quad_setPosition(noteQuad, x, y)
+		local x,y = node_getPosition(me)
+		quad_setPosition(v.noteQuad, x, y)
 	end
 end
 

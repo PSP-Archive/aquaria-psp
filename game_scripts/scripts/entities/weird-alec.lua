@@ -17,10 +17,9 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-glow = 0
+v.n = 0
 
 function init(me)
 	setupEntity(me)
@@ -33,8 +32,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	node = entity_getNearestNode(me, "FLIP")
+	v.n = getNaija()
+	local node = entity_getNearestNode(me, "FLIP")
 	if node ~=0 then
 		if node_isEntityIn(node, me) then
 			entity_fh(me)
@@ -74,8 +73,8 @@ function song(me, song)
 end
 
 function activate(me)
-	entity_idle(n)
-	entity_flipToEntity(n, me)
+	entity_idle(v.n)
+	entity_flipToEntity(v.n, me)
 	fade2(1, 0.1, 1, 1, 1)
 	watch(0.1)
 	cam_toEntity(me)

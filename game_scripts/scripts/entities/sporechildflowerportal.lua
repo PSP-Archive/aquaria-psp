@@ -17,26 +17,28 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/include/sporechildflowertemplate.lua")
 
-active = false
-done = false
+v.active = false
+v.done = false
 function init(me)
-	commonInit(me, "TubeFlower")
+	v.commonInit(me, "TubeFlower")
 	entity_setName(me, "TubeFlower")
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 	if entity_isEntityInRange(me, getNaija(), 356) then
 		if entity_isFlag(me, 0) then
 			pickupGem("tubeflower")
 			entity_setFlag(me, 1)
 		end
 	end
-	if active and not done then
+	if v.active and not v.done then
 		if entity_isEntityInRange(me, getNaija(), 128) then
-			done = true
+			v.done = true
 			entity_sound(me, "TubeFlowerSuck")
 			if isMapName("Tree02") then
 				warpNaijaToSceneNode("Forest04", "FLOWERPORTAL_FROMBOSS")
@@ -49,14 +51,14 @@ function update(me, dt)
 			else
 				-- find the other one
 				debugLog(entity_getName(me))
-				e = getFirstEntity()
+				local e = getFirstEntity()
 				while e~=0 do
 					if e ~= me and entity_isName(e, "TubeFlower") then
 					
-						n = getNaija()
-						--debugLog("WArping!")
+						local n = getNaija()
+						--debugLog("Warping!")
 						entity_idle(n)
-						--dx,dy = entity_getVectorToEntity(me, e)
+						--local dx, dy = entity_getVectorToEntity(me, e)
 						cam_toEntity(e)
 						watch(1)
 						entity_idle(n)
@@ -65,13 +67,13 @@ function update(me, dt)
 						
 						
 						--esetv(n, EV_NOINPUTNOVEL, 0)
-						dx,dy = entity_getNormal(e)
-						dx,dy = vector_setLength(dx, dy, 32)
+						local dx, dy = entity_getNormal(e)
+						dx, dy = vector_setLength(dx, dy, 32)
 						entity_setPosition(n, entity_x(e)+dx, entity_y(e)+dy)
 						watch(0.5)
 						
 					
-						einc = getFirstEntity()
+						local einc = getFirstEntity()
 						while einc ~= 0 do
 							if eisv(einc, EV_TYPEID, EVT_PET) then
 								--debugLog(string.format("petname: %s", entity_getName(einc)))
@@ -82,8 +84,8 @@ function update(me, dt)
 						
 						
 						entity_alpha(n, 1, 0.2)
-						dx,dy = vector_setLength(dx, dy, 400)
-						entity_addVel(n, dx, dy)		
+						local dx, dy = vector_setLength(dx, dy, 400)
+						entity_addVel(n, dx, dy)
 						entity_flipToVel(n)
 						cam_toEntity(n)
 						entity_idle(n)
@@ -92,10 +94,10 @@ function update(me, dt)
 						
 						
 						if hasLi() then
-							li = getLi()
+							local li = getLi()
 							
-							dx,dy = entity_getNormal(e)
-							dx,dy = vector_setLength(dx, dy, 32)
+							local dx, dy = entity_getNormal(e)
+							dx, dy = vector_setLength(dx, dy, 32)
 							
 							entity_setPosition(li, entity_x(e)+dx, entity_y(e)+dy)
 							
@@ -104,7 +106,7 @@ function update(me, dt)
 								entity_alpha(li, 1, 0.2)
 							end
 							
-							dx,dy = vector_setLength(dx, dy, 400)
+							dx, dy = vector_setLength(dx, dy, 400)
 							entity_addVel(li, dx, dy)
 							
 							--wait(0.5)
@@ -123,7 +125,7 @@ function update(me, dt)
 					e = getNextEntity()
 				end
 				entity_setState(me, STATE_CLOSE)
-				done = false
+				v.done = false
 			end
 
 		end
@@ -135,11 +137,11 @@ function update(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_OPENED) then		
-		active = true
+		v.active = true
 	elseif entity_isState(me, STATE_CLOSE) then
-		active = false
+		v.active = false
 	elseif entity_isState(me, STATE_OPEN) then
 		entity_sound(me, "TubeFlower")
 		--entity_sound(me, "TubeFlower")		

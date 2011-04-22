@@ -17,30 +17,30 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- energy barrier
-dofile("scripts/entities/entityinclude.lua")
+v.init_x = 0
+v.init_y = 0
 
-init_x = 0
-init_y = 0
+v.dist = 700
 
-dist = 700
+v.lastRot = -1
 
-lastRot = -1
+v.topy=0
+v.btmy=0
+v.leftx=0
+v.rightx=0
 
-topy=0
-btmy=0
-leftx=0
-rightx=0
+v.halfWidth = 32
 
-halfWidth = 32
+v.flicker 		= false
+local FLICKER_TIME1 	= 1.2
+local FLICKER_TIME2 	= 1.0
+v.flickerTimer 	= FLICKER_TIME1
+v.orient 			= ORIENT_NONE
 
-flicker 		= false
-FLICKER_TIME1 	= 1.2
-FLICKER_TIME2 	= 1.0
-flickerTimer 	= FLICKER_TIME1
-orient 			= ORIENT_NONE
-
-function commonInit(me)
+function v.commonInit(me)
 	setupEntity(me, "EnergyBarrier", 1)
 	entity_setActivationType(me, AT_NONE)
 	entity_setUpdateCull(me, 1024)
@@ -48,51 +48,51 @@ function commonInit(me)
 end
 
 function update(me, dt)
-	adjust = 25
-	if entity_getRotation(me) ~= lastRot then
-		lastRot = entity_getRotation(me)
+	local adjust = 25
+	if entity_getRotation(me) ~= v.lastRot then
+		v.lastRot = entity_getRotation(me)
 		if entity_getRotation(me) < 90 then
-			topy = findWall(entity_x(me), entity_y(me), 0, -1)
-			btmy = findWall(entity_x(me), entity_y(me), 0, 1)
-			leftx = entity_x(me)-halfWidth
-			rightx = entity_x(me)+halfWidth
-			orient = ORIENT_VERTICAL
-			topy = topy + adjust
-			btmy = btmy - adjust			
-			entity_setWidth(me, rightx-leftx)
-			entity_setHeight(me, btmy-topy)
+			v.topy = findWall(entity_x(me), entity_y(me), 0, -1)
+			v.btmy = findWall(entity_x(me), entity_y(me), 0, 1)
+			v.leftx = entity_x(me)-v.halfWidth
+			v.rightx = entity_x(me)+v.halfWidth
+			v.orient = ORIENT_VERTICAL
+			v.topy = v.topy + adjust
+			v.btmy = v.btmy - adjust			
+			entity_setWidth(me, v.rightx-v.leftx)
+			entity_setHeight(me, v.btmy-v.topy)
 
 		elseif entity_getRotation(me) < 180 then
-			leftx = findWall(entity_x(me), entity_y(me), -1, 0)
-			rightx = findWall(entity_x(me), entity_y(me), 1, 0)
-			topy = entity_y(me)-halfWidth
-			btmy = entity_y(me)+halfWidth
-			orient = ORIENT_HORIZONTAL
-			leftx = leftx + adjust
-			rightx = rightx - adjust			
-			entity_setHeight(me, rightx-leftx)
-			entity_setWidth(me, btmy-topy)			
+			v.leftx = findWall(entity_x(me), entity_y(me), -1, 0)
+			v.rightx = findWall(entity_x(me), entity_y(me), 1, 0)
+			v.topy = entity_y(me)-v.halfWidth
+			v.btmy = entity_y(me)+v.halfWidth
+			v.orient = ORIENT_HORIZONTAL
+			v.leftx = v.leftx + adjust
+			v.rightx = v.rightx - adjust			
+			entity_setHeight(me, v.rightx-v.leftx)
+			entity_setWidth(me, v.btmy-v.topy)
 		end
 	end
 	
 	if entity_isState(me, STATE_PULSE) then
-		pulseTimer = pulseTimer - dt
-		if pulseTimer < 0 then
+		v.pulseTimer = v.pulseTimer - dt
+		if v.pulseTimer < 0 then
 			entity_setState(me, STATE_OFF)
 		end
 	end
 	
 	if entity_isState(me, STATE_FLICKER) then
-		flickerTimer = flickerTimer - dt
-		if flickerTimer < 0 then
-			if flicker == false then
-				flickerTimer = FLICKER_TIME1
-			elseif flicker == true then
-				flickerTimer = FLICKER_TIME2
+		v.flickerTimer = v.flickerTimer - dt
+		if v.flickerTimer < 0 then
+			if v.flicker == false then
+				v.flickerTimer = FLICKER_TIME1
+			elseif v.flicker == true then
+				v.flickerTimer = FLICKER_TIME2
 			end
-			if flicker then
+			if v.flicker then
 				entity_alpha(me, 0, 0.1)
-				flicker = false
+				v.flicker = false
 				--setSceneColor(1, 1, 1, 0.5)
 			else
 				entity_playSfx(me, "FizzleBarrier")
@@ -102,33 +102,32 @@ function update(me, dt)
 					spawnParticleEffect("EnergyBarrierFlicker2", entity_x(me), entity_y(me))
 				end
 				entity_alpha(me, 1, 0.1)
-				flicker = true
+				v.flicker = true
 				--setSceneColor(1, 0.5, 0.5, 0.5)
 			end
 		end
 	end
 	
 	if entity_isState(me, STATE_IDLE)
-	or (entity_isState(me, STATE_FLICKER) and flicker==true)
+	or (entity_isState(me, STATE_FLICKER) and v.flicker==true)
 	or entity_isState(me, STATE_PULSE)
 	then
 		--debugLog("state is idle")
-		e = getFirstEntity()
+		local e = getFirstEntity()
 		while e ~= 0 do
 			--debugLog("Found an entity")
 			if (entity_getEntityType(e)==ET_ENEMY or entity_getEntityType(e)==ET_AVATAR)
 			and not entity_isProperty(e, EP_MOVABLE) and not entity_isDead(e) and entity_getCollideRadius(e) > 0 and not eisv(e, EV_TYPEID, EVT_PET) then
 				--debugLog("Found an enemy / the player")
-				if entity_x(e) >= leftx and entity_x(e) <= rightx
-				and entity_y(e) >= topy and entity_y(e) <= btmy then
-					vel = 0
-					if orient == ORIENT_VERTICAL then	
+				if entity_x(e) >= v.leftx and entity_x(e) <= v.rightx
+				and entity_y(e) >= v.topy and entity_y(e) <= v.btmy then
+					if v.orient == ORIENT_VERTICAL then	
 						if entity_x(e) > entity_x(me) then
 							entity_push(e, 1000, entity_vely(e), 0.5, 1000)
 						else
 							entity_push(e, -1000, entity_vely(e), 0.5, 1000)
 						end
-					elseif orient == ORIENT_HORIZONTAL then
+					elseif v.orient == ORIENT_HORIZONTAL then
 						if entity_y(e) > entity_y(me) then
 							entity_push(e, entity_velx(e), 1000, 0.5, 1000)
 						else
@@ -142,12 +141,6 @@ function update(me, dt)
 					else
 						entity_damage(e, me, 2)
 					end
-				end
-			end
-			if entity_isName(e, "MetalObject") then
-				if entity_x(e) > leftx and entity_x(e) < rightx
-				and entity_y(e) > topy and entity_y(e) < btmy then
-					entity_setState(me, STATE_DISABLED)
 				end
 			end
 			e = getNextEntity()
@@ -175,7 +168,7 @@ function enterState(me)
 	elseif entity_isState(me, STATE_PULSE) then
 		entity_alpha(me, 1, 0.1)
 		spawnParticleEffect("EnergyBarrierFlicker", entity_x(me), entity_y(me))
-		pulseTimer = 1
+		v.pulseTimer = 1
 
 	elseif entity_isState(me, STATE_OFF) then
 		entity_alpha(me, 0, 0.1)

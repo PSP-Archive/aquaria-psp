@@ -20,9 +20,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #pragma once
 
-#include "../BBGE/tinyxml.h"
+#include "../ExternalLibs/tinyxml.h"
 #include "../BBGE/DebugFont.h"
-#include "../BBGE/glpng.h"
+#include "../ExternalLibs/glpng.h"
 
 #include "DSQ.h"
 #include "AquariaMenuItem.h"
@@ -94,8 +94,8 @@ const char CHAR_RIGHT		= 'r';
 
 const float MIN_SIZE = 0.1;
 
-#ifndef AQUARIA_DEMO
-	#define BUILD_SCENEEDITOR	1
+#ifdef AQUARIA_DEMO
+	#undef AQUARIA_BUILD_SCENEEDITOR
 #endif
 
 //#include "GridRender.h"
@@ -106,6 +106,7 @@ class ToolTip;
 
 #include "Path.h"
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 struct EntityGroupEntity
 {
 	std::string name;
@@ -128,10 +129,10 @@ enum EditTypes
 	ET_ELEMENTS		=0,
 	ET_ENTITIES		=1,
 	ET_PATHS		=2,
-	ET_CONVAREAS	=3,
 	ET_SELECTENTITY =4,
 	ET_MAX
 };
+#endif
 
 class FollowSym : public Quad
 {
@@ -221,8 +222,8 @@ public:
 	float scaleFactor;
 
 	void eatMe();
-
 	void moveRight();
+	void discard();
 
 	bool isCursorIn();
 
@@ -292,14 +293,6 @@ protected:
 	int slot;
 };
 
-class ConvArea
-{
-public:
-	Vector position;
-	int radius;
-	std::string conv, flag;
-};
-
 class ElementTemplate
 {
 public:
@@ -347,6 +340,7 @@ enum FlagCheckType
 	OR		=1
 };
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 enum EditorStates
 {
 	ES_SELECTING	=0,
@@ -362,6 +356,7 @@ enum SelectionType
 	ST_MULTIPLE		,
 	ST_MAX
 };
+#endif
 
 class EntityClass
 {
@@ -374,6 +369,8 @@ public:
 	bool script;
 	int idx;
 };
+
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 
 class SceneEditorMenuReceiver : public DebugButtonReceiver
 {
@@ -407,6 +404,7 @@ public:
 	void update(float dt);
 	void prevElement();
 	void nextElement();
+	void doPrevElement();
 	Element *cycleElementNext(Element *e);
 	Element *cycleElementPrev(Element *e);
 	void selectZero();
@@ -586,7 +584,11 @@ protected:
 	Quad *placer;
 	DebugFont *text;
 	bool on;
+	InterpolatedVector oldGlobalScale;
 };
+
+#endif  // AQUARIA_BUILD_SCENEEDITOR
+
 typedef std::vector<Quad*> QuadList;
 typedef std::vector<QuadList> QuadArray;
 
@@ -604,9 +606,10 @@ enum ObsType
 struct EntitySaveData
 {
 public:
-	EntitySaveData(Entity *e, int idx, int x, int y, int rot, int group, int id) : e(e), idx(idx), x(x), y(y), rot(rot), group(group), id(id) {}
+	EntitySaveData(Entity *e, int idx, int x, int y, int rot, int group, int id, const std::string &name) : e(e), idx(idx), x(x), y(y), rot(rot), group(group), id(id), name(name) {}
 	Entity *e;
 	int idx, x, y, rot, group, id;
+	std::string name;
 };
 
 class Game : public StateObject
@@ -632,6 +635,7 @@ public:
 	std::string getSelectedChoice() { return selectedChoice; }
 
 	int getGrid(const TileVector &tile);
+	const signed char *getGridColumn(int tileX);
 	void setGrid(const TileVector &tile, int v);
 	bool isObstructed(const TileVector &tile, int t = -1);
 
@@ -670,17 +674,19 @@ public:
 
 	bool collideCircleVsCircle(Entity *a, Entity *b);
 	Bone *collideSkeletalVsCircle(Entity *skeletal, Entity *circle);
-	Bone *collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, int radius);
-	bool collideCircleVsLine(Entity *ent, Vector start, Vector end, int radius);
-	bool collideCircleVsLineAngle(Entity *ent, float angle, int startLen, int endLen, int radius, Vector basePos);
-	Bone *collideSkeletalVsCircle(Entity *skeletal, Vector pos, int radius);
-	CollideData collideCircleWithAllEntities(Vector pos, int r, Entity *me=0, int spellType=0, bool checkAvatarFlag=false);//, bool checkSpellFlag=0, bool checkHitEntitiesFlag=1);
+	Bone *collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, float radius);
+	bool collideCircleVsLine(Entity *ent, Vector start, Vector end, float radius);
+	bool collideCircleVsLineAngle(Entity *ent, float angle, float startLen, float endLen, float radius, Vector basePos);
+	Bone *collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius);
+	CollideData collideCircleWithAllEntities(Vector pos, float r, Entity *me=0, int spellType=0, bool checkAvatarFlag=false);//, bool checkSpellFlag=0, bool checkHitEntitiesFlag=1);
 	void handleShotCollisions(Entity *e, bool hasShield=false);
 	void handleShotCollisionsSkeletal(Entity *e);
 	void handleShotCollisionsHair(Entity *e, int num = 0);
 
 	std::vector<ElementTemplate> elementTemplates;
 	std::string sceneName;
+
+	ElementTemplate *getElementTemplateByIdx(int idx);
 
 	void saveScene(std::string scene);
 	typedef std::vector<WarpArea> WarpAreas;
@@ -689,11 +695,6 @@ public:
 	void postInitEntities();
 	Entity *getEntityInGroup(int gid, int iter);
 	EntityClass *getEntityClassForEntityType(const std::string &type);
-
-	/*
-	typedef std::vector<ConvArea> ConvAreas;
-	ConvAreas convAreas;
-	*/
 
 	void warpToArea(WarpArea *area);
 
@@ -765,10 +766,31 @@ public:
 	Vector cameraMin, cameraMax;
 	bool removeEntity(Entity *e);
 
+protected:
 	std::vector<Path*> paths;
+	Path *firstPathOfType[PATH_MAX];
+public:
+	void addPath(Path *p);
+	void removePath(int idx);
+	void clearPaths();
+	int getNumPaths() const {return paths.size();}
+	Path *getPath(int idx) const {return paths[idx];}
+	Path *getFirstPathOfType(PathType type) const {return firstPathOfType[type];}
 	Path *getPathByName(std::string name);
+	int getIndexOfPath(Path *p);
+	Path *getPathAtCursor();
+	Path *getScriptedPathAtCursor(bool withAct=false);
+	Path *getNearestPath(const Vector &pos, const std::string &name="", const Path *ignore=0);
+	Path *getNearestPath(const Vector &pos, PathType pathType=PATH_NONE);
+	Path *getNearestPath(Path *p, std::string name);
+
 	std::string avatarTransit;
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	SceneEditor sceneEditor;
+	bool isSceneEditorActive() {return sceneEditor.isOn();}
+#else
+	bool isSceneEditorActive() const {return false;}
+#endif
 
 	bool isInGameMenu();
 
@@ -780,16 +802,11 @@ public:
 	void hideInGameMenu(bool effects=true);
 	void showInGameMenu(bool force=false, bool optionsOnly=false, MenuPage menuPage = MENUPAGE_NONE);
 	bool optionsOnly;
-	void removePath(int idx);
 
 	MenuPage currentMenuPage;
+	int currentFoodPage, currentTreasurePage;
 
 	Precacher tileCache;
-	Path *getNearestPath(const Vector &pos, const std::string &name="");
-	Path *getNearestPath(const Vector &pos, PathType pathType=PATH_NONE);
-	Path *getNearestPath(Path *p, std::string name);
-	Path *getPathAtCursor();
-	Path *getScriptedPathAtCursor(bool withAct=false);
 
 	//void cameraPanToNode(Path *p, int speed=500);
 	//void cameraRestore();
@@ -852,7 +869,7 @@ public:
 	bool isElementLayerVisible(int bgLayer);
 
 	void showInGameMenuExitCheck();
-	void hideInGameMenuExitCheck();
+	void hideInGameMenuExitCheck(bool refocus);
 	bool isControlHint();
 
 	int getNumberOfEntitiesNamed(const std::string &name);
@@ -868,13 +885,13 @@ public:
 
 	bool creatingSporeChildren;
 	bool loadingScene;
-	int getIndexOfPath(Path *p);
-	Path *getPathByIndex(int idx);
 
 	WaterSurfaceRender *waterSurfaceRender;
 	Quad *shapeDebug;
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	EntityGroups entityGroups;
+#endif
 
 	std::string getNoteName(int n, const std::string &pre="");
 
@@ -883,7 +900,7 @@ public:
 	float getWaterLevel();
 	void setMusicToPlay(const std::string &musicToPlay);
 	Vector lastCollidePosition;
-	void switchBgLoop(int v, bool effects=true);
+	void switchBgLoop(int v);
 	ElementTemplate getElementTemplateForLetter(int i);
 	CurrentRender *currentRender;
 	SteamRender *steamRender;
@@ -901,13 +918,13 @@ public:
 	BitmapText *songLabel, *foodLabel, *foodDescription, *treasureLabel;
 	ToolTip *treasureDescription;
 	Quad *treasureCloseUp;
-	void updateBgSfxLoop(bool effects=true);
+	void updateBgSfxLoop();
 	void preLocalWarp(LocalWarpType localWarpType);
 	void postLocalWarp();
 	void entityDied(Entity *e);
 
 	bool isShuttingDownGameState() { return shuttingDownGameState; }
-	void warpToSceneNode(std::string scene, std::string node, int toFlip=-1);
+	void warpToSceneNode(std::string scene, std::string node);
 
 	AquariaProgressBar *progressBar;
 	void addProgress();
@@ -937,6 +954,7 @@ public:
 	void ensureLimit(Entity *e, int num, int state=0);
 
 	void rebuildElementUpdateList();
+	void setElementLayerFlags();
 
 	float getTimer(float mod=1);
 	float getHalfTimer(float mod=1);
@@ -1100,9 +1118,6 @@ protected:
 	void updateCurrentVisuals(float dt);
 	std::string lastTileset;
 
-	ElementTemplate *getElementTemplateByIdx(int idx);
-
-
 
 	void createLi();
 	void createPets();
@@ -1162,7 +1177,9 @@ protected:
 	Entity *cameraFollowEntity;
 	bool loadSceneXML(std::string scene);
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	void toggleSceneEditor();
+#endif
 
 
 
@@ -1198,6 +1215,17 @@ int Game::getGrid(const TileVector &tile)
 {
 	if (tile.x < 0 || tile.x >= MAX_GRID || tile.y < 0 || tile.y >= MAX_GRID) return 1;
 	return grid[tile.x][tile.y];
+}
+
+inline
+const signed char *Game::getGridColumn(int tileX)
+{
+	if (tileX < 0)
+		return grid[0];
+	else if (tileX >= MAX_GRID)
+		return grid[MAX_GRID-1];
+	else
+		return grid[tileX];
 }
 
 inline

@@ -17,47 +17,47 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-body = 0
-weakPoint = 0
-marker1 = 0
-marker2 = 0
-attackDelay = 0
-attack1Marker = 0
-grabbingEntity = 0
-dark = 0
-inkBlastDelay = 0
+v.n = 0
+v.body = 0
+v.weakPoint = 0
+v.marker1 = 0
+v.marker2 = 0
+v.attackDelay = 0
+v.attack1Marker = 0
+v.grabbingEntity = 0
+v.dark = 0
+v.inkBlastDelay = 0
 
-STATE_ATTACK1 = 1001
-STATE_BASH = 1002
+local STATE_ATTACK1 = 1001
+local STATE_BASH = 1002
 
-fireDelay = 0
+v.fireDelay = 0
 
-shot1 = 0
-shot2 = 0
-shot3 = 0
+v.shot1 = 0
+v.shot2 = 0
+v.shot3 = 0
 
-fireOff = 1
+v.fireOff = 1
 
-isWeakPointHittable = false
+v.isWeakPointHittable = false
 
 function init(me)
 	setupEntity(me)
 	entity_setEntityType(me, ET_ENEMY)
 	entity_initSkeletal(me, "Octomun")	
-	body = entity_getBoneByName(me, "Body")
-	weakPoint = entity_getBoneByName(me, "WeakPoint")
-	marker1 = entity_getBoneByName(me, "Marker1")
-	marker2 = entity_getBoneByName(me, "Marker2")
-	attack1Marker = entity_getBoneByName(me, "Attack1Marker")
+	v.body = entity_getBoneByName(me, "Body")
+	v.weakPoint = entity_getBoneByName(me, "WeakPoint")
+	v.marker1 = entity_getBoneByName(me, "Marker1")
+	v.marker2 = entity_getBoneByName(me, "Marker2")
+	v.attack1Marker = entity_getBoneByName(me, "Attack1Marker")
 	
-	bone_alpha(attack1Marker, 0)
+	bone_alpha(v.attack1Marker, 0)
 	
-	shot1 = entity_getBoneByName(me, "Shot1")
-	shot2 = entity_getBoneByName(me, "Shot2")
-	shot3 = entity_getBoneByName(me, "Shot3")
+	v.shot1 = entity_getBoneByName(me, "Shot1")
+	v.shot2 = entity_getBoneByName(me, "Shot2")
+	v.shot3 = entity_getBoneByName(me, "Shot3")
 	
 	--entity_setAllDamageTargets(me, false)
 	
@@ -70,9 +70,9 @@ function init(me)
 	entity_setState(me, STATE_IDLE)
 	entity_setTargetRange(me, 512)
 	
-	dark = createQuad("Octomun/Dark", 13)
-	quad_scale(dark, 64, 64)
-	quad_alpha(dark, 0)
+	v.dark = createQuad("Octomun/Dark", 13)
+	quad_scale(v.dark, 64, 64)
+	quad_alpha(v.dark, 0)
 	
 	entity_setUpdateCull(me, 4064)
 	
@@ -95,140 +95,140 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
-function tentacle1Collision(me)
-	if grabbingEntity ~= 0 then
+local function tentacle1Collision(me)
+	if v.grabbingEntity ~= 0 then
 		return
 	end
-	x1, y1 = bone_getWorldPosition(marker2)
-	x2, y2 = bone_getWorldPosition(marker1)
+	local x1, y1 = bone_getWorldPosition(v.marker2)
+	local x2, y2 = bone_getWorldPosition(v.marker1)
 	
-	if entity_isPositionInRange(n, x2, y2, 96) then
-		grabbingEntity = n
+	if entity_isPositionInRange(v.n, x2, y2, 96) then
+		v.grabbingEntity = v.n
 		avatar_fallOffWall()
-		entity_idle(grabbingEntity)
-		entity_animate(grabbingEntity, "trapped", LOOP_INF, LAYER_OVERRIDE)		
-	elseif entity_collideCircleVsLine(n, x1, y1, x2, y2, 32) then
-		entity_damage(n, me, 1)
+		entity_idle(v.grabbingEntity)
+		entity_animate(v.grabbingEntity, "trapped", LOOP_INF, LAYER_OVERRIDE)		
+	elseif entity_collideCircleVsLine(v.n, x1, y1, x2, y2, 32) then
+		entity_damage(v.n, me, 1)
 	end
 end
 
-seen = 0
+v.seen = 0
 
-fired = 0
+v.fired = 0
 
-started = false
+v.started = false
 
 function update(me, dt)
-	quad_setPosition(dark, entity_getPosition(me))
+	quad_setPosition(v.dark, entity_getPosition(me))
 	overrideZoom(0.6, 0.5)
 	entity_handleShotCollisionsSkeletal(me)
 	entity_clearTargetPoints(me)
-	bx,by = bone_getWorldPosition(weakPoint)
+	local bx, by = bone_getWorldPosition(v.weakPoint)
 	entity_addTargetPoint(me, bx, by)
 	
-	if seen == 0 and entity_isEntityInRange(me, n, 1000) then
+	if v.seen == 0 and entity_isEntityInRange(me, v.n, 1000) then
 		playSfx("Octomun-Growl")
-		seen = 1
+		v.seen = 1
 	end
 	
-	if seen < 2 and entity_isEntityInRange(me, n, 800) then
+	if v.seen < 2 and entity_isEntityInRange(me, v.n, 800) then
 		emote(EMOTE_NAIJAUGH)
 		playMusic("MiniBoss")
-		started = true
-		seen = 2
+		v.started = true
+		v.seen = 2
 	end
 	
-	if not started then return end
+	if not v.started then return end
 	
-	if quad_getAlpha(dark)<0.1 then
-		inkBlastDelay = inkBlastDelay + dt
-		if inkBlastDelay > 20 then
+	if quad_getAlpha(v.dark) < 0.1 then
+		v.inkBlastDelay = v.inkBlastDelay + dt
+		if v.inkBlastDelay > 20 then
 			playSfx("Octomun-Ink")
 			spawnParticleEffect("InkBlast", entity_getPosition(me))
-			quad_alpha(dark, 1, 4)
-			inkBlastDelay = math.random(5)
+			quad_alpha(v.dark, 1, 4)
+			v.inkBlastDelay = math.random(5)
 		end
 	end
 	if entity_isState(me, STATE_IDLE) then
-		attackDelay = attackDelay + dt
-		if attackDelay > 1 then
-			if grabbingEntity~=0 then
+		v.attackDelay = v.attackDelay + dt
+		if v.attackDelay > 1 then
+			if v.grabbingEntity~=0 then
 				entity_setState(me, STATE_BASH)
 			else
-				x,y = bone_getWorldPosition(attack1Marker)
-				if entity_x(n) < x and entity_y(n) > y and entity_x(n) > entity_x(me) then
+				local x, y = bone_getWorldPosition(v.attack1Marker)
+				if entity_x(v.n) < x and entity_y(v.n) > y and entity_x(v.n) > entity_x(me) then
 					entity_setState(me, STATE_ATTACK1)
 				end
 			end
 		--[[
-			bx, by = bone_getWorldPosition(marker1)
-			if entity_isPositionInRange(n, bx, by, 128) then
+			local bx, by = bone_getWorldPosition(v.marker1)
+			if entity_isPositionInRange(v.n, bx, by, 128) then
 				entity_setState(me, STATE_ATTACK1)
 			end
 			]]--
 		end
-		fireDelay = fireDelay + dt
-		if fireDelay > 6 and fired == 0 then
+		v.fireDelay = v.fireDelay + dt
+		if v.fireDelay > 6 and v.fired == 0 then
 			playSfx("Octomun-Shot")
-			s = createShot("Octomun", me, n, bone_getWorldPosition(shot1))
+			local s = createShot("Octomun", me, v.n, bone_getWorldPosition(v.shot1))
 			shot_setAimVector(s, 100, -100)
-			fired = 1
-		elseif fireDelay > 6.5 and fired == 1 then
+			v.fired = 1
+		elseif v.fireDelay > 6.5 and v.fired == 1 then
 			playSfx("Octomun-Shot")
-			s = createShot("Octomun", me, n, bone_getWorldPosition(shot2))
+			local s = createShot("Octomun", me, v.n, bone_getWorldPosition(v.shot2))
 			shot_setAimVector(s, 100, -50)
-			fired = 2
-		elseif fireDelay > 7 and fired == 2 then
+			v.fired = 2
+		elseif v.fireDelay > 7 and v.fired == 2 then
 			playSfx("Octomun-Shot")
-			s = createShot("Octomun", me, n, bone_getWorldPosition(shot3))
+			local s = createShot("Octomun", me, v.n, bone_getWorldPosition(v.shot3))
 			shot_setAimVector(s, 100, 0)
-			fired = 3
+			v.fired = 3
 			--[[
 			entity_fireAtTarget(me, "Purple", 1, 500, 200, 0, 0, 0, 0, 100, -100, bx, by)
 			entity_fireAtTarget(me, "Purple", 1, 500, 200, 0, 0, 0, 0, 100, -50, bx, by)
 			entity_fireAtTarget(me, "Purple", 1, 500, 200, 0, 0, 0, 0, 100, 0, bx, by)
 			]]--
 			
-		elseif fireDelay > 9 and fired == 3 then
-			fired = 0
+		elseif v.fireDelay > 9 and v.fired == 3 then
+			v.fired = 0
 			
-			if fireOff == 1 then
+			if v.fireOff == 1 then
 				playSfx("rotcore-birth")
 				
-				bx, by = bone_getWorldPosition(shot1)
+				bx, by = bone_getWorldPosition(v.shot1)
 				
-				e = createEntity("Squiddy", "", bx, by)
+				local e = createEntity("Squiddy", "", bx, by)
 				entity_alpha(e, 0.001)
 				entity_alpha(e, 1, 0.5)
 				
 				spawnParticleEffect("tinyredexplode", bx, by)
-				fireOff = 0
+				v.fireOff = 0
 			else
-				fireOff = 1
+				v.fireOff = 1
 			end
 			
-			fireDelay = math.random(2)*0.75 + 0.5
+			v.fireDelay = math.random(2)*0.75 + 0.5
 		end
 	elseif entity_isState(me, STATE_ATTACK1) then
 		tentacle1Collision(me)
 	end
 	
-	if grabbingEntity~=0 then
-		mx,my = bone_getWorldPosition(marker1)		
-		entity_setPosition(grabbingEntity, mx, my)
-		entity_rotate(grabbingEntity, bone_getRotation(marker1))
-		if entity_isfh(grabbingEntity) then
-			entity_fh(grabbingEntity)
+	if v.grabbingEntity~=0 then
+		local mx, my = bone_getWorldPosition(v.marker1)		
+		entity_setPosition(v.grabbingEntity, mx, my)
+		entity_rotate(v.grabbingEntity, bone_getRotation(v.marker1))
+		if entity_isfh(v.grabbingEntity) then
+			entity_fh(v.grabbingEntity)
 		end
 	end
 	
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if bone ~= 0 then
-		entity_damage(n, me, 1)
+		entity_damage(v.n, me, 1)
 		entity_pushTarget(me, 500)
 	end
 	entity_updateMovement(me, dt)
@@ -236,28 +236,28 @@ end
 
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
-		isWeakPointHittable = false
+		v.isWeakPointHittable = false
 		entity_animate(me, "idle", -1)
-		attackDelay = 0
+		v.attackDelay = 0
 	elseif entity_isState(me, STATE_ATTACK1) then
 		playSfx("Octomun-Growl")
-		num = entity_animate(me, "attack1")
+		local num = entity_animate(me, "attack1")
 		entity_setStateTime(me, num)		
 	elseif entity_isState(me, STATE_BASH) then
 		entity_setStateTime(me, entity_animate(me, "bash",1))
-		if grabbingEntity ~= 0 then
-			--entity_push(grabbingEntity, 10, 0, 1)
+		if v.grabbingEntity ~= 0 then
+			--entity_push(v.grabbingEntity, 10, 0, 1)
 		end
 	elseif entity_isState(me, STATE_DEAD) then
-		quad_delete(dark)
+		quad_delete(v.dark)
 	elseif entity_isState(me, STATE_DEATHSCENE) then
 		setFlag(FLAG_MINIBOSS_OCTOMUN, 1)
 		clearShots()
 		entity_stopInterpolating(me)
 		entity_setStateTime(me, 99)
 		fadeOutMusic(6)
-		entity_idle(n)
-		entity_setInvincible(n, true)
+		entity_idle(v.n)
+		entity_setInvincible(v.n, true)
 		cam_toEntity(me)
 		entity_setInternalOffset(me, 0, 0)
 		entity_setInternalOffset(me, 10, 0, 0.1, -1, 1)
@@ -285,8 +285,8 @@ function enterState(me)
 		watch(1.2)
 		fade(0, 0.5, 1, 1, 1)
 		
-		cam_toEntity(n)
-		entity_setInvincible(n, false)
+		cam_toEntity(v.n)
+		entity_setInvincible(v.n, false)
 		pickupGem("Boss-Octomun")
 		overrideZoom(0, 1)
 		entity_setStateTime(me, 0.1)
@@ -296,23 +296,23 @@ end
 
 function exitState(me)
 	if entity_isState(me, STATE_ATTACK1) then
-		isWeakPointHittable = false
+		v.isWeakPointHittable = false
 		entity_setState(me, STATE_IDLE)
 	elseif entity_isState(me, STATE_BASH) then
-		if grabbingEntity ~= 0 then
-			entity_idle(grabbingEntity)
-			entity_push(grabbingEntity, 1000, 0, 1)
+		if v.grabbingEntity ~= 0 then
+			entity_idle(v.grabbingEntity)
+			entity_push(v.grabbingEntity, 1000, 0, 1)
 		end
-		grabbingEntity = 0
+		v.grabbingEntity = 0
 		entity_setState(me, STATE_IDLE)
 	end
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if bone == weakPoint and isWeakPointHittable then
-		bone_damageFlash(body)
+	if bone == v.weakPoint and v.isWeakPointHittable then
+		bone_damageFlash(v.body)
 		playSfx("Octomun-Hit")
-		fireDelay = fireDelay - dmg * 0.2
+		v.fireDelay = v.fireDelay - dmg * 0.2
 		return true
 	else
 		playNoEffect()
@@ -322,13 +322,13 @@ end
 
 function animationKey(me, key)
 	if entity_isState(me, STATE_BASH) and key == 4 then
-		entity_damage(n, me, 0.75)
+		entity_damage(v.n, me, 0.75)
 	elseif entity_isState(me, STATE_ATTACK1) then
 		if key == 1 then
-			isWeakPointHittable = true
+			v.isWeakPointHittable = true
 		end
 		if key == 5 then
-			isWeakPointHittable = false
+			v.isWeakPointHittable = false
 		end
 		if key == 4 then
 			playSfx("rockhit-big")
@@ -338,8 +338,8 @@ function animationKey(me, key)
 end
 
 function lightFlare(me)
-	if entity_isEntityInRange(me, n, 1024) then
-		quad_alpha(dark, 0, 2)
+	if entity_isEntityInRange(me, v.n, 1024) then
+		quad_alpha(v.dark, 0, 2)
 	end
 end
 

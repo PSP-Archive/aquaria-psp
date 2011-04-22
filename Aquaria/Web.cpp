@@ -156,9 +156,9 @@ void Web::onRender()
 	for (int i = 0; i < points.size()-1; i++)
 	{		
 		
-		glColor4f(1, 1, 1, 0.5*alpha.x);
+		glColor4f(1, 1, 1, 0.5f*alpha.x);
 		glVertex3f(points[i].x, points[i].y, 0);
-		glColor4f(1, 1, 1, 0.5*alpha.x);
+		glColor4f(1, 1, 1, 0.5f*alpha.x);
 		glVertex3f(points[i+1].x, points[i+1].y, 0);
 		
 	}

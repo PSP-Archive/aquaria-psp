@@ -17,36 +17,31 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- JELLY
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-blupTimer = 0
-dirTimer = 0
-blupTime = 3.0
 
 -- ================================================================================================
 -- FUNCTIONS
 -- ================================================================================================
-sz = 1.0
-dir = 0
 
-MOVE_STATE_UP = 0
-MOVE_STATE_DOWN = 1
+local MOVE_STATE_UP = 0
+local MOVE_STATE_DOWN = 1
 
-moveState = 0
-moveTimer = 0
-velx = 0
-waveDir = 1
-waveTimer = 0
-soundDelay = 0
+v.moveState = 0
+v.moveTimer = 0
+v.velx = 0
+v.waveDir = 1
+v.waveTimer = 0
+v.soundDelay = 0
 
 function init(me)
 	setupBasicEntity(
@@ -87,46 +82,45 @@ function update(me, dt)
 	end
 	
 	entity_handleShotCollisions(me)
-	sx,sy = entity_getScale(me)
 	
-	moveTimer = moveTimer - dt
-	if moveTimer < 0 then
-		if moveState == MOVE_STATE_DOWN then		
-			moveState = MOVE_STATE_UP
+	v.moveTimer = v.moveTimer - dt
+	if v.moveTimer < 0 then
+		if v.moveState == MOVE_STATE_DOWN then		
+			v.moveState = MOVE_STATE_UP
 			entity_setMaxSpeedLerp(me, 1.5, 0.2)
 			entity_scale(me, 0.75, 1, 1, 1, 1)
-			moveTimer = 3 + math.random(200)/100.0
+			v.moveTimer = 3 + math.random(200)/100.0
 			entity_sound(me, "JellyBlup")
-		elseif moveState == MOVE_STATE_UP then
-			velx = math.random(400)+100
+		elseif v.moveState == MOVE_STATE_UP then
+			v.velx = math.random(400)+100
 			if math.random(2) == 1 then
-				velx = -velx
+				v.velx = -v.velx
 			end
-			moveState = MOVE_STATE_DOWN
+			v.moveState = MOVE_STATE_DOWN
 			--doIdleScale(me)
 			entity_setMaxSpeedLerp(me, 1, 1)
-			moveTimer = 5 + math.random(200)/100.0 + math.random(3)
+			v.moveTimer = 5 + math.random(200)/100.0 + math.random(3)
 		end
 	end
 	
-	waveTimer = waveTimer + dt
-	if waveTimer > 2 then
-		waveTimer = 0
-		if waveDir == 1 then
-			waveDir = -1
+	v.waveTimer = v.waveTimer + dt
+	if v.waveTimer > 2 then
+		v.waveTimer = 0
+		if v.waveDir == 1 then
+			v.waveDir = -1
 		else
-			waveDir = 1
+			v.waveDir = 1
 		end
 	end
 	
-	if moveState == MOVE_STATE_UP then
-		--entity_addVel(me, velx*dt, -600*dt)
+	if v.moveState == MOVE_STATE_UP then
+		--entity_addVel(me, v.velx*dt, -600*dt)
 		--entity_rotateToVel(me, 1)
 		entity_rotateTo(me, 0, 1)
 		if not entity_isNearObstruction(getNaija(), 3) then
 			entity_moveTowardsTarget(me, dt, 500)		
 		end
-	elseif moveState == MOVE_STATE_DOWN then
+	elseif v.moveState == MOVE_STATE_DOWN then
 		entity_addVel(me, 0, 300*dt)
 		--entity_moveTowardsTarget(me, dt, 50)
 		entity_rotateTo(me, 0, 3)

@@ -17,22 +17,22 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-wasIn = false
+v.n = 0
+v.wasIn = false
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
-	if node_isEntityIn(me, n) then
+	if node_isEntityIn(me, v.n) then
 		overrideZoom(0.3, 1)
-		wasIn = true
+		v.wasIn = true
 	else
-		if wasIn then
-			wasIn = false
+		if v.wasIn then
+			v.wasIn = false
 			overrideZoom(0, 4)
 		end
 	end

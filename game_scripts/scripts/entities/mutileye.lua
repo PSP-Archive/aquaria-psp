@@ -17,32 +17,32 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- M U T I L E Y E   (alpha)
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 
 -- ================================================================================================
 -- L O C A L   V A R I A B L E S 
 -- ================================================================================================
 
-orient = ORIENT_LEFT
-orientTimer = 0
+v.orient = ORIENT_LEFT
+v.orientTimer = 0
 
-swimTimer = 0.28 + (math.random(34) * 0.01)
-
-node_mist = 0
-eMate = 0
-matingTimer = 0
-mateCheckDelay = 4
+v.node_mist = 0
+v.eMate = 0
+v.matingTimer = 0
+v.mateCheckDelay = 4
  
 -- ================================================================================================
 -- F U N C T I O N S
 -- ================================================================================================
 
 function init(me)
+	v.swimTimer = 0.28 + (math.random(34) * 0.01)
+
 	setupBasicEntity(me, 
 	"Mutileye/Head",				-- texture
 	4 + math.random(4),				-- health
@@ -62,23 +62,23 @@ function init(me)
 	entity_setDeathParticleEffect(me, "TinyGreenExplode")
 	
 	entity_initSkeletal(me, "Mutileye")
-	head = entity_getBoneByName(me, "Head")
-	tail01 = entity_getBoneByName(me, "Tail01")
-	tail02 = entity_getBoneByName(me, "Tail02")
-	tail03 = entity_getBoneByName(me, "Tail03")
-	tail04 = entity_getBoneByName(me, "Tail04")
+	v.head = entity_getBoneByName(me, "Head")
+	v.tail01 = entity_getBoneByName(me, "Tail01")
+	v.tail02 = entity_getBoneByName(me, "Tail02")
+	v.tail03 = entity_getBoneByName(me, "Tail03")
+	v.tail04 = entity_getBoneByName(me, "Tail04")
 	
 	-- SEGMENT TAIL
-	bone_setSegmentChainHead(head, true)
-	bone_setSegmentProps(head, 30, 30, true)
-	bone_addSegment(head, tail04)
-	bone_rotateOffset(tail04, -180)
-	bone_addSegment(head, tail03)
-	bone_rotateOffset(tail03, -180)
-	bone_addSegment(head, tail02)
-	bone_rotateOffset(tail02, -180)
-	bone_addSegment(head, tail01)
-	bone_rotateOffset(tail01, -180)
+	bone_setSegmentChainHead(v.head, true)
+	bone_setSegmentProps(v.head, 30, 30, true)
+	bone_addSegment(v.head, v.tail04)
+	bone_rotateOffset(v.tail04, -180)
+	bone_addSegment(v.head, v.tail03)
+	bone_rotateOffset(v.tail03, -180)
+	bone_addSegment(v.head, v.tail02)
+	bone_rotateOffset(v.tail02, -180)
+	bone_addSegment(v.head, v.tail01)
+	bone_rotateOffset(v.tail01, -180)
 	
 	--entity_scale(me, 0.42 + (math.random(21) * 0.01), 0.42 + (math.random(21) * 0.01))  -- Segment tail doesn't scale yet
 	entity_scale(me, 0.8, 0.8)
@@ -93,38 +93,38 @@ function postInit(me)
 end
 
 function update(me, dt)
-	amt = 321 + math.random(234)
+	local amt = 321 + math.random(234)
 	
 	if not entity_hasTarget(me) then
 		entity_findTarget(me, 690)
 			
-		swimTimer = swimTimer - dt
-		if swimTimer <= 0 then	
-			swimTimer = 0.64
+		v.swimTimer = v.swimTimer - dt
+		if v.swimTimer <= 0 then	
+			v.swimTimer = 0.64
 				
-			if orient == ORIENT_LEFT then
+			if v.orient == ORIENT_LEFT then
 				entity_addVel(me, -amt, 0)
-				orient = ORIENT_UP
-			elseif orient == ORIENT_UP then
+				v.orient = ORIENT_UP
+			elseif v.orient == ORIENT_UP then
 				entity_addVel(me, 0, -amt)
-				orient = ORIENT_RIGHT
-			elseif orient == ORIENT_RIGHT then
+				v.orient = ORIENT_RIGHT
+			elseif v.orient == ORIENT_RIGHT then
 				entity_addVel(me, amt, 0)
-				orient = ORIENT_DOWN
-			elseif orient == ORIENT_DOWN then
+				v.orient = ORIENT_DOWN
+			elseif v.orient == ORIENT_DOWN then
 				entity_addVel(me, 0, amt)
-				orient = ORIENT_LEFT
+				v.orient = ORIENT_LEFT
 			end			
 			entity_rotateToVel(me, 0.2)
-			orientTimer = orientTimer + dt
+			v.orientTimer = v.orientTimer + dt
 			entity_doEntityAvoidance(me, 1, 256, 0.2)
 		end
 		entity_doCollisionAvoidance(me, dt, 6, 0.5)
 	else
 			
-		swimTimer = swimTimer - dt
-		if swimTimer <= 0 then			
-			swimTimer = 0.28 + (math.random(54) * 0.01)
+		v.swimTimer = v.swimTimer - dt
+		if v.swimTimer <= 0 then			
+			v.swimTimer = 0.28 + (math.random(54) * 0.01)
 			
 			entity_moveTowardsTarget(me, 1, amt)
 			if not entity_isNearObstruction(getNaija(), 8) then
@@ -152,8 +152,8 @@ end
 function enterState(me)
 	if entity_getState(me) == STATE_IDLE then
 		entity_animate(me, "idle", LOOP_INF)
-		mateCheckDelay = 3
-		matingTimer = 0
+		v.mateCheckDelay = 3
+		v.matingTimer = 0
 		entity_setMaxSpeed(me, 400)
 	end
 end
@@ -162,7 +162,7 @@ function exitState(me)
 end
 
 function hitSurface(me)
-	orient = orient + 1
+	v.orient = v.orient + 1
 end
 
 function dieNormal(me)

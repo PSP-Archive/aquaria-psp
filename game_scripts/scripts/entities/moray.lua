@@ -17,16 +17,16 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-attackDelay = 1
-boneHead = 0
-attackNum = 0
+v.n = 0
+v.attackDelay = 1
+v.boneHead = 0
+v.attackNum = 0
 
-a1 = 0
-a2 = 0
-a3 = 0
+v.a1 = 0
+v.a2 = 0
+v.a3 = 0
 
 function init(me)
 	setupEntity(me)
@@ -44,19 +44,19 @@ function init(me)
 	entity_setCullRadius(me, 512)
 	entity_setDeathScene(me, true)
 	
-	boneHead = entity_getBoneByName(me, "Head")
+	v.boneHead = entity_getBoneByName(me, "Head")
 	
 	
-	a1 = entity_getBoneByName(me, "a1")
-	a2 = entity_getBoneByName(me, "a2")
-	a3 = entity_getBoneByName(me, "a3")
+	v.a1 = entity_getBoneByName(me, "a1")
+	v.a2 = entity_getBoneByName(me, "a2")
+	v.a3 = entity_getBoneByName(me, "a3")
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
-	node = entity_getNearestNode(me, "FLIP")
+	local node = entity_getNearestNode(me, "FLIP")
 	if node_isEntityIn(node, me) then
 		entity_fh(me)
 	end
@@ -67,25 +67,25 @@ function update(me, dt)
 	entity_clearTargetPoints(me)
 	
 	if entity_isState(me, STATE_IDLE) then
-		if entity_isEntityInRange(me, n, 512) then
-			attackDelay = attackDelay - dt
-			if attackDelay < 0 then
+		if entity_isEntityInRange(me, v.n, 512) then
+			v.attackDelay = v.attackDelay - dt
+			if v.attackDelay < 0 then
 				entity_setState(me, STATE_ATTACK)
 			end
 		end
 	end
 	entity_handleShotCollisionsSkeletal(me)
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if bone ~= 0 then
 		if entity_isState(me, STATE_ATTACK) then
-			--entity_damage(n, me, 1)
+			--entity_damage(v.n, me, 1)
 			entity_touchAvatarDamage(me, 0, 1, 800)
 		else
 			entity_touchAvatarDamage(me, 0, 0.5, 800)
 		end
 	end
 	
-	entity_addTargetPoint(me, bone_getWorldPosition(boneHead))
+	entity_addTargetPoint(me, bone_getWorldPosition(v.boneHead))
 end
 
 function enterState(me)
@@ -97,48 +97,48 @@ function enterState(me)
 	elseif entity_isState(me, STATE_ATTACK) then
 		--[[
 		atkname = "attack1"
-		if entity_y(n) < entity_y(me)-16 then
+		if entity_y(v.n) < entity_y(me)-16 then
 			atkname = "attack2"
 		end
 		]]--
-		x=entity_x(n)
-		y=entity_y(n)
+		local x = entity_x(v.n)
+		local y = entity_y(v.n)
 		
-		bx,by = bone_getWorldPosition(a1)
-		d1 = vector_getLength(x-bx,y-by)
+		local bx, by = bone_getWorldPosition(v.a1)
+		local d1 = vector_getLength(x-bx, y-by)
 		
-		bx,by = bone_getWorldPosition(a2)
-		d2 = vector_getLength(x-bx,y-by)
+		local bx, by = bone_getWorldPosition(v.a2)
+		local d2 = vector_getLength(x-bx, y-by)
 		
-		bx,by = bone_getWorldPosition(a3)
-		d3 = vector_getLength(x-bx,y-by)
+		local bx, by = bone_getWorldPosition(v.a3)
+		local d3 = vector_getLength(x-bx, y-by)
 		
 		--debugLog(string.format("d1: %d, d2: %d, d3: %d", d1, d2, d3))
 		
 		if d1 < d2 and d1 < d3 then
-			attackNum = 1
+			v.attackNum = 1
 		elseif d2 < d1 and d2 < d3 then
-			attackNum = 2
+			v.attackNum = 2
 		elseif d3 < d1 and d3 < d1 then
-			attackNum = 3
+			v.attackNum = 3
 		else
-			attackNum = 1
+			v.attackNum = 1
 		end
 		
 			
-		entity_setStateTime(me, entity_animate(me, string.format("attack%d", attackNum)))
+		entity_setStateTime(me, entity_animate(me, string.format("attack%d", v.attackNum)))
 	end
 end
 
 function exitState(me)
 	if entity_isState(me, STATE_ATTACK) then
-		attackDelay = 0.5
+		v.attackDelay = 0.5
 		entity_setState(me, STATE_IDLE)
 	end
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	attackDelay = attackDelay - dmg*2
+	v.attackDelay = v.attackDelay - dmg*2
 	entity_setColor(me, 1, 0.5, 0.5)
 	entity_setColor(me, 1, 1, 1, 1)
 	return true
@@ -169,7 +169,7 @@ end
 
 function dieNormal(me)
 	if chance(75) then
-		bx, by = bone_getWorldPosition(boneHead)
+		local bx, by = bone_getWorldPosition(v.boneHead)
 		if chance(50) then
 			spawnIngredient("SmallEgg", bx , by)
 		else

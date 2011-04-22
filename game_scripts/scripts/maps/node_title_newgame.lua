@@ -17,7 +17,7 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
 function init(me)
 	node_setCursorActivation(me, true)
@@ -28,11 +28,11 @@ function action(me, action, state)
 	if isNestedMain() then return end
 	if getNodeToActivate() == me and state == 1 then
 		if action == ACTION_MENURIGHT then
-			node = getNode("TITLE_CONTINUE")
+			local node = getNode("TITLE_CONTINUE")
 			setNodeToActivate(node)
 			setMousePos(toWindowFromWorld(node_x(node), node_y(node)-20))
 		elseif action == ACTION_MENULEFT or action == ACTION_MENUUP then
-			node = getNode("TITLE_MODS")
+			local node = getNode("TITLE_MODS")
 			setNodeToActivate(node)
 			setMousePos(toWindowFromWorld(node_x(node), node_y(node)-20))
 		end
@@ -56,7 +56,6 @@ function activate(me)
 	watch(0.5)
 	
 	setNodeToActivate(0)
-	stopCursorGlow()
 	
 	toggleCursor(false)
 	fade(1, 2, 0, 0, 0)

@@ -24,6 +24,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/DebugFont.h"
 #include "Game.h"
 
+
+#ifdef AQUARIA_BUILD_SCENEEDITOR  // Through end of file
+
+
 const int TIMELINE_GRIDSIZE		= 10;
 const float TIMELINE_UNIT		= 0.1;
 
@@ -185,6 +189,8 @@ AnimationEditor::AnimationEditor() : StateObject()
 
 void AnimationEditor::resetScale()
 {
+	if (dsq->isNested()) return;
+
 	editSprite->scale = Vector(1,1);
 }
 
@@ -250,6 +256,10 @@ void AnimationEditor::applyState()
 
 	addAction(MakeFunctionEvent(AnimationEditor, editStripKey), KEY_E, 0);
 
+	addAction(MakeFunctionEvent(AnimationEditor, prevAnim), KEY_PGUP, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, nextAnim), KEY_PGDN, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, animateOrStop), KEY_RETURN, 0);
+
 
 
 	/*
@@ -297,13 +307,13 @@ void AnimationEditor::applyState()
 
 	DebugButton *a = new DebugButton(0, 0, 150);
 	a->position = Vector(10, 60);
-	a->label->setText("prevKey   (LEFT)");
+	a->label->setText("prevKey  (LEFT)");
 	a->event.set(MakeFunctionEvent(AnimationEditor, prevKey));
 	addRenderObject(a, LR_HUD);
 
 	DebugButton *a2 = new DebugButton(0, 0, 150);
 	a2->position = Vector(10, 90);
-	a2->label->setText("nextKey  (RIGHT)");
+	a2->label->setText("nextKey (RIGHT)");
 	a2->event.set(MakeFunctionEvent(AnimationEditor, nextKey));
 	addRenderObject(a2, LR_HUD);
 
@@ -315,27 +325,27 @@ void AnimationEditor::applyState()
 
 	DebugButton *animate = new DebugButton(0, 0, 150);
 	animate->position = Vector(10, 200);
-	animate->label->setText("animate");
+	animate->label->setText("animate (ENTER)");
 	animate->event.set(MakeFunctionEvent(AnimationEditor, animate));
 	addRenderObject(animate, LR_HUD);
 
 	DebugButton *stop = new DebugButton(0, 0, 150);
 	stop->position = Vector(10, 230);
-	stop->label->setText("stop");
+	stop->label->setText("stop  (S-ENTER)");
 	stop->event.set(MakeFunctionEvent(AnimationEditor, stop));
 	addRenderObject(stop, LR_HUD);
 
-	DebugButton *nextAnimation = new DebugButton(0, 0, 150);
-	nextAnimation->label->setText("nextAnim");
-	nextAnimation->position = Vector(10, 330);
-	nextAnimation->event.set(MakeFunctionEvent(AnimationEditor, nextAnim));
-	addRenderObject(nextAnimation, LR_MENU);
-
 	DebugButton *prevAnimation = new DebugButton(0, 0, 150);
-	prevAnimation->label->setText("prevAnim");
-	prevAnimation->position = Vector(10, 360);
+	prevAnimation->label->setText("prevAnim (PGUP)");
+	prevAnimation->position = Vector(10, 330);
 	prevAnimation->event.set(MakeFunctionEvent(AnimationEditor, prevAnim));
 	addRenderObject(prevAnimation, LR_MENU);
+
+	DebugButton *nextAnimation = new DebugButton(0, 0, 150);
+	nextAnimation->label->setText("nextAnim (PGDN)");
+	nextAnimation->position = Vector(10, 360);
+	nextAnimation->event.set(MakeFunctionEvent(AnimationEditor, nextAnim));
+	addRenderObject(nextAnimation, LR_MENU);
 
 	DebugButton *copyKey = new DebugButton(0, 0, 150);
 	copyKey->label->setText("copyKey");
@@ -425,7 +435,7 @@ void AnimationEditor::undo()
 {
 	if (dsq->isNested()) return;
 
-	if (core->getKeyState(KEY_LCONTROL))
+	if (core->getCtrlState())
 	{
 		if (undoEntry >= 0 && undoEntry < undoHistory.size())
 		{
@@ -440,7 +450,7 @@ void AnimationEditor::redo()
 {
 	if (dsq->isNested()) return;
 
-	if (core->getKeyState(KEY_LCONTROL))
+	if (core->getCtrlState())
 	{
 		undoEntry++;
 		if (undoEntry >= 0 && undoEntry < undoHistory.size())
@@ -569,7 +579,7 @@ void AnimationEditor::moveBoneStripPoint(const Vector &mov)
 					b->strip.resize(sel->changeStrip.size());
 				}
 
-				b->strip[selectedStripPoint] = sel->changeStrip[selectedStripPoint] += mov*0.006;
+				b->strip[selectedStripPoint] = sel->changeStrip[selectedStripPoint] += mov*0.006f;
 				sel->setGridPoints(sel->stripVert, sel->strip);
 				/*
 
@@ -675,20 +685,23 @@ void AnimationEditor::update(float dt)
 	int spd = 1;
 	if (core->mouse.scrollWheelChange < 0)
 	{
-		editSprite->scale -= Vector(spd*0.05,spd*0.05);
+		editSprite->scale -= Vector(spd*0.05f,spd*0.05f);
 	}
 	else if (core->mouse.scrollWheelChange > 0)
 	{
-		editSprite->scale += Vector(spd*0.05,spd*0.05);
+		editSprite->scale += Vector(spd*0.05f,spd*0.05f);
 	}
-
-	if (core->getKeyState(KEY_PGDN))
+	if (core->getKeyState(KEY_PGDN) && core->getShiftState())
 	{
-		editSprite->scale -= Vector(spd*0.05,spd*0.05);
+		editSprite->scale -= Vector(spd*0.05f,spd*0.05f);
 	}
-	if (core->getKeyState(KEY_PGUP))
+	if (core->getKeyState(KEY_PGUP) && core->getShiftState())
 	{
-		editSprite->scale += Vector(spd*0.05,spd*0.05);
+		editSprite->scale += Vector(spd*0.05f,spd*0.05f);
+	}
+	if (editSprite->scale.x < 0.05f)
+	{
+		editSprite->scale = Vector(0.05f,0.05f);
 	}
 
 	if (boneEdit == 0)
@@ -750,7 +763,7 @@ void AnimationEditor::copy()
 {
 	if (dsq->isNested()) return;
 
-	if (core->getKeyState(KEY_LCONTROL))
+	if (core->getCtrlState())
 		copyBuffer = *editSprite->getCurrentAnimation()->getKeyframe(currentKey);
 }
 
@@ -758,7 +771,7 @@ void AnimationEditor::paste()
 {
 	if (dsq->isNested()) return;
 
-	if (core->getKeyState(KEY_LCONTROL))
+	if (core->getCtrlState())
 	{
 		SkeletalKeyframe *k = editSprite->getCurrentAnimation()->getKeyframe(currentKey);
 		float time = k->t;
@@ -909,6 +922,16 @@ void AnimationEditor::stop()
 	if (dsq->isNested()) return;
 
 	editSprite->stopAnimation();
+}
+
+void AnimationEditor::animateOrStop()
+{
+	if (dsq->isNested()) return;
+
+	if (core->getShiftState())
+		editSprite->stopAnimation();
+	else
+		editSprite->playCurrentAnimation(-1);
 }
 
 void AnimationEditor::lmbd()
@@ -1101,18 +1124,24 @@ void AnimationEditor::nextAnim()
 {
 	if (dsq->isNested()) return;
 
-	editSprite->nextAnimation();
-	currentKey = 0;
-	rebuildKeyframeWidgets();
+	if (!core->getShiftState())
+	{
+		editSprite->nextAnimation();
+		currentKey = 0;
+		rebuildKeyframeWidgets();
+	}
 }
 
 void AnimationEditor::prevAnim()
 {
 	if (dsq->isNested()) return;
 
-	editSprite->prevAnimation();
-	currentKey = 0;
-	rebuildKeyframeWidgets();
+	if (!core->getShiftState())
+	{
+		editSprite->prevAnimation();
+		currentKey = 0;
+		rebuildKeyframeWidgets();
+	}
 }
 
 void AnimationEditor::ignoreBone0()
@@ -1179,3 +1208,6 @@ void AnimationEditor::moveNextWidgets(float dt)
 	}
 	
 }
+
+
+#endif  // AQUARIA_BUILD_SCENEEDITOR

@@ -17,20 +17,20 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-doit = true
-doexit = true
+v.doit = true
+v.doexit = true
 
 function init()
 
-	if doit then
+	if v.doit then
 	
-		n = getNaija()
+		local n = getNaija()
 		
 		shakeCamera(2, 100)
 		
-		fadeNode = getNode("FADE")
+		local fadeNode = getNode("FADE")
 		
 		setCameraLerpDelay(0.0001)
 		
@@ -50,7 +50,7 @@ function init()
 		entity_fh(n)
 
 		
-		li = getLi()
+		local li = getLi()
 		
 		if li == 0 then
 			li = createEntity("Li", "")
@@ -101,7 +101,7 @@ function init()
 		setCameraLerpDelay(0.0001)
 		
 		shakeCamera(5, 100)
-		node = getNode("START")
+		local node = getNode("START")
 		entity_setPosition(n, node_x(node), node_y(node))
 		cam_toEntity(n)
 		
@@ -110,7 +110,7 @@ function init()
 		entity_animate(li, "idle", -1)
 		entity_rotate(li, 0)
 		
-		node2 = getNode("END")
+		local node2 = getNode("END")
 		
 		entity_setState(li, STATE_CARRIED, -1, 1)
 		
@@ -162,7 +162,7 @@ function init()
 		
 		setCameraLerpDelay(0)
 		--playMusic("theend")
-		if doexit then
+		if v.doexit then
 			watch(2)
 			
 			fade3(1, 5)

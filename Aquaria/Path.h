@@ -22,8 +22,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../BBGE/Base.h"
 #include "../BBGE/Particles.h"
+#include "ScriptInterface.h"
 
-struct lua_State;
+#undef PATH_MAX  // May be set by a system header.
 
 class PathNode
 {
@@ -49,7 +50,8 @@ enum PathType
 	PATH_GEM			= 11,
 	PATH_SETING			= 12,
 	PATH_SETENT			= 13,
-	PATH_ZOOM			= 14
+	PATH_ZOOM			= 14,
+	PATH_MAX
 };
 
 enum LocalWarpType
@@ -103,7 +105,7 @@ public:
 
 	void activate(Entity *e=0);
 	void refreshScript();
-	lua_State *L;
+	Script *script;
 	bool updateFunction;
 	bool activateFunction;
 	bool cursorActivation;
@@ -120,6 +122,7 @@ public:
 	float animOffset;
 
 	PathType pathType;
+	Path *nextOfType;
 
 	int toFlip;
 

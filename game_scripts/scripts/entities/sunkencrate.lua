@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/breakablecommon.lua")
 
 function init(me)
 	loadSound("sunkencrate-break")
-	commonInit(me, "Breakable/crate", 40, 3, 3, "sunkencrate-break", false, 1)
+	v.commonInit(me, "Breakable/crate", 40, 3, 3, "sunkencrate-break", false, 1)
 	entity_setEntityLayer(me, -2)
 end

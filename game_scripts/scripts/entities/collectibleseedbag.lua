@@ -17,21 +17,24 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- song cave collectible
 
 dofile("scripts/include/collectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "Collectibles/seed-bag", FLAG_COLLECTIBLE_SEEDBAG)
+	v.commonInit(me, "Collectibles/seed-bag", FLAG_COLLECTIBLE_SEEDBAG)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
+		local ent;
 		ent = createEntity("PullPlantNormal", "", entity_x(me)-100, entity_y(me)+220)
 		entity_rotate(ent, entity_getRotation(ent)-35)
 		ent = createEntity("PullPlantNormal", "", entity_x(me)-130, entity_y(me)+380)
@@ -47,5 +50,5 @@ function enterState(me, state)
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

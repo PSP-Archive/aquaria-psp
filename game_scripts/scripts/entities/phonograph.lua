@@ -17,27 +17,27 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- PHONOGRAPH
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-activeTimer = 0
-noteToPlay = 0
-noteDelay = 0
+v.activeTimer = 0
+v.noteToPlay = 0
+v.noteDelay = 0
 
-singer = true
+v.singer = true
 
-singTimer = 0
+v.singTimer = 0
 
-bubbles = 0
-body = 0
+v.bubbles = 0
+v.body = 0
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -67,8 +67,8 @@ function init(me)
 	
 	entity_animate(me, "idle", -1)
 	
-	bubbles = entity_getBoneByName(me, "Bubbles")
-	body = entity_getBoneByName(me, "Body")
+	v.bubbles = entity_getBoneByName(me, "Bubbles")
+	v.body = entity_getBoneByName(me, "Body")
 	
 	
 	
@@ -80,8 +80,8 @@ function init(me)
 end
 
 function postInit(me)
-	if singer then
-		e = getFirstEntity()
+	if v.singer then
+		local e = getFirstEntity()
 		while e ~= 0 do
 			if e ~= me and entity_isName(e, entity_getName(me)) and entity_isEntityInRange(me, e, 1024) then	
 				entity_msg(e, "no-sing")
@@ -93,8 +93,8 @@ end
 
 function songNote(me, note)
 	if entity_isEntityInRange(me, getNaija(), 600) then
-		noteToPlay = note
-		noteDelay = 0.2
+		v.noteToPlay = note
+		v.noteDelay = 0.2
 	end
 end
 
@@ -102,36 +102,36 @@ function songNoteDone(me, note)
 end
 
 function update(me, dt)
-	if noteDelay > 0 then
-		noteDelay = noteDelay - dt
-		if noteDelay < 0 then
-			if singer then
-				entity_sound(me, getNoteName(noteToPlay, "low-"), 1, 2)
+	if v.noteDelay > 0 then
+		v.noteDelay = v.noteDelay - dt
+		if v.noteDelay < 0 then
+			if v.singer then
+				entity_sound(me, getNoteName(v.noteToPlay, "low-"), 1, 2)
 			end
-			if activeTimer == 0 then
+			if v.activeTimer == 0 then
 				debugLog("bone segs")
-				bone_setSegs(body, 2, 8, 0.7, 0.1, -0.018, 0, 10, 1)
+				bone_setSegs(v.body, 2, 8, 0.7, 0.1, -0.018, 0, 10, 1)
 			end
-			activeTimer = 2
+			v.activeTimer = 2
 		end
 	end
-	if activeTimer > 0 then
-		singTimer = singTimer + dt
-		if singTimer > 0.8 then
-			x,y = bone_getWorldPosition(bubbles)
+	if v.activeTimer > 0 then
+		v.singTimer = v.singTimer + dt
+		if v.singTimer > 0.8 then
+			local x, y = bone_getWorldPosition(v.bubbles)
 			spawnParticleEffect("bubble-release", x, y)
-			singTimer = 0
+			v.singTimer = 0
 		end
-		activeTimer = activeTimer - dt
-		if activeTimer < 0 then
-			activeTimer = 0
-			bone_setSegs(body, 2, 8, 0.7, 0.1, -0.018, 0, 2, 1)
+		v.activeTimer = v.activeTimer - dt
+		if v.activeTimer < 0 then
+			v.activeTimer = 0
+			bone_setSegs(v.body, 2, 8, 0.7, 0.1, -0.018, 0, 2, 1)
 		end
 	end
-	if activeTimer == 0 then
-		singTimer = singTimer - dt * 2
-		if singTimer < 0 then
-			singTimer = 0
+	if v.activeTimer == 0 then
+		v.singTimer = v.singTimer - dt * 2
+		if v.singTimer < 0 then
+			v.singTimer = 0
 		end
 	end
 end
@@ -152,7 +152,7 @@ end
 function msg(me, msg)
 	if msg == "no-sing" then
 		debugLog("no sing")
-		singer = false
+		v.singer = false
 	end
 end
 

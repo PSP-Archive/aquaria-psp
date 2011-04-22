@@ -17,20 +17,20 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- SONG STALK
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-glow = 0
-activeTimer = 0
-bulb = 0
+v.glow = 0
+v.activeTimer = 0
+v.bulb = 0
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -57,8 +57,8 @@ function init(me)
 	entity_setEntityType(me, ET_NEUTRAL)
 	
 	entity_initSkeletal(me, "SongStalk")
-	glow = entity_getBoneByName(me, "Glow")
-	bulb = entity_getBoneByName(me, "Bulb")	
+	v.glow = entity_getBoneByName(me, "Glow")
+	v.bulb = entity_getBoneByName(me, "Bulb")	
 		
 	entity_setState(me, STATE_IDLE)
 	
@@ -69,17 +69,17 @@ function songNote(me, note)
 	if entity_isState(me, STATE_IDLE) then
 		entity_setState(me, STATE_ACTIVE)
 	end
-	activeTimer = 3.5
-	transTime = 0.5
-	r,g,b = getNoteColor(note)
-	bone_setColor(glow, r,g,b, transTime)
+	v.activeTimer = 3.5
+	local transTime = 0.5
+	local r,g,b = getNoteColor(note)
+	bone_setColor(v.glow, r,g,b, transTime)
 end
 
 function update(me, dt)
 	if entity_isState(me, STATE_ACTIVE) then
-		if activeTimer > 0 then
-			activeTimer = activeTimer - dt
-			if activeTimer <= 0 then
+		if v.activeTimer > 0 then
+			v.activeTimer = v.activeTimer - dt
+			if v.activeTimer <= 0 then
 				entity_setState(me, STATE_IDLE)
 			end
 		end
@@ -89,12 +89,12 @@ end
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then		
 		entity_animate(me, "idle")
-		if glow ~= 0 then
-			bone_setSegs(bulb, 2, 8, 0.8, 0.1, -0.018, 0, 6, 1)
-			bone_setColor(glow, 1, 1, 1, 1)
+		if v.glow ~= 0 then
+			bone_setSegs(v.bulb, 2, 8, 0.8, 0.1, -0.018, 0, 6, 1)
+			bone_setColor(v.glow, 1, 1, 1, 1)
 		end
 	elseif entity_isState(me, STATE_ACTIVE) then
-		bone_setSegs(bulb, 2, 8, 0.8, 0.1, -0.018, 0, 20, 1)
+		bone_setSegs(v.bulb, 2, 8, 0.8, 0.1, -0.018, 0, 20, 1)
 		--entity_animate(me, "wave", LOOP_INF)
 	end
 end

@@ -26,7 +26,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Avatar.h"
 #include "ScriptedEntity.h"
 #include "Shot.h"
-#include "WaterFont.h"
 
 Shader Entity::blurShader;
 
@@ -43,11 +42,6 @@ void Entity::setIngredientData(const std::string &name)
 	ingredientData = dsq->continuity.getIngredientDataByName(name);
 }
 
-bool Entity::isNormalLayer()
-{
-	return layer == LR_ENTITIES || layer == LR_ENTITIES0 || layer == LR_ENTITIES2 || layer == LR_ENTITIES_MINUS2 || layer == LR_ENTITIES_MINUS3;
-}
-
 void Entity::entityDied(Entity *e)
 {
 	for (int i = 0; i < targets.size(); i++)
@@ -62,82 +56,6 @@ void Entity::entityDied(Entity *e)
 			setBoneLock(BoneLock());
 		}
 	}
-}
-
-bool Entity::isPresent()
-{
-	return !isDead() && !isEntityDead() && life == 1 && alpha.x != 0;
-}
-
-// this function is only called if addDeathNotify is called first
-void Entity::deathNotify(RenderObject *r)
-{
-	DFSprite::deathNotify(r);
-	if ((RenderObject*)saytext == r)
-	{
-		saytext = 0;
-		debugLog("playing queued say");
-		if (!sayQueue.empty())
-		{
-			say(sayQueue.front());
-			sayQueue.pop();
-		}
-	}
-}
-
-bool Entity::isSaying()
-{
-	return saytext != 0;
-}
-
-void Entity::say(const std::string &dialogue, SayType st)
-{
-	std::ostringstream os;
-	os << "say(" << dialogue << ", " << (int)st << ")";
-	debugLog(os.str());
-
-	if (st == SAY_QUEUE && isSaying())
-	{
-		sayQueue.push(dialogue);
-		return;
-	}
-
-	if (st == SAY_INTERUPT)
-	{
-		while (!sayQueue.empty())
-			sayQueue.pop();
-	}
-
-	if (saytext)
-	{
-		saytext->setDecayRate(2);
-		saytext->setLife(1);
-		saytext->fadeAlphaWithLife = 1;
-		saytext = 0;
-	}
-
-	float t = 6;
-
-	saytext = new WaterFont;
-	dsq->game->addRenderObject(saytext, LR_PARTICLES);
-
-	//saytext->scrollText(dialogue, 0.1);
-	saytext->setText(dialogue);
-
-	float a = 0.5;
-	saytext->alpha.path.addPathNode(0, 0);
-	saytext->alpha.path.addPathNode(a, 0.2);
-	saytext->alpha.path.addPathNode(a, 0.8);
-	saytext->alpha.path.addPathNode(0, 1);
-	saytext->alpha.startPath(t);
-
-	saytext->setDecayRate(1.0f/t);
-	saytext->setLife(1);
-
-	saytext->scale = Vector(0.8, 0.8);
-	saytext->scale.interpolateTo(Vector(1,1),t,0,0,1);
-	//saytext->fadeAlphaWithLife = 1;
-	saytext->addDeathNotify(this);
 }
 
 void Entity::setBounceType(BounceType bt)
@@ -217,7 +135,7 @@ bool Entity::setBoneLock(const BoneLock &boneLock)
 				this->boneLock.offRot -= PI;
 			while (this->boneLock.offRot < 0)
 				this->boneLock.offRot += PI;
-			//this->boneLock.offRot = atan(this->boneLock.circleOffset.y / this->boneLock.circleOffset.x);
+			//this->boneLock.offRot = atanf(this->boneLock.circleOffset.y / this->boneLock.circleOffset.x);
 			//
 			//this->boneLock.localOffset = boneLock.bone->getOriginCollidePosition(this->boneLock.localOffset);
 			*/
@@ -271,7 +189,6 @@ Entity::Entity() : StateMachine(), DFSprite()
 	setv(EV_BEASTBURST, 1);
 	setv(EV_WEBSLOW, 100);
 	//debugLog("Entity::Entity()");
-	sayOffset = Vector(0,-80);
 	//clampOnSwitchDir = true;
 	//registerEntityDied = false;
 	invincible = false;
@@ -303,7 +220,6 @@ Entity::Entity() : StateMachine(), DFSprite()
 	entityID = 0;
 	//assignUniqueID();
 	hair = 0;
-	pauseInConversation = true;
 	maxSpeedLerp = 1;
 	fillGridFromQuad = false;
 	dropChance = 0;
@@ -356,15 +272,15 @@ Entity::Entity() : StateMachine(), DFSprite()
 	canStickInStream = false;
 	pushDamage = 0;
 
-	//debugLog("dsq->entities.push_back()");
+	//debugLog("dsq->addEntity()");
 
-	dsq->entities.push_back(this);
+	dsq->addEntity(this);
 	maxSpeed = oldMaxSpeed = 300;
 	entityDead = false;
 	takeDamage = true;
 	health = maxHealth = 5;
 	invincibleBreak = false;
-	convoRadius = 40;
+	activationRadius = 40;
 	activationRange = 600;
 	//affectedBySpells = true;
 //	followAvatar = false;
@@ -392,14 +308,6 @@ Entity::Entity() : StateMachine(), DFSprite()
 	setDamageTarget(DT_AVATAR_SEED, false);
 
 
-	/*
-	saytext = new BitmapText(&dsq->font);
-	saytext->alpha = 0;
-	dsq->game->addRenderObject(saytext, LR_PARTICLES);
-	*/
-	saytext = 0;
-
-
 	//debugLog("End Entity::Entity()");
 }
 
@@ -415,6 +323,8 @@ void Entity::setCanLeaveWater(bool v)
 
 bool Entity::checkSplash(const Vector &o)
 {
+	Path *lastWaterBubble = waterBubble;
+
 	Vector check = position;
 	if (!o.isZero())
 		check = o;
@@ -434,7 +344,23 @@ bool Entity::checkSplash(const Vector &o)
 
 	if (changed)
 	{
-		dsq->spawnParticleEffect("Splash", check, rotation.z);
+		float angle;
+
+		if (!wasUnderWater && waterBubble)
+		{
+			Vector diff = position - waterBubble->nodes[0].position;
+			angle = MathFunctions::getAngleToVector(diff, 0) + 180;
+		}
+		else if (wasUnderWater && lastWaterBubble)
+		{
+			Vector diff = position - lastWaterBubble->nodes[0].position;
+			angle = MathFunctions::getAngleToVector(diff, 0);
+		}
+		else
+		{
+			angle = MathFunctions::getAngleToVector(vel+vel2, 0);
+		}
+		dsq->spawnParticleEffect("Splash", check, angle);
 	}
 
 	return changed;
@@ -585,13 +511,14 @@ void Entity::followPath(Path *p, int speedType, int dir, bool deleteOnEnd)
 		deleteOnPathEnd = deleteOnEnd;
 
 		position.stopPath();
-		position.path.clear();
+		position.ensureData();
+		position.data->path.clear();
 		if (dir)
 		{
 			for (int i = p->nodes.size()-1; i >=0; i--)
 			{
 				PathNode pn = p->nodes[i];
-				position.path.addPathNode(pn.position, 1.0-(float(i/float(p->nodes.size()))));
+				position.data->path.addPathNode(pn.position, 1.0f-(float(i/float(p->nodes.size()))));
 			}
 		}
 		else
@@ -599,14 +526,14 @@ void Entity::followPath(Path *p, int speedType, int dir, bool deleteOnEnd)
 			for (int i = 0; i < p->nodes.size(); i++)
 			{
 				PathNode pn = p->nodes[i];
-				position.path.addPathNode(pn.position, float(i/float(p->nodes.size())));
+				position.data->path.addPathNode(pn.position, float(i/float(p->nodes.size())));
 			}
 		}
 		debugLog("Calculating Time");
-		float time = position.path.getLength()/(float)dsq->continuity.getSpeedType(speedType);
+		float time = position.data->path.getLength()/(float)dsq->continuity.getSpeedType(speedType);
 		debugLog("Starting");
-		position.path.getPathNode(0)->value = position;
-		position.startPath(time);//, 1.0/2.0);
+		position.data->path.getPathNode(0)->value = position;
+		position.startPath(time);//, 1.0f/2.0f);
 		//swimPath = true;
 		/*
 		currentPathNode = 1;
@@ -630,16 +557,17 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 	followEntity = 0;
 	//watchingEntity = 0;
 
-	position.path.clear();
+	position.ensureData();
+	position.data->path.clear();
 	position.stop();
 
 	ondulateTimer = 0;
 	swimPath = swim;
 	debugLog("Generating path to: " + path->name);
 	dsq->pathFinding.generatePath(this, TileVector(start), TileVector(dest));
-	int sz = position.path.getNumPathNodes();
-	position.path.addPathNode(path->nodes[0].position, 1);
-	VectorPath old = position.path;
+	int sz = position.data->path.getNumPathNodes();
+	position.data->path.addPathNode(path->nodes[0].position, 1);
+	VectorPath old = position.data->path;
 	std::ostringstream os;
 	os << "Path length: " << sz;
 	debugLog(os.str());
@@ -652,27 +580,27 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 	{
 		int node = sz/2;
 		dsq->pathFinding.generatePath(this, TileVector(position), TileVector(position.path.getPathNode(node)->value));
-		old.splice(position.path, node);
-		position.path = old;
+		old.splice(position.data->path, node);
+		position.data->path = old;
 	}
 	*/
 	this->vel = 0;
 
 	debugLog("Molesting Path");
 
-	dsq->pathFinding.molestPath(position.path);
-	//position.path.realPercentageCalc();
-	//position.path.cut(4);
+	dsq->pathFinding.molestPath(position.data->path);
+	//position.data->path.realPercentageCalc();
+	//position.data->path.cut(4);
 
 	debugLog("forcing path to minimum 2 nodes");
-	dsq->pathFinding.forceMinimumPath(position.path, start, dest);
+	dsq->pathFinding.forceMinimumPath(position.data->path, start, dest);
 	debugLog("Done");
 
 	debugLog("Calculating Time");
-	float time = position.path.getLength()/(float)dsq->continuity.getSpeedType(speedType);
+	float time = position.data->path.getLength()/(float)dsq->continuity.getSpeedType(speedType);
 	debugLog("Starting");
-	position.path.getPathNode(0)->value = position;
-	position.startPath(time);//, 1.0/2.0);
+	position.data->path.getPathNode(0)->value = position;
+	position.startPath(time);//, 1.0f/2.0f);
 
 	/*
 	if (dieOnPathEnd)
@@ -685,7 +613,7 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 	debugLog("End of Generate Path");
 
 	//position.startSpeedPath(dsq->continuity.getSpeedType(speedType));
-	//position.startPath(((position.path.getNumPathNodes()*TILE_SIZE*4)-2)/dsq->continuity.getSpeedType(speedType));
+	//position.startPath(((position.data->path.getNumPathNodes()*TILE_SIZE*4)-2)/dsq->continuity.getSpeedType(speedType));
 }
 
 void Entity::addNodeToNodeGroup(int group, Path *p)
@@ -718,17 +646,6 @@ void Entity::setNodeGroupActive(int group, bool v)
 		}
 	}
 }
-
-void Entity::setPauseInConversation(bool v)
-{
-	pauseInConversation = v;
-}
-
-bool Entity::isPauseInConversation()
-{
-	return pauseInConversation;
-}
-
 
 void Entity::stopFollowingPath()
 {
@@ -1058,11 +975,6 @@ bool Entity::clampToSurface(int tcheck, Vector usePos, TileVector hitTile)
 	return clamped;
 }
 
-bool Entity::isEntityDead()
-{
-	return entityDead;
-}
-
 void Entity::heal(float a, int type)
 {
 	if (!entityDead)
@@ -1105,7 +1017,7 @@ void Entity::doMovementPattern(Entity *target, MovementPatternType type, int min
 	}
 	else
 	{
-		vel -= vel*dt*0.5;
+		vel -= vel*dt*0.5f;
 	}
 }
 
@@ -1434,7 +1346,7 @@ void Entity::update(float dt)
 			{
 				// possible bug here because of return
 				return;
-				//dt *= 0.5;
+				//dt *= 0.5f;
 			}
 			//if (dsq->continuity.getWorldType() != WT_NORMAL)
 			//	return;
@@ -1535,10 +1447,11 @@ bool Entity::pathBurst(bool wallJump)
 	{
 		dsq->game->playBurstSound(wallJump);
 		skeletalSprite.animate("burst");
+		position.ensureData();
 		if (wallJump)
-			position.pathTimeMultiplier = 2;
+			position.data->pathTimeMultiplier = 2;
 		else
-			position.pathTimeMultiplier = 1.5;
+			position.data->pathTimeMultiplier = 1.5;
 		burstTimer.start(1);
 		//void pathBurst();r
 		return true;
@@ -1567,11 +1480,12 @@ void Entity::onPathEnd()
 			{
 				skeletalSprite.animate("idle", -1);
 			}
-			int num = position.path.getNumPathNodes();
+			position.ensureData();
+			int num = position.data->path.getNumPathNodes();
 			if (num >= 2)
 			{
-				Vector v2 = position.path.getPathNode(num-1)->value;
-				Vector v1 = position.path.getPathNode(num-2)->value;
+				Vector v2 = position.data->path.getPathNode(num-1)->value;
+				Vector v1 = position.data->path.getPathNode(num-2)->value;
 				Vector v = v2 - v1;
 
 				if (isv(EV_FLIPTOPATH, 1))
@@ -1668,10 +1582,9 @@ bool Entity::updateCurrents(float dt)
 		//Path *p = dsq->game->getNearestPath(position, PATH_CURRENT);
 		if (dsq->continuity.getWorldType() != WT_SPIRIT)
 		{
-			for (int i = 0; i < dsq->game->paths.size(); i++)
+			for (Path *p = dsq->game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
 			{
-				Path *p = dsq->game->paths[i];
-				if (p && p->active && p->pathType == PATH_CURRENT)
+				if (p->active)
 				{
 					for (int n = 1; n < p->nodes.size(); n++)
 					{
@@ -1718,9 +1631,9 @@ bool Entity::updateCurrents(float dt)
 			if (getEntityType() == ET_AVATAR)
 			{
 				if (v < 0)
-					dsq->rumble((-v)*scale, (1.0+v)*scale, 0.2);
+					dsq->rumble((-v)*scale, (1.0f+v)*scale, 0.2);
 				else
-					dsq->rumble((1.0-v)*scale, (v)*scale, 0.1);
+					dsq->rumble((1.0f-v)*scale, (v)*scale, 0.1);
 			}
 		}
 	}
@@ -1943,14 +1856,6 @@ void Entity::onUpdate(float dt)
 	}
 	vel2.update(dt);
 
-	if (saytext)
-	{
-		if (sayPosition.isZero())
-			saytext->position = position + sayOffset;
-		else
-			saytext->position = sayPosition;
-	}
-
 	if (boneLockDelay > 0)
 	{
 		boneLockDelay -= dt;
@@ -2010,10 +1915,11 @@ void Entity::onUpdate(float dt)
 		*/
 
 		slowingToStopPathTimer += dt;
+		position.ensureData();
 		if (slowingToStopPathTimer >= slowingToStopPath)
 		{
 			// done
-			position.pathTimeMultiplier = 1;
+			position.data->pathTimeMultiplier = 1;
 //			stopFollowingPath();
 			idle();
 			slowingToStopPath = 0;
@@ -2021,7 +1927,7 @@ void Entity::onUpdate(float dt)
 		}
 		else
 		{
-			position.pathTimeMultiplier = 1.0 - (slowingToStopPathTimer / slowingToStopPath);
+			position.data->pathTimeMultiplier = 1.0f - (slowingToStopPathTimer / slowingToStopPath);
 		}
 	}
 
@@ -2035,7 +1941,8 @@ void Entity::onUpdate(float dt)
 
 	if (burstTimer.updateCheck(dt))
 	{
-		position.pathTimeMultiplier = 1;
+		position.ensureData();
+		position.data->pathTimeMultiplier = 1;
 	}
 
 	if (poisonTimer.updateCheck(dt))
@@ -2054,7 +1961,7 @@ void Entity::onUpdate(float dt)
 				DamageData d;
 				d.damageType = DT_ENEMY_ACTIVEPOISON;
 				d.useTimer = false;
-				d.damage = 0.5*poison;
+				d.damage = 0.5f*poison;
 				damage(d);
 
 				dsq->spawnParticleEffect("PoisonBubbles", position);
@@ -2150,7 +2057,7 @@ void Entity::onUpdate(float dt)
 				PathNode *previousNode = &followingPath->nodes[currentPathNode-1];
 				distBetweenNodes = (node->position - previousNode->position).getLength2D();
 			}
-			setMaxSpeed(lastPathMaxSpeed + (ms - lastPathMaxSpeed)*(1.0-(distFromNode/distBetweenNodes)));
+			setMaxSpeed(lastPathMaxSpeed + (ms - lastPathMaxSpeed)*(1.0f-(distFromNode/distBetweenNodes)));
 		}
 		//setMaxSpeed(ms);
 		Vector diffVec = (node->position - this->position);
@@ -2345,11 +2252,10 @@ void Entity::idle()
 	onIdle();
 
 	skeletalSprite.transitionAnimate(getIdleAnimName(), 0.3, -1);
-	rotateToVec(Vector(0,-1),0);
 	rotateToVec(Vector(0,-1),0.1);
 	vel.capLength2D(50);
 
-	setRiding(false);
+	setRiding(0);
 }
 
 void Entity::updateLance(float dt)
@@ -2370,7 +2276,7 @@ void Entity::updateLance(float dt)
 		{
 			lanceGfx->fhTo(_fh);
 			lanceDelay = lanceDelay + dt;
-			if (lanceDelay > 0.1)
+			if (lanceDelay > 0.1f)
 			{
 				lanceDelay = 0;
 				dsq->game->fireShot("Lance", this, 0, lanceGfx->getWorldCollidePosition(Vector(-64, 0)));
@@ -2448,7 +2354,7 @@ void Entity::detachEntity(Entity *e)
 	}
 }
 
-//if (fabs(rotation.z - angle) > 180)
+//if (fabsf(rotation.z - angle) > 180)
 //{
 //	rotation.z += 360;
 //}
@@ -2491,7 +2397,7 @@ void Entity::rotateToVec(Vector addVec, float time, int offsetAngle)
 		*/
 
 		/*
-		if (fabs(angle - rotation.z) > 180)
+		if (fabsf(angle - rotation.z) > 180)
 		{
 			// something's wrong
 			rotation.z += 360;
@@ -2741,7 +2647,7 @@ Entity *Entity::findTarget(int dist, int type, int t)
 		FOR_ENTITIES(i)
 		{
 			Entity *e = *i;
-			if (e != this && e->getEntityType() == type && e->isEntityDead() && e->health > 0)
+			if (e != this && e->getEntityType() == type && e->health > 0)
 			{
 				int d = (e->position - this->position).getSquaredLength2D();
 				if (d < sqr(dist) && (d < closestDist || closestDist == -1))
@@ -2852,7 +2758,7 @@ void Entity::onEnterState(int action)
 		if (!isGoingToBeEaten())
 		{
 			if (!deathSound.empty())
-				sound(deathSound, (800 + rand()%400)/1000.0);
+				sound(deathSound, (800 + rand()%400)/1000.0f);
 		}
 		else
 		{
@@ -2910,10 +2816,11 @@ void Entity::freeze(float time)
 		bubble->position = this->position;
 		bubble->scale = Vector(0.2,0.2);
 		bubble->scale.interpolateTo(Vector(2,2), 0.5, 0, 0, 1);
-		bubble->alpha.path.addPathNode(0.5, 0);
-		bubble->alpha.path.addPathNode(0.5, 0.75);
-		bubble->alpha.path.addPathNode(0, 1);
-		bubble->alpha.startPath(time+time*0.25);
+		bubble->alpha.ensureData();
+		bubble->alpha.data->path.addPathNode(0.5, 0);
+		bubble->alpha.data->path.addPathNode(0.5, 0.75);
+		bubble->alpha.data->path.addPathNode(0, 1);
+		bubble->alpha.startPath(time+time*0.25f);
 		core->getTopStateData()->addRenderObject(bubble, LR_PARTICLES);
 
 	}
@@ -3025,16 +2932,10 @@ void Entity::setInvincible(bool inv)
 
 bool Entity::isInDarkness()
 {
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (Element *e = dsq->getFirstElementOnLayer(12); e; e = e->bgLayerNext)
 	{
-		Element *e = dsq->elements[i];
-		if (e->bgLayer == 12)
-		{
-			if (e->isCoordinateInside(position))
-			{
-				return true;
-			}
-		}
+		if (e->isCoordinateInside(position))
+			return true;
 	}
 	return false;
 }
@@ -3066,11 +2967,9 @@ bool Entity::canSetState(int state)
 
 bool Entity::updateLocalWarpAreas(bool affectAvatar)
 {
-	int i = 0;
-	for (i = 0; i < dsq->game->paths.size(); i++)
+	for (int i = 0; i < dsq->game->getNumPaths(); i++)
 	{
-		bool warp = false;
-		Path *p = dsq->game->paths[i];
+		Path *p = dsq->game->getPath(i);
 		if (!p->nodes.empty())
 		{
 			PathNode *n = &p->nodes[0];
@@ -3298,18 +3197,14 @@ void Entity::render()
 	InterpolatedVector bcolor = color;
 	InterpolatedVector bscale = scale;
 
-	scale = scale * flipScale;
-
+	scale *= flipScale;
 	if (multColor.isInterpolating())
 	{
-		color = dsq->game->sceneColor * color * multColor * dsq->game->sceneColor2 * dsq->game->sceneColor3;
-	}
-	else
-	{
-		color = dsq->game->sceneColor * color * dsq->game->sceneColor2 * dsq->game->sceneColor3;
+		color *= multColor;
 	}
 
-	if (dsq->game->sceneEditor.isOn() && dsq->game->sceneEditor.editType == ET_ENTITIES)
+#ifdef AQUARIA_BUILD_SCENEEDITOR
+	if (dsq->game->isSceneEditorActive() && dsq->game->sceneEditor.editType == ET_ENTITIES)
 	{
 		if (dsq->game->sceneEditor.editingEntity == this)
 			renderBorderColor = Vector(1,1,1);
@@ -3318,10 +3213,10 @@ void Entity::render()
 		renderBorder = true;
 		//errorLog("!^!^$");
 	}
+#endif
+
 	// HACK: need to multiply base + etc
-	//skeletalSprite.shareColor(this->color);
-	skeletalSprite.multiplyColor(this->color);
-	skeletalSprite.multiplyAlpha(this->alpha);
+	skeletalSprite.setColorMult(this->color, this->alpha.x);
 	bool set=false;
 	if (beautyFlip && blurShader.isLoaded() && flipScale.isInterpolating() && dsq->user.video.blur)
 	{
@@ -3340,8 +3235,7 @@ void Entity::render()
 	if (set)
 		blurShader.unbind();
 	renderBorder = false;
-	skeletalSprite.multiplyColor(this->color, true);
-	skeletalSprite.multiplyAlpha(this->alpha, true);
+	skeletalSprite.clearColorMult();
 	color = bcolor;
 	scale = bscale;
 }
@@ -3356,9 +3250,10 @@ void Entity::doGlint(const Vector &position, const Vector &scale, const std::str
 	glint->scale = Vector(0.5,0.5);
 	glint->position = position;
 	glint->scale.interpolateTo(scale, glintTime);
-	glint->alpha.path.addPathNode(1, 0);
-	glint->alpha.path.addPathNode(1, 0.7);
-	glint->alpha.path.addPathNode(0, 1);
+	glint->alpha.ensureData();
+	glint->alpha.data->path.addPathNode(1, 0);
+	glint->alpha.data->path.addPathNode(1, 0.7);
+	glint->alpha.data->path.addPathNode(0, 1);
 	glint->alpha.startPath(glintTime);
 	//glint->rotation.interpolateTo(Vector(0,0,360), glintTime);
 	glint->rotation.z = this->rotation.z;
@@ -3438,25 +3333,29 @@ void Entity::fillGrid()
 
 void Entity::assignUniqueID()
 {
-	int c=1;
+	int id = 1;
 	while (1)
 	{
-		FOR_ENTITIES_EXTERN(i)
+		bool isFree = true;
+		FOR_ENTITIES(i)
 		{
 			Entity *e = *i;
 			if (e != this)
 			{
-				if (e->getID() == c)
+				if (e->getID() == id)
+				{
+					isFree = false;
 					break;
+				}
 			}
 		}
-		if (i == dsq->entities.end())
+		if (isFree)
 		{
 			break;
 		}
-		c++;
+		id++;
 	}
-	entityID = c;
+	entityID = id;
 }
 
 void Entity::setID(int id)
@@ -3508,7 +3407,7 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, i
 		{
 			Vector a = position - waterBubble->nodes[0].position;
 			Vector b = a;
-			b.setLength2D((waterBubble->rect.getWidth()*0.5) - b.getLength2D());
+			b.setLength2D((waterBubble->rect.getWidth()*0.5f) - b.getLength2D());
 			if (b.isLength2DIn(search*TILE_SIZE))
 			{
 				/*
@@ -3532,7 +3431,7 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, i
 	TileVector t(position);
 	TileVector useTile;
 
-	float totalDist = sqrt(float(sqr((search*2)*TILE_SIZE)+sqr((search*2)*TILE_SIZE)));
+	float totalDist = sqrtf(float(sqr((search*2)*TILE_SIZE)+sqr((search*2)*TILE_SIZE)));
 	for (int x = -search; x <= search; x++)
 	{
 		for (int y = -search; y <= search; y++)
@@ -3565,9 +3464,8 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, i
 	}
 	if (c > 0)
 	{
-		accum /= float(c);
-		accum /= totalDist/2;
-		accum.setLength2D(1.0 - accum.getLength2D());
+		accum /= float(c) * (totalDist/2);
+		accum.setLength2D(1.0f - accum.getLength2D());
 		if (onlyVP)
 		{
 			*vp += accum*overrideMaxSpeed*mod;

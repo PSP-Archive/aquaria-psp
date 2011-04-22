@@ -2,6 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(Aquaria)
 
 INCLUDE(CheckCCompilerFlag)
+INCLUDE(CheckFunctionExists)
 
 IF(NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "None Debug Release RelWithDebInfo MinSizeRel" FORCE)
@@ -27,23 +28,116 @@ ADD_DEFINITIONS(-DBBGE_BUILD_ACHIEVEMENTS_INTERNAL=1)
 
 SET(BBGEDIR ${CMAKE_CURRENT_SOURCE_DIR}/BBGE)
 SET(SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/Aquaria)
-SET(LUADIR ${CMAKE_CURRENT_SOURCE_DIR}/Aquaria/lua-5.1.4)
-SET(LUASRCDIR ${LUADIR}/src)
+SET(EXTLIBDIR ${CMAKE_CURRENT_SOURCE_DIR}/ExternalLibs)
 
-# Find SDL or use the included library if applicable
+SET(FTGLDIR ${EXTLIBDIR}/FTGL)
+SET(FTGLSRCDIR ${FTGLDIR}/src)
+SET(FREETYPE2DIR ${EXTLIBDIR}/freetype2)
+SET(FREETYPE2SRCDIR ${FREETYPE2DIR}/src)
+SET(LUADIR ${EXTLIBDIR}/lua-5.1.4)
+SET(LUASRCDIR ${LUADIR}/src)
+SET(LIBOGGDIR ${EXTLIBDIR}/libogg-1.2.0)
+SET(LIBVORBISDIR ${EXTLIBDIR}/libvorbis-1.3.1)
+
+################ Look for external libraries
+
+### FreeType
+
+OPTION(AQUARIA_INTERNAL_FREETYPE "Always use included FreeType library" FALSE)
+if(NOT AQUARIA_INTERNAL_FREETYPE)
+    find_package(Freetype)
+endif(NOT AQUARIA_INTERNAL_FREETYPE)
+if(NOT FREETYPE_FOUND)
+    set(FREETYPE_INCLUDE_DIRS ${FREETYPE2DIR}/include)
+endif(NOT FREETYPE_FOUND)
+
+### Lua
+
+OPTION(AQUARIA_INTERNAL_LUA "Always use included Lua library" FALSE)
+if(NOT AQUARIA_INTERNAL_LUA)
+    find_package(Lua51)
+endif(NOT AQUARIA_INTERNAL_LUA)
+if(NOT LUA51_FOUND)
+    set(LUA_INCLUDE_DIR ${LUASRCDIR})
+endif(NOT LUA51_FOUND)
+
+### Ogg/Vorbis
+
+OPTION(AQUARIA_INTERNAL_OGGVORBIS "Always use included Ogg/Vorbis libraries" FALSE)
+if(NOT AQUARIA_INTERNAL_OGGVORBIS)
+    # CMake doesn't seem to have a module for libogg or libvorbis yet, so
+    # we roll our own based on existing find_package modules.
+
+    find_path(OGG_INCLUDE_DIR ogg.h
+        HINTS $ENV{OGG_DIR}
+        PATH_SUFFIXES include/ogg include
+        PATHS ~/Library/Frameworks /Library/Frameworks /usr/local /usr /sw /opt/local /opt/csw /opt
+    )
+    find_library(OGG_LIBRARY
+        NAMES ogg
+        HINTS $ENV{OGG_DIR}
+        PATH_SUFFIXES lib64 lib
+        PATHS ~/Library/Frameworks /Library/Frameworks /usr/local /usr /sw /opt/local /opt/csw /opt
+    )
+
+    if(OGG_LIBRARY)
+
+        find_path(VORBIS_INCLUDE_DIR vorbisfile.h
+            HINTS $ENV{VORBIS_DIR}
+            PATH_SUFFIXES include/vorbis include
+            PATHS ~/Library/Frameworks /Library/Frameworks /usr/local /usr /sw /opt/local /opt/csw /opt
+        )
+        find_library(VORBIS_LIBRARY
+            NAMES vorbis
+            HINTS $ENV{VORBIS_DIR}
+            PATH_SUFFIXES lib64 lib
+            PATHS ~/Library/Frameworks /Library/Frameworks /usr/local /usr /sw /opt/local /opt/csw /opt
+        )
+        find_library(VORBISFILE_LIBRARY
+            NAMES vorbisfile
+            HINTS $ENV{VORBIS_DIR}
+            PATH_SUFFIXES lib64 lib
+            PATHS ~/Library/Frameworks /Library/Frameworks /usr/local /usr /sw /opt/local /opt/csw /opt
+        )
+
+        if(VORBIS_LIBRARY AND VORBISFILE_LIBRARY)
+            set(OGGVORBIS_INCLUDE_DIRS "${OGG_INCLUDE_DIR};${VORBIS_INCLUDE_DIR}" CACHE STRING "Ogg/Vorbis include directories")
+            if(UNIX AND NOT APPLE)
+                find_library(VORBIS_MATH_LIBRARY m)
+                set(OGGVORBIS_LIBRARIES "${VORBISFILE_LIBRARY};${VORBIS_LIBRARY};${VORBIS_MATH_LIBRARY};${OGG_LIBRARY}" CACHE STRING "Ogg/Vorbis libraries")
+            else(UNIX AND NOT APPLE)
+                set(OGGVORBIS_LIBRARIES "${VORBISFILE_LIBRARY};${VORBIS_LIBRARY};${OGG_LIBRARY}" CACHE STRING "Ogg/Vorbis libraries")
+            endif(UNIX AND NOT APPLE)
+        endif(VORBIS_LIBRARY AND VORBISFILE_LIBRARY)
+
+    endif(OGG_LIBRARY)
+
+    find_package_handle_standard_args(OggVorbis  DEFAULT_MSG  OGGVORBIS_LIBRARIES OGGVORBIS_INCLUDE_DIRS)
+
+    mark_as_advanced(OGG_INCLUDE_DIR VORBIS_INCLUDE_DIR OGGVORBIS_INCLUDE_DIRS)
+    mark_as_advanced(OGG_LIBRARY VORBIS_LIBRARY VORBISFILE_LIBRARY VORBIS_MATH_LIBRARY OGGVORBIS_LIBRARIES)
+
+endif(NOT AQUARIA_INTERNAL_OGGVORBIS)
+
+if(NOT OGGVORBIS_FOUND)
+    set(OGGVORBIS_INCLUDE_DIRS ${LIBOGGDIR}/include ${LIBVORBISDIR}/include)
+endif(NOT OGGVORBIS_FOUND)
+
+### SDL
+
 OPTION(AQUARIA_INTERNAL_SDL "Always use included SDL library" FALSE)
 if(NOT AQUARIA_INTERNAL_SDL)
     find_package(SDL)
 endif(NOT AQUARIA_INTERNAL_SDL)
 if (NOT SDL_FOUND)
     if(MACOSX)
-        set(SDLDIR "${BBGEDIR}/SDL12")
+        set(SDLDIR "${EXTLIBDIR}/SDL12")
         set(SDL_INCLUDE_DIR "${SDLDIR}/include")
         message(STATUS "Using internal copy of SDL")
         set(SDL_LIBRARY "${SDLDIR}/lib/macosx/libSDL-1.2.0.dylib;${SDLDIR}/lib/macosx/libSDLmain.a")
     elseif(WIN32)
         if(MSVC)
-            set(SDLDIR "${BBGEDIR}/SDL12")
+            set(SDLDIR "${EXTLIBDIR}/SDL12")
             set(SDL_INCLUDE_DIR "${SDLDIR}/include" CACHE PATH "SDL include directory" FORCE)
             message(STATUS "Using internal copy of SDL")
             set(SDLMAIN_LIBRARY "${SDLDIR}/lib/win32/SDLmain.lib" CACHE INTERNAL "")
@@ -57,7 +151,8 @@ if (NOT SDL_FOUND)
     endif(MACOSX)
 endif (NOT SDL_FOUND)
 
-# Find OpenAL or use the included library if applicable
+### OpenAL
+
 OPTION(AQUARIA_INTERNAL_OPENAL "Always use included OpenAL library" FALSE)
 if(NOT AQUARIA_INTERNAL_OPENAL)
     find_package(OpenAL)
@@ -65,7 +160,7 @@ endif(NOT AQUARIA_INTERNAL_OPENAL)
 if (NOT OPENAL_FOUND)
     if(WIN32)
         if(MSVC)
-            set(OPENALDIR "${BBGEDIR}/AL")
+            set(OPENALDIR "${EXTLIBDIR}/AL")
             set(OPENAL_INCLUDE_DIR "${OPENALDIR}/include" CACHE PATH "OpenAL include directory" FORCE)
             message(STATUS "Using internal copy of OpenAL")
             set(OPENAL_LIBRARY "${OPENALDIR}/lib/win32/OpenAL32.lib" CACHE FILEPATH "Where the OpenAL library can be found" FORCE)
@@ -77,27 +172,28 @@ if (NOT OPENAL_FOUND)
     endif(WIN32)
 endif (NOT OPENAL_FOUND)
 
-SET(FTGLDIR ${BBGEDIR}/FTGL)
-SET(FTGLSRCDIR ${FTGLDIR}/src)
-SET(FREETYPE2DIR ${BBGEDIR}/freetype2)
-SET(FREETYPE2SRCDIR ${FREETYPE2DIR}/src)
-SET(LIBOGGDIR ${BBGEDIR}/libogg-1.1.3)
-SET(LIBVORBISDIR ${BBGEDIR}/libvorbis-1.1.2)
+################ End of external libraries
 
 INCLUDE_DIRECTORIES(${BBGEDIR})
 INCLUDE_DIRECTORIES(${BBGEDIR}/GL)
-INCLUDE_DIRECTORIES(${BBGEDIR}/glpng/zlib)
+INCLUDE_DIRECTORIES(${EXTLIBDIR}/glpng/zlib)
 INCLUDE_DIRECTORIES(${SRCDIR})
-INCLUDE_DIRECTORIES(${SDL_INCLUDE_DIR})
-INCLUDE_DIRECTORIES(${LUASRCDIR})
 INCLUDE_DIRECTORIES(${FTGLDIR}/include)
-INCLUDE_DIRECTORIES(${FREETYPE2DIR}/include)
+INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${OGGVORBIS_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${SDL_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIR})
-INCLUDE_DIRECTORIES(${LIBOGGDIR}/include)
-INCLUDE_DIRECTORIES(${LIBVORBISDIR}/include)
 
 # !!! FIXME: don't use fmod!
 #INCLUDE_DIRECTORIES("${BBGEDIR}/fmodapi42604linux64/api/inc")
+
+# Custom build ID: e.g. "-custom", " (my very own build)"
+SET(AQUARIA_CUSTOM_BUILD_ID "" CACHE STRING
+    "Text to append to the Aquaria version ID on the title screen.")
+if (NOT(AQUARIA_CUSTOM_BUILD_ID STREQUAL ""))
+  ADD_DEFINITIONS("-DAQUARIA_CUSTOM_BUILD_ID=\"${AQUARIA_CUSTOM_BUILD_ID}\"")
+endif (NOT(AQUARIA_CUSTOM_BUILD_ID STREQUAL ""))
 
 # Aquaria/BBGE specific defines...
 ADD_DEFINITIONS(-DGL_GLEXT_LEGACY=1)
@@ -112,6 +208,8 @@ ADD_DEFINITIONS(-DBBGE_BUILD_WIDESCREEN=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_FMOD_OPENAL_BRIDGE=1)
 ADD_DEFINITIONS(-DAQUARIA_NODRM=1)
 ADD_DEFINITIONS(-DAQUARIA_FULL=1)
+ADD_DEFINITIONS(-DAQUARIA_BUILD_CONSOLE=1)
+ADD_DEFINITIONS(-DAQUARIA_BUILD_SCENEEDITOR=1)
 
 IF(UNIX)
     ADD_DEFINITIONS(-DBBGE_BUILD_UNIX=1)
@@ -150,6 +248,11 @@ IF(CMAKE_COMPILER_IS_GNUCC)
         SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
     ENDIF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
+
+CHECK_FUNCTION_EXISTS(strcasecmp HAVE_STRCASECMP)
+IF(HAVE_STRCASECMP)
+    ADD_DEFINITIONS(-DHAVE_STRCASECMP)
+ENDIF(HAVE_STRCASECMP)
 
 # Main game source code for Aquaria, minus engine and other middleware...
 SET(AQUARIA_SRCS
@@ -228,29 +331,6 @@ ENDIF(MACOSX)
 
 # Bit Blot Game Engine sources...
 SET(BBGE_SRCS
-    ${BBGEDIR}/glfont2/glfont2.cpp
-    ${BBGEDIR}/glpng/glpng.c
-    ${BBGEDIR}/glpng/png/png.c
-    ${BBGEDIR}/glpng/png/pngerror.c
-    ${BBGEDIR}/glpng/png/pngget.c
-    ${BBGEDIR}/glpng/png/pngmem.c
-    ${BBGEDIR}/glpng/png/pngpread.c
-    ${BBGEDIR}/glpng/png/pngread.c
-    ${BBGEDIR}/glpng/png/pngrio.c
-    ${BBGEDIR}/glpng/png/pngrtran.c
-    ${BBGEDIR}/glpng/png/pngrutil.c
-    ${BBGEDIR}/glpng/png/pngset.c
-    ${BBGEDIR}/glpng/png/pngtrans.c
-    ${BBGEDIR}/glpng/zlib/adler32.c
-    ${BBGEDIR}/glpng/zlib/crc32.c
-    ${BBGEDIR}/glpng/zlib/compress.c
-    ${BBGEDIR}/glpng/zlib/deflate.c
-    ${BBGEDIR}/glpng/zlib/inffast.c
-    ${BBGEDIR}/glpng/zlib/inflate.c
-    ${BBGEDIR}/glpng/zlib/inftrees.c
-    ${BBGEDIR}/glpng/zlib/trees.c
-    ${BBGEDIR}/glpng/zlib/uncompr.c
-    ${BBGEDIR}/glpng/zlib/zutil.c
     ${BBGEDIR}/ActionInput.cpp
     ${BBGEDIR}/ActionMapper.cpp
     ${BBGEDIR}/ActionSet.cpp
@@ -277,7 +357,6 @@ SET(BBGE_SRCS
     ${BBGEDIR}/LightCone.cpp
     ${BBGEDIR}/Light.cpp
     ${BBGEDIR}/Math.cpp
-    ${BBGEDIR}/PackRead.cpp
     ${BBGEDIR}/ParticleEffect.cpp
     ${BBGEDIR}/ParticleManager.cpp
     ${BBGEDIR}/Particles.cpp
@@ -300,13 +379,36 @@ SET(BBGE_SRCS
     ${BBGEDIR}/StateManager.cpp
     ${BBGEDIR}/Strings.cpp
     ${BBGEDIR}/Texture.cpp
-    ${BBGEDIR}/tinyxml.cpp
-    ${BBGEDIR}/tinyxmlerror.cpp
-    ${BBGEDIR}/tinyxmlparser.cpp
     ${BBGEDIR}/TTFFont.cpp
     ${BBGEDIR}/Vector.cpp
     ${BBGEDIR}/FmodOpenALBridge.cpp
     ${COCOA_SRCS}
+    ${EXTLIBDIR}/glfont2/glfont2.cpp
+    ${EXTLIBDIR}/glpng/glpng.c
+    ${EXTLIBDIR}/glpng/png/png.c
+    ${EXTLIBDIR}/glpng/png/pngerror.c
+    ${EXTLIBDIR}/glpng/png/pngget.c
+    ${EXTLIBDIR}/glpng/png/pngmem.c
+    ${EXTLIBDIR}/glpng/png/pngpread.c
+    ${EXTLIBDIR}/glpng/png/pngread.c
+    ${EXTLIBDIR}/glpng/png/pngrio.c
+    ${EXTLIBDIR}/glpng/png/pngrtran.c
+    ${EXTLIBDIR}/glpng/png/pngrutil.c
+    ${EXTLIBDIR}/glpng/png/pngset.c
+    ${EXTLIBDIR}/glpng/png/pngtrans.c
+    ${EXTLIBDIR}/glpng/zlib/adler32.c
+    ${EXTLIBDIR}/glpng/zlib/crc32.c
+    ${EXTLIBDIR}/glpng/zlib/compress.c
+    ${EXTLIBDIR}/glpng/zlib/deflate.c
+    ${EXTLIBDIR}/glpng/zlib/inffast.c
+    ${EXTLIBDIR}/glpng/zlib/inflate.c
+    ${EXTLIBDIR}/glpng/zlib/inftrees.c
+    ${EXTLIBDIR}/glpng/zlib/trees.c
+    ${EXTLIBDIR}/glpng/zlib/uncompr.c
+    ${EXTLIBDIR}/glpng/zlib/zutil.c
+    ${EXTLIBDIR}/tinyxml.cpp
+    ${EXTLIBDIR}/tinyxmlerror.cpp
+    ${EXTLIBDIR}/tinyxmlparser.cpp
 )
 
 # Apparently not used at the moment. Listed here just for completeness.
@@ -317,6 +419,7 @@ SET(BBGE_SRCS_UNUSED
     ${BBGEDIR}/FileVars.cpp
     ${BBGEDIR}/Model.cpp
     ${BBGEDIR}/OggStream.cpp
+    ${BBGEDIR}/PackRead.cpp
     ${BBGEDIR}/PointSprites.cpp
 )
 
@@ -414,9 +517,16 @@ IF(MSVC)
         PROPERTIES COMPILE_FLAGS "-DFT_CONFIG_OPTION_SYSTEM_ZLIB -DFT2_BUILD_LIBRARY -I${FREETYPE2SRCDIR} -I${FREETYPE2DIR}/include/freetype/config -DHAVE_FCNTL_H"
     )
 ELSE(MSVC)
+    # FT2 seems to not be strict-aliasing safe, so disable that in GCC.
+    CHECK_C_COMPILER_FLAG("-fno-strict-aliasing" COMPILER_HAS_NOSTRICTALIAS)
+    IF(COMPILER_HAS_NOSTRICTALIAS)
+        SET(NOSTRICTALIAS "-fno-strict-aliasing")
+    ELSE(COMPILER_HAS_NOSTRICTALIAS)
+        SET(NOSTRICTALIAS "")
+    ENDIF(COMPILER_HAS_NOSTRICTALIAS)
     SET_SOURCE_FILES_PROPERTIES(
         ${FREETYPE2_SRCS}
-        PROPERTIES COMPILE_FLAGS "-DFT_CONFIG_OPTION_SYSTEM_ZLIB -DFT_CONFIG_CONFIG_H='\"${FREETYPE2DIR}/include/freetype/config/ftconfig.h\"' -DFT2_BUILD_LIBRARY -DFT_CONFIG_MODULES_H='\"${FREETYPE2DIR}/include/freetype/config/ftmodule.h\"' -I${FREETYPE2SRCDIR} -I${FREETYPE2DIR}/include/freetype/config -DHAVE_FCNTL_H"
+        PROPERTIES COMPILE_FLAGS "-DFT_CONFIG_OPTION_SYSTEM_ZLIB -DFT_CONFIG_CONFIG_H='\"${FREETYPE2DIR}/include/freetype/config/ftconfig.h\"' -DFT2_BUILD_LIBRARY -DFT_CONFIG_MODULES_H='\"${FREETYPE2DIR}/include/freetype/config/ftmodule.h\"' -I${FREETYPE2SRCDIR} -I${FREETYPE2DIR}/include/freetype/config -DHAVE_FCNTL_H ${NOSTRICTALIAS}"
     )
 ENDIF(MSVC)
 
@@ -448,27 +558,42 @@ SET(LUA_SRCS
     ${LUASRCDIR}/lmathlib.c
 )
 
-ADD_EXECUTABLE(aquaria
-    ${AQUARIA_SRCS}
-    ${LUA_SRCS}
-    ${BBGE_SRCS}
-    ${FREETYPE2_SRCS}
-    ${OGGVORBIS_SRCS}
-    ${FTGL_SRCS}
-    ${OPTIONAL_SRCS}
-)
 
 IF(MACOSX)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework Carbon")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework Cocoa")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework OpenGL")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework OpenAL")
-    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "${SDL_LIBRARY}")
-    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "${OPENAL_LIBRARY}")
-    TARGET_LINK_LIBRARIES(aquaria ${OPTIONAL_LIBS})
-ELSE(MACOSX)
-    TARGET_LINK_LIBRARIES(aquaria ${SDL_LIBRARY} ${OPENAL_LIBRARY})
 ENDIF(MACOSX)
+
+SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${SDL_LIBRARY})
+SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${OPENAL_LIBRARY})
+
+IF(FREETYPE_FOUND)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${FREETYPE_LIBRARIES})
+ELSE(FREETYPE_FOUND)
+    SET(OPTIONAL_SRCS ${OPTIONAL_SRCS} ${FREETYPE2_SRCS})
+ENDIF(FREETYPE_FOUND)
+
+IF(LUA51_FOUND)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${LUA_LIBRARIES})
+ELSE(LUA51_FOUND)
+    SET(OPTIONAL_SRCS ${OPTIONAL_SRCS} ${LUA_SRCS})
+ENDIF(LUA51_FOUND)
+
+IF(OGGVORBIS_FOUND)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${OGGVORBIS_LIBRARIES})
+ELSE(OGGVORBIS_FOUND)
+    SET(OPTIONAL_SRCS ${OPTIONAL_SRCS} ${OGGVORBIS_SRCS})
+ENDIF(OGGVORBIS_FOUND)
+
+ADD_EXECUTABLE(aquaria
+    ${AQUARIA_SRCS}
+    ${BBGE_SRCS}
+    ${FTGL_SRCS}
+    ${OPTIONAL_SRCS}
+)
+TARGET_LINK_LIBRARIES(aquaria ${OPTIONAL_LIBS})
 
 # end of CMakeLists.txt ...
 

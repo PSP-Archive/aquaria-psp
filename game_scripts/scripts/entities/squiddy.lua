@@ -17,25 +17,26 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- S Q U I D D Y
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
 -- entity specific
-STATE_FIREPREP			= 1000
-STATE_FIRE				= 1001
-STATE_LUNGE				= 1002
+local STATE_FIREPREP		= 1000
+local STATE_FIRE			= 1001
+local STATE_LUNGE			= 1002
 
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
- fireDelay = 1.4
- lungeDelay = 2
+v.fireDelay = 1.4
+v.lungeDelay = 2
  
- n = 0
+v.n = 0
  
 -- ================================================================================================
 -- FUNCTIONS
@@ -65,7 +66,7 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 
@@ -76,22 +77,22 @@ function update(me, dt)
 		if not(entity_hasTarget(me)) then
 			entity_findTarget(me, 1000)
 		else
-			if fireDelay > 0 then
-				fireDelay = fireDelay - dt
-				if fireDelay < 0 then
-					fireDelay = 3
+			if v.fireDelay > 0 then
+				v.fireDelay = v.fireDelay - dt
+				if v.fireDelay < 0 then
+					v.fireDelay = 3
 					entity_setState(me, STATE_FIREPREP, 0.5)
 				end
 			end			
-			if lungeDelay > 0 then
-				lungeDelay = lungeDelay - dt
-				if lungeDelay < 0 then
-					lungeDelay = 3
+			if v.lungeDelay > 0 then
+				v.lungeDelay = v.lungeDelay - dt
+				if v.lungeDelay < 0 then
+					v.lungeDelay = 3
 					entity_setState(me, STATE_LUNGE, 2)
 				end
 			end
 			if entity_isTargetInRange(me, 100) then
-				lungeDelay = 4
+				v.lungeDelay = 4
 				entity_setState(me, STATE_LUNGE, 1)
 			elseif entity_isTargetInRange(me, 200) then
 				entity_moveAroundTarget(me, dt, 4000, 0)
@@ -120,8 +121,8 @@ function enterState(me)
 	elseif entity_getState(me)==STATE_FIREPREP then
 		entity_rotateToTarget(me, entity_getStateTime(me), 180)
 	elseif entity_getState(me)==STATE_FIRE then
-		s = createShot("EnemyInk", me, n, entity_x(me), entity_y(me))
-		shot_setAimVector(s, entity_x(n) - entity_x(me), entity_y(n) - entity_y(me))
+		local s = createShot("EnemyInk", me, v.n, entity_x(me), entity_y(me))
+		shot_setAimVector(s, entity_x(v.n) - entity_x(me), entity_y(v.n) - entity_y(me))
 	end
 end
 

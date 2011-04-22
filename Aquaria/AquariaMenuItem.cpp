@@ -115,11 +115,11 @@ void AquariaGuiElement::updateMovement(float dt)
 
 		if (guiMoveTimer==0)
 		{
-			Vector p = core->joystick.position;
 			Direction dir = DIR_NONE;
+			Vector p = core->joystick.position;
 			if (!p.isLength2DIn(0.4))
 			{
-				if (fabs(p.x) > fabs(p.y))
+				if (fabsf(p.x) > fabsf(p.y))
 				{
 					if (p.x > 0)
 						dir = DIR_RIGHT;
@@ -134,8 +134,7 @@ void AquariaGuiElement::updateMovement(float dt)
 						dir = DIR_UP;
 				}
 			}
-
-			if (p.isZero())
+			else
 			{
 				StateObject *obj = dsq->getTopStateObject();
 				if (obj)
@@ -147,7 +146,7 @@ void AquariaGuiElement::updateMovement(float dt)
 				}
 			}
 
-			if (p.isZero()) return;
+			if (dir == DIR_NONE) return;
 
 			const float moveDelay = 0.2;
 
@@ -169,24 +168,22 @@ void AquariaGuiElement::updateMovement(float dt)
 			if (!gui)
 			{
 				debugLog("updating closest");
-				int smallDist = -1,dist=0;
+				int smallDist = -1, dist = 0;
 
-				AquariaGuiElement *gui=0, *closest=0;
-				Vector p1, p2;
-				int go=0;
+				AquariaGuiElement *gui = 0, *closest = 0;
 				int ch = 64;
 				for (GuiElements::iterator i = guiElements.begin(); i != guiElements.end(); i++)
 				{
 					gui = (*i);
 					if (gui != this && gui->isGuiVisible() && gui->canDirMove)
 					{
-						go = 0;
-						p1 = getGuiPosition();
-						p2 = gui->getGuiPosition();
+						int go = 0;
+						Vector p1 = getGuiPosition();
+						Vector p2 = gui->getGuiPosition();
 
 						if (dir == DIR_DOWN)
 						{
-							if (fabs(p1.x - p2.x) < ch)
+							if (fabsf(p1.x - p2.x) < ch)
 							{
 								if (p2.y > p1.y) go = 1;
 								p1.x = p2.x = 0;
@@ -194,7 +191,7 @@ void AquariaGuiElement::updateMovement(float dt)
 						}
 						else if (dir == DIR_UP)
 						{
-							if (fabs(p1.x - p2.x) < ch)
+							if (fabsf(p1.x - p2.x) < ch)
 							{
 								if (p2.y < p1.y) go = 1;
 								p1.x = p2.x = 0;
@@ -202,7 +199,7 @@ void AquariaGuiElement::updateMovement(float dt)
 						}
 						else if (dir == DIR_RIGHT)
 						{
-							if (fabs(p1.y - p2.y) < ch)
+							if (fabsf(p1.y - p2.y) < ch)
 							{
 								if (p2.x > p1.x) go = 1;
 								p1.y = p2.y = 0;
@@ -210,7 +207,7 @@ void AquariaGuiElement::updateMovement(float dt)
 						}
 						else if (dir == DIR_LEFT)
 						{
-							if (fabs(p1.y - p2.y) < ch)
+							if (fabsf(p1.y - p2.y) < ch)
 							{
 								if (p2.x < p1.x) go = 1;
 								p1.y = p2.y = 0;
@@ -267,7 +264,7 @@ Vector AquariaGuiQuad::getGuiPosition()
 
 bool AquariaGuiQuad::isGuiVisible()
 {
-	return alpha.x > 0 && alphaMod > 0 && renderQuad;
+	return !isHidden() && alpha.x > 0 && alphaMod > 0 && renderQuad;
 }
 
 void AquariaGuiQuad::update(float dt)
@@ -290,22 +287,83 @@ void AquariaGuiQuad::onUpdate(float dt)
 	Quad::onUpdate(dt);
 }
 
+// Joystick input threshold at which we start sliding (0.0-1.0); must be
+// less than updateMovement() threshold.
+const float SLIDER_JOY_THRESHOLD = 0.39;
+// Initial delay before repeating for slider input (seconds).
+const float SLIDER_REPEAT_DELAY = 0.4;
+// Scale factor for delay as repeats continue.
+const float SLIDER_REPEAT_ACCEL = 0.8;
+
 AquariaSlider::AquariaSlider()
 : Slider(90, 12, "gui/slider-bg", "gui/slider-fg"), AquariaGuiElement()
 // len, grab radius
 {
+	inputTimer = inputDelay = 0;
+	_hadInput = false;
 }
 
 void AquariaSlider::onUpdate(float dt)
 {
-	AquariaGuiElement::updateMovement(dt);
 	if (!hasInput())
 	{
+		inputTimer = inputDelay = 0;
+		AquariaGuiElement::updateMovement(dt);
 		RenderObject::onUpdate(dt);
 	}
 	else
 	{
+		if (!doSliderInput(dt))
+			AquariaGuiElement::updateMovement(dt);
 		Slider::onUpdate(dt);
+	}
+}
+
+bool AquariaSlider::doSliderInput(float dt)
+{
+	if (!(core->mouse.position - this->position).isLength2DIn(5))
+		return false;
+
+	float inputAmount;  // How much to adjust by?
+
+	StateObject *obj = dsq->getTopStateObject();
+	if (core->joystick.position.x <= -SLIDER_JOY_THRESHOLD)
+		inputAmount = -0.1f;
+	else if (core->joystick.position.x >= SLIDER_JOY_THRESHOLD)
+		inputAmount = +0.1f;
+	else if (core->joystick.dpadLeft)
+		inputAmount = -0.1f;
+	else if (core->joystick.dpadRight)
+		inputAmount = +0.1f;
+	else if (obj && obj->isActing(ACTION_MENULEFT))
+		inputAmount = -0.1f;
+	else if (obj && obj->isActing(ACTION_MENURIGHT))
+		inputAmount = +0.1f;
+	else
+		inputAmount = 0;
+
+	if (inputAmount != 0)
+	{
+		inputTimer += dt;
+		if (inputTimer >= inputDelay)
+		{
+			float oldValue = value;
+			setValue(value + inputAmount);
+			if (value != oldValue)
+				_hadInput = true;
+
+			inputTimer = 0;
+			if (inputDelay == 0)
+				inputDelay = SLIDER_REPEAT_DELAY;
+			else
+				inputDelay *= SLIDER_REPEAT_ACCEL;
+		}
+		return true;
+	}
+	else
+	{
+		inputTimer = inputDelay = 0;
+		return false;
 	}
 }
 
@@ -322,7 +380,7 @@ Vector AquariaSlider::getGuiPosition()
 
 bool AquariaSlider::isGuiVisible()
 {
-	return alpha.x > 0 && alphaMod > 0;
+	return !isHidden() && alpha.x > 0 && alphaMod > 0;
 }
 
 AquariaCheckBox::AquariaCheckBox()
@@ -356,7 +414,7 @@ Vector AquariaCheckBox::getGuiPosition()
 
 bool AquariaCheckBox::isGuiVisible()
 {
-	return alpha.x > 0 && alphaMod > 0;
+	return !isHidden() && alpha.x > 0 && alphaMod > 0;
 }
 
 
@@ -395,8 +453,6 @@ AquariaKeyConfig::AquariaKeyConfig(const std::string &actionInputName, InputSetT
 	addChild(keyConfigFont, PM_POINTER);
 
 
-	waitingForInput = 0;
-
 	keyDown = false;
 
 	locked = 0;
@@ -409,6 +465,9 @@ void AquariaKeyConfig::destroy()
 {
 	AquariaGuiElement::clean();
 	RenderObject::destroy();
+
+	if (waitingForInput == this)
+		waitingForInput = 0;
 }
 
 Vector AquariaKeyConfig::getGuiPosition()
@@ -418,7 +477,7 @@ Vector AquariaKeyConfig::getGuiPosition()
 
 bool AquariaKeyConfig::isGuiVisible()
 {
-	return alpha.x > 0 && alphaMod > 0;
+	return !isHidden() && alpha.x > 0 && alphaMod > 0;
 }
 
 void AquariaKeyConfig::toggleEnterKey(int on)
@@ -633,7 +692,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 			}
 			else
 			{
-				for (int i = ActionMapper::JOY1_BUTTON_0; i <= ActionMapper::JOY1_BUTTON_12; i++)
+				for (int i = ActionMapper::JOY1_BUTTON_0; i <= ActionMapper::JOY1_BUTTON_16; i++)
 				{
 					if (dsq->game->getKeyState(i))
 					{
@@ -659,8 +718,8 @@ void AquariaKeyConfig::onUpdate(float dt)
 	Vector p = getWorldPosition();
 
 	if (waitingForInput == this || (!waitingForInput &&
-		(core->mouse.position.x > (p.x - bg->getWidth()*0.5) && core->mouse.position.x < (p.x + bg->getWidth()*0.5)
-		 && core->mouse.position.y > (p.y - bg->getHeight()*0.5) && core->mouse.position.y < (p.y + bg->getHeight()*0.5)
+		(core->mouse.position.x > (p.x - bg->getWidth()*0.5f) && core->mouse.position.x < (p.x + bg->getWidth()*0.5f)
+		 && core->mouse.position.y > (p.y - bg->getHeight()*0.5f) && core->mouse.position.y < (p.y + bg->getHeight()*0.5f)
 		 )))
 	{
 		if (waitingForInput != this)
@@ -762,7 +821,7 @@ Vector AquariaMenuItem::getGuiPosition()
 
 bool AquariaMenuItem::isGuiVisible()
 {
-	return alpha.x > 0 && alphaMod > 0;
+	return !isHidden() && alpha.x > 0 && alphaMod > 0;
 }
 
 void AquariaMenuItem::useSound(const std::string &tex)
@@ -912,8 +971,8 @@ bool AquariaMenuItem::isCursorInMenuItem()
 		hw = 64;
 	if (glow)
 	{
-		hw = glow->getWidth()/2.0;
-		hh = glow->getHeight()/2.0;
+		hw = glow->getWidth()/2.0f;
+		hh = glow->getHeight()/2.0f;
 	}
 	if (rotation.z == 90)
 	{

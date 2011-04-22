@@ -164,6 +164,9 @@ namespace FMOD
         FMOD_RESULT setFileSystem(FMOD_FILE_OPENCALLBACK useropen, FMOD_FILE_CLOSECALLBACK userclose, FMOD_FILE_READCALLBACK userread, FMOD_FILE_SEEKCALLBACK userseek, int blockalign);
         FMOD_RESULT setSpeakerMode(FMOD_SPEAKERMODE speakermode);
         FMOD_RESULT update();
+
+	// BBGE-specific...
+	FMOD_RESULT getNumChannels(int *maxchannels_ret);
     };
 
     typedef System FMOD_SYSTEM;

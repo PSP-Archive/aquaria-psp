@@ -51,32 +51,43 @@ void Strand::onUpdate(float dt)
 void Strand::onRender()
 {
 #ifdef BBGE_BUILD_OPENGL
-	if (segments.empty()) return;
+	const int numSegments = segments.size();
+	if (numSegments == 0) return;
+
 	glEnable(GL_BLEND);
 	glTranslatef(-position.x, -position.y, 0);
 	glLineWidth(1);
 
-	glBegin(GL_LINES);
+	glBegin(GL_LINE_STRIP);
 	//glColor4f(0.25,0.25,0.5,1);
-	glColor4f(color.x, color.y, color.z, 1);
+	// Use fixed-point math to speed things up.  --achurch
+	unsigned int r = (unsigned int)(color.x * (255<<8));
+	unsigned int g = (unsigned int)(color.y * (255<<8));
+	unsigned int b = (unsigned int)(color.z * (255<<8));
+	unsigned int a = (255<<8);
+	unsigned int dr = r/50;
+	unsigned int dg = g/50;
+	unsigned int db = b/50;
+	unsigned int da = a/numSegments;
+	glColor4ub(r>>8, g>>8, b>>8, a>>8);
 	glVertex2f(position.x, position.y);
 	glVertex2f(segments[0]->position.x, segments[0]->position.y);
-	float x,y;
-	float bit = 1.0/segments.size();
-	for (int i =0; i < segments.size()-1; i++)
+	const int colorLimit = numSegments<50 ? numSegments : 50;
+	int i;
+	for (i = 1; i < colorLimit; i++)
 	{
-		float d=i*0.02;
-		float d2=i*bit;
-		float used = 1 - d;
-		if (used < 0) used = 0;
-		glColor4f(used*color.x,used*color.y,used*color.z, 1-d2);
-		x = segments[i]->position.x;
-		y = segments[i]->position.y;		
-		glVertex2f(x, y);
-		glColor4f(used*color.x,used*color.y,used*color.z, 1-d2-bit);
-		x = segments[i+1]->position.x;
-		y = segments[i+1]->position.y;
-		glVertex2f(x, y);
+		r -= dr;
+		g -= dg;
+		b -= db;
+		a -= da;
+		glColor4ub(r>>8, g>>8, b>>8, a>>8);
+		glVertex2f(segments[i]->position.x, segments[i]->position.y);
+	}
+	for (; i < numSegments; i++)
+	{
+		a -= da;
+		glColor4ub(0, 0, 0, a>>8);
+		glVertex2f(segments[i]->position.x, segments[i]->position.y);
 	}
 	glEnd();
 #endif

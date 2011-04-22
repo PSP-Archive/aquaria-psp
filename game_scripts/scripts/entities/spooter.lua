@@ -17,26 +17,27 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- S P O O T E R (I C E  S C O O T E R)
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
 -- specific
-STATE_JUMP				= 1000
-STATE_TRANSITION		= 1001
+local STATE_JUMP			= 1000
+local STATE_TRANSITION		= 1001
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-jumpDelay = 0
-moveTimer = 0
-rotateOffset = 0
-hungry = true
-fedTime = 0
-eatTime = 0
-eating = 0
+v.jumpDelay = 0
+v.moveTimer = 0
+v.rotateOffset = 0
+v.hungry = true
+v.fedTime = 0
+v.eatTime = 0
+v.eating = 0
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -71,9 +72,9 @@ function init(me)
 	esetv(me, EV_ENTITYDIED, 1)
 end
 
-function startEating(me, krill)
-	eating = krill
-	hungry = false
+local function startEating(me, krill)
+	v.eating = krill
+	v.hungry = false
 	entity_setState(krill, STATE_WAIT)
 	entity_scale(krill, 0, 0, 1.5)
 	
@@ -81,17 +82,17 @@ function startEating(me, krill)
 	entity_scale(me, 1,0.5, 0.5, -1, 1)	
 end
 
-function clearEating(me)
+local function clearEating(me)
 	entity_scale(me, 1,1)
-	fedTime = 2
-	eatTime = 0
-	eating = 0
-	hungry = false
+	v.fedTime = 2
+	v.eatTime = 0
+	v.eating = 0
+	v.hungry = false
 end
 
 -- warning: only called if EV_ENTITYDIED set to 1!
 function entityDied(me, ent)
-	if ent == eating then
+	if ent == v.eating then
 		clearEating(me)
 	end
 end
@@ -102,21 +103,21 @@ function update(me, dt)
 
 		entity_rotateToSurfaceNormal(me, 0.1)
 
-		if eating==0 then
+		if v.eating==0 then
 			entity_moveAlongSurface(me, dt, 100, 6)
-			moveTimer = moveTimer + dt
-			if moveTimer > 30 then
+			v.moveTimer = v.moveTimer + dt
+			if v.moveTimer > 30 then
 				entity_switchSurfaceDirection(me)
-				moveTimer = 0
+				v.moveTimer = 0
 			end	
 	
 			if not(entity_hasTarget(me)) then
 				entity_findTarget(me, 1200)
 			else
 				if entity_isTargetInRange(me, 600) then
-					jumpDelay = jumpDelay - dt
-					if jumpDelay < 0 then
-						jumpDelay = 3
+					v.jumpDelay = v.jumpDelay - dt
+					if v.jumpDelay < 0 then
+						v.jumpDelay = 3
 						entity_setState(me, STATE_JUMP)
 					end
 				end
@@ -124,11 +125,11 @@ function update(me, dt)
 		end
 		
 	elseif entity_getState(me)==STATE_JUMP then
-		rotateOffset = rotateOffset + dt * 400
-		if rotateOffset > 180 then
-			rotateOffset = 180
+		v.rotateOffset = v.rotateOffset + dt * 400
+		if v.rotateOffset > 180 then
+			v.rotateOffset = 180
 		end
-		entity_rotateToVel(me, 0.1, rotateOffset)
+		entity_rotateToVel(me, 0.1, v.rotateOffset)
 		entity_updateMovement(me, dt)
 		
 	elseif not(entity_isState(me, STATE_TRANSITION)) then
@@ -141,7 +142,7 @@ end
 
 function hitSurface(me)
 	if entity_getState(me)==STATE_JUMP then
-		t = egetvf(me, EV_CLAMPTRANSF)
+		local t = egetvf(me, EV_CLAMPTRANSF)
 		if entity_checkSurface(me, 6, STATE_TRANSITION, t) then
 			entity_rotateToSurfaceNormal(me, 0)
 			entity_scale(me, 1, 0.5)
@@ -149,8 +150,8 @@ function hitSurface(me)
 			entity_setInternalOffset(me, 0, 64)
 			entity_setInternalOffset(me, 0, 0, t)
 		else
-			nx,ny = getWallNormal(entity_getPosition(me))
-			nx,ny = vector_setLength(nx, ny, 400)
+			local nx, ny = getWallNormal(entity_getPosition(me))
+			nx, ny = vector_setLength(nx, ny, 400)
 			entity_addVel(me, nx, ny)
 		end
 		--[[
@@ -166,7 +167,7 @@ function enterState(me)
 	if entity_getState(me)==STATE_IDLE then
 		entity_setMaxSpeed(me, 800)
 	elseif entity_getState(me)==STATE_JUMP then
-		rotateOffset = 0
+		v.rotateOffset = 0
 		entity_applySurfaceNormalForce(me, 800)
 		entity_adjustPositionBySurfaceNormal(me, 10)
 	end

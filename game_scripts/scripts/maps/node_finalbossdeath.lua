@@ -17,33 +17,33 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-ent = 0
-incut = false
+v.ent = 0
+v.incut = false
 
 function init(me)
-	ent = node_getNearestEntity(me, "CreatorForm6")
+	v.ent = node_getNearestEntity(me, "CreatorForm6")
 	
 	loadSound("creatorform6-die3")
 end
 
-function flash()
+local function flash()
 	fade(1, 0, 1, 1, 1)
 	fade(0, 1, 1, 1, 1)
 end
 
 function update(me, dt)
-	if incut then return end
-	incut = true
-	if entity_isState(ent, STATE_TRANSITION) then
-		vision = getNode("VISION")
-		visionNaija = getNode("VISIONNAIJA")
+	if v.incut then return end
+	v.incut = true
+	if entity_isState(v.ent, STATE_TRANSITION) then
+		local vision = getNode("VISION")
+		local visionNaija = getNode("VISIONNAIJA")
 		
-		n = getNaija()
+		local n = getNaija()
 		changeForm(FORM_NORMAL)
 		entity_setInvincible(n)
-		entity_setPosition(ent, entity_x(ent), entity_y(ent), 0.01)
+		entity_setPosition(v.ent, entity_x(v.ent), entity_y(v.ent), 0.01)
 		disableInput()
 		entity_idle(n)
 		
@@ -54,7 +54,7 @@ function update(me, dt)
 		
 		watch(1)
 		
-		entity_flipToEntity(n, ent)
+		entity_flipToEntity(n, v.ent)
 		
 		playMusicOnce("EndingPart1")
 		
@@ -64,42 +64,42 @@ function update(me, dt)
 		fade(1, 0.01, 1, 1, 1)
 		
 		fade(0, 5, 1, 1, 1)
-		entity_msg(ent, "eye")
-		entity_setAnimLayerTimeMult(ent, 0, 1.2)
-		entity_setPosition(ent, entity_x(ent)+600, entity_y(ent), 7)
+		entity_msg(v.ent, "eye")
+		entity_setAnimLayerTimeMult(v.ent, 0, 1.2)
+		entity_setPosition(v.ent, entity_x(v.ent)+600, entity_y(v.ent), 7)
 		playSfx("creatorform6-die3", 0, 0.2)
-		flash() entity_animate(ent, "die1", -1)
+		flash() entity_animate(v.ent, "die1", -1)
 		watch(5)
 		flash()
 		overrideZoom(0.5, 2)
-		entity_msg(ent, "neck")
+		entity_msg(v.ent, "neck")
 		watch(3)
 		overrideZoom(0.4, 5)
 		
-		entity_setAnimLayerTimeMult(ent, 0, 4)
-		flash() entity_animate(ent, "die2", -1)
+		entity_setAnimLayerTimeMult(v.ent, 0, 4)
+		flash() entity_animate(v.ent, "die2", -1)
 		shakeCamera(5, 5)
 		watch(5)
 		overrideZoom(0.3, 9)
-		entity_setAnimLayerTimeMult(ent, 0, 0.5)
+		entity_setAnimLayerTimeMult(v.ent, 0, 0.5)
 		playSfx("creatorform6-die3")
-		flash() entity_animate(ent, "die3", 0)
+		flash() entity_animate(v.ent, "die3", 0)
 		shakeCamera(8, 4)
 		watch(4)
 		shakeCamera(15, 4)
 		watch(4)
-		--entity_setStateTime(ent, 0.01)
+		--entity_setStateTime(v.ent, 0.01)
 		fade(1, 0.5, 1,1,1)
-		entity_setState(ent, STATE_WAIT)
+		entity_setState(v.ent, STATE_WAIT)
 		
 		watch(0.5)
 		
 		
-		entity_update(ent, 0)
+		entity_update(v.ent, 0)
 		
 		entity_setPosition(n, node_x(visionNaija), node_y(visionNaija))
 		cam_toNode(vision)
-		kid = node_getNearestEntity(me, "CC_EndOfGame")
+		local kid = node_getNearestEntity(me, "CC_EndOfGame")
 		entity_color(kid, 0, 0, 0)
 		entity_color(n, 0, 0, 0)
 		
@@ -123,10 +123,10 @@ function update(me, dt)
 		--entity_setStateTime(me, 28 - 22)
 		watch(6)
 		]]--
-		entity_setStateTime(ent, 0.01)
+		entity_setStateTime(v.ent, 0.01)
 		
 		loadMap("eric")
 		--jumpState("credits")
 	end
-	incut = false
+	v.incut = false
 end

@@ -103,7 +103,6 @@ void CollideEntity::updateMovement(float dt)
 {	
 	if (isEntityDead()) return;
 	if (position.isFollowingPath()) return;
-	bool setFromWater=false;
 	vel.capLength2D(getMaxSpeed()*maxSpeedLerp.x);
 	/*
 	if (vel.getSquaredLength2D() > sqr(getMaxSpeed()))
@@ -184,7 +183,6 @@ void CollideEntity::updateMovement(float dt)
 			}
 			
 		}
-		wasUnderWater = underWater;
 	}
 	/*
 	if (!canLeaveWater)
@@ -244,7 +242,7 @@ void CollideEntity::updateMovement(float dt)
 			}
 			else
 			{			
-				if (!freeRange && ((!canLeaveWater && !isUnderWater()) || dsq->game->collideCircleWithGrid(position, hw, &fix)))
+				if (!freeRange && ((!canLeaveWater && !isUnderWater() && wasUnderWater) || dsq->game->collideCircleWithGrid(position, hw, &fix)))
 				{
 					position = lastPosition;
 					onHitWall();
@@ -274,4 +272,6 @@ void CollideEntity::updateMovement(float dt)
 		attachedEntities[i]->position = this->position + attachedEntitiesOffsets[i];
 		attachedEntities[i]->rotation = this->rotation;
 	}	
+
+	wasUnderWater = underWater;
 }

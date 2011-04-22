@@ -17,13 +17,15 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- S M A L L   I C E   C H U N K
 -- ================================================================================================
 dofile("scripts/entities/icechunkcommon.lua")
 
 function init(me)
-	commonInit(me, 2)
+	v.commonInit(me, 2)
 end
 
 function dieNormal(me)
@@ -31,4 +33,3 @@ function dieNormal(me)
 		spawnIngredient("IceChunk", entity_x(me), entity_y(me))
 	end
 end
-

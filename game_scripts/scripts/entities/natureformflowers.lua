@@ -17,14 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- SPORE SEED
 
-dofile("scripts/entities/entityinclude.lua")
+v.done = false
+v.lifeTime = 0
 
-done = false
-lifeTime = 0
-
-STATE_WITHER = 1001
+local STATE_WITHER = 1001
 
 function init(me)
 	setupEntity(me)
@@ -34,19 +34,19 @@ function init(me)
 	
 	entity_setInternalOffset(me, 0, -32)	
 	
-	lifeTime = 5
+	v.lifeTime = 5
 	
 	entity_alpha(me, 0)
 	entity_alpha(me, 1, 0.1)
 	
 	entity_scale(me, 0.5, 0)
-	v = math.random(100)/250.0
+	local v = math.random(100)/250.0
 	entity_scale(me, 0.95+v, 0.95+v, 0.5, 0, 0, 1)
 	
 	--entity_clampToSurface(me)
 	entity_setState(me, STATE_IDLE)
 	
-	c = (math.random(100)/100.0)*0.1 + 0.9
+	local c = (math.random(100)/100.0)*0.1 + 0.9
 	entity_setColor(me, c, c, c)
 
 	
@@ -61,7 +61,7 @@ function postInit(me)
 	entity_clampToSurface(me)
 	entity_rotateToSurfaceNormal(me)
 	--entity_rotateToSurfaceNormal(me)
-	--c = ((math.random(200)-100)/100.0)*45
+	--local c = ((math.random(200)-100)/100.0)*45
 	--entity_rotate(me, entity_getRotation(me) + c)	
 end
 
@@ -70,10 +70,10 @@ end
 
 function update(me, dt)
 	if entity_isState(me, STATE_IDLE) then
-		if not done then
-			lifeTime = lifeTime - dt
-			if lifeTime < 0 then
-				done = true
+		if not v.done then
+			v.lifeTime = v.lifeTime - dt
+			if v.lifeTime < 0 then
+				v.done = true
 				entity_setState(me, STATE_WITHER)
 			end
 		end
@@ -97,7 +97,7 @@ end
 
 function exitState(me)
 	if entity_isState(me, STATE_WITHER) then
-		x,y = entity_getScale(me)
+		local x, y = entity_getScale(me)
 		entity_scale(me, x, 0.4, 3)
 		entity_delete(me, 3)
 	end

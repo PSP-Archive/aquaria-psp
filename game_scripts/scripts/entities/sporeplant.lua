@@ -17,17 +17,17 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- S P O R E  G E N E R A T O R
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-delay = 1.0
+v.delay = 1.0
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -53,18 +53,18 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	--entity_setTarget(me, n)
+	v.n = getNaija()
+	--entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 
-	if delay > 0 then
-		delay = delay - dt
+	if v.delay > 0 then
+		v.delay = v.delay - dt
 	else
-		ent = createEntity("SongSpore", "", entity_x(me) + math.random(100) - math.random(100), entity_y(me) + math.random(100) - math.random(100))
+		local ent = createEntity("SongSpore", "", entity_x(me) + math.random(100) - math.random(100), entity_y(me) + math.random(100) - math.random(100))
 		entity_rotate(ent, entity_getRotation(me))
-		delay = math.random(3)+4
+		v.delay = math.random(3)+4
 	end
 end
 

@@ -17,24 +17,23 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-ompo = 0
-n = 0
-d = false
+v.n = 0
+v.done = false
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me)
-	if not d and node_isEntityIn(me, n) then
-		d = true
-		h = getEntity("healthupgrade3")
+	if not v.done and node_isEntityIn(me, v.n) then
+		v.done = true
+		local h = getEntity("healthupgrade3")
 		
 		if h ~= 0 then
 			
-			entity_idle(n)
+			entity_idle(v.n)
 			watch(1)
 			setCameraLerpDelay(0.5)
 			cam_toEntity(h)
@@ -43,7 +42,7 @@ function update(me)
 			watch(1)
 			emote(EMOTE_NAIJAWOW)
 			watch(1)
-			cam_toEntity(n)
+			cam_toEntity(v.n)
 			watch(2)
 			
 			setCameraLerpDelay(0)

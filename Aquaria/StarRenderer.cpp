@@ -47,7 +47,7 @@ void StarRenderer::render()
 	glBegin(GL_POINTS);
 	for (int i = 0; i < stars.size(); i++)
 	{
-		float c = 1.0-fabs(stars[i].z)/50.0;
+		float c = 1.0f-fabsf(stars[i].z)/50.0f;
 		glColor3f(c,c,c);
 		glVertex3f(stars[i].x, stars[i].y, stars[i].z);
 	}

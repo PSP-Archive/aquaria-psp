@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/DebugFont.h"
 #include "../BBGE/LensFlare.h"
 #include "../BBGE/RoundedRect.h"
+#include "../BBGE/SimpleIStringStream.h"
 
 #include "Game.h"
 #include "GridRender.h"
@@ -50,13 +51,10 @@ const float bgSfxVol	= 1.0;
 
 const float MENUPAGETRANSTIME		= 0.2; // 0.2
 
+const int foodPageSize = 16;
+const int treasurePageSize = 16;
+
 int FoodSlot::foodSlotIndex = -1;
-
-int foodPage = 0;
-int foodPageSize = 16;
-
-int treasurePage = 0;
-int treasurePageSize = 16;
 
 int selectedTreasureFlag = -1;
 
@@ -256,10 +254,11 @@ void FoodHolder::setIngredient(IngredientData *i, bool effects)
 		ing->renderQuad = true;
 		//renderQuad = true;
 
-		ing->scale.path.clear();
-		ing->scale.path.addPathNode(Vector(1,1),0);
-		ing->scale.path.addPathNode(Vector(1.25,1.25), 0.2);
-		ing->scale.path.addPathNode(Vector(1,1),1);
+		ing->scale.ensureData();
+		ing->scale.data->path.clear();
+		ing->scale.data->path.addPathNode(Vector(1,1),0);
+		ing->scale.data->path.addPathNode(Vector(1.25,1.25), 0.2);
+		ing->scale.data->path.addPathNode(Vector(1,1),1);
 		ing->scale.startPath(0.5);
 
 		game->enqueuePreviewRecipe();
@@ -391,7 +390,7 @@ void FoodSlot::toggle(bool f)
 
 void FoodSlot::refresh(bool effects)
 {
-	int offset = foodPage*foodPageSize;
+	int offset = game->currentFoodPage*foodPageSize;
 	IngredientData *i = dsq->continuity.getIngredientByIndex(offset+slot);
 	if (i)
 	{
@@ -431,10 +430,11 @@ void FoodSlot::refresh(bool effects)
 	{
 		if (effects)
 		{
-			scale.path.clear();
-			scale.path.addPathNode(Vector(1,1)*scaleFactor,0);
-			scale.path.addPathNode(Vector(1.5,1.5)*scaleFactor, 0.2);
-			scale.path.addPathNode(Vector(1,1)*scaleFactor,1);
+			scale.ensureData();
+			scale.data->path.clear();
+			scale.data->path.addPathNode(Vector(1,1)*scaleFactor,0);
+			scale.data->path.addPathNode(Vector(1.5,1.5)*scaleFactor, 0.2);
+			scale.data->path.addPathNode(Vector(1,1)*scaleFactor,1);
 			scale.startPath(0.5);
 		}
 	}
@@ -496,6 +496,17 @@ void FoodSlot::moveRight()
 	}
 }
 
+void FoodSlot::discard()
+{
+	if (!ingredient) return;
+	if (ingredient->amount <= 0) return;
+
+	ingredient->amount--;
+	dsq->game->dropIngrNames.push_back(ingredient->name);
+	dsq->continuity.removeEmptyIngredients();
+	dsq->game->refreshFoodSlots(true);
+}
+
 bool FoodSlot::isCursorIn()
 {
 	return (core->mouse.position - getWorldPosition()).isLength2DIn(32);
@@ -522,7 +533,7 @@ void FoodSlot::onUpdate(float dt)
 
 				//if (ingredient->type < IT_FOOD)
 
-				//if (grabTime > 0.5)
+				//if (grabTime > 0.5f)
 				if (!dsq->game->recipeMenu.on)
 				{
 					/*
@@ -758,11 +769,12 @@ void SongSlot::onUpdate(float dt)
 			dsq->game->playSongInMenu(songType);
 			dsq->game->songLabel->setText(dsq->continuity.getSongNameBySlot(songSlot));
 			dsq->game->songLabel->alpha.interpolateTo(1, 0.2);
-			if (core->mouse.buttons.left && !mbDown)
+			const bool anyButton = core->mouse.buttons.left || core->mouse.buttons.right;
+			if (!mbDown && anyButton)
 			{
 				mbDown = true;
 			}
-			else if (mbDown && !core->mouse.buttons.left)
+			else if (mbDown && !anyButton)
 			{
 				mbDown = false;
 
@@ -881,7 +893,7 @@ void TreasureSlot::onUpdate(float dt)
 
 void TreasureSlot::refresh()
 {
-	flag = (treasurePage*treasurePageSize) + index + treasureFlagStart;
+	flag = (game->currentTreasurePage*treasurePageSize) + index + treasureFlagStart;
 	if (flag >= FLAG_COLLECTIBLE_START && flag < FLAG_COLLECTIBLE_END && dsq->continuity.getFlag(flag)>0)
 	{
 		// get treasure image somehow
@@ -1060,18 +1072,6 @@ void Game::playSongInMenu(int songType, bool override)
 	}
 }
 
-void Game::removePath(int idx)
-{
-	if (idx >= 0 && idx < paths.size()) paths[idx]->destroy();
-	std::vector<Path*> copy = this->paths;
-	paths.clear();
-	for (int i = 0; i < copy.size(); i++)
-	{
-		if (i != idx)
-			paths.push_back(copy[i]);
-	}
-}
-
 void Game::flipRenderObjectVertical(RenderObject *r, int flipY)
 {
 	if (r->position.y < flipY)
@@ -1109,9 +1109,9 @@ void Game::flipSceneVertical(int flipY)
 		else
 			obsRows[i].ty = flipTY - (obsRows[i].ty - flipTY);
 	}
-	for (ElementContainer::iterator eit = dsq->elements.begin(); eit != dsq->elements.end(); eit++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = (*eit);
+		Element *e = dsq->getElement(i);
 		e->rotation.z = 180-e->rotation.z;
 		flipRenderObjectVertical(e, flipY);
 	}
@@ -1249,6 +1249,9 @@ Game::Game() : StateObject()
 
 	worldMapRender = 0;
 
+	for (int i = 0; i < PATH_MAX; i++)
+		firstPathOfType[i] = 0;
+
 	loadEntityTypeList();
 
 
@@ -1257,6 +1260,7 @@ Game::Game() : StateObject()
 Game::~Game()
 {
 	tileCache.clean();
+	game = 0;
 }
 /*
 void Game::doChoiceMenu(Vector position, std::vector<std::string> choices)
@@ -1354,7 +1358,7 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 		else
 		{
 			menuBg2->alpha = 0;
-			menuBg2->alpha.interpolateTo(1, t*0.5);
+			menuBg2->alpha.interpolateTo(1, t*0.5f);
 		}
 
 		if (dsq->continuity.hasFormUpgrade(FORMUPGRADE_ENERGY2))
@@ -1396,9 +1400,47 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 
 		menuDescription->alpha.interpolateTo(1, t);
 
-		menuBg->scale = menuBgScale*0.5;
+		menuBg->scale = menuBgScale*0.5f;
 		menuBg->scale.interpolateTo(menuBgScale, t);
-		menuBg->alpha.interpolateTo(1, t*0.5);
+		menuBg->alpha.interpolateTo(1, t*0.5f);
+		menuBg->setHidden(false);
+
+		// FIXME: This gets a little verbose because of all the
+		// individual non-child objects.  Is there a reason they
+		// can't all be children of menuBg?  --achurch
+		opt_save->setHidden(false);
+		opt_cancel->setHidden(false);
+		options->setHidden(false);
+		keyConfigButton->setHidden(false);
+		cook->setHidden(false);
+		foodSort->setHidden(false);
+		recipes->setHidden(false);
+		use->setHidden(false);
+		prevFood->setHidden(false);
+		nextFood->setHidden(false);
+		prevTreasure->setHidden(false);
+		nextTreasure->setHidden(false);
+		circlePageNum->setHidden(false);
+		previewRecipe->setHidden(false);
+		showRecipe->setHidden(false);
+		recipeMenu.scroll->setHidden(false);
+		recipeMenu.scrollEnd->setHidden(false);
+		recipeMenu.header->setHidden(false);
+		recipeMenu.page->setHidden(false);
+		recipeMenu.prevPage->setHidden(false);
+		recipeMenu.nextPage->setHidden(false);
+		menuDescription->setHidden(false);
+		eAre->setHidden(false);
+		eYes->setHidden(false);
+		eNo->setHidden(false);
+		menuIconGlow->setHidden(false);
+		for (int i = 0; i < menu.size(); i++)
+			menu[i]->setHidden(false);
+		for (int i = 0; i < treasureSlots.size(); i++)
+			treasureSlots[i]->setHidden(false);
+		treasureDescription->setHidden(false);
+		for (int i = 0; i < foodSlots.size(); i++)
+			foodSlots[i]->setHidden(false);
 
 
 		if (dsq->game->miniMapRender)
@@ -1505,12 +1547,13 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 
 void Game::pickupIngredientEffects(IngredientData *data)
 {
-	Quad *q = new Quad("gfx/ingredients/" + data->gfx, Vector(800-20 + core->getVirtualOffX(), 460+ingOffY));
+	Quad *q = new Quad("gfx/ingredients/" + data->gfx, Vector(800-20 + core->getVirtualOffX(), (570-2*(100*miniMapRender->scale.y))+ingOffY));
 	q->scale = Vector(0.8, 0.8);
 	q->followCamera = 1;
-	q->alpha.path.addPathNode(0, 0);
-	q->alpha.path.addPathNode(1.0, 0.1);
-	q->alpha.path.addPathNode(0, 1.0);
+	q->alpha.ensureData();
+	q->alpha.data->path.addPathNode(0, 0);
+	q->alpha.data->path.addPathNode(1.0, 0.1);
+	q->alpha.data->path.addPathNode(0, 1.0);
 	q->alpha.startPath(2);
 	q->setLife(1);
 	q->setDecayRate(0.5);
@@ -1535,7 +1578,7 @@ void Game::hideInGameMenu(bool effects)
 		if (effects)
 			core->sound->playSfx("Menu-Close");
 
-		hideInGameMenuExitCheck();
+		hideInGameMenuExitCheck(false);
 		playingSongInMenu = -1;
 
 
@@ -1569,7 +1612,7 @@ void Game::hideInGameMenu(bool effects)
 		for (i = 0; i < menu.size(); i++)
 		{
 			menu[i]->alpha = 0;
-			//menu[i]->alpha.interpolateTo(0, t*0.5);
+			//menu[i]->alpha.interpolateTo(0, t*0.5f);
 			//menu[i]->scale.interpolateTo(Vector(0, 0), t);
 		}
 		for (i = 0; i < spellIcons.size(); i++)
@@ -1587,7 +1630,7 @@ void Game::hideInGameMenu(bool effects)
 
 		menuDescription->alpha.interpolateTo(0, t);
 		menuBg->alpha.interpolateTo(0, t);
-		menuBg->scale.interpolateTo(menuBg->scale*0.5, t);
+		menuBg->scale.interpolateTo(menuBg->scale*0.5f, t);
 		menuBg2->alpha.interpolateTo(0, t);
 		
 		
@@ -1635,6 +1678,41 @@ void Game::hideInGameMenu(bool effects)
 
 		dsq->routeShoulder = true;
 	}
+
+	menuBg->setHidden(true);
+	opt_save->setHidden(true);
+	opt_cancel->setHidden(true);
+	options->setHidden(true);
+	keyConfigButton->setHidden(true);
+	cook->setHidden(true);
+	foodSort->setHidden(true);
+	recipes->setHidden(true);
+	use->setHidden(true);
+	prevFood->setHidden(true);
+	nextFood->setHidden(true);
+	prevTreasure->setHidden(true);
+	nextTreasure->setHidden(true);
+	circlePageNum->setHidden(true);
+	previewRecipe->setHidden(true);
+	showRecipe->setHidden(true);
+	recipeMenu.scroll->setHidden(true);
+	recipeMenu.scrollEnd->setHidden(true);
+	recipeMenu.header->setHidden(true);
+	recipeMenu.page->setHidden(true);
+	recipeMenu.prevPage->setHidden(true);
+	recipeMenu.nextPage->setHidden(true);
+	menuDescription->setHidden(true);
+	eAre->setHidden(true);
+	eYes->setHidden(true);
+	eNo->setHidden(true);
+	menuIconGlow->setHidden(true);
+	for (int i = 0; i < menu.size(); i++)
+		menu[i]->setHidden(true);
+	for (int i = 0; i < treasureSlots.size(); i++)
+		treasureSlots[i]->setHidden(true);
+	treasureDescription->setHidden(true);
+	for (int i = 0; i < foodSlots.size(); i++)
+		foodSlots[i]->setHidden(true);
 }
 
 void Game::onLeftMouseButton()
@@ -1757,7 +1835,7 @@ void Game::warpPrep()
 	fromPosition = avatar->position;
 }
 
-void Game::warpToSceneNode(std::string scene, std::string node, int toFlip)
+void Game::warpToSceneNode(std::string scene, std::string node)
 {
 	warpPrep();
 
@@ -1910,8 +1988,8 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 	{
 		std::vector<TileVector> obs, obsCopy;
 		TileVector tpos(q->position);
-		int tw = int((q->getWidth()*q->scale.x)/TILE_SIZE);
-		int th = int((q->getHeight()*q->scale.y)/TILE_SIZE);
+		//int tw = int((q->getWidth()*q->scale.x)/TILE_SIZE);
+		//int th = int((q->getHeight()*q->scale.y)/TILE_SIZE);
 		int w2 = int(q->getWidth()*q->scale.x)/2;
 		int h2 = int(q->getHeight()*q->scale.y)/2;
 		w2/=TILE_SIZE;
@@ -1977,7 +2055,7 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 					}
 				}
 
-				if (num >= int((szx*szy)*0.8))
+				if (num >= int((szx*szy)*0.8f))
 				//if (num >= int((szx*szy)))
 				{
 					// add tile
@@ -2038,7 +2116,7 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 			rot -= 360;
 		while (rot < 0)
 			rot += 360;
-		//rot = int(float(rot-45)/90.0);
+		//rot = int(float(rot-45)/90.0f);
 		//int obsType = OT_INVISIBLEIN;
 		for (int i = 0; i < obs.size(); i++)
 		{
@@ -2066,7 +2144,6 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 			glGetFloatv(GL_MODELVIEW_MATRIX, m);
 			float x = m[12];
 			float y = m[13];
-			float z = m[14];
 
 			//dsq->game->setGrid(TileVector(tpos.x+(w2*TILE_SIZE)+(x/TILE_SIZE), tpos.y+(h2*TILE_SIZE)+(y/TILE_SIZE)), obsType);
 			TileVector tvec(tpos.x+w2+x, tpos.y+h2+y);
@@ -2139,16 +2216,16 @@ void Game::reconstructEntityGrid()
 
 void Game::reconstructGrid(bool force)
 {
-	if (!force && sceneEditor.isOn()) return;
+	if (!force && isSceneEditorActive()) return;
 
 	clearGrid();
 	int i = 0;
-	for (i = 0; i < dsq->elements.size(); i++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		e->fillGrid();
 		/*
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (e->getElementType() == Element::BOX)
 		{
 			int w = e->getWidth()/TILE_SIZE;
@@ -2253,7 +2330,7 @@ Vector Game::getWallNormal(Vector pos, int sampleArea, float *dist, int obs)
 	//Vector p = t.worldVector();
 	Vector avg;
 	int c = 0;
-	float maxLen = -1;
+	//float maxLen = -1;
 	std::vector<Vector> vs;
 	if (dist != NULL)
 		*dist = -1;
@@ -2285,8 +2362,8 @@ Vector Game::getWallNormal(Vector pos, int sampleArea, float *dist, int obs)
 				int xDiff = pos.x-vt.x;
 				int yDiff = pos.y-vt.y;
 				/*
-				float xEffect = (sampleArea*TILE_SIZE - abs(xDiff))*1.0;
-				float yEffect = (sampleArea*TILE_SIZE - abs(yDiff))*1.0;
+				float xEffect = (sampleArea*TILE_SIZE - abs(xDiff))*1.0f;
+				float yEffect = (sampleArea*TILE_SIZE - abs(yDiff))*1.0f;
 				*/
 				//Vector v(xDiff*xEffect, yDiff*yEffect);
 				Vector v(xDiff, yDiff);
@@ -2463,6 +2540,7 @@ void Game::loadEntityTypeList()
 	}
 	in.close();
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	entityGroups.clear();
 
 	std::string fn = "scripts/entities/entitygroups.txt";
@@ -2502,6 +2580,7 @@ void Game::loadEntityTypeList()
 
 	game->sceneEditor.entityPageNum = 0;
 	//game->sceneEditor.page = entityGroups.begin();
+#endif
 }
 
 EntityClass *Game::getEntityClassForEntityType(const std::string &type)
@@ -2639,7 +2718,7 @@ Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool 
 	if (createSaveData)
 	{
 		int idx = dsq->game->getIdxForEntityType(type);
-		entitySaveData.push_back(EntitySaveData(e, idx, usePos.x, usePos.y, rot, e->getGroupID(), e->getID()));
+		entitySaveData.push_back(EntitySaveData(e, idx, usePos.x, usePos.y, rot, e->getGroupID(), e->getID(), e->name));
 	}
 
 	addRenderObject(e, e->layer);
@@ -2752,7 +2831,7 @@ void Game::setTimerText(float time)
 	int mins = int(time/60);
 	int secs = time - (mins*60);
 	os << mins;
-	if (getTimer() > 0.5)
+	if (getTimer() > 0.5f)
 		os << ":";
 	else
 		os << ".";
@@ -2776,8 +2855,6 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 		q->collisionMask.clear();
 		std::vector<TileVector> obs;
 		TileVector tpos(q->position);
-		int tw = int((q->getWidth()*q->scale.x)/TILE_SIZE);
-		int th = int((q->getHeight()*q->scale.y)/TILE_SIZE);
 		int w2 = int(q->getWidth()*q->scale.x)>>1;
 		int h2 = int(q->getHeight()*q->scale.y)>>1;
 		w2/=TILE_SIZE;
@@ -2812,7 +2889,7 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 
 		q->collisionMaskRadius = 0;
 
-		q->collisionMaskHalfVector = Vector(q->getWidth()/2, q->getHeight()/2);
+		Vector collisionMaskHalfVector = Vector(q->getWidth()/2, q->getHeight()/2);
 
 		for (int tx = 0; tx < (q->getWidth()*q->scale.x); tx+=TILE_SIZE)
 		{
@@ -2848,14 +2925,14 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 						}
 					}
 				}
-				if (num >= int((szx*szy)*0.25))
+				if (num >= int((szx*szy)*0.25f))
 				{
 					TileVector tile(int((tx+TILE_SIZE/2)/TILE_SIZE), int((ty+TILE_SIZE/2)/TILE_SIZE));
 
 					obs.push_back(tile);
 
 					// + Vector(0,TILE_SIZE)
-					q->collisionMask.push_back(tile.worldVector() - q->collisionMaskHalfVector);
+					q->collisionMask.push_back(tile.worldVector() - collisionMaskHalfVector);
 				}
 			}
 		}
@@ -2881,7 +2958,7 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 		else
 			q->collisionMaskRadius = h2*2;
 		*/
-		//q->collisionMaskRadius = sqrt(sqr(w2)+sqr(h2));
+		//q->collisionMaskRadius = sqrtf(sqr(w2)+sqr(h2));
 		q->collisionMaskRadius = 512;
 
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -2897,11 +2974,33 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 #endif
 }
 
-Path *Game::getPathByIndex(int idx)
+void Game::addPath(Path *p)
 {
-	if (idx >= 0 && idx < paths.size())
-		return paths[idx];
-	return 0;
+	paths.push_back(p);
+	if (p->pathType >= 0 && p->pathType < PATH_MAX)
+	{
+		p->nextOfType = firstPathOfType[p->pathType];
+		firstPathOfType[p->pathType] = p;
+	}
+}
+
+void Game::removePath(int idx)
+{
+	if (idx >= 0 && idx < paths.size()) paths[idx]->destroy();
+	std::vector<Path*> copy = this->paths;
+	clearPaths();
+	for (int i = 0; i < copy.size(); i++)
+	{
+		if (i != idx)
+			addPath(copy[i]);
+	}
+}
+
+void Game::clearPaths()
+{
+	paths.clear();
+	for (int i = 0; i < PATH_MAX; i++)
+		firstPathOfType[i] = 0;
 }
 
 int Game::getIndexOfPath(Path *p)
@@ -2938,7 +3037,7 @@ Path *Game::getPathAtCursor()
 
 Path *Game::getScriptedPathAtCursor(bool withAct)
 {
-	int range = 64;
+	//int range = 64;
 	int sz = paths.size();
 	for (int i = 0; i < sz; i++)
 	{
@@ -2964,21 +3063,20 @@ Path *Game::getScriptedPathAtCursor(bool withAct)
 	return 0;
 }
 
-Path *Game::getNearestPath(const Vector &pos, const std::string &s)
+Path *Game::getNearestPath(const Vector &pos, const std::string &s, const Path *ignore)
 {
-	Path *closest=0;
-	int smallestDist = -1;
-	Path *cp = 0;
+	Path *closest = 0;
+	float smallestDist = HUGE_VALF;
 	std::string st = s;
 	stringToLower(st);
 	for (int i = 0; i < dsq->game->paths.size(); i++)
 	{
-		cp = dsq->game->paths[i];
-		if (cp->nodes.size()>0 && (st.empty() || st == cp->name))
+		Path *cp = dsq->game->paths[i];
+		if (cp != ignore && !cp->nodes.empty() && (st.empty() || st == cp->name))
 		{
-			Vector v = cp->nodes[0].position - pos;
-			float dist = v.getSquaredLength2D();
-			if (smallestDist == -1 || dist < smallestDist )
+			const Vector v = cp->nodes[0].position - pos;
+			const float dist = v.getSquaredLength2D();
+			if (dist < smallestDist)
 			{
 				smallestDist = dist;
 				closest = cp;
@@ -2990,18 +3088,15 @@ Path *Game::getNearestPath(const Vector &pos, const std::string &s)
 
 Path *Game::getNearestPath(const Vector &pos, PathType pathType)
 {
-	Path *closest=0;
-	int smallestDist = -1;
-	Path *cp = 0;
-	Vector v;
-	for (int i = 0; i < dsq->game->paths.size(); i++)
+	Path *closest = 0;
+	float smallestDist = HUGE_VALF;
+	for (Path *cp = dsq->game->getFirstPathOfType(pathType); cp; cp = cp->nextOfType)
 	{
-		cp = dsq->game->paths[i];
-		if (cp->pathType == pathType && !cp->nodes.empty())
+		if (!cp->nodes.empty())
 		{
-			v = cp->nodes[0].position - pos;
-			float dist = v.getSquaredLength2D();
-			if (smallestDist == -1 || dist < smallestDist )
+			const Vector v = cp->nodes[0].position - pos;
+			const float dist = v.getSquaredLength2D();
+			if (dist < smallestDist)
 			{
 				smallestDist = dist;
 				closest = cp;
@@ -3016,6 +3111,17 @@ Path *Game::getNearestPath(Path *p, std::string s)
 	if (p->nodes.empty()) return 0;
 
 	return getNearestPath(p->nodes[0].position, s);
+}
+
+Path *Game::getPathByName(std::string name)
+{
+	stringToLowerUserData(name);
+	for (int i = 0; i < paths.size(); i++)
+	{
+		if (paths[i]->name == name)
+			return paths[i];
+	}
+	return 0;
 }
 
 
@@ -3232,7 +3338,6 @@ void Game::sortFood()
 	
 	dsq->continuity.sortFood();
 	
-	foodPage = 0;
 	// rebuild the page
 	
 	refreshFoodSlots(false);
@@ -3273,8 +3378,8 @@ void Game::createInGameMenu()
 	menuBg = new Quad;
 	menuBg->setTexture("menu");
 	//menuBg->setWidthHeight(800);
-	//menuBg->scale = Vector(800.0/1024.0, 800.0/1024.0);
-	menuBgScale = Vector(800.0/1024.0, 800.0/1024.0);
+	//menuBg->scale = Vector(800.0f/1024.0f, 800.0f/1024.0f);
+	menuBgScale = Vector(800.0f/1024.0f, 800.0f/1024.0f);
 	menuBg->position = Vector(400,300,menuz);
 	menuBg->followCamera = 1;
 	//menuBg->shareAlphaWithChildren=true;
@@ -3329,7 +3434,7 @@ void Game::createInGameMenu()
 	Quad *controllabels = new Quad("gui/controllabels", Vector(0,0,0));
 	int w = controllabels->getWidth();
 	int h = controllabels->getHeight();
-	controllabels->position = Vector(checkx-16-w/2.0, checky + h/2.0 - 14);
+	controllabels->position = Vector(checkx-16-w/2.0f, checky + h/2.0f - 14);
 	options->addChild(controllabels, PM_POINTER);
 	
 
@@ -3342,7 +3447,7 @@ void Game::createInGameMenu()
 	Quad *subtitleslabel = new Quad("gui/subtitles", Vector(0,0,0));
 	sw = subtitleslabel->getWidth();
 	sh = subtitleslabel->getHeight();
-	subtitleslabel->position = Vector(scheckx-16-sw*0.5, schecky + sh/2.0 - 14);
+	subtitleslabel->position = Vector(scheckx-16-sw*0.5f, schecky + sh/2.0f - 14);
 	options->addChild(subtitleslabel, PM_POINTER);
 
 	subtitlesCheck = new AquariaCheckBox();
@@ -3351,7 +3456,7 @@ void Game::createInGameMenu()
 	options->addChild(subtitlesCheck, PM_POINTER);
 
 	Quad *fullscreenLabel = new Quad("gui/fullscreen", Vector(0,0,0));
-	fullscreenLabel->position = Vector(scheckx-16-sw*0.5, schecky + voptoffy + sh/2.0 - 14);
+	fullscreenLabel->position = Vector(scheckx-16-sw*0.5f, schecky + voptoffy + sh/2.0f - 14);
 	options->addChild(fullscreenLabel, PM_POINTER);
 
 	fullscreenCheck = new AquariaCheckBox();
@@ -3380,7 +3485,7 @@ void Game::createInGameMenu()
 	Quad *audiolabels = new Quad("gui/audiolabels", Vector(0,0,0));
 	w = audiolabels->getWidth();
 	h = audiolabels->getHeight();
-	audiolabels->position = Vector(sliderx-64-w/2.0, slidery + h/2.0 - 14);
+	audiolabels->position = Vector(sliderx-64-w/2.0f, slidery + h/2.0f - 14);
 	options->addChild(audiolabels, PM_POINTER);
 
 	musslider = new AquariaSlider();
@@ -3565,11 +3670,10 @@ void Game::createInGameMenu()
 	RoundedRect *kcb = new RoundedRect();
 	//kcb->color = 0;
 	//kcb->alphaMod = 0.75;
-	kcb->position = Vector(400,276 - 20);
-	kcb->setWidthHeight(580, 435, 10);
+	kcb->position = Vector(400,276 - 10);
+	kcb->setWidthHeight(580, 455, 10);
 	group_keyConfig->addChild(kcb, PM_POINTER);
 
-	//int offy = 0; //-20;
 	int offy = -20;
 	
 	TTFText *header_action = new TTFText(&dsq->fontArialSmall);
@@ -3633,16 +3737,18 @@ void Game::createInGameMenu()
 	addKeyConfigLine(group_keyConfig, "Food Menu Cook",				"CookFood",				380+offy);
 	addKeyConfigLine(group_keyConfig, "Food Left",					"FoodLeft",				400+offy);
 	addKeyConfigLine(group_keyConfig, "Food Right",					"FoodRight",			420+offy);
+	addKeyConfigLine(group_keyConfig, "Food Drop",					"FoodDrop",			440+offy);
 
-	addKeyConfigLine(group_keyConfig, "Look",						"Look",					440+offy);
+	addKeyConfigLine(group_keyConfig, "Look",						"Look",					460+offy);
 	
-	addKeyConfigLine(group_keyConfig, "Help",						"ToggleHelp",			460+offy);
+	addKeyConfigLine(group_keyConfig, "Help",						"ToggleHelp",			480+offy);
 
 
 
 	group_keyConfig->shareAlphaWithChildren = 1;
 	group_keyConfig->followCamera = 1;
 	group_keyConfig->alpha = 0;
+	group_keyConfig->setHidden(true);
 
 	group_keyConfig->position = Vector(0, -40);
 
@@ -3745,7 +3851,7 @@ void Game::createInGameMenu()
 		foodHolders[i] = new FoodHolder(i);
 		foodHolders[i]->alpha = 0;
 
-		float angle = (float(holders)/float(foodHolders.size()))*3.14*2;
+		float angle = (float(holders)/float(foodHolders.size()))*PI*2;
 		foodHolders[i]->position = rightCenter + Vector(sinf(angle), cosf(angle))*radius;
 		holders ++;
 
@@ -3822,8 +3928,8 @@ void Game::createInGameMenu()
 		{
 			petSlots[i] = new PetSlot(i);
 			petSlots[i]->alpha = 0;
-			float angle = (float(i)/float(petSlots.size()))*3.14*2;
-			petSlots[i]->position = center + Vector(sinf(angle), cosf(angle))*(radius*0.9);
+			float angle = (float(i)/float(petSlots.size()))*PI*2;
+			petSlots[i]->position = center + Vector(sinf(angle), cosf(angle))*(radius*0.9f);
 			menuBg->addChild(petSlots[i], PM_POINTER);
 		}
 	}
@@ -3847,14 +3953,14 @@ void Game::createInGameMenu()
 		SongType s = (SongType)dsq->continuity.getSongTypeBySlot(i);
 		if (dsq->continuity.isSongTypeForm(s))
 		{
-			angle = (float(outer)/float(numForms))*3.14*2;
+			angle = (float(outer)/float(numForms))*PI*2;
 			songSlots[i]->position = center + Vector(sinf(angle), cosf(angle))*radius;
 			outer ++;
 		}
 		else
 		{
-			angle = (float(inner)/float(songSlots.size()-numForms))*3.14*2 + 3.14;
-			songSlots[i]->position = center + Vector(sinf(angle), cosf(angle))*radius*0.4;
+			angle = (float(inner)/float(songSlots.size()-numForms))*PI*2 + PI;
+			songSlots[i]->position = center + Vector(sinf(angle), cosf(angle))*radius*0.4f;
 			inner ++;
 		}
 		menuBg->addChild(songSlots[i], PM_POINTER);
@@ -4018,7 +4124,7 @@ void Game::createInGameMenu()
 	{
 		foodSlots[i] = new FoodSlot(i);
 		
-		float angle = (float(food)/float(foodSlots.size()))*3.14*2;
+		float angle = (float(food)/float(foodSlots.size()))*PI*2;
 		foodSlots[i]->position = worldCenter + Vector(sinf(angle), cosf(angle))*foodSlotRadius;
 
 		foodSlots[i]->setOriginalPosition(foodSlots[i]->position);
@@ -4074,7 +4180,7 @@ void Game::createInGameMenu()
 		treasureSlots[i] = new TreasureSlot(i);
 
 
-		float angle = (float(i)/float(treasureSlots.size()))*3.14*2;
+		float angle = (float(i)/float(treasureSlots.size()))*PI*2;
 		treasureSlots[i]->position = worldCenter + Vector(sinf(angle), cosf(angle))*treasureSlotRadius;
 
 		treasureSlots[i]->alphaMod = 0;
@@ -4157,7 +4263,7 @@ void Game::endProgress()
 	if (progressBar)
 	{
 		progressBar->setLife(1);
-		progressBar->setDecayRate(1.0/0.5);
+		progressBar->setDecayRate(1.0f/0.5f);
 		progressBar->fadeAlphaWithLife = 1;
 		progressBar = 0;
 	}
@@ -4198,7 +4304,7 @@ bool Game::loadSceneXML(std::string scene)
 	while (lensFlare)
 	{
 		LensFlare *l = new LensFlare;
-		std::istringstream is(lensFlare->Attribute("tex"));
+		SimpleIStringStream is(lensFlare->Attribute("tex"));
 		int w = -1, h=-1;
 		w = atoi(lensFlare->Attribute("w"));
 		h = atoi(lensFlare->Attribute("h"));
@@ -4209,7 +4315,7 @@ bool Game::loadSceneXML(std::string scene)
 			if (!tex.empty())
 				l->addFlare(tex, Vector(1,1,1), w, h);
 		}
-		std::istringstream is2(lensFlare->Attribute("inc"));
+		SimpleIStringStream is2(lensFlare->Attribute("inc"));
 		is2 >> l->inc;
 		l->maxLen = atoi(lensFlare->Attribute("maxLen"));
 		/*
@@ -4297,13 +4403,13 @@ bool Game::loadSceneXML(std::string scene)
 
 		if (level->Attribute("bgRepeat"))
 		{
-			std::istringstream is(level->Attribute("bgRepeat"));
+			SimpleIStringStream is(level->Attribute("bgRepeat"));
 			is >> backgroundImageRepeat;
 			levelSF.SetAttribute("bgRepeat", level->Attribute("bgRepeat"));
 		}
 		if (level->Attribute("cameraConstrained"))
 		{
-			std::istringstream is(level->Attribute("cameraConstrained"));
+			SimpleIStringStream is(level->Attribute("cameraConstrained"));
 			is >> cameraConstrained;
 			levelSF.SetAttribute("cameraConstrained", cameraConstrained);
 			std::ostringstream os;
@@ -4353,13 +4459,13 @@ bool Game::loadSceneXML(std::string scene)
 		{
 			if (level->Attribute("gradTop"))
 			{
-				std::istringstream is(level->Attribute("gradTop"));
+				SimpleIStringStream is(level->Attribute("gradTop"));
 				is >> gradTop.x >> gradTop.y >> gradTop.z;
 				levelSF.SetAttribute("gradTop", level->Attribute("gradTop"));
 			}
 			if (level->Attribute("gradBtm"))
 			{
-				std::istringstream is(level->Attribute("gradBtm"));
+				SimpleIStringStream is(level->Attribute("gradBtm"));
 				is >> gradBtm.x >> gradBtm.y >> gradBtm.z;
 				levelSF.SetAttribute("gradBtm", level->Attribute("gradBtm"));
 			}
@@ -4369,7 +4475,7 @@ bool Game::loadSceneXML(std::string scene)
 
 		if (level->Attribute("parallax"))
 		{
-			std::istringstream is(level->Attribute("parallax"));
+			SimpleIStringStream is(level->Attribute("parallax"));
 			float x,y,z,r,g,b;
 			is >> x >> y >> z >> r >> g >> b;
 			RenderObjectLayer *l = 0;
@@ -4395,7 +4501,7 @@ bool Game::loadSceneXML(std::string scene)
 		if (level->Attribute("parallaxLock"))
 		{
 			int x, y, z, r, g, b;
-			std::istringstream is(level->Attribute("parallaxLock"));
+			SimpleIStringStream is(level->Attribute("parallaxLock"));
 			is >> x >> y >> z >> r >> g >> b;
 
 			RenderObjectLayer *l = 0;
@@ -4496,7 +4602,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (level->Attribute("sceneColor"))
 		{
-			std::istringstream in(level->Attribute("sceneColor"));
+			SimpleIStringStream in(level->Attribute("sceneColor"));
 			in >> sceneColor.x >> sceneColor.y >> sceneColor.z;
 			levelSF.SetAttribute("sceneColor", level->Attribute("sceneColor"));
 		}
@@ -4510,7 +4616,7 @@ bool Game::loadSceneXML(std::string scene)
 	if (obs)
 	{
 		int tx, ty, len;
-		std::istringstream is(obs->Attribute("d"));
+		SimpleIStringStream is(obs->Attribute("d"));
 		while (is >> tx)
 		{
 			is >> ty >> len;
@@ -4535,7 +4641,7 @@ bool Game::loadSceneXML(std::string scene)
 		while (nodeXml)
 		{
 			PathNode node;
-			std::istringstream is(nodeXml->Attribute("pos"));
+			SimpleIStringStream is(nodeXml->Attribute("pos"));
 			is >> node.position.x >> node.position.y;
 
 			if (nodeXml->Attribute("ms"))
@@ -4545,7 +4651,7 @@ bool Game::loadSceneXML(std::string scene)
 
 			if (nodeXml->Attribute("rect"))
 			{
-				std::istringstream is(nodeXml->Attribute("rect"));
+				SimpleIStringStream is(nodeXml->Attribute("rect"));
 				int w,h;
 				is >> w >> h;
 				path->rect.setWidth(w);
@@ -4561,7 +4667,7 @@ bool Game::loadSceneXML(std::string scene)
 			nodeXml = nodeXml->NextSiblingElement("Node");
 		}
 		path->refreshScript();
-		paths.push_back(path);
+		addPath(path);
 		addProgress();
 		pathXml = pathXml->NextSiblingElement("Path");
 	}
@@ -4707,7 +4813,7 @@ bool Game::loadSceneXML(std::string scene)
 		waSF.SetAttribute("ay", a.avatarPosition.y = atoi(warpArea->Attribute("ay")));
 		*/
 
-		std::istringstream is(sceneString);
+		SimpleIStringStream is(sceneString);
 		std::string sceneName, warpAreaType, side;
 		is >> sceneName >> warpAreaType >> a.spawnOffset.x >> a.spawnOffset.y;
 		a.spawnOffset.normalize2D();
@@ -4763,7 +4869,7 @@ bool Game::loadSceneXML(std::string scene)
 		float size = 1;
 		if (schoolFish->Attribute("size"))
 		{
-			std::istringstream is(schoolFish->Attribute("size"));
+			SimpleIStringStream is(schoolFish->Attribute("size"));
 			is >> size;
 		}
 
@@ -4777,12 +4883,11 @@ bool Game::loadSceneXML(std::string scene)
 
 		for (int i = 0; i < num; i++)
 		{
-			SchoolFish *s = new SchoolFish;
+			SchoolFish *s = new SchoolFish(texture);
 			{
 				s->position = Vector(x+i*5,y+i*5);
 				s->startPos = s->position;
-				s->flockID = id;
-				s->setTexture(texture);
+				s->addToFlock(id);
 				if (range != 0)
 					s->range = range;
 				if (maxSpeed != 0)
@@ -4859,7 +4964,7 @@ bool Game::loadSceneXML(std::string scene)
 		b->position = Vector(atoi(boxElement->Attribute("x")), atoi(boxElement->Attribute("y")));
 		addRenderObject(b, LR_BLACKGROUND);
 		b->position.z = boxElementZ;
-		dsq->elements.push_back(b);
+		dsq->addElement(b);
 		boxElement = boxElement->NextSiblingElement("BoxElement");
 	}
 
@@ -4870,7 +4975,7 @@ bool Game::loadSceneXML(std::string scene)
 		float sz,sz2;
 		if (simpleElements->Attribute("d"))
 		{
-			std::istringstream is(simpleElements->Attribute("d"));
+			SimpleIStringStream is(simpleElements->Attribute("d"));
 			while (is >> idx)
 			{
 				is >> x >> y >> rot;
@@ -4880,7 +4985,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("e"))
 		{
-			std::istringstream is2(simpleElements->Attribute("e"));
+			SimpleIStringStream is2(simpleElements->Attribute("e"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4891,7 +4996,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("f"))
 		{
-			std::istringstream is2(simpleElements->Attribute("f"));
+			SimpleIStringStream is2(simpleElements->Attribute("f"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4903,7 +5008,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("g"))
 		{
-			std::istringstream is2(simpleElements->Attribute("g"));
+			SimpleIStringStream is2(simpleElements->Attribute("g"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4920,7 +5025,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("h"))
 		{
-			std::istringstream is2(simpleElements->Attribute("h"));
+			SimpleIStringStream is2(simpleElements->Attribute("h"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4941,7 +5046,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("i"))
 		{
-			std::istringstream is2(simpleElements->Attribute("i"));
+			SimpleIStringStream is2(simpleElements->Attribute("i"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4965,7 +5070,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("j"))
 		{
-			std::istringstream is2(simpleElements->Attribute("j"));
+			SimpleIStringStream is2(simpleElements->Attribute("j"));
 			int l = atoi(simpleElements->Attribute("l"));
 			while(is2 >> idx)
 			{
@@ -4992,7 +5097,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("k"))
 		{
-			std::istringstream is2(simpleElements->Attribute("k"));
+			SimpleIStringStream is2(simpleElements->Attribute("k"));
 			int l = atoi(simpleElements->Attribute("l"));
 			int c = 0;
 			while(is2 >> idx)
@@ -5064,7 +5169,7 @@ bool Game::loadSceneXML(std::string scene)
 
 				if (element->Attribute("sz"))
 				{
-					std::istringstream is(element->Attribute("sz"));
+					SimpleIStringStream is(element->Attribute("sz"));
 					is >> e->scale.x >> e->scale.y;
 				}
 			}
@@ -5102,7 +5207,7 @@ bool Game::loadSceneXML(std::string scene)
 	{
 		if (entitiesNode->Attribute("d"))
 		{
-			std::istringstream is(entitiesNode->Attribute("d"));
+			SimpleIStringStream is(entitiesNode->Attribute("d"));
 			int idx, x, y;
 			while (is >> idx)
 			{
@@ -5112,7 +5217,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (entitiesNode->Attribute("e"))
 		{
-			std::istringstream is(entitiesNode->Attribute("e"));
+			SimpleIStringStream is(entitiesNode->Attribute("e"));
 			int idx, x, y, rot;
 			while (is >> idx)
 			{
@@ -5123,12 +5228,12 @@ bool Game::loadSceneXML(std::string scene)
 					os << "read in rot as: " << rot;
 					debugLog(os.str());
 				}
-				Entity *e = dsq->game->createEntity(idx, 0, Vector(x,y), rot, true, "");
+				dsq->game->createEntity(idx, 0, Vector(x,y), rot, true, "");
 			}
 		}
 		if (entitiesNode->Attribute("f"))
 		{
-			std::istringstream is(entitiesNode->Attribute("f"));
+			SimpleIStringStream is(entitiesNode->Attribute("f"));
 			int idx, x, y, rot, group;
 			while (is >> idx)
 			{
@@ -5139,7 +5244,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (entitiesNode->Attribute("g"))
 		{
-			std::istringstream is(entitiesNode->Attribute("g"));
+			SimpleIStringStream is(entitiesNode->Attribute("g"));
 			int idx, x, y, rot, group, id;
 			while (is >> idx)
 			{
@@ -5150,7 +5255,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (entitiesNode->Attribute("h"))
 		{
-			std::istringstream is(entitiesNode->Attribute("h"));
+			SimpleIStringStream is(entitiesNode->Attribute("h"));
 			int idx, x, y, rot, groupID, id;
 			Entity::NodeGroups *ng;
 			Entity::NodeGroups nodeGroups;
@@ -5173,35 +5278,34 @@ bool Game::loadSceneXML(std::string scene)
 						{
 							int idx;
 							is >> idx;
-							if (Path *p = getPathByIndex(idx))
+							if (idx >= 0 && idx < getNumPaths())
 							{
-								nodeGroups[i].push_back(p);
+								nodeGroups[i].push_back(getPath(idx));
 							}
 						}
 					}
 				}
 
-				Entity *e = dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, BT_NORMAL, ng, groupID);
+				dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, BT_NORMAL, ng, groupID);
 				// setting group ID
 			}
 		}
 		if (entitiesNode->Attribute("i"))
 		{
-			std::istringstream is(entitiesNode->Attribute("i"));
+			SimpleIStringStream is(entitiesNode->Attribute("i"));
 			int idx, x, y, rot, groupID, id;
 			Entity::NodeGroups nodeGroups;
 			while (is >> idx)
 			{
-				int numNodeGroups = 0;
 				is >> x >> y >> rot >> groupID >> id;
 
-				Entity *e = dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, BT_NORMAL, 0, groupID);
+				dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, BT_NORMAL, 0, groupID);
 				// setting group ID
 			}
 		}
 		if (entitiesNode->Attribute("j"))
 		{
-			std::istringstream is(entitiesNode->Attribute("j"));
+			SimpleIStringStream is(entitiesNode->Attribute("j"));
 			int idx, x, y, rot, groupID, id;
 			std::string name;
 			Entity::NodeGroups nodeGroups;
@@ -5210,10 +5314,7 @@ bool Game::loadSceneXML(std::string scene)
 				name="";
 				if (idx == -1)
 					is >> name;
-				int numNodeGroups = 0;
 				is >> x >> y >> rot >> groupID >> id;
-
-				Entity *e = 0;
 
 				if (!name.empty())
 					dsq->game->createEntity(name, id, Vector(x,y), rot, true, "", ET_ENEMY, BT_NORMAL, 0, groupID);
@@ -5233,6 +5334,12 @@ bool Game::loadSceneXML(std::string scene)
 	}
 	this->reconstructGrid(true);
 	rebuildElementUpdateList();
+	setElementLayerFlags();
+
+	// HACK: Don't try to optimize the barrier layer in Mithalas Cathedral
+	// since elements are turned off dynamically.
+	if (nocasecmp(scene, "cathedral02") == 0)
+		dsq->getRenderObjectLayer(LR_ELEMENTS3)->setOptimizeStatic(false);
 
 	findMaxCameraValues();
 
@@ -5269,9 +5376,9 @@ void Game::findMaxCameraValues()
 		}
 	}
 	/*
-	for (i = 0; i < dsq->elements.size(); i++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (e->position.x > cameraMax.x)
 			cameraMax.x = e->position.x;
 		if (e->position.y > cameraMax.y)
@@ -5392,17 +5499,6 @@ bool Game::loadScene(std::string scene)
 	*/
 }
 
-Path *Game::getPathByName(std::string name)
-{
-    stringToLowerUserData(name);
-	for(int i = 0; i < paths.size(); i++)
-	{
-		if (paths[i]->name == name)
-			return paths[i];
-	}
-	return 0;
-}
-
 void Game::saveScene(std::string scene)
 {
 	std::string fn = getSceneFilename(scene);
@@ -5474,10 +5570,10 @@ void Game::saveScene(std::string scene)
 	saveFile.InsertEndChild(obsXml);
 
 
-	for (i = 0; i < dsq->game->paths.size(); i++)
+	for (i = 0; i < dsq->game->getNumPaths(); i++)
 	{
 		TiXmlElement pathXml("Path");
-		Path *p = dsq->game->paths[i];
+		Path *p = dsq->game->getPath(i);
 		pathXml.SetAttribute("name", p->name);
 		//pathXml.SetAttribute("active", p->active);
 		for (int n = 0; n < p->nodes.size(); n++)
@@ -5526,9 +5622,9 @@ void Game::saveScene(std::string scene)
 	std::ostringstream simpleElements[LR_MAX];
 
 
-	for (i = 0; i < dsq->elements.size(); i++)
+	for (i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (!e->dontSave)
 		{
 			if (e->getElementType() == Element::BOX) {}
@@ -5549,8 +5645,8 @@ void Game::saveScene(std::string scene)
 
 			if (e->idx == -1)
 			{
-				if (!e->e->name.empty())
-					os << e->e->name << " ";
+				if (!e->name.empty())
+					os << e->name << " ";
 				else
 					os << "INVALID" << " ";
 			}
@@ -5740,9 +5836,9 @@ void Game::colorTest()
 	/*
 	std::vector<QuadLight> quadLights;
 	quadLights.push_back(QuadLight(Vector(400, 300), Vector(1, 0, 0), 2000));
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (int i = 0; i < dsq->getNumElements(); i++)
 	{
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		//e->color = Vector(rand()%100, rand()%100, rand()%100);
 		for (int i = 0; i < quadLights.size(); i++)
 		{
@@ -5752,8 +5848,8 @@ void Game::colorTest()
 			{
 				float fract = float(dist.getLength2D())/float(quadLights[i].dist);
 				float amb = fract;
-				fract = 1.0 - fract;
-				e->color = sceneColor*amb + q->color*fract;
+				fract = 1.0f - fract;
+				e->color = Vector(1,1,1)*amb + q->color*fract;
 			}
 			else
 			{
@@ -5797,7 +5893,7 @@ void Game::hideImage()
 	if (image)
 	{
 		image->setLife(1);
-		image->setDecayRate(1.0/2.0);
+		image->setDecayRate(1.0f/2.0f);
 		image->fadeAlphaWithLife = 1;
 	}
 
@@ -5805,7 +5901,7 @@ void Game::hideImage()
 	dsq->overlay->color = 0;
 }
 
-void Game::switchBgLoop(int v, bool effects)
+void Game::switchBgLoop(int v)
 {
 	if (v != lastBgSfxLoop)
 	{
@@ -5815,8 +5911,6 @@ void Game::switchBgLoop(int v, bool effects)
 			dsq->loops.bg = BBGE_AUDIO_NOCHANNEL;
 		}
 
-		Vector hsplash = avatar->getHeadPosition();
-		hsplash.y = waterLevel.x;
 		switch(v)
 		{
 		case 0:
@@ -5829,13 +5923,6 @@ void Game::switchBgLoop(int v, bool effects)
 				sfx.priority = 0.8;
 				dsq->loops.bg = core->sound->playSfx(sfx);
 			}
-
-			if (effects)
-			{
-				core->sound->playSfx("GoUnder");
-
-				core->createParticleEffect("HeadSplash", hsplash, LR_PARTICLES);
-			}
 		break;
 		case 1:
 			if (!airSfxLoop.empty())
@@ -5846,12 +5933,6 @@ void Game::switchBgLoop(int v, bool effects)
 			    sfx.loops = -1;
 				sfx.priority = 0.8;
 				dsq->loops.bg = core->sound->playSfx(sfx);
-			}
-
-			if (effects)
-			{
-				core->sound->playSfx("Emerge");
-				core->createParticleEffect("HeadSplash", hsplash, LR_PARTICLES);
 			}
 		break;
 		}
@@ -5974,7 +6055,7 @@ void game_wibbleParticle(Particle *p)
 	{
 		if (!p->offset.isInterpolating())
 		{
-			p->offset.interpolateTo(Vector(10,0), (8-dsq->game->avatar->getLastNote())/10.0, -1, 1);
+			p->offset.interpolateTo(Vector(10,0), (8-dsq->game->avatar->getLastNote())/10.0f, -1, 1);
 
 			//if (dsq->game->avatar->isSinging())
 			//{
@@ -6004,11 +6085,11 @@ void Game::rebuildElementUpdateList()
 		dsq->getRenderObjectLayer(i)->update = false;
 
 	elementUpdateList.clear();
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (int i = 0; i < dsq->getNumElements(); i++)
 	//for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS8; i++)
 	{
 		//RenderObjectLayer *rl = dsq->getRenderObjectLayer(i);
-		Element *e = dsq->elements[i];
+		Element *e = dsq->getElement(i);
 		if (e && e->layer >= LR_ELEMENTS1 && e->layer <= LR_ELEMENTS8)
 		{
 			if (e->getElementEffectIndex() != -1)
@@ -6016,6 +6097,19 @@ void Game::rebuildElementUpdateList()
 				elementUpdateList.push_back(e);
 			}
 		}
+	}
+}
+
+void Game::setElementLayerFlags()
+{
+	for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS16; i++)
+	{
+		// FIXME: Background SchoolFish get added to ELEMENTS11, so
+		// we can't optimize that layer.  (Maybe create a new layer?)
+		if (i == LR_ELEMENTS11)
+			continue;
+
+		dsq->getRenderObjectLayer(i)->setOptimizeStatic(!isSceneEditorActive() && dsq->user.video.displaylists);
 	}
 }
 
@@ -6027,7 +6121,7 @@ float Game::getTimer(float mod)
 float Game::getHalf2WayTimer(float mod)
 {
 	float t=timer;
-	if (t > 0.5)
+	if (t > 0.5f)
 		t = 1 - t;
 	return timer*2*mod;
 }
@@ -6097,15 +6191,17 @@ void Game::action(int id, int state)
 			recipes->setFocus(true);
 			recipeMenu.toggle(!recipeMenu.on, true);
 		}
-		else
+		else if (!core->isStateJumpPending())
 		{
 			toggleWorldMap();
 		}
 	}
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (id == ACTION_TOGGLESCENEEDITOR && !state)		toggleSceneEditor();
+#endif
 
-	if (dsq->isDeveloperKeys() || sceneEditor.isOn())
+	if (dsq->isDeveloperKeys() || isSceneEditorActive())
 	{
 		if (id == ACTION_TOGGLEGRID && !state)			toggleGridRender();
 	}
@@ -6199,6 +6295,42 @@ void Game::action(int id, int state)
 						}
 					}
 				}
+
+				if (id == ACTION_FOODDROP)
+				{
+					if (recipeMenu.on)
+					{
+					}
+					else
+					{
+						int trashIndex = -1;
+						for (int i = 0; i < foodHolders.size(); i++)
+						{
+							if (foodHolders[i]->alpha.x > 0 && foodHolders[i]->alphaMod > 0 && foodHolders[i]->isTrash())
+							{
+								trashIndex = i;
+								break;
+							}
+						}
+						if (trashIndex >= 0)
+						{
+							int ingrIndex = -1;
+							for (int i = 0; i < foodSlots.size(); i++)
+							{
+								if (foodSlots[i]->isCursorIn() && foodSlots[i]->getIngredient())
+								{
+									ingrIndex = i;
+									break;
+								}
+							}
+							if (ingrIndex >= 0)
+							{
+								foodSlots[ingrIndex]->discard();
+								adjustFoodSlotCursor();
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -6237,6 +6369,8 @@ void Game::applyState()
 		}
 	}
 
+	dsq->collectScriptGarbage();
+
 	isCooking = false;
 	enqueuedPreviewRecipe = 0;
 
@@ -6249,9 +6383,6 @@ void Game::applyState()
 
 	cameraOffBounds = false;
 
-
-	foodPage = 0;
-	treasurePage = 0;
 
 	ingOffY = 0;
 	ingOffYTimer = 0;
@@ -6270,8 +6401,6 @@ void Game::applyState()
 
 	firstSchoolFish = true;
 	invincibleOnNested = true;
-
-	currentMenuPage = MENUPAGE_NONE;
 
 
 	controlHintNotes.clear();
@@ -6297,7 +6426,6 @@ void Game::applyState()
 	cameraFollowEntity = 0;
 
 	shuttingDownGameState = false;
-	optionsMenu = false;
 	core->particlesPaused = false;
 	bNatural = false;
 	songLineRender = 0;
@@ -6356,7 +6484,6 @@ void Game::applyState()
 	//dsq->getRenderObjectLayer(LR_ELEMENTS5)->update = false;
 
 	backgroundImageRepeat = 1;
-	dsq->conversationDelay = 0;
 	jetStreams.clear();
 	grad = 0;
 	maxZoom = -1;
@@ -6376,7 +6503,7 @@ void Game::applyState()
 	StateObject::applyState();
 	//core->enable2D(800);
 
-	dsq->entities.clear();
+	dsq->clearEntities();
 	dsq->clearElements();
 	elementWithMenu = 0;
 	//dsq->gui.menu.clearEntries();
@@ -6440,6 +6567,7 @@ void Game::applyState()
 		controlHint_bg->alphaMod = 0.7;
 		//controlHint_bg->setTexture("HintBox");
 		controlHint_bg->setWidthHeight(core->getVirtualWidth(), 100);
+		controlHint_bg->autoWidth = AUTO_VIRTUALWIDTH;
 		controlHint_bg->alpha = 0;
 	}
 	addRenderObject(controlHint_bg, LR_HELP);
@@ -6518,7 +6646,7 @@ void Game::applyState()
 	li = 0;
 
 
-#ifdef BUILD_SCENEEDITOR
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (dsq->isDeveloperKeys() || dsq->mod.isActive())
 	{
 		sceneEditor.init();
@@ -6678,9 +6806,8 @@ void Game::applyState()
 	miniMapRender = new MiniMapRender;
 
 	//miniMapRender->position = Vector(740,540);
-	// position = vw - 55
-	// set x in minimaprender::onupdate
-	miniMapRender->position = Vector(0,545); // x=745
+	// position = (vw,vh) - (scale*100)
+	// set in minimaprender::onupdate
 	miniMapRender->scale = Vector(0.55, 0.55);
 
 
@@ -6711,17 +6838,17 @@ void Game::applyState()
 	{
 		stringToLower(fromScene);
 		debugLog("fromScene: " + fromScene + " fromWarpType: " + fromWarpType);
-		int smallestDist = -1;
-		Path *closest=0;
+		float smallestDist = HUGE_VALF;
+		Path *closest = 0;
 		Vector closestPushOut;
-		bool doFlip=false;
-		for (int i = 0; i < dsq->game->paths.size(); i++)
+		bool doFlip = false;
+		for (int i = 0; i < dsq->game->getNumPaths(); i++)
 		{
-			Path *p = dsq->game->paths[i];
+			Path *p = dsq->game->getPath(i);
 			Vector pos = p->nodes[0].position;
 			if (p && (nocasecmp(p->warpMap, fromScene)==0))
 			{
-				int dist = -1;
+				float dist = -1;
 				bool go = false;
 				Vector pushOut;
 				switch(fromWarpType)
@@ -6729,23 +6856,23 @@ void Game::applyState()
 				case CHAR_RIGHT:
 					go = (p->warpType == CHAR_LEFT);
 					pushOut = Vector(1,0);
-					dist = fabs(fromPosition.y - pos.y);
+					dist = fabsf(fromPosition.y - pos.y);
 					doFlip = true;
 				break;
 				case CHAR_LEFT:
 					go = (p->warpType == CHAR_RIGHT);
 					pushOut = Vector(-1,0);
-					dist = fabs(fromPosition.y - pos.y);
+					dist = fabsf(fromPosition.y - pos.y);
 				break;
 				case CHAR_UP:
 					go = (p->warpType == CHAR_DOWN);
 					pushOut = Vector(0, -1);
-					dist = fabs(fromPosition.x - pos.x);
+					dist = fabsf(fromPosition.x - pos.x);
 				break;
 				case CHAR_DOWN:
 					go = (p->warpType == CHAR_UP);
 					pushOut = Vector(0, 1);
-					dist = fabs(fromPosition.x - pos.x);
+					dist = fabsf(fromPosition.x - pos.x);
 				break;
 				}
 				if (go)
@@ -6754,7 +6881,7 @@ void Game::applyState()
 					{
 						debugLog(p->warpMap + ": warpType is wonky");
 					}
-					else if ((dist < smallestDist || smallestDist == -1))
+					else if (dist < smallestDist)
 					{
 						smallestDist = dist;
 						closest = p;
@@ -6817,11 +6944,11 @@ void Game::applyState()
 	if (avatar->position.isZero() || avatar->position == Vector(1,1))
 	{
 		Path *p = 0;
-		if ((p = getPathByName("NAIJASTART")) || (p = getPathByName("NAIJASTART L")))
+		if ((p = getPathByName("NAIJASTART")) != 0 || (p = getPathByName("NAIJASTART L")) != 0)
 		{
 			avatar->position = p->nodes[0].position;
 		}
-		else if (p = getPathByName("NAIJASTART R"))
+		else if ((p = getPathByName("NAIJASTART R")) != 0)
 		{
 			avatar->position = p->nodes[0].position;
 			avatar->flipHorizontal();
@@ -6935,14 +7062,18 @@ void Game::applyState()
 	core->resetTimer();
 
 	if (verbose) debugLog("paths init");
-	int pathSz = paths.size();
+	int pathSz = getNumPaths();
 	for (i = 0; i < pathSz; i++)
 	{
-		paths[i]->init();
+		getPath(i)->init();
 	}
 
 	debugLog("Updating bgSfxLoop");
-	updateBgSfxLoop(false);
+	updateBgSfxLoop();
+
+	// Must be _before_ the init script, since some init scripts run
+	// cutscenes immediately.  --achurch
+	dsq->subtitlePlayer.show(0.25);
 
 	if (verbose) debugLog("loading map init script");
 	dsq->runScript("scripts/maps/map_"+sceneName+".lua", "init");
@@ -6999,7 +7130,7 @@ void Game::bindInput()
 	//ActionMapper::clearCreatedEvents();
 
 
-#ifdef BUILD_SCENEEDITOR
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (dsq->isDeveloperKeys() || dsq->mod.isActive())
 	{
 		//addAction(MakeFunctionEvent(Game, toggleSceneEditor), KEY_TAB, 0);
@@ -7042,6 +7173,7 @@ void Game::bindInput()
 	dsq->user.control.actionSet.importAction(this, "CookFood",		ACTION_COOKFOOD);
 	dsq->user.control.actionSet.importAction(this, "FoodLeft",		ACTION_FOODLEFT);
 	dsq->user.control.actionSet.importAction(this, "FoodRight",		ACTION_FOODRIGHT);
+	dsq->user.control.actionSet.importAction(this, "FoodDrop",		ACTION_FOODDROP);
 
 	if (dsq->isDeveloperKeys() || dsq->mod.isActive())
 	{
@@ -7051,7 +7183,7 @@ void Game::bindInput()
 
 	/*
 	addAction(ACTION_MENULEFT,	KEY_LEFT);
-	addAction(ACTION_MENURIGHT, KEY_RIGHT);
+	addAction(ACTION_MENURIGHT,	KEY_RIGHT);
 	addAction(ACTION_MENUUP,	KEY_UP);
 	addAction(ACTION_MENUDOWN,	KEY_DOWN);
 
@@ -7060,17 +7192,16 @@ void Game::bindInput()
 	dsq->user.control.actionSet.importAction(this, "SwimUp",		ACTION_MENUUP);
 	dsq->user.control.actionSet.importAction(this, "SwimDown",		ACTION_MENUDOWN);
 
-	addAction(ACTION_MENULEFT,	X360_DPAD_LEFT);
-	addAction(ACTION_MENURIGHT, X360_DPAD_RIGHT);
-	addAction(ACTION_MENUUP,	X360_DPAD_UP);
-	addAction(ACTION_MENUDOWN,	X360_DPAD_DOWN);
+	addAction(ACTION_MENULEFT,	JOY1_DPAD_LEFT);
+	addAction(ACTION_MENURIGHT,	JOY1_DPAD_RIGHT);
+	addAction(ACTION_MENUUP,	JOY1_DPAD_UP);
+	addAction(ACTION_MENUDOWN,	JOY1_DPAD_DOWN);
 	*/
 
 	addAction(ACTION_MENULEFT,	JOY1_STICK_LEFT);
-	addAction(ACTION_MENURIGHT, JOY1_STICK_RIGHT);
+	addAction(ACTION_MENURIGHT,	JOY1_STICK_RIGHT);
 	addAction(ACTION_MENUUP,	JOY1_STICK_UP);
 	addAction(ACTION_MENUDOWN,	JOY1_STICK_DOWN);
-
 
 
 	if (avatar)
@@ -7119,44 +7250,45 @@ const int numTreasures = 16*2;
 
 void Game::onPrevTreasurePage()
 {
-	if ((treasurePage-1) * treasurePageSize >= 0)
+	if (currentTreasurePage > 0)
 	{
 		dsq->sound->playSfx("menu-switch", 0.5);
 		dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
 
-		treasurePage--;
+		currentTreasurePage--;
 		refreshTreasureSlots();
 	}
 	else
 	{
-		dsq->sound->playSfx("menu-switch", 0.5);
-		dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
+		if (numTreasures > 0)
+		{
+			dsq->sound->playSfx("menu-switch", 0.5);
+			dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
 
-		treasurePage = ((numTreasures-1)/treasurePageSize);
-		if (treasurePage < 0)
-			treasurePage = 0;
-		refreshTreasureSlots();
+			currentTreasurePage = ((numTreasures-1)/treasurePageSize);
+			refreshTreasureSlots();
+		}
 	}
 }
 
 void Game::onNextTreasurePage()
 {
-	if ((treasurePage+1)*treasurePageSize < numTreasures)
+	if ((currentTreasurePage+1)*treasurePageSize < numTreasures)
 	{
 		dsq->sound->playSfx("menu-switch", 0.5);
 		dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
 
-		treasurePage++;
+		currentTreasurePage++;
 		refreshTreasureSlots();
 	}
 	else
 	{
-		if (treasurePage != 0)
+		if (currentTreasurePage != 0)
 		{
 			dsq->sound->playSfx("menu-switch", 0.5);
 			dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
 
-			treasurePage = 0;
+			currentTreasurePage = 0;
 			refreshTreasureSlots();
 		}
 	}
@@ -7164,29 +7296,26 @@ void Game::onNextTreasurePage()
 
 void Game::onPrevFoodPage()
 {
-	int lastFoodPage = foodPage;
-	if ((foodPage-1) * foodPageSize >= 0)
+	int lastFoodPage = currentFoodPage;
+	if (currentFoodPage > 0)
 	{
-		foodPage--;
+		currentFoodPage--;
 		refreshFoodSlots(false);
 	}
 	else
 	{
 		if (!dsq->continuity.ingredients.empty())
 		{
-			foodPage = ((dsq->continuity.ingredients.size()-1)/foodPageSize);
-			if (foodPage < 0)
-				foodPage = 0;
-
+			currentFoodPage = ((dsq->continuity.ingredients.size()-1)/foodPageSize);
 			refreshFoodSlots(false);
 		}
 	}
 
 	std::ostringstream os;
-	os << "food page: " << foodPage;
+	os << "food page: " << currentFoodPage;
 	debugLog(os.str());
 
-	if (foodPage != lastFoodPage)
+	if (currentFoodPage != lastFoodPage)
 	{
 		dsq->sound->playSfx("menu-switch", 0.5);
 		dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
@@ -7195,22 +7324,22 @@ void Game::onPrevFoodPage()
 
 void Game::onNextFoodPage()
 {
-	int lastFoodPage = foodPage;
-	if ((foodPage+1)*foodPageSize < dsq->continuity.ingredients.size())
+	int lastFoodPage = currentFoodPage;
+	if ((currentFoodPage+1)*foodPageSize < dsq->continuity.ingredients.size())
 	{
-		foodPage++;
+		currentFoodPage++;
 		refreshFoodSlots(false);
 	}
 	else
 	{
-		if (foodPage != 0)
+		if (currentFoodPage != 0)
 		{
-			foodPage = 0;
+			currentFoodPage = 0;
 			refreshFoodSlots(false);
 		}
 	}
 
-	if (foodPage != lastFoodPage)
+	if (currentFoodPage != lastFoodPage)
 	{
 		dsq->sound->playSfx("menu-switch", 0.5);
 		dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
@@ -7486,9 +7615,36 @@ void Game::onCook()
 		else
 			dsq->main(0.2);
 
+		bool haveLeftovers = true;
 		for (int i = 0; i < foodHolders.size(); i++)
 		{
-			foodHolders[i]->setIngredient(0, false);
+			if (!foodHolders[i]->isEmpty()) {
+				IngredientData *ing = foodHolders[i]->getIngredient();
+				// FIXME: It _looks_ like *ing should be the actual inventory
+				// object, but playing it safe because I'm not sure.  --achurch
+				IngredientData *heldIng = dsq->continuity.getIngredientHeldByName(ing->name);
+				if (!heldIng || heldIng->amount < heldIng->held)
+				{
+					haveLeftovers = false;
+					break;
+				}
+			}
+		}
+		for (int i = 0; i < foodHolders.size(); i++)
+		{
+			if (haveLeftovers)
+			{
+				IngredientData *ing = foodHolders[i]->getIngredient();
+				if (ing)
+				{
+					IngredientData *heldIng = dsq->continuity.getIngredientHeldByName(ing->name);
+					heldIng->amount--;
+				}
+			}
+			else
+			{
+				foodHolders[i]->setIngredient(0, false);
+			}
 		}
 
 		dsq->sound->playSfx("Cook");
@@ -7513,11 +7669,12 @@ void Game::onCook()
 			showRecipe->setTexture(n);
 			showRecipe->scale = Vector(0.5, 0.5);
 			showRecipe->scale.interpolateTo(Vector(1.2, 1.2), t);
-			showRecipe->alpha.path.clear();
-			showRecipe->alpha.path.addPathNode(0, 0);
-			showRecipe->alpha.path.addPathNode(1, 0.1);
-			showRecipe->alpha.path.addPathNode(1, 0.6);
-			showRecipe->alpha.path.addPathNode(0, 1);
+			showRecipe->alpha.ensureData();
+			showRecipe->alpha.data->path.clear();
+			showRecipe->alpha.data->path.addPathNode(0, 0);
+			showRecipe->alpha.data->path.addPathNode(1, 0.1);
+			showRecipe->alpha.data->path.addPathNode(1, 0.6);
+			showRecipe->alpha.data->path.addPathNode(0, 1);
 			showRecipe->alpha.startPath(t);
 		}
 
@@ -7532,6 +7689,8 @@ void Game::onCook()
 		if (r)
 		{
 			dsq->continuity.learnRecipe(r);
+			if (haveLeftovers)
+				updatePreviewRecipe();
 		}
 
 		core->mouse.buttonsEnabled = true;
@@ -7672,7 +7831,7 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 
 			char str[128]; sprintf(str, "song/notebutton-%d", note); 
 			Quad *q = new Quad(str, p);
-			q->color = dsq->getNoteColor(note)*0.5 + Vector(1, 1, 1)*0.5;
+			q->color = dsq->getNoteColor(note)*0.5f + Vector(1, 1, 1)*0.5f;
 			q->followCamera = 1;
 			q->scale = Vector(1.0, 1.0);
 			q->alpha = 0;
@@ -7761,10 +7920,11 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 	controlHint_ignoreClear = ignoreClear;
 
 
-	controlHint_shine->alpha.path.clear();
-	controlHint_shine->alpha.path.addPathNode(0.001, 0.0);
-	controlHint_shine->alpha.path.addPathNode(1.000, 0.3);
-	controlHint_shine->alpha.path.addPathNode(0.001, 1.0);
+	controlHint_shine->alpha.ensureData();
+	controlHint_shine->alpha.data->path.clear();
+	controlHint_shine->alpha.data->path.addPathNode(0.001, 0.0);
+	controlHint_shine->alpha.data->path.addPathNode(1.000, 0.3);
+	controlHint_shine->alpha.data->path.addPathNode(0.001, 1.0);
 	controlHint_shine->alpha.startPath(0.4);
 }
 
@@ -7798,6 +7958,8 @@ void Game::onToggleHelpScreen()
 {
 	if (inHelpScreen)
 		toggleHelpScreen(false);
+	else if (core->isStateJumpPending())
+		return;
 	else
 	{
 		if (worldMapRender->isOn())
@@ -7831,7 +7993,7 @@ void Game::onToggleHelpScreen()
 
 void Game::toggleHelpScreen(bool on, const std::string &label)
 {
-	if (dsq->game->sceneEditor.isOn()) return;
+	if (dsq->game->isSceneEditorActive()) return;
 
 	if (inHelpScreen == on) return;
 	if (core->getShiftState()) return;
@@ -8090,7 +8252,7 @@ void Game::onPressEscape()
 		{
 			if (!AquariaKeyConfig::waitingForInput)
 			{
-				if (dsq->game->menuOpenTimer > 0.5)
+				if (dsq->game->menuOpenTimer > 0.5f)
 				{
 					if (optionsMenu || keyConfigMenu)
 						onOptionsCancel();
@@ -8103,7 +8265,7 @@ void Game::onPressEscape()
 
 		if (!paused)
 		{
-			if (core->getNestedMains() == 1)
+			if (core->getNestedMains() == 1 && !core->isStateJumpPending())
 				showInGameMenu();
 		}
 		else
@@ -8119,6 +8281,7 @@ void Game::onPressEscape()
 
 		if ((dsq->saveSlotMode != SSM_NONE || dsq->inModSelector) && core->isNested())
 		{
+			dsq->selectedSaveSlot = 0;
 			core->quitNestedMain();
 		}
 	}
@@ -8127,6 +8290,7 @@ void Game::onPressEscape()
 void Game::onDebugSave()
 {
 	hideInGameMenu();
+	clearControlHint();
 	core->main(0.5);
 	dsq->game->togglePause(true);
 	dsq->doSaveSlotMenu(SSM_SAVE);
@@ -8164,7 +8328,7 @@ void Game::onExitCheckYes()
 
 void Game::onExitCheckNo()
 {
-	hideInGameMenuExitCheck();
+	hideInGameMenuExitCheck(true);
 }
 
 void Game::showInGameMenuExitCheck()
@@ -8178,14 +8342,15 @@ void Game::showInGameMenuExitCheck()
 	eNo->setFocus(true);
 }
 
-void Game::hideInGameMenuExitCheck()
+void Game::hideInGameMenuExitCheck(bool refocus)
 {
 	inGameMenuExitState = 0;
 	eYes->alpha.interpolateTo(0, 0.2);
 	eNo->alpha.interpolateTo(0, 0.2);
 	eAre->alpha.interpolateTo(0, 0.2);
 
-	((AquariaMenuItem*)menu[1])->setFocus(true);
+	if (refocus)
+		((AquariaMenuItem*)menu[1])->setFocus(true);
 }
 
 void Game::onInGameMenuExit()
@@ -8236,13 +8401,13 @@ void Game::playBurstSound(bool wallJump)
 	int freqBase = 950;
 	if (wallJump)
 		freqBase += 100;
-	sound->playSfx("Burst", 1, 0);//, (freqBase+rand()%25)/1000.0);
+	sound->playSfx("Burst", 1, 0);//, (freqBase+rand()%25)/1000.0f);
 	if (chance(50))
 	{
 		switch (dsq->continuity.form)
 		{
 		case FORM_BEAST:
-			sound->playSfx("BeastBurst", (128+rand()%64)/256.0, 0);//, (freqBase+rand()%25)/1000.0);
+			sound->playSfx("BeastBurst", (128+rand()%64)/256.0f, 0);//, (freqBase+rand()%25)/1000.0f);
 		break;
 		}
 	}
@@ -8287,9 +8452,9 @@ Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Entity *circle)
 	return collideSkeletalVsCircle(skeletal, pos, circle->collideRadius);
 }
 
-Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, int radius)
+Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, float radius)
 {
-	int smallestDist = -1;
+	//float smallestDist = HUGE_VALF;
 	Bone *closest = 0;
 	for (int i = 0; i < skeletal->skeletalSprite.bones.size(); i++)
 	{
@@ -8297,7 +8462,7 @@ Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, in
 		/*
 		int checkRadius = sqr(radius+b->collisionMaskRadius);
 		Vector bonePos = b->getWorldCollidePosition();
-		int dist = (bonePos - pos).getSquaredLength2D();
+		float dist = (bonePos - pos).getSquaredLength2D();
 		*/
 
 		// MULTIPLE CIRCLES METHOD
@@ -8323,7 +8488,7 @@ Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, in
 		{
 			if (dist < checkRadius)
 			{
-				if (smallestDist == -1 || dist < smallestDist)
+				if (dist < smallestDist)
 				{
 					closest = b;
 					smallestDist = dist;
@@ -8335,9 +8500,8 @@ Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, in
 	return closest;
 }
 
-bool Game::collideCircleVsLine(Entity *ent, Vector start, Vector end, int radius)
+bool Game::collideCircleVsLine(Entity *ent, Vector start, Vector end, float radius)
 {
-	int smallestDist = -1;
 	bool collision = false;
 	if (isTouchingLine(start, end, ent->position, radius+ent->collideRadius, &lastCollidePosition))
 	{
@@ -8346,13 +8510,12 @@ bool Game::collideCircleVsLine(Entity *ent, Vector start, Vector end, int radius
 	return collision;
 }
 
-bool Game::collideCircleVsLineAngle(Entity *ent, float angle, int startLen, int endLen, int radius, Vector basePos)
+bool Game::collideCircleVsLineAngle(Entity *ent, float angle, float startLen, float endLen, float radius, Vector basePos)
 {
-	int smallestDist = -1;
 	bool collision = false;
 	float rads = MathFunctions::toRadians(angle);
-	float sinv = sin(rads);
-	float cosv = cos(rads);
+	float sinv = sinf(rads);
+	float cosv = cosf(rads);
 	Vector start=Vector(sinv,cosv)*startLen + basePos;
 	Vector end=Vector(sinv,cosv)*endLen + basePos;
 	if (isTouchingLine(start, end, ent->position, radius+ent->collideRadius, &lastCollidePosition))
@@ -8367,20 +8530,20 @@ bool Game::collideCircleVsLineAngle(Entity *ent, float angle, int startLen, int 
 }
 
 
-Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Vector pos, int radius)
+Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius)
 {
-	int smallestDist = -1;
+	float smallestDist = HUGE_VALF;
 	Bone *closest = 0;
 	if (!(pos - skeletal->position).isLength2DIn(2000)) return 0;
 	for (int i = 0; i < skeletal->skeletalSprite.bones.size(); i++)
 	{
 		Bone *b = skeletal->skeletalSprite.bones[i];
-		int checkRadius = sqr(radius+b->collisionMaskRadius);
-		Vector bonePos = b->getWorldCollidePosition();
-		int dist = (bonePos - pos).getSquaredLength2D();
 
 		if (b->alpha.x == 1 && b->renderQuad)
 		{
+			float checkRadius = sqr(radius+b->collisionMaskRadius);
+			Vector bonePos = b->getWorldCollidePosition();
+			float dist = (bonePos - pos).getSquaredLength2D();
 			// BOUND RECT METHOD
 			if (!b->collisionRects.empty())
 			{
@@ -8411,7 +8574,7 @@ Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Vector pos, int radius)
 			{
 				if (dist < sqr(radius+b->collideRadius))
 				{
-					if (smallestDist == -1 || dist < smallestDist)
+					if (dist < smallestDist)
 					{
 						closest = b;
 						smallestDist = dist;
@@ -8437,7 +8600,6 @@ void Game::preLocalWarp(LocalWarpType localWarpType)
 
 	dsq->game->avatar->warpIn = !dsq->game->avatar->warpIn;
 	
-	float t = 0.2;
 	dsq->screenTransition->capture();
 	core->resetTimer();
 }
@@ -8582,7 +8744,7 @@ void Game::handleShotCollisionsHair(Entity *e, int num)
 	}
 }
 
-CollideData Game::collideCircleWithAllEntities(Vector pos, int r, Entity *me, int spellType, bool checkAvatarFlag)
+CollideData Game::collideCircleWithAllEntities(Vector pos, float r, Entity *me, int spellType, bool checkAvatarFlag)
 {
 	CollideData c;
 	//if (me && (checkHitEntitiesFlag && !me->hitEntity)) return 0;
@@ -8599,13 +8761,12 @@ CollideData Game::collideCircleWithAllEntities(Vector pos, int r, Entity *me, in
 				if (spellType == 0)
 				{
 					Bone *closest = 0;
-					int dist = 0;
-					int smallestDist = -1;
+					float smallestDist = HUGE_VALF;
 					for (int i = 0; i < e->skeletalSprite.bones.size(); i++)
 					{
 						Bone *b = e->skeletalSprite.bones[i];
 						Vector bonePos = b->getWorldCollidePosition();
-						dist = (bonePos - pos).getSquaredLength2D();
+						float dist = (bonePos - pos).getSquaredLength2D();
 						if (!b->collisionMask.empty() && b->alpha.x == 1)
 						{
 							if (dist < sqr(r + b->collisionMaskRadius))
@@ -8631,10 +8792,10 @@ CollideData Game::collideCircleWithAllEntities(Vector pos, int r, Entity *me, in
 						else if (b->collideRadius && b->alpha.x == 1)
 						{
 							//Vector bonePos = b->getWorldCollidePosition();
-							//dist = (bonePos - pos).getSquaredLength2D();
+							//float dist = (bonePos - pos).getSquaredLength2D();
 							if (dist < sqr(r+b->collideRadius))
 							{
-								if (smallestDist == -1 || dist < smallestDist)
+								if (dist < smallestDist)
 								{
 									closest = b;
 									smallestDist = dist;
@@ -8697,18 +8858,23 @@ CollideData Game::collideCircleWithAllEntities(Vector pos, int r, Entity *me, in
 	return c;
 }
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 void Game::toggleSceneEditor()
 {
 	if (!core->getAltState())
+	{
 		sceneEditor.toggle();
+		setElementLayerFlags();
+	}
 }
+#endif
 
 void Game::toggleMiniMapRender()
 {
 	if (miniMapRender)
 	{
 		if (miniMapRender->alpha == 0)
-			miniMapRender->alpha.interpolateTo(1, 0.1);
+			miniMapRender->alpha.interpolateTo(1, 0.1f);
 		else if (!miniMapRender->alpha.isInterpolating())
 			miniMapRender->alpha.interpolateTo(0, 0.1f);
 	}
@@ -8760,13 +8926,13 @@ void Game::setParallaxTextureCoordinates(Quad *q, float speed)
 	q->followCamera = 1;
 	q->texture->repeat = true;
 
-	float camx = (core->cameraPos.x/800.0)*speed;
-	float camy = -(core->cameraPos.y/600.0)*speed;
+	float camx = (core->cameraPos.x/800.0f)*speed;
+	float camy = -(core->cameraPos.y/600.0f)*speed;
 
-	float camx1 = camx - float(backgroundImageRepeat)/2.0;
-	float camx2 = camx + float(backgroundImageRepeat)/2.0;
-	float camy1 = camy - float(backgroundImageRepeat)/2.0;
-	float camy2 = camy + float(backgroundImageRepeat)/2.0;
+	float camx1 = camx - float(backgroundImageRepeat)/2.0f;
+	float camx2 = camx + float(backgroundImageRepeat)/2.0f;
+	float camy1 = camy - float(backgroundImageRepeat)/2.0f;
+	float camy2 = camy + float(backgroundImageRepeat)/2.0f;
 
 	q->upperLeftTextureCoordinates = Vector(camx1*backgroundImageRepeat, camy1*backgroundImageRepeat);
 	q->lowerRightTextureCoordinates = Vector(camx2*backgroundImageRepeat, camy2*backgroundImageRepeat);
@@ -8798,12 +8964,11 @@ void Game::updateCurrentVisuals(float dt)
 	/*
 	static float delay = 0;
 	delay += dt;
-	if (delay > 0.2)
+	if (delay > 0.2f)
 	{
-		for (int i = 0; i < dsq->game->paths.size(); i++)
+		for (Path *p = dsq->game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
 		{
-			Path *p = dsq->game->paths[i];
-			if (p->pathType == PATH_CURRENT && p->active)
+			if (p->active)
 			{
 				for (int n = 1; n < p->nodes.size(); n++)
 				{
@@ -8822,11 +8987,11 @@ void Game::updateCurrentVisuals(float dt)
 	*/
 
 	/*
-    if (dsq->game->paths[i]->name == "CURRENT" && dsq->game->paths[i]->nodes.size() >= 2)
+    if (dsq->game->getPath(i)->name == "CURRENT" && dsq->game->getPath(i)->nodes.size() >= 2)
 	{
-		Vector dir = dsq->game->paths[i]->nodes[1].position - dsq->game->paths[i]->nodes[0].position;
+		Vector dir = dsq->game->getPath(i)->nodes[1].position - dsq->game->getPath(i)->nodes[0].position;
 		dir.setLength2D(800);
-		dsq->spawnBubble(dsq->game->paths[i]->nodes[0].position, dir);
+		dsq->spawnBubble(dsq->game->getPath(i)->nodes[0].position, dir);
 	}
 	*/
 }
@@ -8900,6 +9065,7 @@ void Game::onOptionsSave()
 
 	if (keyConfigMenu)
 	{
+		AquariaKeyConfig::waitingForInput = 0;
 		dsq->screenTransition->capture();
 		toggleKeyConfigMenu(false);
 		toggleOptionsMenu(true, false, true);
@@ -8935,6 +9101,7 @@ void Game::onOptionsCancel()
 
 	if (keyConfigMenu)
 	{
+		AquariaKeyConfig::waitingForInput = 0;
 		dsq->screenTransition->capture();
 		toggleKeyConfigMenu(false);
 		toggleOptionsMenu(true, true, true);
@@ -8991,7 +9158,6 @@ void Game::togglePetMenu(bool f)
 		toggleMainMenu(false);
 
 		bool hasPet = false;
-		bool didMenu = false;
 		for (int i = 0; i < petSlots.size(); i++)
 		{
 			petSlots[i]->alpha = 1;
@@ -9138,7 +9304,6 @@ void Game::toggleTreasureMenu(bool f)
 	else if (!f && treasureMenu)
 	{
 		treasureMenu = false;
-		toggleMainMenu(true);
 
 		for (int i = 0; i < treasureTips.size(); i++)
 			treasureTips[i]->alpha = 0;
@@ -9276,13 +9441,12 @@ void Game::toggleFoodMenu(bool f)
 		circlePageNum->alpha = 1;
 
 		previewRecipe->alpha = 0;
+		updatePreviewRecipe();
 	}
 	else if (!f && foodMenu)
 	{
 		recipeMenu.toggle(false);
 		foodMenu = false;
-
-		toggleMainMenu(true);
 
 		cook->alpha = 0;
 		recipes->alpha = 0;
@@ -9362,17 +9526,13 @@ void Game::toggleMainMenu(bool f)
 					}
 				}
 			}
-			songSlots[i]->setDirMove(DIR_RIGHT, 0);
-			songSlots[i]->setCanDirMove(false);
 		}
 
-		/*
 		if (ss)
 		{
 			ss->setDirMove(DIR_RIGHT, (AquariaMenuItem*)menu[5]);
 		}
-		*/
-		((AquariaMenuItem*)menu[5])->setDirMove(DIR_LEFT, 0);
+		((AquariaMenuItem*)menu[5])->setDirMove(DIR_LEFT, ss);
 
 		doMenuSectionHighlight(0);
 	}
@@ -9420,6 +9580,7 @@ void Game::toggleKeyConfigMenu(bool f)
 
 		keyConfigMenu = true;
 
+		group_keyConfig->setHidden(false);
 		group_keyConfig->alpha = 1;
 
 		dsq->user_bcontrol = dsq->user;
@@ -9459,6 +9620,7 @@ void Game::toggleKeyConfigMenu(bool f)
 		keyConfigMenu = false;
 
 		group_keyConfig->alpha = 0;
+		group_keyConfig->setHidden(true);
 
 		opt_cancel->alpha = 0;
 		opt_save->alpha = 0;
@@ -9678,7 +9840,16 @@ void Game::updateOptionsMenu(float dt)
 		*/
 
 		optsfxdly += dt;
-		if (optsfxdly > 0.6)
+		if (sfxslider->hadInput())
+		{
+			dsq->sound->playSfx("denied");
+		}
+		else if (voxslider->hadInput())
+		{
+			if (!dsq->sound->isPlayingVoice())
+				dsq->voice("naija_somethingfamiliar");
+		}
+		else if (optsfxdly > 0.6f)
 		{
 			optsfxdly = 0;
 			if (sfxslider->isGrabbed())
@@ -9728,7 +9899,7 @@ void Game::updateInGameMenu(float dt)
 
 			if (!dsq->continuity.ingredients.empty())
 			{
-				int pageNum = (foodPage+1);
+				int pageNum = (currentFoodPage+1);
 				int numPages = ((dsq->continuity.ingredients.size()-1)/foodPageSize)+1;
 
 				std::ostringstream os;
@@ -9748,7 +9919,7 @@ void Game::updateInGameMenu(float dt)
 		if (treasureMenu)
 		{
 			std::ostringstream os;
-			os << (treasurePage+1) << "/" << (numTreasures/treasurePageSize);
+			os << (currentTreasurePage+1) << "/" << (numTreasures/treasurePageSize);
 			circlePageNum->setText(os.str());
 		}
 		// HACK: move this later
@@ -9761,7 +9932,7 @@ void Game::updateInGameMenu(float dt)
 
 			if (currentSongMenuNote < s.notes.size())
 			{
-				if (songMenuPlayDelay >= 0.5)
+				if (songMenuPlayDelay >= 0.5f)
 				{
 					songMenuPlayDelay = 0;
 
@@ -9774,7 +9945,7 @@ void Game::updateInGameMenu(float dt)
 						*/
 						sound->playSfx(dsq->game->getNoteName(s.notes[currentSongMenuNote], "Menu"));
 
-						float a = (s.notes[currentSongMenuNote]*2*PI)/8.0;
+						float a = (s.notes[currentSongMenuNote]*2*PI)/8.0f;
 						int sz = 110*menuBg->scale.x;
 						Vector notePos(sinf(a)*sz,cosf(a)*sz);
 
@@ -9782,10 +9953,11 @@ void Game::updateInGameMenu(float dt)
 						Quad *q = new Quad("particles/glow", Vector(400+237*menuBg->scale.x,300-52*menuBg->scale.x)+notePos);
 						q->setBlendType(RenderObject::BLEND_ADD);
 						q->scale = Vector(5,5);
-						q->alpha.path.addPathNode(0, 0);
-						q->alpha.path.addPathNode(0.75, 0.5);
-						q->alpha.path.addPathNode(0.75, 0.5);
-						q->alpha.path.addPathNode(0, 1);
+						q->alpha.ensureData();
+						q->alpha.data->path.addPathNode(0, 0);
+						q->alpha.data->path.addPathNode(0.75, 0.5);
+						q->alpha.data->path.addPathNode(0.75, 0.5);
+						q->alpha.data->path.addPathNode(0, 1);
 						q->alpha.startPath(t);
 						q->followCamera = 1;
 						q->setLife(t);
@@ -9809,7 +9981,7 @@ void Game::updateInGameMenu(float dt)
 			}
 			else
 			{
-				if (songMenuPlayDelay >= 1.0)
+				if (songMenuPlayDelay >= 1.0f)
 				{
 					playingSongInMenu = -1;
 				}
@@ -9854,13 +10026,16 @@ void Game::updateCursor(float dt)
 		}
 	}
 
-	bool inMiniMap = (dsq->game->miniMapRender && (dsq->game->miniMapRender->getWorldPosition() - core->mouse.position).isLength2DIn(64));
-	if (sceneEditor.isOn() || dsq->game->isPaused() || (!avatar || !avatar->isInputEnabled()) ||
+	if (isSceneEditorActive() || dsq->game->isPaused() || (!avatar || !avatar->isInputEnabled()) ||
 		(dsq->game->miniMapRender && dsq->game->miniMapRender->isCursorIn())
 		)
 	{
 		dsq->setCursor(CURSOR_NORMAL);
-		dsq->cursor->alphaMod = 0.5;
+		// Don't show the cursor in keyboard/joystick mode if it's not
+		// already visible (this keeps the cursor from appearing for an
+		// instant during map fadeout).
+		if (dsq->inputMode == INPUT_MOUSE || isSceneEditorActive() || dsq->game->isPaused())
+			dsq->cursor->alphaMod = 0.5;
 		
 		/*
 		dsq->cursor->offset.stop();
@@ -10059,7 +10234,7 @@ bool Game::trace(Vector start, Vector target)
 }
 
 const float bgLoopFadeTime = 1;
-void Game::updateBgSfxLoop(bool effects)
+void Game::updateBgSfxLoop()
 {
 	if (!avatar) return;
 
@@ -10097,10 +10272,10 @@ void Game::updateBgSfxLoop(bool effects)
 
 	if (avatar->isUnderWater(avatar->getHeadPosition()))
 	{
-		dsq->game->switchBgLoop(0, effects);
+		dsq->game->switchBgLoop(0);
 	}
 	else
-		dsq->game->switchBgLoop(1, effects);
+		dsq->game->switchBgLoop(1);
 }
 
 const float helpTextScrollSpeed = 800.0f;
@@ -10215,9 +10390,9 @@ void Game::update(float dt)
 		}
 		*/
 		/*
-		for (int i = 0; i < dsq->entities.size(); i++)
+		FOR_ENTITIES (i)
 		{
-			Entity *e = dsq->entities[i];
+			Entity *e = *i;
 			if (e->getEntityType() != ET_AVATAR && e->collideRadius > 0)
 			{
 				Emitter::addInfluence(ParticleInfluence(e->position, 200, e->collideRadius, false));
@@ -10248,15 +10423,17 @@ void Game::update(float dt)
 
 
 	int i = 0;
-	for (i = 0; i < dsq->game->paths.size(); i++)
+	for (i = 0; i < dsq->game->getNumPaths(); i++)
 	{
-		dsq->game->paths[i]->update(dt);
+		dsq->game->getPath(i)->update(dt);
 	}
 
 	FOR_ENTITIES(j)
 	{
 		(*j)->postUpdate(dt);
 	}
+
+	FlockEntity::updateFlockData();
 
 	updateCurrentVisuals(dt);
 	updateCursor(dt);
@@ -10291,7 +10468,7 @@ void Game::update(float dt)
 		q->alpha = 0;
 		q->alpha.interpolateTo(0.4, 1, 1, 1, 1);
 		addRenderObject(q, LR_ELEMENTS3);
-		q->velocity = Vector(((rand()%200)-100)/100.0, ((rand()%200)-100)/100.0);
+		q->velocity = Vector(((rand()%200)-100)/100.0f, ((rand()%200)-100)/100.0f);
 		q->velocity *= 32;
 		bubbleTimer -= spawnTime;
 	}
@@ -10300,24 +10477,19 @@ void Game::update(float dt)
 	sceneColor.update(dt);
 	sceneColor2.update(dt);
 	sceneColor3.update(dt);
+	dsq->sceneColorOverlay->color = sceneColor * sceneColor2 * sceneColor3;
 	if (bg)
 	{
-		bg->color = sceneColor * sceneColor2 * sceneColor3;
 		setParallaxTextureCoordinates(bg, 0.3);
 	}
 	if (bg2)
 	{
-		bg2->color = sceneColor * sceneColor2 * sceneColor3;
 		setParallaxTextureCoordinates(bg2, 0.1);
-	}
-	if (grad)
-	{
-		grad->color = sceneColor*sceneColor2*sceneColor3;
 	}
 	updateInGameMenu(dt);
 	if (avatar && grad && bg && bg2)
 	{
-		double d = avatar->position.y / double(40000.0);
+		//float d = avatar->position.y / float(40000.0);
 
 		/*
 		Vector top1(0.6, 0.8, 0.65);
@@ -10334,14 +10506,14 @@ void Game::update(float dt)
 
 		/*
 		// dynamic gradient
-		Vector top1(99/256.0, 166/256.0, 170/256.0);
-		Vector top2(86/256.0, 150/256.0, 154/256.0);
-		Vector btm1(86/256.0, 150/256.0, 154/256.0);
-		Vector btm2(66/256.0, 109/256.0, 122/256.0);
+		Vector top1(99/256.0f, 166/256.0f, 170/256.0f);
+		Vector top2(86/256.0f, 150/256.0f, 154/256.0f);
+		Vector btm1(86/256.0f, 150/256.0f, 154/256.0f);
+		Vector btm2(66/256.0f, 109/256.0f, 122/256.0f);
 		btm2 *= 0.75;
 
 
-		Vector newtop1(105/256.0, 190/256.0, 200/256.0);
+		Vector newtop1(105/256.0f, 190/256.0f, 200/256.0f);
 
 		grad->makeVertical(newtop1, btm2);
 		*/
@@ -10351,7 +10523,7 @@ void Game::update(float dt)
 		//grad->makeVertical(top1*(1.0-d) + top2*(d), btm1*(1.0-d) + btm2*(d));
 		/*
 		float range = 0.5f;
-		float left = 1.0 - range;
+		float left = 1.0f - range;
 		float v = ((range-(d*range)) + left);
 		bg->color = Vector(v,v,v);
 		bg2->color = Vector(v,v,v);
@@ -10359,28 +10531,27 @@ void Game::update(float dt)
 
 	}
 
-#ifdef BUILD_SCENEEDITOR
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	{
 		sceneEditor.update(dt);
 	}
 #endif
 
 	dsq->emote.update(dt);
-	// update convo
 
 	if (!isPaused())
 	{
 		timer += dt;
-		while (timer > 1.0)
-			timer -= 1.0;
+		while (timer > 1.0f)
+			timer -= 1.0f;
 
-		halfTimer += dt*0.5;
-		while (halfTimer > 1.0)
-			halfTimer -= 1.0;
+		halfTimer += dt*0.5f;
+		while (halfTimer > 1.0f)
+			halfTimer -= 1.0f;
 	}
 
 
-	if (avatar && (avatar->isEntityDead() || avatar->health <= 0) && core->getNestedMains()==1)
+	if (avatar && (avatar->isEntityDead() || avatar->health <= 0) && core->getNestedMains()==1 && !isPaused())
 	{
 		dsq->stopVoice();
 		/*
@@ -10402,7 +10573,7 @@ void Game::update(float dt)
 			}
 		}
 	}
-	if (avatar && avatar->isSinging() && avatar->songInterfaceTimer > 0.5)
+	if (avatar && avatar->isSinging() && avatar->songInterfaceTimer > 0.5f)
 	{
 		avatar->entityToActivate = 0;
 		avatar->pathToActivate = 0;
@@ -10424,7 +10595,7 @@ void Game::update(float dt)
 			{
 				Entity *e = *i;
 				int sqrLen = (dsq->getGameCursorPosition() - e->position).getSquaredLength2D();
-				if (sqrLen < sqr(e->convoRadius)
+				if (sqrLen < sqr(e->activationRadius)
 					&& (avatar->position-e->position).getSquaredLength2D() < sqr(e->activationRange)
 					&& e->activationType == Entity::ACT_CLICK
 					&& (e->canTalkWhileMoving || !e->position.isInterpolating())
@@ -10433,7 +10604,6 @@ void Game::update(float dt)
 					//if (trace(avatar->position, e->position))
 					{
 						avatar->entityToActivate = e;
-						//avatar->convoEntity = e;
 						dsq->cursorGlow->alpha.interpolateTo(1, 0.2);
 						dsq->cursorBlinker->alpha.interpolateTo(1.0,0.1);
 						if (!hadThingToActivate)
@@ -10497,7 +10667,7 @@ void Game::update(float dt)
 		dsq->cursorBlinker->alpha.interpolateTo(0, 0.1);
 	}
 
-	if (!this->sceneEditor.isOn())
+	if (!isSceneEditorActive())
 	{
 		if (!isPaused())
 			waterLevel.update(dt);
@@ -10715,7 +10885,7 @@ void Game::snapCam()
 
 ElementTemplate Game::getElementTemplateForLetter(int i)
 {
-	float cell = float(64.0)/float(512.0);
+	float cell = 64.0f/512.0f;
 	//for (int i = 0; i < 27; i++)
 	ElementTemplate t;
 	t.idx = 1024+i;
@@ -10880,9 +11050,11 @@ void Game::setGrid(ElementTemplate *et, Vector position, float rot360)
 
 void Game::removeState()
 {
+	const float fadeTime = 0.25;
+
 	dsq->toggleVersionLabel(false);
 	
-	dsq->subtitlePlayer.forceOff();
+	dsq->subtitlePlayer.hide(fadeTime);
 
 	dropIngrNames.clear();
 
@@ -10894,9 +11066,11 @@ void Game::removeState()
 		avatar->endOfGameState();
 	}
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	debugLog("toggle sceneEditor");
 	if (sceneEditor.isOn())
 		sceneEditor.toggle(false);
+#endif
 
 	debugLog("gameSpeed");
 	dsq->gameSpeed.interpolateTo(1, 0);
@@ -10907,7 +11081,7 @@ void Game::removeState()
 
 	debugLog("toggleCursor");
 
-	dsq->toggleCursor(0, 0.25);
+	dsq->toggleCursor(0, fadeTime);
 
 	if (!isInGameMenu())
 		avatar->disableInput();
@@ -10922,8 +11096,8 @@ void Game::removeState()
 		avatarTransit = dsq->game->avatar->attachedTo->name;
 
 	//dsq->overlay->alpha = 0;
-	dsq->overlay->alpha.interpolateTo(1, 0.25);
-	dsq->main(0.25);
+	dsq->overlay->alpha.interpolateTo(1, fadeTime);
+	dsq->main(fadeTime);
 
 	/*
 	// to block on voice overs
@@ -10935,13 +11109,6 @@ void Game::removeState()
 	// AFTER TRANSITION:
 
 	core->joystick.rumble(0,0,0);
-
-	debugLog("world map render transfer");
-	if (worldMapRender)
-	{
-		worldMapRender->transferData();
-	}
-	debugLog("done");
 
 	dsq->sound->clearFadingSfx();
 
@@ -10986,19 +11153,20 @@ void Game::removeState()
 	dsq->game->avatar->myZoom = Vector(1,1);
 	dsq->globalScale = Vector(1,1);
 
-	for (int i = 0; i < paths.size(); i++)
+	for (int i = 0; i < getNumPaths(); i++)
 	{
-		paths[i]->destroy();
-		delete(paths[i]);
+		Path *p = getPath(i);
+		p->destroy();
+		delete p;
 	}
-	paths.clear();
+	clearPaths();
 
 	StateObject::removeState();
 	dsq->clearElements();
-	dsq->entities.clear();
+	dsq->clearEntities();
 	avatar = 0;
 	//items.clear();
-#ifdef BUILD_SCENEEDITOR
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 	sceneEditor.shutdown();
 #endif
 
@@ -11100,8 +11268,8 @@ Vector Game::getClosestPointOnLine(Vector a, Vector b, Vector p)
 	Vector c = p - a;
    Vector V = b-a;
    V.normalize2D();
-   double d = (a-b).getLength2D();
-   double t = V.dot(c);
+   float d = (a-b).getLength2D();
+   float t = V.dot(c);
 
    // Check to see if t is beyond the extents of the line segment
 
@@ -11123,7 +11291,6 @@ bool Game::collideCircleWithGrid(Vector position, int r, Vector *fill)
 	tile.y = t.y;
 
 	float hsz = TILE_SIZE/2;
-	float hsz2 = TILE_SIZE/4;
 	int xrange=1,yrange=1;
 	xrange = (r/TILE_SIZE)+1;
 	yrange = (r/TILE_SIZE)+1;
@@ -11132,49 +11299,46 @@ bool Game::collideCircleWithGrid(Vector position, int r, Vector *fill)
 	{
 		for (int y = tile.y-yrange; y <= tile.y+yrange; y++)
 		{
-			int v = 0;
-			if (v = this->getGrid(TileVector(x, y)))
+			int v = this->getGrid(TileVector(x, y));
+			if (v != 0)
 			{
 				//if (tile.x == x && tile.y == y) return true;
-				if (v != 0)
+				TileVector t(x, y);
+				lastCollidePosition = t.worldVector();
+				//if (tile.x == x && tile.y == y) return true;
+				float rx = (x*TILE_SIZE)+TILE_SIZE/2;
+				float ry = (y*TILE_SIZE)+TILE_SIZE/2;
+
+				float rSqr;
+				lastCollideTileType = (ObsType)v;
+
+				rSqr = sqr(position.x - (rx+hsz)) + sqr(position.y - (ry+hsz));
+				if (rSqr < sqr(r))	return true;
+
+				rSqr = sqr(position.x - (rx-hsz)) + sqr(position.y - (ry+hsz));
+				if (rSqr < sqr(r))	return true;
+
+				rSqr = sqr(position.x - (rx-hsz)) + sqr(position.y - (ry-hsz));
+				if (rSqr < sqr(r))	return true;
+
+				rSqr = sqr(position.x - (rx+hsz)) + sqr(position.y - (ry-hsz));
+				if (rSqr < sqr(r))	return true;
+
+
+				if (position.x > rx-hsz && position.x < rx+hsz)
 				{
-					TileVector t(x, y);
-					lastCollidePosition = t.worldVector();
-					//if (tile.x == x && tile.y == y) return true;
-					float rx = (x*TILE_SIZE)+TILE_SIZE/2;
-					float ry = (y*TILE_SIZE)+TILE_SIZE/2;
-
-					float rSqr;
-					lastCollideTileType = (ObsType)v;
-
-					rSqr = sqr(position.x - (rx+hsz)) + sqr(position.y - (ry+hsz));
-					if (rSqr < sqr(r))	return true;
-
-					rSqr = sqr(position.x - (rx-hsz)) + sqr(position.y - (ry+hsz));
-					if (rSqr < sqr(r))	return true;
-
-					rSqr = sqr(position.x - (rx-hsz)) + sqr(position.y - (ry-hsz));
-					if (rSqr < sqr(r))	return true;
-
-					rSqr = sqr(position.x - (rx+hsz)) + sqr(position.y - (ry-hsz));
-					if (rSqr < sqr(r))	return true;
-
-
-					if (position.x > rx-hsz && position.x < rx+hsz)
+					if (fabsf(ry - position.y) < r+hsz)
 					{
-						if (fabs(ry - position.y) < r+hsz)
-						{
-							return true;
-						}
+						return true;
 					}
+				}
 
 
-					if (position.y > ry-hsz && position.y < ry+hsz)
+				if (position.y > ry-hsz && position.y < ry+hsz)
+				{
+					if (fabsf(rx - position.x) < r+hsz)
 					{
-						if (fabs(rx - position.x) < r+hsz)
-						{
-							return true;
-						}
+						return true;
 					}
 				}
 			}
@@ -11192,7 +11356,6 @@ bool Game::collideBoxWithGrid(Vector position, int hw, int hh)
 	tile.y = t.y;
 
 	float hsz = TILE_SIZE/2;
-	float hsz2 = TILE_SIZE/4;
 	int xrange=1,yrange=1;
 	xrange = (hw/TILE_SIZE)+1;
 	yrange = (hh/TILE_SIZE)+1;
@@ -11200,25 +11363,21 @@ bool Game::collideBoxWithGrid(Vector position, int hw, int hh)
 	{
 		for (int y = tile.y-yrange; y <= tile.y+yrange; y++)
 		{
-			int v = 0;
-			if (v = this->getGrid(TileVector(x, y)))
+			int v = this->getGrid(TileVector(x, y));
+			if (v == 1)
 			{
-				//if (tile.x == x && tile.y == y) return true;
-				if (v == 1)
+				if (tile.x == x && tile.y == y) return true;
+				float rx = (x*TILE_SIZE)+TILE_SIZE/2;
+				float ry = (y*TILE_SIZE)+TILE_SIZE/2;
+
+
+				if (isBoxIn(position, Vector(hw, hh), Vector(rx, ry), Vector(hsz, hsz)))
 				{
-					if (tile.x == x && tile.y == y) return true;
-					float rx = (x*TILE_SIZE)+TILE_SIZE/2;
-					float ry = (y*TILE_SIZE)+TILE_SIZE/2;
-
-
-					if (isBoxIn(position, Vector(hw, hh), Vector(rx, ry), Vector(hsz, hsz)))
-					{
-						return true;
-					}
-					if (isBoxIn(Vector(rx, ry), Vector(hsz, hsz), position, Vector(hw, hh)))
-					{
-						return true;
-					}
+					return true;
+				}
+				if (isBoxIn(Vector(rx, ry), Vector(hsz, hsz), position, Vector(hw, hh)))
+				{
+					return true;
 				}
 			}
 		}

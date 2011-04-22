@@ -17,27 +17,28 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-STATE_PULL			= 1001
+local STATE_PULL		= 1001
 
-entToSpawn = ""
-ingToSpawn = ""
-amount = 0
+v.entToSpawn = ""
+v.ingToSpawn = ""
+v.amount = 0
 
-pullTimer			= 0
-pullMax				= 0.2
+v.pullTimer			= 0
+v.pullMax				= 0.2
 
-leaf1 				= 0
-leaf2				= 0
+v.leaf1 				= 0
+v.leaf2				= 0
 
-function commonInit(me, ent, ing, amt)
+function v.commonInit(me, ent, ing, amt)
 	setupEntity(me)
-	amount = amt
-	if amount == 0 then
-		amount = 1
+	if amt == 0 then
+		v.amount = 1
+	else
+		v.amount = amt
 	end
 	entity_setEntityType(me, ET_NEUTRAL)
 	entity_initSkeletal(me, "PullPlant")
@@ -46,28 +47,28 @@ function commonInit(me, ent, ing, amt)
 	
 	entity_setState(me, STATE_IDLE)
 	
-	entToSpawn = ent
-	ingToSpawn = ing
+	v.entToSpawn = ent
+	v.ingToSpawn = ing
 	entity_setEntityLayer(me, -2)
 	
-	leaf1 = entity_getBoneByIdx(me, 0)
-	leaf2 = entity_getBoneByIdx(me, 1)
+	v.leaf1 = entity_getBoneByIdx(me, 0)
+	v.leaf2 = entity_getBoneByIdx(me, 1)
 	
-	sz1 = 1 + math.random(1000)/4000.0
-	sz2 = 1 + math.random(1000)/4000.0
-	bone_scale(leaf1, sz1, sz1)
-	bone_scale(leaf2, sz2, sz2)
+	local sz1 = 1 + math.random(1000)/4000.0
+	local sz2 = 1 + math.random(1000)/4000.0
+	bone_scale(v.leaf1, sz1, sz1)
+	bone_scale(v.leaf2, sz2, sz2)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 	if entity_isState(me, STATE_IDLE) and entity_isBeingPulled(me) then
-		pullTimer = pullTimer + dt
-		if pullTimer > pullMax then
+		v.pullTimer = v.pullTimer + dt
+		if v.pullTimer > v.pullMax then
 			entity_setState(me, STATE_PULL)
 		end
 	end
@@ -99,13 +100,13 @@ end
 function animationKey(me, key)
 	if entity_isState(me, STATE_PULL) then
 		if key == 2 then
-			if ingToSpawn ~= "" then
-				spawnIngredient(ingToSpawn, entity_x(me), entity_y(me))
+			if v.ingToSpawn ~= "" then
+				spawnIngredient(v.ingToSpawn, entity_x(me), entity_y(me))
 				playSfx("secret")
 			end
 		elseif key == 3 then
-			if entToSpawn ~= "" then
-				createEntity(entToSpawn, "", entity_x(me), entity_y(me))
+			if v.entToSpawn ~= "" then
+				createEntity(v.entToSpawn, "", entity_x(me), entity_y(me))
 				playSfx("secret")
 			end
 		end

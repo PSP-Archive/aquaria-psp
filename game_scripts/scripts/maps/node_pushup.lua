@@ -17,16 +17,16 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
-	if node_isEntityIn(me, n) then
-		entity_addVel(n, 0, -8000*dt)
+	if node_isEntityIn(me, v.n) then
+		entity_addVel(v.n, 0, -8000*dt)
 	end
 end

@@ -17,14 +17,15 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- ENERGY ORB CRACKED
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-charge = 0
-delay = 1
-chargeTimer = 0
+v.charge = 0
+v.delay = 1
+v.chargeTimer = 0
  
 -- ================================================================================================
 -- FUNCTIONS
@@ -37,7 +38,6 @@ function init(me)
 	entity_setProperty(me, EP_MOVABLE, true)
 	entity_setWeight(me, 200)
 	entity_setCollideRadius(me, 32)
-	entity_setAffectedBySpells(me, 1)
 	entity_setName(me, "EnergyOrb")
 	
 	entity_setMaxSpeed(me, 450)
@@ -55,19 +55,19 @@ function update(me, dt)
 	entity_updateMovement(me, dt)
 	
 	if entity_isState(me, STATE_CHARGED) then
-		chargeTimer = chargeTimer - dt
-		if chargeTimer < 0 then
+		v.chargeTimer = v.chargeTimer - dt
+		if v.chargeTimer < 0 then
 			entity_setState(me, STATE_IDLE)
 			spawnParticleEffect("EnergyOrbUnCharge", entity_x(me), entity_y(me))
 		end
 	end
 	if not entity_isState(me, STATE_CHARGED) then		
-		delay = delay - dt
-		if delay < 0 then
-			delay = 0.5
-			charge = charge - 1
-			if charge < 0 then
-				charge = 0
+		v.delay = v.delay - dt
+		if v.delay < 0 then
+			v.delay = 0.5
+			v.charge = v.charge - 1
+			if v.charge < 0 then
+				v.charge = 0
 			end
 		end
 	end
@@ -77,7 +77,7 @@ function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_setTexture(me, "EnergyOrbCracked")
 	elseif entity_isState(me, STATE_CHARGED) then
-		chargeTimer = 1
+		v.chargeTimer = 1
 		entity_setTexture(me, "EnergyOrbCracked-Charged")
 		--msg("CHARGED")
 	elseif entity_isState(me, STATE_INHOLDER) then
@@ -96,15 +96,15 @@ end
 function damage(me, attacker, bone, damageType, dmg)	
 	if not entity_isState(me, STATE_CHARGED) then
 		if damageType == DT_AVATAR_ENERGYBLAST then
-			--charge = charge + dmg
+			--v.charge = v.charge + dmg
 		elseif damageType == DT_AVATAR_SHOCK then
-			charge = charge + 10
+			v.charge = v.charge + 10
 		end
-		if charge >= 10 then
+		if v.charge >= 10 then
 			playSfx("EnergyOrbCharge")
 			spawnParticleEffect("EnergyOrbCharge", entity_x(me), entity_y(me))
 			entity_setState(me, STATE_CHARGED)
-			charge = 0
+			v.charge = 0
 		end
 	end
 	return false

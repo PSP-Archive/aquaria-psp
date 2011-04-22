@@ -43,21 +43,23 @@ void spawnWaterFontParticle(RenderObject *me, Vector position, int size, float l
 
 	q->setBlendType(RenderObject::BLEND_ADD);
 
-	q->color.path.addPathNode(Vector(1,1,1),0);
-	q->color.path.addPathNode(Vector(0.1,0.75,1),0.3);
-	q->color.path.addPathNode(Vector(0.05,0.5,1),0.8);
-	q->color.path.addPathNode(Vector(0,0,1),1.0);
+	q->color.ensureData();
+	q->color.data->path.addPathNode(Vector(1,1,1),0);
+	q->color.data->path.addPathNode(Vector(0.1,0.75,1),0.3);
+	q->color.data->path.addPathNode(Vector(0.05,0.5,1),0.8);
+	q->color.data->path.addPathNode(Vector(0,0,1),1.0);
 	q->color.startPath(t);
 
 	//q->color = Vector(1, 0.5, 0);
-	q->alpha.path.addPathNode(0, 0);
-	q->alpha.path.addPathNode(0.2, 0.5);
-	q->alpha.path.addPathNode(0, 1.0);
+	q->alpha.ensureData();
+	q->alpha.data->path.addPathNode(0, 0);
+	q->alpha.data->path.addPathNode(0.2, 0.5);
+	q->alpha.data->path.addPathNode(0, 1.0);
 	q->alpha.startPath(t);
 	q->velocity = Vector(sinf(angle)*spd,cosf(angle)*spd);
 	//q->velocity += vel;
 	q->setLife(1.0);
-	q->setDecayRate(1.0/t);
+	q->setDecayRate(1.0f/t);
 	q->rotation.z = rand()%360;
 	q->setWidthHeight(size, size);
 	q->position = position;
@@ -78,8 +80,8 @@ void WaterFont::onUpdate(float dt)
 {
 	BitmapText::onUpdate(dt);
 
-	Vector sp(position.x-alignWidth*0.5-15, 5+position.y+5);
-	Vector ep(position.x+alignWidth*0.5+15, 5+position.y+10);
+	Vector sp(position.x-alignWidth*0.5f-15, 5+position.y+5);
+	Vector ep(position.x+alignWidth*0.5f+15, 5+position.y+10);
 	pTime += dt;
 	while (pTime > interval)
 	{
@@ -93,7 +95,7 @@ void WaterFont::onUpdate(float dt)
 			debugLog(os.str());
 			*/
 			Vector d(rand()%200-100,rand()%200-100);
-			d *= 0.01;
+			d *= 0.01f;
 			spawnWaterFontParticle(this, p, 64, 1.2, LR_PARTICLES);
 		}
 		pTime -= interval;

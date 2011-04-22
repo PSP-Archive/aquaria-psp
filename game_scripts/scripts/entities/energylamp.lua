@@ -17,9 +17,9 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
 function init(me)
 	setupBasicEntity(
@@ -53,8 +53,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -67,8 +67,8 @@ function enterState(me)
 		spawnParticleEffect("starexplode", entity_x(me)+10, entity_y(me)+50)
 		for i=1,3 do
 			debugLog("Spawning")
-			e = createEntity("BrokenPiece", "", entity_x(me), entity_y(me))
-			str = string.format("%s-0001", "breakable/energylamp", i)
+			local e = createEntity("BrokenPiece", "", entity_x(me), entity_y(me))
+			local str = string.format("%s-0001", "breakable/energylamp", i)
 			--debugLog(str)
 			entity_setTexture(e, str)
 		end

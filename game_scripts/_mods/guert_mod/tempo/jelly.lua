@@ -17,42 +17,42 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- J E L L Y - Original Flavour
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 -- ================================================================================================
 -- S T A T E S
 -- ================================================================================================
 
-MOVE_STATE_UP = 0
-MOVE_STATE_DOWN = 1
+local MOVE_STATE_UP = 0
+local MOVE_STATE_DOWN = 1
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-blupTimer = 0
-dirTimer = 0
-blupTime = 3.0
+v.blupTimer = 0
+v.dirTimer = 0
+v.blupTime = 3.0
 
 -- ================================================================================================
 -- F U N C T I O N S
 -- ================================================================================================
 
-sz = 1.0
-dir = 0
+v.sz = 1.0
+v.dir = 0
 
-moveState = 0
-moveTimer = 0
-velx = 0
+v.moveState = 0
+v.moveTimer = 0
+v.velx = 0
 
-soundDelay = 0
+v.soundDelay = 0
 
-function doIdleScale(me)	
-	entity_scale(me, 1.0*sz, 0.75*sz, blupTime, -1, 1, 1)
+local function doIdleScale(me)	
+	entity_scale(me, 1.0*v.sz, 0.75*v.sz, v.blupTime, -1, 1, 1)
 end
 
 function init(me)
@@ -81,7 +81,7 @@ function init(me)
 	
 	entity_initHair(me, 40, 5, 40, "JellyTentacles")
 	
-	entity_scale(me, 0.75*sz, 1*sz)
+	entity_scale(me, 0.75*v.sz, 1*v.sz)
 	doIdleScale(me)
 	
 	entity_exertHairForce(me, 0, 400, 1)
@@ -92,15 +92,15 @@ end
 function update(me, dt)
 	dt = dt * 1.5
 	if avatar_isBursting() or entity_getRiding(getNaija())~=0 then
-		e = entity_getRiding(getNaija())
+		local e = entity_getRiding(getNaija())
 		if entity_touchAvatarDamage(me, 32, 0, 400) then
 			if e~=0 then
-				x,y = entity_getVectorToEntity(me, e)
+				local x,y = entity_getVectorToEntity(me, e)
 				x,y = vector_setLength(x, y, 500)
 				entity_addVel(e, x, y)
 			end
-			len = 500
-			x,y = entity_getVectorToEntity(getNaija(), me)
+			local len = 500
+			local x,y = entity_getVectorToEntity(getNaija(), me)
 			x,y = vector_setLength(x, y, len)
 			entity_push(me, x, y, 0.2, len, 0)
 			entity_sound(me, "JellyBlup", 800)
@@ -111,35 +111,50 @@ function update(me, dt)
 		end
 	end
 	entity_handleShotCollisions(me)
-	sx,sy = entity_getScale(me)
+	v.sx,v.sy = entity_getScale(me)
 		
 		
-	moveTimer = moveTimer - dt
-	if moveTimer < 0 then
-		if moveState == MOVE_STATE_DOWN then		
-			moveState = MOVE_STATE_UP
+	-- Quick HACK to handle getting bumped out of the water.  --achurch
+	if not entity_isUnderWater(me) then
+		v.moveState = MOVE_STATE_DOWN
+		v.moveTimer = 5 + math.random(200)/100.0 + math.random(3)
+		entity_setMaxSpeed(me, 500)
+		entity_setMaxSpeedLerp(me, 1, 0)
+		entity_addVel(me, 0, 500*dt)
+		entity_updateMovement(me, dt)
+		entity_setHairHeadPosition(me, entity_x(me), entity_y(me))
+		entity_updateHair(me, dt)
+		return
+	elseif not entity_isState(me, STATE_PUSH) then
+		entity_setMaxSpeed(me, 50)
+	end
+	
+	v.moveTimer = v.moveTimer - dt
+	if v.moveTimer < 0 then
+		if v.moveState == MOVE_STATE_DOWN then		
+			v.moveState = MOVE_STATE_UP
 			entity_setMaxSpeedLerp(me, 1.5, 0.2)
 			entity_scale(me, 0.75, 1, 1, 1, 1)
-			moveTimer = 3 + math.random(200)/100.0
+			v.moveTimer = 3 + math.random(200)/100.0
 			entity_sound(me, "JellyBlup")
-		elseif moveState == MOVE_STATE_UP then
-			velx = math.random(400)+100
+		elseif v.moveState == MOVE_STATE_UP then
+			v.velx = math.random(400)+100
 			if math.random(2) == 1 then
-				velx = -velx
+				v.velx = -v.velx
 			end
-			moveState = MOVE_STATE_DOWN
+			v.moveState = MOVE_STATE_DOWN
 			doIdleScale(me)
 			entity_setMaxSpeedLerp(me, 1, 1)
-			moveTimer = 5 + math.random(200)/100.0 + math.random(3)
+			v.moveTimer = 5 + math.random(200)/100.0 + math.random(3)
 		end
 	end
 	
 	
-	if moveState == MOVE_STATE_UP then
-		entity_addVel(me, velx*dt, -600*dt)
+	if v.moveState == MOVE_STATE_UP then
+		entity_addVel(me, v.velx*dt, -600*dt)
 		entity_rotateToVel(me, 1)
 
-	elseif moveState == MOVE_STATE_DOWN then
+	elseif v.moveState == MOVE_STATE_DOWN then
 		entity_addVel(me, 0, 50*dt)
 		entity_rotateTo(me, 0, 3)
 

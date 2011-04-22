@@ -17,21 +17,21 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- P E T  D U M BO
 
-dofile("scripts/entities/entityinclude.lua")
+local STATE_ATTACKPREP		= 1000
+local STATE_ATTACK			= 1001
 
-STATE_ATTACKPREP		= 1000
-STATE_ATTACK			= 1001
+v.lungeDelay = 0
 
-lungeDelay = 0
+v.spinDir = -1
 
-spinDir = -1
+v.rot = 0
+v.shotDrop = 0
 
-rot = 0
-shotDrop = 0
-
-glow = 0
+v.glow = 0
 
 function init(me)
 	setupBasicEntity(
@@ -55,11 +55,11 @@ function init(me)
 	
 	entity_setDeathParticleEffect(me, "TinyBlueExplode")
 
-	lungeDelay = 1.0
+	v.lungeDelay = 1.0
 	
 	entity_scale(me, 0.6, 0.6)
 	
-	rot = 0
+	v.rot = 0
 	
 	esetv(me, EV_LOOKAT, 0)
 	esetv(me, EV_ENTITYDIED, 1)
@@ -85,7 +85,7 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
@@ -95,11 +95,11 @@ function update(me, dt)
 		entity_setColor(me, 1, 1, 1, 1)
 	end
 	
-	glow = createQuad("Naija/LightFormGlow", 13)
-	quad_scale(glow, 5 + (getPetPower()*8), 5 + (getPetPower()*8))
+	v.glow = createQuad("Naija/LightFormGlow", 13)
+	quad_scale(v.glow, 5 + (getPetPower()*8), 5 + (getPetPower()*8))
 	
-	if not isInputEnabled() or not entity_isUnderWater(n) then
-		entity_setPosition(me, entity_x(n), entity_y(n), 0.3)
+	if not isInputEnabled() or not entity_isUnderWater(v.n) then
+		entity_setPosition(me, entity_x(v.n), entity_y(v.n), 0.3)
 		entity_alpha(me, 0, 0.1)
 		entity_stopEmitter(me, 0)
 		return
@@ -108,60 +108,60 @@ function update(me, dt)
 		entity_startEmitter(me, 0)
 	end
 	
-	naijaUnder = entity_y(n) > getWaterLevel()
+	local naijaUnder = entity_y(v.n) > getWaterLevel()
 	if naijaUnder then
 		if entity_y(me)-32 < getWaterLevel() then
 			entity_setPosition(me, entity_x(me), getWaterLevel()+32)
 		end
 	else
 		if entity_isState(me, STATE_FOLLOW) then
-			entity_setPosition(me, entity_x(n), entity_y(n), 0.1)
+			entity_setPosition(me, entity_x(v.n), entity_y(v.n), 0.1)
 		end
 	end
 	
 	if entity_isState(me, STATE_FOLLOW) then
 		
-		rot = rot + dt*0.2
-		if rot > 1 then
-			rot = rot - 1
+		v.rot = v.rot + dt*0.2
+		if v.rot > 1 then
+			v.rot = v.rot - 1
 		end
-		dist = 100
-		t = 0
-		x = 0
-		y = 0
+		local dist = 100
+		local t = 0
+		local x = 0
+		local y = 0
 		if avatar_isRolling() then
 			dist = 90
-			spinDir = -avatar_getRollDirection()
-			t = rot * 6.28
+			v.spinDir = -avatar_getRollDirection()
+			t = v.rot * 6.28
 		else
-			t = rot * 6.28
+			t = v.rot * 6.28
 		end
 		
-		if not entity_isEntityInRange(me, n, 1024) then
-			entity_setPosition(me, entity_getPosition(n))
+		if not entity_isEntityInRange(me, v.n, 1024) then
+			entity_setPosition(me, entity_getPosition(v.n))
 		end
 		
-		a = t
+		local a = t
 		x = x + math.sin(a)*dist
 		y = y + math.cos(a)*dist
 		if naijaUnder then
-			entity_setPosition(me, entity_x(n)+x, entity_y(n)+y, 0.6)
+			entity_setPosition(me, entity_x(v.n)+x, entity_y(v.n)+y, 0.6)
 		end
 		
 		--entity_handleShotCollisions(me)
 	end
 	
-	if glow ~= 0 then
+	if v.glow ~= 0 then
 		if entity_isInDarkness(me) then
-			quad_alpha(glow, 1, 0.5)
+			quad_alpha(v.glow, 1, 0.5)
 		else
-			quad_alpha(glow, 0, 0.5)
+			quad_alpha(v.glow, 0, 0.5)
 		end
 	end
 	
-	quad_setPosition(glow, entity_getPosition(me))
-	quad_delete(glow, 0.1)
-	glow = 0
+	quad_setPosition(v.glow, entity_getPosition(me))
+	quad_delete(v.glow, 0.1)
+	v.glow = 0
 end
 
 function entityDied(me, ent)
@@ -173,9 +173,9 @@ function enterState(me)
 	elseif entity_isState(me, STATE_FOLLOW) then
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_DEAD) then
-		if glow ~= 0 then
-			quad_delete(glow)
-			glow = 0
+		if v.glow ~= 0 then
+			quad_delete(v.glow)
+			v.glow = 0
 		end
 	end
 end

@@ -17,11 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- G R O U N D   S H O C K E R   A T T A C K   --   L E F T
 -- ================================================================================================
 dofile("scripts/entities/groundshockerattackcommon.lua")
 
 function init(me)
-	commonInit(me, 1)
+	v.commonInit(me, 1)
 end

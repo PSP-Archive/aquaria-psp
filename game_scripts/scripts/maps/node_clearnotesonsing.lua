@@ -17,22 +17,22 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-notes = 0
+v.n = 0
+v.notes = 0
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
 end
 
 function songNote(me, note)
-	if node_isEntityIn(me, n) then
-		notes = notes + 1
-		if notes > 4 then
+	if node_isEntityIn(me, v.n) then
+		v.notes = v.notes + 1
+		if v.notes > 4 then
 			clearControlHint()
 		end
 	end

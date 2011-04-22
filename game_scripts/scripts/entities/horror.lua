@@ -17,21 +17,21 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-STATE_HIDDEN 		= 1000
-STATE_REVEAL		= 1001
-STATE_FIRE			= 1002
+local STATE_HIDDEN 		= 1000
+local STATE_REVEAL		= 1001
+local STATE_FIRE		= 1002
 
-bone_shot = 0
-bone_body = 0
-bone_whip = 0
-fireDelay = 0
-soundDelay = 0
-whipDeath = false
-whipHits = 0
+v.bone_shot = 0
+v.bone_body = 0
+v.bone_whip = 0
+v.fireDelay = 0
+v.soundDelay = 0
+v.whipDeath = false
+v.whipHits = 0
 
 function init(me)
 	setupEntity(me)
@@ -46,10 +46,10 @@ function init(me)
 	entity_setUpdateCull(me, 2000)
 	entity_setCullRadius(me, 1024)
 	
-	bone_shot = entity_getBoneByName(me, "Shot")
-	bone_body = entity_getBoneByName(me, "Body")
-	bone_whip = entity_getBoneByName(me, "Whip")
-	bone_alpha(bone_shot, 0)
+	v.bone_shot = entity_getBoneByName(me, "Shot")
+	v.bone_body = entity_getBoneByName(me, "Body")
+	v.bone_whip = entity_getBoneByName(me, "Whip")
+	bone_alpha(v.bone_shot, 0)
 	
 	entity_setEntityLayer(me, -2)
 	
@@ -63,9 +63,9 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
-	flipNode = entity_getNearestNode(me, "FLIP")
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
+	local flipNode = entity_getNearestNode(me, "FLIP")
 	if flipNode ~= 0 then
 		if node_isEntityIn(flipNode, me) then
 			entity_fh(me)
@@ -76,22 +76,22 @@ end
 function update(me, dt)
 	
 	entity_handleShotCollisionsSkeletal(me)
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if bone ~= 0 then
 		entity_touchAvatarDamage(me, 0, 1)
 	end
 	
 	
-	x,y = bone_getWorldPosition(bone_body)
+	local x, y = bone_getWorldPosition(v.bone_body)
 	if entity_isState(me, STATE_HIDDEN) then
-		soundDelay = soundDelay +dt
-		if soundDelay > 1 then
+		v.soundDelay = v.soundDelay +dt
+		if v.soundDelay > 1 then
 			entity_sound(me, "Scuttle")
-			soundDelay = -math.random(2)
+			v.soundDelay = -math.random(2)
 		end
-		if entity_y(n) > y and y < entity_y(me) + 1024 then
-			spread = 200
-			if entity_x(n) > entity_x(me)-spread and entity_x(n) < entity_x(me)+spread then
+		if entity_y(v.n) > y and y < entity_y(me) + 1024 then
+			local spread = 200
+			if entity_x(v.n) > entity_x(me)-spread and entity_x(v.n) < entity_x(me)+spread then
 				entity_setState(me, STATE_REVEAL)
 			end
 		end
@@ -100,9 +100,9 @@ function update(me, dt)
 	--entity_updateMovement(me, dt)
 	
 	if entity_isState(me, STATE_IDLE) then
-		fireDelay = fireDelay + dt
-		if fireDelay > 1.5 then
-			fireDelay = -math.random(2)
+		v.fireDelay = v.fireDelay + dt
+		if v.fireDelay > 1.5 then
+			v.fireDelay = -math.random(2)
 			entity_setState(me, STATE_FIRE)
 		end
 	end
@@ -110,7 +110,7 @@ function update(me, dt)
 	entity_clearTargetPoints(me)
 	if not entity_isState(me, STATE_HIDDEN) then
 		entity_addTargetPoint(me, x, y)
-		x, y = bone_getWorldPosition(bone_whip)
+		local x, y = bone_getWorldPosition(v.bone_whip)
 		entity_addTargetPoint(me, x, y)
 	end
 end
@@ -127,20 +127,19 @@ function enterState(me)
 	elseif entity_isState(me, STATE_REVEAL) then
 		entity_setStateTime(me, entity_animate(me, "reveal"))
 		entity_setNaijaReaction(me, "shock")
-		entity_flipToEntity(me, n)
+		entity_flipToEntity(me, v.n)
 	elseif entity_isState(me, STATE_FIRE) then
 		entity_setStateTime(me, entity_animate(me, "fireShots", 0, 1))
 	elseif entity_isState(me, STATE_DEATHSCENE) then
-		--if whipDeath then
-			bone_alpha(bone_whip, 0)
-			t = 0
+		--if v.whipDeath then
+			bone_alpha(v.bone_whip, 0)
 			if chance(50) then
-				t = entity_animate(me, "die")
+				entity_animate(me, "die")
 			else
-				t = entity_animate(me, "die2")
+				entity_animate(me, "die2")
 			end
 
-			x,y = entity_getPosition(me)
+			local x, y = entity_getPosition(me)
 			while (isObstructed(x,y) == false) do
 				y = y + 20
 			end
@@ -163,17 +162,17 @@ function damage(me, attacker, bone, damageType, dmg)
 	if entity_isState(me, STATE_HIDDEN) then
 		entity_setState(me, STATE_REVEAL)
 	end
-	if bone == bone_whip then
+	if bone == v.bone_whip then
 		debugLog("whip hit!")
-		whipHits = whipHits + 1
+		v.whipHits = v.whipHits + 1
 		if damageType == DT_AVATAR_BITE then
-			whipHits = whipHits + 2
+			v.whipHits = v.whipHits + 2
 		end
 		bone_damageFlash(bone)
-		--debugLog(string.format("whipHits %d", whipHits))
-		if whipHits >= 8 then
+		--debugLog(string.format("whipHits %d", v.whipHits))
+		if v.whipHits >= 8 then
 			--debugLog("whipDeath")
-			whipDeath = true
+			v.whipDeath = true
 			--entity_adjustHealth(me, -999)
 			entity_setHealth(me, 1)
 			return true
@@ -186,8 +185,8 @@ end
 function animationKey(me, key)
 	if entity_isState(me, STATE_FIRE) then
 		if key == 3 or key == 5 or key == 7 then
-			x,y = bone_getWorldPosition(bone_shot)
-			s = createShot("Horror", me, entity_getTarget(me), x, y)
+			local x, y = bone_getWorldPosition(v.bone_shot)
+			local s = createShot("Horror", me, entity_getTarget(me), x, y)
 		end
 	end
 	--[[

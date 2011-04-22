@@ -17,32 +17,32 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ===============================================================================================
 -- SPORE CHILD
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
+v.growth = 0
+v.growTime = 5
+v.growEmitter = 0
+v.seekEnemy = 0
+v.seekEnemyDelay = 1.5
 
-growth = 0
-growTime = 5
-growEmitter = 0
-seekEnemy = 0
-seekEnemyDelay = 1.5
+v.minSpeed = 450
+v.maxSpeed = 700
 
-minSpeed = 450
-maxSpeed = 700
+v.backAway = 0
+v.backAwayTime = 0.75
 
-backAway = 0
-backAwayTime = 0.75
+v.myType = 1
 
-myType = 1
+v.flowerTimer = 0
 
-flowerTimer = 0
+local STATE_MOVETOFLOWER 	= 1000
+local STATE_OPENFLOWER	= 1001
 
-STATE_MOVETOFLOWER 	= 1000
-STATE_OPENFLOWER	= 1001
-
-state2 = 0
+v.state2 = 0
 
 function init(me)
 	setupBasicEntity(
@@ -62,7 +62,7 @@ function init(me)
 	1
 	)
 	
-	entity_initEmitter(me, growEmitter, "SporeSeedGrow")
+	entity_initEmitter(me, v.growEmitter, "SporeSeedGrow")
 	
 	entity_setCollideRadius(me, 16)
 	entity_setEntityType(me, ET_PET)
@@ -74,39 +74,39 @@ function init(me)
 	
 	entity_setState(me, STATE_SEED)
 	
-	seekEnemy = seekEnemyDelay
+	v.seekEnemy = v.seekEnemyDelay
 end
 
 function songNote(me, note)	
 	if note == 0 or note == 1 then
 		-- green
-		myType = 1
+		v.myType = 1
 	elseif note == 2 or note == 3 then
 		-- blue
-		myType = 2
+		v.myType = 2
 	elseif note == 4 or note == 5 then
 		-- red
-		myType = 0
+		v.myType = 0
 	elseif note == 6 or note == 7 then
 		-- yellow
-		myType = 3
+		v.myType = 3
 	end
 end
 
-function hatch(me)
-	if myType == 0 then
+local function hatch(me)
+	if v.myType == 0 then
 		entity_setState(me, STATE_SK_RED)
-	elseif myType == 1 then
+	elseif v.myType == 1 then
 		entity_setState(me, STATE_SK_GREEN)
-	elseif myType == 2 then
+	elseif v.myType == 2 then
 		entity_setState(me, STATE_SK_BLUE)
-	elseif myType == 3 then
+	elseif v.myType == 3 then
 		entity_setState(me, STATE_SK_YELLOW)
 	end
 
 end
 
-function isHatched(me)
+local function isHatched(me)
 	return (entity_isState(me, STATE_SK_RED) or entity_isState(me, STATE_SK_BLUE)
 	or entity_isState(me, STATE_SK_GREEN) or entity_isState(me, STATE_SK_YELLOW))
 end
@@ -119,86 +119,86 @@ function update(me, dt)
 	end
 	entity_updateMovement(me, dt)
 	
-	if state2 == STATE_MOVETOFLOWER then
-		if not entity_isFollowingPath(me) or entity_isEntityInRange(me, flower, 128) then
-			state2 = STATE_OPENFLOWER
+	if v.state2 == STATE_MOVETOFLOWER then
+		if not entity_isFollowingPath(me) or entity_isEntityInRange(me, v.flower, 128) then
+			v.state2 = STATE_OPENFLOWER
 			entity_animate(me, "openFlower", LOOP_INF)
 			entity_clearVel(me)
-			entity_setTarget(me, flower)
+			entity_setTarget(me, v.flower)
 			entity_stopFollowingPath(me)
-			flowerTimer = 0
+			v.flowerTimer = 0
 		end
 	end
-	if state2 == STATE_OPENFLOWER then
-		if entity_isState(flower, STATE_OPENED) then
-			state2 = 0
-			flower = 0
+	if v.state2 == STATE_OPENFLOWER then
+		if entity_isState(v.flower, STATE_OPENED) then
+			v.state2 = 0
+			v.flower = 0
 			entity_animate(me, "idle", LOOP_INF)
 			entity_setState(me, entity_getState(me))
 		else 
-			flowerTimer = flowerTimer + dt
-			if flowerTimer < 1 then
+			v.flowerTimer = v.flowerTimer + dt
+			if v.flowerTimer < 1 then
 				entity_moveTowardsTarget(me, dt, 100)
 			else
 				entity_moveTowardsTarget(me, dt, -100)
 			end
-			if flowerTimer > 2 then
-				flowerTimer = 0
+			if v.flowerTimer > 2 then
+				v.flowerTimer = 0
 			end
 		end
 	end
 
 	if entity_isState(me, STATE_SEED) then
-		node = entity_getNearestNode(me, "GSPOT")
+		local node = entity_getNearestNode(me, "GSPOT")
 		if node ~= 0 then
 			if node_isEntityIn(node, me) then
-				if growing then					
-					growth = growth + dt
-					if growth > growTime then
+				if v.growing then
+					v.growth = v.growth + dt
+					if v.growth > v.growTime then
 						hatch(me)
 					end
 				else
-					growing = true
-					entity_startEmitter(me, growEmitter)
+					v.growing = true
+					entity_startEmitter(me, v.growEmitter)
 				end
 			else
-				if growing then
-					entity_stopEmitter(me, growEmitter)
+				if v.growing then
+					entity_stopEmitter(me, v.growEmitter)
 				end
-				growing = false
+				v.growing = false
 			end
 		end
 	--elseif entity_isState(me, STATE_HATCHEDYOUNG) then	
-	elseif isHatched(me) and state2==0 then
+	elseif isHatched(me) and v.state2==0 then
 		if not entity_hasTarget(me) then
-			ent = entity_getNearestEntity(getNaija(), "SporeChildFlower")
+			local ent = entity_getNearestEntity(getNaija(), "SporeChildFlower")
 			if ent ~= 0 then
 				if entity_isEntityInRange(getNaija(), ent, 256) and entity_isState(ent, STATE_IDLE) then
-					flower = ent
-					state2 = STATE_MOVETOFLOWER
-					entity_swimToPosition(me, entity_getPosition(flower))
+					v.flower = ent
+					v.state2 = STATE_MOVETOFLOWER
+					entity_swimToPosition(me, entity_getPosition(v.flower))
 				end
 			end
 			entity_findTarget(me, 800, ET_AVATAR)
 		end	
 		if entity_hasTarget(me) then
-			ent = entity_getNearestEntity(getNaija(), "SporeChildFlower")
+			local ent = entity_getNearestEntity(getNaija(), "SporeChildFlower")
 			if ent ~= 0 and entity_isEntityInRange(getNaija(), ent, 64) and entity_isState(ent, STATE_IDLE) then
 				entity_setTarget(me, 0)
 			else
 				if entity_getHealth(entity_getTarget(me)) < 1 then
 					entity_setTarget(me, 0)
 				else
-					target = entity_getTarget(me)
+					local target = entity_getTarget(me)
 					if entity_getEntityType(target)==ET_ENEMY then
-						seekEnemy = 0
+						v.seekEnemy = 0
 						entity_rotateToVel(me, 0)
 						entity_setMaxSpeedLerp(me, 1.0, 0.1)
-						if backAway > 0 then						
-							backAway = backAway - dt
+						if v.backAway > 0 then						
+							v.backAway = v.backAway - dt
 							entity_moveTowardsTarget(me, dt, -2000)
-							if backAway < 0 then
-								backAway = 0
+							if v.backAway < 0 then
+								v.backAway = 0
 								entity_setMaxSpeedLerp(me, 1.0, 0.2)
 							end
 						else
@@ -207,7 +207,7 @@ function update(me, dt)
 						entity_doCollisionAvoidance(me, dt, 2, 0.5)					
 						if entity_isEntityInRange(me, target, 32 + entity_getCollideRadius(target)) then
 							entity_damage(target, me, 1, DT_AVATAR_SPORECHILD)
-							backAway = backAwayTime
+							v.backAway = v.backAwayTime
 							entity_moveTowardsTarget(me, 1, -2000)
 							--entity_setMaxSpeedLerp(me, 0.01, 0.01)
 							--entity_setTarget(me, 0)
@@ -239,8 +239,8 @@ function update(me, dt)
 				end
 			end
 		end
-		seekEnemy = seekEnemy - dt
-		if seekEnemy < 0 then
+		v.seekEnemy = v.seekEnemy - dt
+		if v.seekEnemy < 0 then
 			if entity_isEntityInRange(me, getNaija(), 1000) then
 					if not entity_isEntityInRange(me, getNaija(), 500) then
 						entity_setMaxSpeedLerp(me, 2.0, 0.2)
@@ -249,22 +249,22 @@ function update(me, dt)
 					end
 				--if entity_isState(me, STATE_SK_GREEN) then
 					entity_findTarget(me, 2000, ET_ENEMY)
-					ent = entity_getTarget(me)
+					local ent = entity_getTarget(me)
 					if ent ~=0 then
 						if not entity_isDamageTarget(ent, DT_AVATAR_SPORECHILD) then
 							entity_setTarget(me, 0)
-							entity_setMaxSpeed(me, minSpeed)						
+							entity_setMaxSpeed(me, v.minSpeed)						
 						else
-							entity_setMaxSpeed(me, maxSpeed)
+							entity_setMaxSpeed(me, v.maxSpeed)
 							entity_setMaxSpeedLerp(me, 1.2, 0.1)
 						end
 					end
 				--end
 			else
 				entity_setTarget(me, getNaija())
-				entity_setMaxSpeed(me, minSpeed)
+				entity_setMaxSpeed(me, v.minSpeed)
 			end
-			seekEnemy = seekEnemyDelay
+			v.seekEnemy = v.seekEnemyDelay
 		end
 	end
 end
@@ -274,11 +274,11 @@ end
 
 function enterState(me)
 	if entity_isState(me, STATE_SEED) then
-		growth = 0
+		v.growth = 0
 		entity_setProperty(me, EP_MOVABLE, true)
 		entity_setWeight(me, 200)
 	elseif isHatched(me) then
-		entity_setMaxSpeed(me, minSpeed)
+		entity_setMaxSpeed(me, v.minSpeed)
 		--entity_setColor(me, 1, 0, 0, 0.5)
 		entity_setProperty(me, EP_MOVABLE, false)
 		entity_setWeight(me, 0)
@@ -309,6 +309,6 @@ end
 
 function exitState(me)
 	if entity_isState(me, STATE_SEED) then
-		entity_stopEmitter(me, growEmitter)
+		entity_stopEmitter(me, v.growEmitter)
 	end
 end

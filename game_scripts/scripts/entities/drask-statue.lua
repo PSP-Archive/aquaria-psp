@@ -17,11 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-STATE_SIT				= 1000
+local STATE_SIT				= 1000
 
 function init(me)
 	setupEntity(me)
@@ -30,17 +30,17 @@ function init(me)
 	entity_setCullRadius(me, 2048)
 	entity_setState(me, STATE_SIT)
 	
-	bTrident = entity_getBoneByName(me, "Trident")
+	local bTrident = entity_getBoneByName(me, "Trident")
 	bone_alpha(bTrident, 0)
 	
 	entity_scale(me, 0.7, 0.7)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
-	flip = entity_getNearestNode(me, "flip")
+	local flip = entity_getNearestNode(me, "flip")
 	if flip ~= 0 then
 		if node_isEntityIn(flip, me) then
 			entity_fh(me)

@@ -54,6 +54,8 @@ Element::Element(Element::Type elementType) : Quad(), type(elementType)
 	wavyMax = 0;
 	oldRotation = 0;
 	templateIdx = -1;
+
+	setStatic(true);
 }
 
 void Element::wavyPull(int to, int from, float dt)
@@ -92,13 +94,13 @@ void Element::updateEffects(float dt)
 			Vector p = dsq->game->avatar->position;// + Vector(200,0);
 			if (p.x > position.x-16 && p.x < position.x+16)
 			{
-				float h2 = (height*scale.y)/2.0;
+				float h2 = (height*scale.y)/2.0f;
 				if (p.y < position.y+h2 && p.y > position.y-h2)
 				{
 					touchIdx = 0;
 					hitPerc = pos.y - p.y;
 					hitPerc /= float(height*scale.y);
-					hitPerc = (1.0-hitPerc)-1.0;
+					hitPerc = (1.0f-hitPerc)-1.0f;
 					
 					
 					//std::cout << "hit!\n";
@@ -126,7 +128,7 @@ void Element::updateEffects(float dt)
 				// start pull
 				wavyWaving = true;
 				wavyAngleOffset = 0;
-				float ramp = dsq->game->avatar->vel.getLength2D()/800.0;
+				float ramp = dsq->game->avatar->vel.getLength2D()/800.0f;
 				if (ramp < 0)	ramp = 0;
 				if (ramp > 1)	ramp = 1;
 
@@ -136,11 +138,11 @@ void Element::updateEffects(float dt)
 					wavyMagnitude = -wavyMagnitude;
 
 				/*
-				if (hitPerc > 0.35)
+				if (hitPerc > 0.35f)
 					wavyMagnitude = -wavyMagnitude;
 				*/
 
-				wavyAngleOffset = (hitPerc-0.5)*3.14;
+				wavyAngleOffset = (hitPerc-0.5f)*PI;
 
 				wavySave = wavy;
 				wavyLerpIn = 0;
@@ -151,28 +153,28 @@ void Element::updateEffects(float dt)
 				/*
 				float wavyMagnitude = wavyMagnitude;
 				if (dsq->continuity.form == FORM_FISH)
-					wavyMagnitude *= 0.1;
+					wavyMagnitude *= 0.1f;
 				*/
 				float wavyMagMult = 1;
 				
 				if (dsq->continuity.form == FORM_FISH)
 					wavyMagMult = 0.4;
 
-				float spd = 3.14*1.1;
+				float spd = PI*1.1f;
 				float magRedSpd = 48;
 				float lerpSpd = 5.0;
 				for (int i = 0; i < wavy.size(); i++)
 				{
 					float weight = float(i)/float(wavy.size());
 					if (wavyFlip)
-						weight = 1.0-weight;
-					if (weight < 0.125)
-						weight *= 0.5;
-					wavy[i].x = sin(wavyAngleOffset + (float(i)/float(wavy.size()))*3.14)*float(wavyMagnitude*wavyMagMult)*weight;
+						weight = 1.0f-weight;
+					if (weight < 0.125f)
+						weight *= 0.5f;
+					wavy[i].x = sinf(wavyAngleOffset + (float(i)/float(wavy.size()))*PI)*float(wavyMagnitude*wavyMagMult)*weight;
 					if (!wavySave.empty())
 					{
 						if (wavyLerpIn < 1)
-							wavy[i].x = wavy[i].x*wavyLerpIn + (wavySave[i].x*(1.0-wavyLerpIn));
+							wavy[i].x = wavy[i].x*wavyLerpIn + (wavySave[i].x*(1.0f-wavyLerpIn));
 					}
 				}
 				
@@ -270,8 +272,8 @@ void Element::setGridFromWavy()
 				int wavy_y = (yDivs - y)-1;
 				if (wavy_y < wavy.size())
 				{
-					drawGrid[x][y].x = (wavy[wavy_y].x/float(getWidth()) - 0.5);
-					drawGrid[x+1][y].x = (wavy[wavy_y].x/float(getWidth()) + 0.5);
+					drawGrid[x][y].x = (wavy[wavy_y].x/float(getWidth()) - 0.5f);
+					drawGrid[x+1][y].x = (wavy[wavy_y].x/float(getWidth()) + 0.5f);
 				}
 			}
 		}
@@ -299,12 +301,14 @@ void Element::setElementEffectByIndex(int eidx)
 	case EFX_SEGS:
 	{
 		setSegs(e.segsx, e.segsy, e.segs_dgox, e.segs_dgoy, e.segs_dgmx, e.segs_dgmy, e.segs_dgtm, e.segs_dgo);
+		setStatic(false);
 	}
 	break;
 	case EFX_ALPHA:
 	{
 		setBlendType(e.blendType);
 		alpha = e.alpha;
+		setStatic(false);
 	}
 	break;
 	case EFX_WAVY:
@@ -324,7 +328,7 @@ void Element::setElementEffectByIndex(int eidx)
 		wavyRadius = e.wavy_radius;
 		wavyFlip = e.wavy_flip;
 		wavyMin = bity;
-		wavyMax = bity*1.2;
+		wavyMax = bity*1.2f;
 
 		//wavyRadius = 8;
 
@@ -337,7 +341,11 @@ void Element::setElementEffectByIndex(int eidx)
 		wavyMin = e.wavy_min;
 		wavyMax = e.wavy_max;
 		*/
+		setStatic(false);
 	}
+	break;
+	default:
+		setStatic(true);
 	break;
 	}
 	elementEffectType = e.type;
@@ -346,9 +354,8 @@ void Element::setElementEffectByIndex(int eidx)
 void Element::render()
 {
 	if (!elementActive) return;
-	InterpolatedVector bcolor = color;
-	color = dsq->game->sceneColor * color * dsq->game->sceneColor2 * dsq->game->sceneColor3;
-	if (dsq->game->sceneEditor.isOn() && this->bgLayer == dsq->game->sceneEditor.bgLayer
+#ifdef AQUARIA_BUILD_SCENEEDITOR
+	if (dsq->game->isSceneEditorActive() && this->bgLayer == dsq->game->sceneEditor.bgLayer
 		&& dsq->game->sceneEditor.editType == ET_ELEMENTS)
 	{
 		renderBorderColor = Vector(0.5,0.5,0.5);
@@ -368,6 +375,7 @@ void Element::render()
 		renderBorder = true;
 		//errorLog("!^!^$");
 	}
+#endif
 	
 	if (this->elementEffectType == EFX_WAVY)
 	{
@@ -382,7 +390,7 @@ void Element::render()
 		
 		glDisable(GL_BLEND);
 		Vector pos = position;
-		pos.y = position.y + (getHeight()*scale.y)/2.0;
+		pos.y = position.y + (getHeight()*scale.y)/2.0f;
 		glBegin(GL_LINES);
 			for (int i = 0; i < wavy.size()-1; i++)
 			{
@@ -396,7 +404,6 @@ void Element::render()
 	*/
 
 	renderBorder = false;
-	color = bcolor;
 }
 
 void Element::fillGrid()
@@ -438,8 +445,8 @@ bool Element::isActive()
 	return true;
 }
 
-double Element::getSortDepth()
+float Element::getSortDepth()
 {
-	return Quad::getSortDepth() - bgLayer*0.01;
+	return Quad::getSortDepth() - bgLayer*0.01f;
 }
 

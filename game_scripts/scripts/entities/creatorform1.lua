@@ -17,32 +17,32 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-delay = 0
+v.delay = 0
 
-STATE_ATTACK1 		= 1000
-STATE_ATTACK2		= 1003
-STATE_ATTACK2LOOP	= 1004
+local STATE_ATTACK1 		= 1000
+local STATE_ATTACK2		= 1003
+local STATE_ATTACK2LOOP	= 1004
 
 
-bone_head = 0
-bone_spawn = 0
-bone_hand = 0
-bone_mask = 0
+v.bone_head = 0
+v.bone_spawn = 0
+v.bone_hand = 0
+v.bone_mask = 0
 
-hits = 64 * 1.5
+v.hits = 64 * 1.5
 
-fireDelay = 0
+v.fireDelay = 0
 
-takeDamage = true
-suck = false
+v.takeDamage = true
+v.suck = false
 
-pat = 0
+v.pat = 0
 
-node_creatorcutscene = 0
+v.node_creatorcutscene = 0
 
 function init(me)
 	setupEntity(me)
@@ -54,11 +54,11 @@ function init(me)
 	
 	entity_setState(me, STATE_WAITFORCUTSCENE)
 	
-	bone_head = entity_getBoneByName(me, "Head")
-	bone_spawn = entity_getBoneByName(me, "Spawn")
-	bone_hand = entity_getBoneByName(me, "Hand")
-	bone_mask = entity_getBoneByName(me, "Mask")
-	bone_alpha(bone_spawn, 0.01)
+	v.bone_head = entity_getBoneByName(me, "Head")
+	v.bone_spawn = entity_getBoneByName(me, "Spawn")
+	v.bone_hand = entity_getBoneByName(me, "Hand")
+	v.bone_mask = entity_getBoneByName(me, "Mask")
+	bone_alpha(v.bone_spawn, 0.01)
 	
 	entity_setCullRadius(me, 600)
 	
@@ -72,16 +72,16 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
-	node_creatorcutscene = getNode("CREATORCUTSCENE")
+	v.node_creatorcutscene = getNode("CREATORCUTSCENE")
 end
 
-function getDelayTime()
-	if hits > 48 then
+local function getDelayTime()
+	if v.hits > 48 then
 		return 6
-	elseif hits > 32 then
+	elseif v.hits > 32 then
 		return 3
 	else
 		return 0
@@ -93,65 +93,65 @@ function update(me, dt)
 		overrideZoom(0.5, 1)
 	end
 	
-	if entity_isState(me, STATE_TRANSITION) and suck then
-		bx, by = bone_getWorldPosition(bone_head)
+	if entity_isState(me, STATE_TRANSITION) and v.suck then
+		local bx, by = bone_getWorldPosition(v.bone_head)
 		entity_pullEntities(me, bx, by, 1000, 1700, dt)
 		entity_clearVel(getLi())
 	end
 	
 	if entity_isState(me, STATE_WAITFORCUTSCENE) then
-		if node_isEntityIn(node_creatorcutscene, n) then
+		if node_isEntityIn(v.node_creatorcutscene, v.n) then
 			entity_setState(me, STATE_CUTSCENE)
 		end
 	end
 	
 	if not entity_isState(me, STATE_WAITFORCUTSCENE) then
 		entity_handleShotCollisionsSkeletal(me)
-		bone = entity_collideSkeletalVsCircle(me, n)
+		local bone = entity_collideSkeletalVsCircle(me, v.n)
 		--[[
-		if avatar_isBursting() and bone ~= 0 and entity_setBoneLock(n, me, bone) then
+		if avatar_isBursting() and bone ~= 0 and entity_setBoneLock(v.n, me, bone) then
 		else
-			if bone ~= 0 and entity_getBoneLockEntity(n) ~= me then
-				entity_push(n, -500, 0, 1)
-				entity_damage(n, me, 1)
+			if bone ~= 0 and entity_getBoneLockEntity(v.n) ~= me then
+				entity_push(v.n, -500, 0, 1)
+				entity_damage(v.n, me, 1)
 			end
 		end
 		]]--
 		if bone ~= 0 then
-			entity_push(n, -500, 0, 1)
-			entity_damage(n, me, 0.5)
+			entity_push(v.n, -500, 0, 1)
+			entity_damage(v.n, me, 0.5)
 		end
 	end
 	
-	hx, hy = bone_getWorldPosition(bone_head)
+	local hx, hy = bone_getWorldPosition(v.bone_head)
 	
 	entity_setLookAtPoint(me, hx, hy)
 	
 	if entity_isState(me, STATE_IDLE) then
-		delay = delay + dt
-		if delay > getDelayTime() then
-			if pat < 3 then
+		v.delay = v.delay + dt
+		if v.delay > getDelayTime() then
+			if v.pat < 3 then
 				entity_setState(me, STATE_ATTACK1)
 			else
 				entity_setState(me, STATE_ATTACK2)
-				pat = -1
+				v.pat = -1
 			end
 		end
 	end
 	
 	if entity_isState(me, STATE_ATTACK2LOOP) then
-		fireDelay = fireDelay + dt
-		if fireDelay > 0.05 then
-			bx, by = bone_getWorldPosition(bone_spawn)
-			s = createShot("CreatorForm1", me, n, bx, by)
-			x = -1000
-			y = math.random(2000)-1000
+		v.fireDelay = v.fireDelay + dt
+		if v.fireDelay > 0.05 then
+			local bx, by = bone_getWorldPosition(v.bone_spawn)
+			local s = createShot("CreatorForm1", me, v.n, bx, by)
+			local x = -1000
+			local y = math.random(2000)-1000
 			if chance(10) then
-				x = entity_x(n) - bx
-				y = entity_y(n) - by
+				x = entity_x(v.n) - bx
+				y = entity_y(v.n) - by
 			end
 			shot_setAimVector(s, x, y)
-			fireDelay = 0
+			v.fireDelay = 0
 		end
 	end
 	
@@ -164,7 +164,7 @@ function update(me, dt)
 	--entity_addTargetPoint(me, bone_getWorldPosition(bone_hand))
 end
 
-function doIntroEnd(me)
+local function doIntroEnd(me)
 	shakeCamera(2, 1)
 	
 	voiceInterupt("CreatorLast12")
@@ -179,7 +179,7 @@ function doIntroEnd(me)
 	
 	watch(1)
 	
-	cam_toEntity(n)
+	cam_toEntity(v.n)
 	
 	setOverrideVoiceFader(-1)
 	
@@ -189,12 +189,12 @@ function doIntroEnd(me)
 	setCutscene(0)
 end
 
-function qws(me, t)
-	c = 0
+local function qws(me, t)
+	local c = 0
 	
 	if t == -1 then
 		--debugLog("WATCH FOR VOICE!!!")
-		while isPlayingVoice() do
+		while isStreamingVoice() do
 			watch(FRAME_TIME)
 			-- old skip method
 			--[[
@@ -219,11 +219,11 @@ function qws(me, t)
 	return false
 end
 
-intrans2 = false
+v.intrans2 = false
 
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
-		delay = 0
+		v.delay = 0
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_ATTACK1) then
 		entity_setStateTime(me, entity_animate(me, "spawn"))
@@ -232,20 +232,20 @@ function enterState(me)
 		entity_setStateTime(me, entity_animate(me, "attack2"))
 	elseif entity_isState(me, STATE_TRANSITION) then
 	
-		nd = getNode("fallback")
+		local nd = getNode("fallback")
 		
-		if not entity_isfh(n) then
-			entity_fh(n)
+		if not entity_isfh(v.n) then
+			entity_fh(v.n)
 		end
 		
-		li = getLi()
+		local li = getLi()
 		
-		entity_setPosition(n, node_x(nd), node_y(nd), 1)
+		entity_setPosition(v.n, node_x(nd), node_y(nd), 1)
 		entity_setPosition(li, node_x(nd), node_y(nd), 1)
 		
 		fadeOutMusic(6)
 		--entity_setStateTime(me, entity_animate(me, "die"))
-		node = getNode("CREATORFORM1")
+		local node = getNode("CREATORFORM1")
 		
 		entity_animate(me, "die")
 		entity_setAllDamageTargets(me, false)
@@ -254,38 +254,38 @@ function enterState(me)
 			changeForm(FORM_NORMAL)
 		end
 		
-		entity_idle(n)
+		entity_idle(v.n)
 		disableInput()
-		entity_setInvincible(n, true)
+		entity_setInvincible(v.n, true)
 		cam_toEntity(me)
 		
 		entity_setStateTime(me, 5)
 	elseif entity_isState(me, STATE_TRANSITION2) then
-		if not intrans2 then
-			intrans2 = true
+		if not v.intrans2 then
+			v.intrans2 = true
 			
-			n = getNaija()
+			v.n = getNaija()
 			
-			nd = getNode("fallback")
+			local nd = getNode("fallback")
 			
-			if not entity_isfh(n) then
-				entity_fh(n)
+			if not entity_isfh(v.n) then
+				entity_fh(v.n)
 			end
 			
 			playSfx("naijali1")
 			
-			li = getLi()
+			local li = getLi()
 			
-			entity_setPosition(n, node_x(nd), node_y(nd))
+			entity_setPosition(v.n, node_x(nd), node_y(nd))
 			entity_setPosition(li, node_x(nd), node_y(nd))
 			
 			cam_toEntity(li)
 			
-			bx, by = bone_getWorldPosition(bone_head)
+			local bx, by = bone_getWorldPosition(v.bone_head)
 			
 			entity_setState(li, STATE_CLOSE, -1, 1)
 			
-			ent = getFirstEntity()
+			local ent = getFirstEntity()
 			while ent ~= 0 do
 				if (entity_getEntityType(ent) == ET_ENEMY) and ent ~= me then
 					entity_damage(ent, me, 9999, DT_AVATAR_ENERGYBLAST)
@@ -314,7 +314,7 @@ function enterState(me)
 			playSfx("naijalow1")
 			
 			setFlag(FLAG_LI, 200)
-			intrans2 = false
+			v.intrans2 = false
 		end
 	elseif entity_isState(me, STATE_ATTACK2LOOP) then
 		entity_animate(me, "attack2loop", -1)
@@ -332,9 +332,9 @@ function enterState(me)
 			changeForm(FORM_NORMAL)
 		end
 		
-		entity_swimToNode(n, node_creatorcutscene)
+		entity_swimToNode(v.n, v.node_creatorcutscene)
 		
-		while entity_isFollowingPath(n) do
+		while entity_isFollowingPath(v.n) do
 			watch(FRAME_TIME)
 		end
 		
@@ -346,11 +346,11 @@ function enterState(me)
 		
 		overrideZoom(0.7, 10)
 		
-		li = getLi()
+		local li = getLi()
 		
-		lucienVol = 0.7
+		local lucienVol = 0.7
 		
-		jennaVol = 0
+		local jennaVol = 0
 		
 		entity_flipToEntity(li, me)
 		
@@ -470,47 +470,47 @@ end
 
 function exitState(me)
 	if entity_isState(me, STATE_ATTACK1) then
-		pat = pat + 1
+		v.pat = v.pat + 1
 		entity_setState(me, STATE_IDLE)
 	elseif entity_isState(me, STATE_ATTACK2) then
 		entity_setState(me, STATE_ATTACK2LOOP)
 	elseif entity_isState(me, STATE_ATTACK2LOOP) then
-		pat = pat + 1
+		v.pat = v.pat + 1
 		entity_setState(me, STATE_IDLE)
 	elseif entity_isState(me, STATE_TRANSITION) then
 		entity_setState(me, STATE_TRANSITION2, 3)
 	elseif entity_isState(me, STATE_TRANSITION2) then
-		ent = createEntity("CreatorForm2", "", entity_getPosition(me))
+		local ent = createEntity("CreatorForm2", "", entity_getPosition(me))
 		entity_alpha(me, 0, 0.5)
 		entity_alpha(ent, 0)
 		entity_alpha(ent, 1, 0.5)
 		entity_setState(me, STATE_WAIT, 2)
 	elseif entity_isState(me, STATE_WAIT) then
 		enableInput()
-		entity_setInvincible(n, false)
-		cam_toEntity(n)
+		entity_setInvincible(v.n, false)
+		cam_toEntity(v.n)
 		entity_delete(me)
 	end
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if entity_isState(me, STATE_TRANSITION) or takeDamage == false or entity_isState(me, STATE_TRANSITION2) or entity_isState(me, STATE_WAIT) then
+	if entity_isState(me, STATE_TRANSITION) or v.takeDamage == false or entity_isState(me, STATE_TRANSITION2) or entity_isState(me, STATE_WAIT) then
 		return false
 	end
 	if entity_isState(me, STATE_CUTSCENE) or entity_isState(me, STATE_WAITFORCUTSCENE) then
 		return false
 	end
 	if damageType == DT_AVATAR_DUALFORMNAIJA then
-		hits = hits - dmg
-		bone_damageFlash(bone_head)
-		bone_damageFlash(bone_mask)
+		v.hits = v.hits - dmg
+		bone_damageFlash(v.bone_head)
+		bone_damageFlash(v.bone_mask)
 		return false
 	end
-	if bone == bone_mask or bone == bone_head then
-		hits = hits - dmg
+	if bone == v.bone_mask or bone == v.bone_head then
+		v.hits = v.hits - dmg
 		bone_damageFlash(bone)
 		--return true
-		if hits <= 0 then
+		if v.hits <= 0 then
 			entity_setState(me, STATE_TRANSITION)
 		end
 	end
@@ -519,9 +519,10 @@ end
 
 function animationKey(me, key)
 	if entity_isState(me, STATE_ATTACK1) and key == 3 then
-		sx, sy = bone_getWorldPosition(bone_spawn)
+		local sx, sy = bone_getWorldPosition(v.bone_spawn)
 		--[[
-		r = math.random(6)
+		local r = math.random(6)
+		local ent
 		if r == 1 then
 			ent = createEntity("Mutilus", "", sx, sy)
 		elseif r == 2 then
@@ -541,7 +542,8 @@ function animationKey(me, key)
 		end
 		]]--
 		
-		r = math.random(2)
+		local r = math.random(2)
+		local ent
 		if r == 1 then
 			ent = createEntity("Mutilus", "", sx, sy)
 		elseif r == 2 then
@@ -550,14 +552,14 @@ function animationKey(me, key)
 			end
 		end
 		
-		sx, sy = entity_getScale(ent)
+		local sx, sy = entity_getScale(ent)
 		entity_scale(ent, 0, 0)
 		entity_scale(ent, sx, sy, 0.5)
 	elseif entity_isState(me, STATE_TRANSITION) and key == 7 then
-		suck = true
+		v.suck = true
 		playSfx("hellbeast-suck")
-		nd = getNode("fallback")
-		entity_setPosition(n, node_x(nd), node_y(nd), 1)
+		local nd = getNode("fallback")
+		entity_setPosition(v.n, node_x(nd), node_y(nd), 1)
 	end
 end
 

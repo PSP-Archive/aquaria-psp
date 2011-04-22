@@ -17,24 +17,24 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- M A U L
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 -- entity specific
-dir = 0
-myNote = 0
-noteDown = -1
-n = 0
-followDelay = 0
+v.dir = 0
+v.myNote = 0
+v.noteDown = -1
+v.n = 0
+v.followDelay = 0
  
 -- ================================================================================================
 -- FUNCTIONS
 -- ================================================================================================
 
-function commonInit(me, note)
+function v.commonInit(me, note)
 	setupBasicEntity(
 	me,
 	"",					-- texture
@@ -58,7 +58,7 @@ function commonInit(me, note)
 	entity_setMaxSpeedLerp(me, 1, 1, -1, 1)
 	entity_setSegs(me, 8, 2, 0.1, 0.9, 0, -0.03, 8, 0)
 	entity_setDeathParticleEffect(me, "TinyRedExplode")
-	myNote = note
+	v.myNote = note
 	
 	
 	entity_setBeautyFlip(me, false)
@@ -67,35 +67,35 @@ function commonInit(me, note)
 	entity_setDamageTarget(me, DT_AVATAR_BITE, false)
 	
 	entity_initSkeletal(me, "CaveFish")
-	glow = entity_getBoneByName(me, "glow")
-	bone_setBlendType(glow, BLEND_ADD)
-	bone_alpha(glow, 0)
+	v.glow = entity_getBoneByName(me, "glow")
+	bone_setBlendType(v.glow, BLEND_ADD)
+	bone_alpha(v.glow, 0)
 	
-	bone_scale(glow, 4, 4)
-	bone_scale(glow, 8, 8, 1, -1, 1)
+	bone_scale(v.glow, 4, 4)
+	bone_scale(v.glow, 8, 8, 1, -1, 1)
 	
-	entity_setColor(me, getNoteColor(myNote))
+	entity_setColor(me, getNoteColor(v.myNote))
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)	
 	entity_handleShotCollisions(me)	
 	--entity_touchAvatarDamage(me, 32, 1, 1200)
 	
-	if noteDown == myNote or followDelay > 0 then
-		if noteDown ~= myNote and followDelay > 0 then
-			followDelay = followDelay - dt
+	if v.noteDown == v.myNote or v.followDelay > 0 then
+		if v.noteDown ~= v.myNote and v.followDelay > 0 then
+			v.followDelay = v.followDelay - dt
 		end
 		entity_moveTowardsTarget(me, dt, 500)
 		entity_doCollisionAvoidance(me, dt, 4, 0.5)
 		entity_setMaxSpeedLerp(me, 1.2, 0.2)
 		--entity_doEntityAvoidance(me, dt, 32, 0.5)
 	else
-		if dir==0 then
+		if v.dir==0 then
 			entity_addVel(me, -500*dt, 0)
 		else
 			entity_addVel(me, 500*dt, 0)
@@ -123,15 +123,15 @@ end
 
 function hitSurface(me)
 	
-	if followDelay <= 0 then
+	if v.followDelay <= 0 then
 		--debugLog("hit surface!")
 		--entity_flipHorizontal(me)
-		if dir == 0 then
+		if v.dir == 0 then
 			--entity_applySurfaceNormalForce(me, 1000)
-			dir = 1
-		elseif dir == 1 then 
+			v.dir = 1
+		elseif v.dir == 1 then 
 			--entity_applySurfaceNormalForce(me, 1000)
-			dir = 0			
+			v.dir = 0			
 		end
 		
 		entity_clearVel(me)
@@ -139,17 +139,17 @@ function hitSurface(me)
 end
 
 function songNote(me, note)
-	noteDown = note
-	if note == myNote then
-		followDelay = 1.5
-		bone_alpha(glow, 0.5, 0.2)
+	v.noteDown = note
+	if note == v.myNote then
+		v.followDelay = 1.5
+		bone_alpha(v.glow, 0.5, 0.2)
 	end
 	
 end
 
 function songNoteDone(me, note)
-	noteDown = -1
-	bone_alpha(glow, 0, 3)
+	v.noteDown = -1
+	bone_alpha(v.glow, 0, 3)
 end
 
 function activate(me)

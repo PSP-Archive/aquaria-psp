@@ -17,38 +17,35 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- L I O N F I S H
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 -- ================================================================================================
 -- S T A T E S
 -- ================================================================================================
 
-STATE_GLIDING = 1001
-STATE_TO_THRUST = 1002
-STATE_THRUSTING = 1003
-STATE_TO_GLIDE = 1004
+local STATE_GLIDING = 1001
+local STATE_TO_THRUST = 1002
+local STATE_THRUSTING = 1003
+local STATE_TO_GLIDE = 1004
 
 -- ================================================================================================
 -- L O C A L   V A R I A B L E S 
 -- ================================================================================================
 
-sz = 1
-maxSpeed = 890
-
-swimTime = 0.34 + (math.random(42)*0.01)
-angle = 90
-
-turtle_type = 0
+v.maxSpeed = 890
+v.angle = 90
 
 -- ================================================================================================
 -- F U N C T I O N S
 -- ================================================================================================
 
 function init(me)
+	v.swimTime = 0.34 + (math.random(42)*0.01)
+
 	setupBasicEntity(
 	me,
 	"",				-- texture
@@ -72,7 +69,7 @@ function init(me)
 
 	entity_setState(me, STATE_GLIDING)
 	entity_rotateTo(me, 360, 0.1)
-	entity_setMaxSpeed(me, maxSpeed)
+	entity_setMaxSpeed(me, v.maxSpeed)
 end
 
 function animationKey(me, key)
@@ -80,7 +77,7 @@ end
 
 function postInit(me)
 	-- FLIP HORIZONTALLY IF THERE'S A FLIP NODE
-	node = entity_getNearestNode(me, "FLIP")
+	local node = entity_getNearestNode(me, "FLIP")
 	if node ~=0 then
 		if node_isEntityIn(node, me) then 
 			entity_fh(me)
@@ -91,17 +88,17 @@ end
 function update(me, dt)
 	-- SWIM ANGLE
 	if entity_getState(me) == STATE_GLIDING then
-		swimTime = swimTime - dt
-		if swimTime < 0 then
-			swimTime = 1.23 + (math.random(234)*0.01)
+		v.swimTime = v.swimTime - dt
+		if v.swimTime < 0 then
+			v.swimTime = 1.23 + (math.random(234)*0.01)
 			
 			-- Point based on Flip
 			if not entity_isfh(me) then
-				angle = 58 + math.random(64)
-				entity_rotateTo(me, angle + 270, 2)
+				v.angle = 58 + math.random(64)
+				entity_rotateTo(me, v.angle + 270, 2)
 			else
-				angle = 238 + math.random(64)
-				entity_rotateTo(me, angle + 90, 2)
+				v.angle = 238 + math.random(64)
+				entity_rotateTo(me, v.angle + 90, 2)
 			end		
 			
 			entity_setState(me, STATE_TO_THRUST)
@@ -118,13 +115,13 @@ function update(me, dt)
 	end
 	
 	-- FLIP L/R
-	flipThresh = 50	
+	local flipThresh = 50	
 	if entity_velx(me) < -flipThresh and not entity_isfh(me) then
 		entity_fh(me)
-		angle = angle + 180
+		v.angle = v.angle + 180
 	elseif entity_velx(me) > flipThresh and entity_isfh(me) then
 		entity_fh(me)
-		angle = angle - 180
+		v.angle = v.angle - 180
 	end
 	
 	-- AVOIDANCE
@@ -161,7 +158,7 @@ function exitState(me)
 		
 	elseif entity_getState(me) == STATE_THRUSTING then
 		-- THRUST
-		entity_moveTowardsAngle(me, angle, 1, 124 + math.random(124))
+		entity_moveTowardsAngle(me, v.angle, 1, 124 + math.random(124))
 		entity_setState(me, STATE_TO_GLIDE)
 		
 	elseif entity_getState(me) == STATE_TO_GLIDE then

@@ -17,22 +17,22 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-head = 0
-tback = 0
-tfront = 0
+v.head = 0
+v.tback = 0
+v.tfront = 0
 
 
-STATE_APPEAR			= 1000
-STATE_HIDDEN			= 1001
-STATE_HIDE				= 1002
+local STATE_APPEAR			= 1000
+local STATE_HIDDEN			= 1001
+local STATE_HIDE			= 1002
 
-inout	= 0
-dir 	= 1
-spawn = false
+v.inout	= 0
+v.dir 	= 1
+v.spawn = false
 
 function init(me)
 	setupEntity(me)
@@ -41,13 +41,13 @@ function init(me)
 	
 	entity_setAllDamageTargets(me, false)
 	
-	head = entity_getBoneByName(me, "head")
-	tfront = entity_getBoneByName(me, "tfront")
-	tback = entity_getBoneByName(me, "tback")
+	v.head = entity_getBoneByName(me, "head")
+	v.tfront = entity_getBoneByName(me, "tfront")
+	v.tback = entity_getBoneByName(me, "tback")
 	
-	bone_setSegs(head, 2, 8, 0.8, 0.8, -0.018, 0, 6, 1)
-	bone_setSegs(tfront, 2, 8, 0.8, 0.8, -0.018, 0, 6, 1)
-	bone_setSegs(tback, 2, 8, -0.8, -0.8, -0.018, 0, 6, 1)
+	bone_setSegs(v.head, 2, 8, 0.8, 0.8, -0.018, 0, 6, 1)
+	bone_setSegs(v.tfront, 2, 8, 0.8, 0.8, -0.018, 0, 6, 1)
+	bone_setSegs(v.tback, 2, 8, -0.8, -0.8, -0.018, 0, 6, 1)
 	
 	entity_setCollideRadius(me, 32)
 	
@@ -71,53 +71,53 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 	if entity_isState(me, STATE_HIDDEN)
 	and not isForm(FORM_FISH) then
-		if entity_isEntityInRange(me, n, 180) then
+		if entity_isEntityInRange(me, v.n, 180) then
 			entity_setState(me, STATE_APPEAR)
 		end
 	end
 	
 	if entity_isState(me, STATE_IDLE) then
-		inout = inout + dt*dir
-		if not spawn and inout > 0.2 then
+		v.inout = v.inout + dt*v.dir
+		if not v.spawn and v.inout > 0.2 then
 			spawnParticleEffect("bubble-release", entity_x(me), entity_y(me))
-			spawn = true
+			v.spawn = true
 		end
-		if inout > 1 then
-			dir = -1
-			inout = 1
+		if v.inout > 1 then
+			v.dir = -1
+			v.inout = 1
 			spawnParticleEffect("bubble-release", entity_x(me), entity_y(me))
-		elseif inout < 0 then
-			dir = 1
-			inout = 0
-			spawn = false
+		elseif v.inout < 0 then
+			v.dir = 1
+			v.inout = 0
+			v.spawn = false
 			
-			if entity_isEntityInRange(me, n, 1000) then
-				s = createShot("camopus-ink", me, n, entity_x(me), entity_y(me))
-				shot_setAimVector(s, entity_x(n) - entity_x(me), entity_y(n) - entity_y(me))
+			if entity_isEntityInRange(me, v.n, 1000) then
+				local s = createShot("camopus-ink", me, v.n, entity_x(me), entity_y(me))
+				shot_setAimVector(s, entity_x(v.n) - entity_x(me), entity_y(v.n) - entity_y(me))
 			end
 			
 		end
 		
-		bone_scale(tfront, 0.2*(1-inout)+0.8, 0.9 + inout*0.1)
-		bone_scale(tback, 0.2*inout+0.8, 1)
+		bone_scale(v.tfront, 0.2*(1-v.inout)+0.8, 0.9 + v.inout*0.1)
+		bone_scale(v.tback, 0.2*v.inout+0.8, 1)
 		
-		bone_scale(head, 0.9 + 0.1 * (1-inout), 0.2*inout + 0.8)
+		bone_scale(v.head, 0.9 + 0.1 * (1-v.inout), 0.2*v.inout + 0.8)
 		
-		entity_setMaxSpeedLerp(me, inout*2 + 0.4)
+		entity_setMaxSpeedLerp(me, v.inout*2 + 0.4)
 		
 		
 		
 		entity_moveTowardsTarget(me, dt, -400)
 		entity_doCollisionAvoidance(me, dt, 10, 0.2)
 		entity_doEntityAvoidance(me, dt, 64, 0.1)
-		if not entity_isEntityInRange(me, n, 1224) then
+		if not entity_isEntityInRange(me, v.n, 1224) then
 			entity_setState(me, STATE_HIDE) 
 		end
 		
@@ -149,9 +149,9 @@ function enterState(me)
 		entity_rotate(me, 0, 1, 0, 0, 1)
 		entity_alpha(me, 0.05, 3)
 		entity_setStateTime(me, 3)
-		bone_scale(head, 1, 1, 1)
-		bone_scale(tfront, 1, 1, 1)
-		bone_scale(tback, 1, 1, 1)
+		bone_scale(v.head, 1, 1, 1)
+		bone_scale(v.tfront, 1, 1, 1)
+		bone_scale(v.tback, 1, 1, 1)
 	end
 end
 
@@ -166,8 +166,8 @@ end
 
 function damage(me, attacker, bone, damageType, dmg)
 	if entity_isState(me, STATE_HIDDEN) then
-		inout = 0.5
-		dir = -1
+		v.inout = 0.5
+		v.dir = -1
 		entity_setState(me, STATE_APPEAR)
 	end
 	if entity_isState(me, STATE_IDLE) then
@@ -198,7 +198,7 @@ function dieNormal(me)
 	playSfx("camopus-roar")
 	cam_toEntity(me)
 	
-	entity_idle(n)
+	entity_idle(v.n)
 	watch(0.5)
 	
 	shakeCamera(2, 3)
@@ -208,6 +208,6 @@ function dieNormal(me)
 	spawnIngredient("RubberyMeat", entity_x(me), entity_y(me))
 	if chance(90) then spawnIngredient("SmallTentacle", entity_x(me), entity_y(me)) end
 	watch(1)
-	cam_toEntity(n)
+	cam_toEntity(v.n)
 end
 

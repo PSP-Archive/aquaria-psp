@@ -17,31 +17,33 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- L E A C H
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
 -- entity specific
-STATE_ATTACHED			= 1000
-STATE_FLYOFF			= 1001
+local STATE_ATTACHED		= 1000
+local STATE_FLYOFF			= 1001
 
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-attachOffsetX	= 0
-attachOffsetY	= 0
-attachBone = 0
-rollTime = 0
-maxRollTime = math.random(10)/10.0 + 0.5
+v.attachOffsetX	= 0
+v.attachOffsetY	= 0
+v.attachBone = 0
+v.rollTime = 0
 
 -- ================================================================================================
 -- FUNCTIONS
 -- ================================================================================================
 
 function init(me)
+	v.maxRollTime = math.random(10)/10.0 + 0.5
+
 	setupBasicEntity(
 	me,
 	"Leach",						-- texture
@@ -85,13 +87,12 @@ function update(me, dt)
 			entity_setState(me, STATE_FLYOFF, 2)
 			return
 		end
-		t = entity_getTarget(me)
-		entity_rotate(me, bone_getWorldRotation(attachBone))
-		entity_setPosition(me, bone_getWorldPosition(attachBone))
+		entity_rotate(me, bone_getWorldRotation(v.attachBone))
+		entity_setPosition(me, bone_getWorldPosition(v.attachBone))
 		
 		if avatar_isRolling() then
-			rollTime = rollTime + dt
-			if rollTime > maxRollTime then			
+			v.rollTime = v.rollTime + dt
+			if v.rollTime > v.maxRollTime then
 				entity_setState(me, STATE_FLYOFF, 2)
 			end
 		end
@@ -114,14 +115,14 @@ function enterState(me)
 		entity_setMaxSpeed(me, 0)
 		entity_incrTargetLeaches(me)
 		entity_sound(me, "Leach")
-		attachBone = entity_getNearestBoneToPosition(entity_getTarget(me), entity_getPosition(me))
+		v.attachBone = entity_getNearestBoneToPosition(entity_getTarget(me), entity_getPosition(me))
 		--[[
-		attachOffsetX = entity_x(me) - entity_getTargetPositionX(me)
-		attachOffsetY = entity_y(me) - entity_getTargetPositionY(me)
+		v.attachOffsetX = entity_x(me) - entity_getTargetPositionX(me)
+		v.attachOffsetY = entity_y(me) - entity_getTargetPositionY(me)
 		]]--
 	elseif entity_isState(me, STATE_FLYOFF) then
 		entity_setEntityType(me, ET_ENEMY)
-		rollTime = 0
+		v.rollTime = 0
 		entity_setMaxSpeed(me, 800)
 		entity_addRandomVel(me, 1000)
 	end

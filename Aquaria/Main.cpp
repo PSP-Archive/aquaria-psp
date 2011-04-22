@@ -52,7 +52,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 			debugLog("OK");
 
 			renderObjectLayers.resize(2);
-			fastCullLayers.resize(2);
 
 			Quad *q = new Quad;
 			q->setTexture("gfx/Logo");
@@ -100,9 +99,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 	void enumerateTest()
 	{
+#ifdef BBGE_BUILD_SDL
 		SDL_Rect **modes;
-		int i;
-
 		/* Get available fullscreen/hardware modes */
 		modes=SDL_ListModes(NULL, SDL_FULLSCREEN|SDL_HWSURFACE);
 
@@ -120,13 +118,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 		else{
 			/* Print valid modes */
 			printf("Available Modes\n");
-			for(i=0;modes[i];++i){
+			for(int i=0;modes[i];++i){
 				std::ostringstream os;
 				os << "[" << modes[i]->w << "x" << modes[i]->h << "]";
 				MessageBox(0, os.str().c_str(), "", MB_OK);
 				//printf("  %d x %d\n", modes[i]->w, modes[i]->h);
 			}
 		}
+#endif
 #endif
 	}
 
@@ -219,6 +218,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 		DSQ core(fileSystem);
 #endif	 
+
 		{			
 			core.init();
 			//enumerateTest();

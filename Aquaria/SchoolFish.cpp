@@ -37,7 +37,8 @@ float maxChange = maxSpeed*maxUrgency;
 
 float velocityScale = 1;
 
-SchoolFish::SchoolFish() : FlockEntity()
+
+SchoolFish::SchoolFish(const std::string &texname) : FlockEntity()
 {
 	burstDelay = 0;
 
@@ -45,27 +46,28 @@ SchoolFish::SchoolFish() : FlockEntity()
 	rippleTimer = 0;
 	oldFlockID = -1;
 	respawnTimer = 0;
-	dodgeAbility = (rand()%900)/1000.0 + 0.1;
-	float randScale = float(rand()%200)/1000.0;
-	scale = Vector(0.6-randScale, 0.6-randScale);
+	dodgeAbility = (rand()%900)/1000.0f + 0.1f;
+	float randScale = float(rand()%200)/1000.0f;
+	scale = Vector(0.6f-randScale, 0.6f-randScale);
 
 	/*
-	float randColor = float(rand()%250)/1000.0;
+	float randColor = float(rand()%250)/1000.0f;
 	color = Vector(1-randColor, 1-randColor, 1-randColor);
 	*/
 
 	//color.interpolateTo(Vector(0.5, 0.5, 0.5), 2, -1, 1);
-	color.path.addPathNode(Vector(1,1,1), 0);
-	color.path.addPathNode(Vector(1,1,1), 0.5);
-	color.path.addPathNode(Vector(0.8, 0.8, 0.8), 0.7);
-	color.path.addPathNode(Vector(1,1,1), 1.0);
+	color.ensureData();
+	color.data->path.addPathNode(Vector(1,1,1), 0);
+	color.data->path.addPathNode(Vector(1,1,1), 0.5);
+	color.data->path.addPathNode(Vector(0.8, 0.8, 0.8), 0.7);
+	color.data->path.addPathNode(Vector(1,1,1), 1.0);
 	color.startPath(2);
-	color.loopType = -1;
-	color.update((rand()%1000)/1000.0);
+	color.data->loopType = -1;
+	color.update((rand()%1000)/1000.0f);
 
 	flipDelay = 0;
 	swimSound = "SchoolFishSwim";
-	soundDelay = (rand()%300)/100.0;
+	soundDelay = (rand()%300)/100.0f;
 	range = 0;
 	setEntityType(ET_ENEMY);
 	canBeTargetedByAvatar = true;
@@ -73,7 +75,7 @@ SchoolFish::SchoolFish() : FlockEntity()
 	//scale = Vector(0.5, 0.5);
 	avoidTime=0;
 	vel = Vector(-minUrgency, 0);
-	setTexture("flock-0001");
+	setTexture(texname);
 	flockType = FLOCK_FISH;
 	//updateCull = -1;
 	updateCull = 4000;
@@ -112,8 +114,8 @@ void SchoolFish::onEnterState(int action)
 		//rotation.interpolateTo(Vector(0,0,180), 2);
 		vel.setLength2D(vel.getLength2D()*-1);
 
-		oldFlockID = flockID;
-		flockID = -1;
+		oldFlockID = flock ? flock->flockID : -1;
+		removeFromFlock();
 
 		doDeathEffects(0,0,0);
 
@@ -162,7 +164,7 @@ void SchoolFish::onEnterState(int action)
 		alpha.interpolateTo(1, 1);
 		alphaMod = 1;
 		if (oldFlockID != -1)
-			flockID = oldFlockID;
+			addToFlock(oldFlockID);
 	}
 }
 
@@ -170,19 +172,19 @@ void SchoolFish::updateVelocity(Vector &accumulator)
 {
 	// Ok, now limit speeds
 	accumulator.capLength2D(maxChange);
-	// Save old velocity
-	lastVel = vel;
+	// Save old speed
+	lastSpeed = vel.getLength2D();
 
 	// Calculate new velocity and constrain it
 	vel += accumulator;
 
 	vel.capLength2D(getMaxSpeed() * maxSpeedLerp.x);
 	vel.z = 0;
-	if (fabs(vel.y) > fabs(vel.x))
+	if (fabsf(vel.y) > fabsf(vel.x))
 	{
 		/*
-		float sign = vel.y / fabs(vel.y);
-		vel.y = fabs(vel.x) * sign;
+		float sign = vel.y / fabsf(vel.y);
+		vel.y = fabsf(vel.x) * sign;
 		*/
 		//std::swap(vel.x, vel.y);
 		// going up 
@@ -258,58 +260,38 @@ void SchoolFish::applyAvoidance(Vector &accumulator)
 
 	if (avoidTime>0) return;
 
-	VectorSet closestObs;
-	VectorSet obsPos;
-	//Vector closestObs;
-	int range = 10;
+	const int range = 10;
+	const int step = 1;
 	int radius = range*TILE_SIZE;
-	Vector p;
-	TileVector t0(position);
+	int obsSumX = 0, obsSumY = 0;  // Not a Vector (avoid using floats)
+	int obsCount = 0;
+	const TileVector t0(position);
 	TileVector t;
-	for (int x = -range; x <= range; x++)
+	for (t.x = t0.x-range; t.x <= t0.x+range; t.x += step)
 	{
-		for (int y = -range; y <= range; y++)
+		for (t.y = t0.y-range; t.y <= t0.y+range; t.y += step)
 		{
-			TileVector t = t0;
-			t.x+=x;
-			t.y+=y;
 			if (dsq->game->isObstructed(t))
 			{
-				p = t.worldVector();
-
-				closestObs.push_back(this->position - p);
-				obsPos.push_back(p);
-				/*
-				std::ostringstream os;
-				os << "tile(" << t.x << ", " << t.y << ") p(" << p.x << ", " << p.y << ")";
-				debugLog(os.str());
-				*/
-
-				/*
-				int len = (p - this->position).getSquaredLength2D();
-				if (len < sqr(radius))
-				{
-					closestObs.push_back(this->position - p);
-					obsPos.push_back(p);
-				}
-				*/
+				obsSumX += t0.x - t.x;
+				obsSumY += t0.y - t.y;
+				obsCount++;
 			}
 		}
 	}
 
-	if (!closestObs.empty())
+	if (obsCount > 0)
 	{
-		//avoid (accumulator, this->averageVectors(closestObs));
-		//accumulator = Vector(0,0,0);
-		Vector change;
-		change = averageVectors(closestObs);
+		const float tileMult = (float)TILE_SIZE / (float)obsCount;
+		Vector change(obsSumX*tileMult, obsSumY*tileMult);
+		change += position - t0.worldVector();
 		//change |= 200;
 
-		float dist = (this->position - averageVectors(obsPos)).getLength2D();
+		float dist = change.getLength2D();
 		float ratio = dist / radius;
 		if (ratio < minUrgency) ratio = minUrgency;
 		else if (ratio > maxUrgency) ratio = maxUrgency;
-		change.setLength2D(ratio + lastVel.getLength2D()/10);
+		change *= (ratio + lastSpeed*0.1f) / dist;
 
 		accumulator += change;
 	}
@@ -319,12 +301,10 @@ void SchoolFish::applyAvoidance(Vector &accumulator)
 		if (!((position - startPos).isLength2DIn(this->range)))
 		{
 			Vector diff = startPos - position;
-			diff.setLength2D(lastVel.getLength2D());
+			diff.setLength2D(lastSpeed);
 			accumulator += diff;
 		}
 	}
-
-
 }
 
 inline
@@ -377,42 +357,25 @@ void SchoolFish::applySeparation(Vector &accumulator)
 	FlockEntity *e = getNearestFlockEntity();
 	if (e)
 	{
-		Vector change;
-		float ratio;
-		change = e->position - this->position;
-		float nearestFlockEntityDist = change.getLength2D();
-		ratio = nearestFlockEntityDist / separationDistance;
-		if (ratio < minUrgency) ratio = minUrgency;
-		else if (ratio > maxUrgency) ratio = maxUrgency;
-		ratio *= strengthSeparation;
-
-		if (nearestFlockEntityDist < separationDistance)
+		const float dist = getNearestFlockEntityDist();
+		if (dist < separationDistance)
 		{
+			float ratio = dist / separationDistance;
+			if (ratio < minUrgency) ratio = minUrgency;
+			else if (ratio > maxUrgency) ratio = maxUrgency;
+			ratio *= strengthSeparation;
+			Vector change(e->position - this->position);
 			if (!change.isZero())
+			{
 				change.setLength2D(-ratio);
-           //Change.SetMagnitudeOfVector(-Ratio)
-        // Are we too far from nearest flockmate?  Then Move Closer
-		/*
-        else if (nearestFlockEntityDist > separationDistance)
-			change |= ratio;
-			*/
+		        	accumulator += change;
+			}
 		}
-        else
-            change = Vector(0,0,0);
-        // Add Change to Accumulator
+	        // Are we too far from nearest flockmate?  Then Move Closer
 		/*
-        if Flock <> nil then
-           Flock.BoidApplyRule( Self, fbSeparation, Accumulator, Change );
+        	else if (dist > separationDistance)
+			change |= ratio;
 		*/
-        accumulator += change;
-	}
-}
-
-void SchoolFish::activate()
-{
-	if (dsq->game->sceneName.find("VEIL") != std::string::npos)
-	{
-		say("Yay, its the Veil!");
 	}
 }
 
@@ -440,10 +403,10 @@ void SchoolFish::onUpdate(float dt)
 		vel = 0;
 		v *= -5000;
 		vel += v;
-		//float t = (100 + rand()%100)/100.0;
+		//float t = (100 + rand()%100)/100.0f;
 		float t = 2;
 		maxSpeedLerp.interpolateTo(1, t);
-		burstDelay = 10;// + (rand()%100)/100.0;
+		burstDelay = 10;// + (rand()%100)/100.0f;
 		//rotateToVec(v, 0, 90);
 		//rotation.interpolateTo(0, 1);
 
@@ -469,7 +432,7 @@ void SchoolFish::onUpdate(float dt)
 		}
 	}
 
-	if (stickToNaijasHead && alpha.x < 0.1)
+	if (stickToNaijasHead && alpha.x < 0.1f)
 		stickToNaijasHead = false;
 
 	if (this->layer < LR_ENTITIES)
@@ -524,7 +487,7 @@ void SchoolFish::onUpdate(float dt)
 		if (soundDelay <= 0)
 		{
 			//sound(swimSound, 1000 + rand()%100);
-			soundDelay = 4+(rand()%50)/100.0;
+			soundDelay = 4+(rand()%50)/100.0f;
 		}
 		*/
 		/*
@@ -539,9 +502,6 @@ void SchoolFish::onUpdate(float dt)
 		*/
 
 
-		float seperation = 1;
-		float alignment = 0;
-		float cohesion = 0.75;
 		/*
 		FlockPiece flock;
 		getFlockInRange(160, &flock);
@@ -577,13 +537,13 @@ void SchoolFish::onUpdate(float dt)
 
 
 			Vector lastPosition = position;
-			Vector newPosition = position + (vel*velocityScale*dt) + vel2*dt;
-			position = newPosition;
+			position += (vel*velocityScale + vel2) * dt;
 
 			if (dsq->game->isObstructed(position))
 			{
 				position = lastPosition;
 				/*
+				Vector newPosition = position;
 				position = Vector(newPosition.x, lastPosition.y);
 				if (dsq->game->isObstructed(position))
 				{
@@ -619,7 +579,7 @@ void SchoolFish::onUpdate(float dt)
 				const float amt = 0;
 				/*
 
-				if (fabs(dir.x) > fabs(dir.y))
+				if (fabsf(dir.x) > fabsf(dir.y))
 				{
 					if (dir.x > amt && !isfh())
 					{
@@ -646,8 +606,8 @@ void SchoolFish::onUpdate(float dt)
 
 			//rotateToVec(accumulator, 5, 90);
 
-			float angle = atan(dir.y/dir.x);
-			angle = ((angle*180)/3.14);
+			float angle = atan2f(dir.x<0 ? -dir.y : dir.y, fabsf(dir.x));
+			angle = ((angle*180)/PI);
 
 			if (angle > 45)
 				angle = 45;

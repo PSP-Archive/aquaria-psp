@@ -17,39 +17,39 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- H A T C H E T F I S H
 
-dofile("scripts/entities/entityinclude.lua")
 
 
+local STATE_CIRCLE			= 1000
+local STATE_WANDER			= 1001		--Assumes bevy has no target
+local STATE_SEEKTARGET		= 1002		--Everything is just dandy, following stuff
+local STATE_SEEKBEVY		= 1003		--No bevy in range, find a bevy!
 
-STATE_CIRCLE			= 1000
-STATE_WANDER			= 1001		--Assumes bevy has no target
-STATE_SEEKTARGET		= 1002		--Everything is just dandy, following stuff
-STATE_SEEKBEVY			= 1003		--No bevy in range, find a bevy!
+v.targetDelay = 0.5				-- Time between checking targets
+v.wanderDelay = 2				-- Amount of time to wander in a given direction
 
-targetDelay = 0.5				-- Time between checking targets
-wanderDelay = 2					-- Amount of time to wander in a given direction
-
-segsOn = true
+v.segsOn = true
 
 -- ================================================================================================
 -- M Y   F U N C T I O N S
 -- ================================================================================================
 
-function setSpookSegsOn(me)
-	bone_setSegs(body, 8, 2, 0.12, 0.42, 0, -0.03, 8, 0)
-	bone_setSegs(glow01, 8, 2, 0.12, 0.42, 0, -0.03, 8, 0)
-	bone_setSegs(glow02, 8, 2, 0.12, 0.42, 0, -0.03, 8, 0)
+local function setSpookSegsOn(me)
+	bone_setSegs(v.body, 8, 2, 0.12, 0.42, 0, -0.03, 8, 0)
+	bone_setSegs(v.glow01, 8, 2, 0.12, 0.42, 0, -0.03, 8, 0)
+	bone_setSegs(v.glow02, 8, 2, 0.12, 0.42, 0, -0.03, 8, 0)
 end
 
-function setSpookSegsOff(me)
-	bone_setSegs(body, 8, 2, 0.23, 0.69, 0, -0.03, 8, 0)
-	bone_setSegs(glow01, 8, 2, 0.23, 0.69, 0, -0.03, 8, 0)
-	bone_setSegs(glow02, 8, 2, 0.23, 0.69, 0, -0.03, 8, 0)
-	--bone_setSegs(body)
-	--bone_setSegs(glow01)
-	--bone_setSegs(glow02)
+local function setSpookSegsOff(me)
+	bone_setSegs(v.body, 8, 2, 0.23, 0.69, 0, -0.03, 8, 0)
+	bone_setSegs(v.glow01, 8, 2, 0.23, 0.69, 0, -0.03, 8, 0)
+	bone_setSegs(v.glow02, 8, 2, 0.23, 0.69, 0, -0.03, 8, 0)
+	--bone_setSegs(v.body)
+	--bone_setSegs(v.glow01)
+	--bone_setSegs(v.glow02)
 end
 
 -- ================================================================================================
@@ -75,27 +75,27 @@ function init(me)
 	)
 
 	entity_initSkeletal(me, "hatchetfish")
-	body = entity_getBoneByName(me, "body")
-	glow01 = entity_getBoneByName(me, "glow01")
-	glow02 = entity_getBoneByName(me, "glow02")
+	v.body = entity_getBoneByName(me, "body")
+	v.glow01 = entity_getBoneByName(me, "glow01")
+	v.glow02 = entity_getBoneByName(me, "glow02")
 
 	entity_animate(me, "idle", LOOP_INF)
 	entity_setDeathParticleEffect(me, "TinyGreenExplode")
 	entity_setMaxSpeed(me, 400)
 	entity_setDropChance(me, 10, 1)
 	
-	scale_random = math.random(40) * 0.01
+	local scale_random = math.random(40) * 0.01
 	entity_scale(me, 0.6 + scale_random, 0.6 + scale_random)
 	esetv(me, EV_ENTITYDIED, 1)
 end
 
 function postInit(me)
-	--bone_scale(glow02, 1.31, 2.5, 3.4, -1, 1, 1)
-	bone_alpha(glow01, 0.12, 1.23, -1, 1, 1)
-	bone_alpha(body, 0.23, 4.2, -1, 1, 1)
+	--bone_scale(v.glow02, 1.31, 2.5, 3.4, -1, 1, 1)
+	bone_alpha(v.glow01, 0.12, 1.23, -1, 1, 1)
+	bone_alpha(v.body, 0.23, 4.2, -1, 1, 1)
 
 	setSpookSegsOn(me)
-	segsOn = true
+	v.segsOn = true
 end
 
 function entityDied(me, ent)
@@ -107,11 +107,11 @@ end
 -- the entity's main update function
 function update(me, dt)	
 	--Timer for checking state and target
-	if targetDelay > 0 then targetDelay = targetDelay - dt if targetDelay < 0 then targetDelay = 0 end end
+	if v.targetDelay > 0 then v.targetDelay = v.targetDelay - dt if v.targetDelay < 0 then v.targetDelay = 0 end end
 	
 	--Update State/Target
-	if targetDelay == 0 then
-		target = entity_getNearestEntity(me, "hatchetfish")
+	if v.targetDelay == 0 then
+		local target = entity_getNearestEntity(me, "hatchetfish")
 		if target == 0 then	--No Bevys at all!
 			if not entity_isState(me, STATE_WANDER) then entity_setState(me, STATE_WANDER) end
 		else
@@ -122,15 +122,15 @@ function update(me, dt)
 				entity_setState(me, STATE_SEEKTARGET)
 			end
 		end
-		targetDelay = 0.5
+		v.targetDelay = 0.5
 	end
 	
 	--Perform actions based on state
 	if entity_isState(me, STATE_WANDER) then
-		if wanderDelay > 0 then wanderDelay = wanderDelay - dt if wanderDelay < 0 then wanderDelay = 0 end end
-		if wanderDelay == 0 then
+		if v.wanderDelay > 0 then v.wanderDelay = v.wanderDelay - dt if v.wanderDelay < 0 then v.wanderDelay = 0 end end
+		if v.wanderDelay == 0 then
 			entity_addVel(me, math.random(50) - 100, math.random(50) - 100)
-			wanderDelay = 1.5
+			v.wanderDelay = 1.5
 		end
 	elseif entity_hasTarget(me) then
 		if entity_isState(me, STATE_SEEKBEVY) then

@@ -17,19 +17,19 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
--- activate a temp barrier with a faulty orb
+v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
+-- activate a temp barrier with a faulty orb
 
 function init(me)
 	node_setCursorActivation(me, false)
 end
 
 function activate(me)
-	orb = node_getNearestEntity(me, "EnergyOrb")
+	local orb = node_getNearestEntity(me, "EnergyOrb")
 	if orb ~= 0 and entity_isState(orb, STATE_CHARGED) then
 		debugLog("BOSS NODE ACTIVATED")
-		barrier = getEntityByID(5)
+		local barrier = getEntityByID(5)
 		if barrier ~= 0 then
 			debugLog("Setting barrier to pulse")
 			entity_setState(barrier, STATE_PULSE)

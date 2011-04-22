@@ -17,13 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-function commonInit(me, object, flag)
+function v.commonInit(me, object, flag)
 	if isFlag(flag, 1) then
 		debugLog("CollectibleNode: Creating object")
 		debugLog(object)
-		collectible = createEntity(object, "", node_x(me), node_y(me))
+		local collectible = createEntity(object, "", node_x(me), node_y(me))
 		debugLog("seting state to inhouse")
 		entity_setState(collectible, STATE_COLLECTEDINHOUSE)
 	else

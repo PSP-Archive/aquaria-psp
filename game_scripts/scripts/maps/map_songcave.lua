@@ -17,30 +17,30 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-leave = true
+v.leave = true
 
 function init()
 	if isFlag(FLAG_ENDING, ENDING_NAIJACAVE) then
 		loadSound("spirit-awaken")
 		
-		e1 = getNode("end1")
-		e2 = getNode("end2")
-		e3 = getNode("end3")
-		e4 = getNode("end4")
-		e5 = getNode("end5")
-		e6 = getNode("end6")
+		local e1 = getNode("end1")
+		local e2 = getNode("end2")
+		local e3 = getNode("end3")
+		local e4 = getNode("end4")
+		local e5 = getNode("end5")
+		local e6 = getNode("end6")
 		
-		g1 = getNode("ghost1")
-		g2 = getNode("ghost2")
+		local g1 = getNode("ghost1")
+		local g2 = getNode("ghost2")
 		
 		overrideZoom(0.8)
 		
 		fade2(1, 0)
 		
-		spirit = createEntity("erulianghost", "", node_x(e6), node_y(e6))
-		turtle = entity_getNearestEntity(spirit, "turtle")
+		local spirit = createEntity("erulianghost", "", node_x(e6), node_y(e6))
+		local turtle = entity_getNearestEntity(spirit, "turtle")
 		if turtle ~= 0 then
 			entity_delete(turtle)
 			turtle = 0
@@ -49,7 +49,7 @@ function init()
 		entity_offset(spirit, 0, -10)
 		entity_offset(spirit, 0, 10, 1, -1, 1, 1)
 		
-		cam = createEntity("empty", "", node_x(e1), node_y(e1))
+		local cam = createEntity("empty", "", node_x(e1), node_y(e1))
 		cam_toEntity(cam)
 		
 		watch(0.5)
@@ -91,7 +91,7 @@ function init()
 		
 		playSfx("spirit-awaken")
 		spawnParticleEffect("erulian-appear", node_x(g1), node_y(g1))
-		e = createEntity("erulianghost", "", node_x(g1), node_y(g1))
+		local e = createEntity("erulianghost", "", node_x(g1), node_y(g1))
 		entity_fh(e)
 		entity_setColor(e, 0.5, 0.7, 1)
 		entity_offset(e, 0, -10)
@@ -107,7 +107,7 @@ function init()
 		
 		playSfx("spirit-awaken")
 		spawnParticleEffect("erulian-appear", node_x(g2), node_y(g2))
-		e = createEntity("erulianghost", "", node_x(g2), node_y(g2))
+		local e = createEntity("erulianghost", "", node_x(g2), node_y(g2))
 		entity_setColor(e, 0.7, 1, 0.7)
 		entity_offset(e, 0, -10)
 		entity_offset(e, 0, 10, 1, -1, 1, 1)
@@ -131,7 +131,7 @@ function init()
 		overrideZoom(0)
 		setCameraLerpDelay(0)
 		
-		if leave then
+		if v.leave then
 			loadMap("energytemple05")
 		else
 			watch(1)

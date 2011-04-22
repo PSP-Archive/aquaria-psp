@@ -17,41 +17,44 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-core = 0
-ring = 0
-n=0
-spawnTimer = 0
-closeRange = 860
-farRange = 950
-started = false
+v.core = 0
+v.ring = 0
+v.n = 0
+v.spawnTimer = 0
+v.closeRange = 860
+v.farRange = 950
+v.started = false
 
-STATE_READY				= 1000
-STATE_SPAWNJELLIES		= 1001
-STATE_MOVECORE			= 1002
+local STATE_READY			= 1000
+local STATE_SPAWNJELLIES	= 1001
+local STATE_MOVECORE		= 1002
 
-maxHealth = 60
+v.maxHealth = 60
 
-zaps = {}
-zapGlows = {}
+v.zaps = nil
+v.zapGlows = nil
 
-nZaps = 3
+v.nZaps = 3
 
-zapTimer = 0
-zapStart = 5
-zapTime = 5
-zapGlowStart = 3
+v.zapTimer = 0
+v.zapStart = 5
+v.zapTime = 5
+v.zapGlowStart = 3
 
-zapsOn = false
-zapGlowOn = false
-dist = 90
-start = 0
-spread = 120
+v.zapsOn = false
+v.zapGlowOn = false
+v.dist = 90
+v.start = 0
+v.spread = 120
 
-hardLevel = 0
+v.hardLevel = 0
 
 function init(me)
+	v.zaps = {}
+	v.zapGlows = {}
+
 	setupEntity(me)
 	--entity_setEntityLayer(me, 1)
 	entity_initSkeletal(me, "KingJelly")
@@ -62,15 +65,15 @@ function init(me)
 	entity_animate(me, "idle")
 	entity_setCull(me, false)
 	
-	entity_setHealth(me, maxHealth)
+	entity_setHealth(me, v.maxHealth)
 	
-	core = entity_getBoneByName(me, "Core")
-	ring = entity_getBoneByName(me, "Ring")
+	v.core = entity_getBoneByName(me, "Core")
+	v.ring = entity_getBoneByName(me, "Ring")
 	
-	--bone_scale(core, 1.2, 1.2, 1, -1)
+	--bone_scale(v.core, 1.2, 1.2, 1, -1)
 	
 	entity_setState(me, STATE_IDLE)	
-	n = getNaija()
+	v.n = getNaija()
 	
 	--entity_setActivation(me, AT_CLICK, 64, 512)
 	
@@ -80,18 +83,18 @@ function init(me)
 	entity_setDamageTarget(me, DT_AVATAR_SHOCK, true)
 	]]--
 	
-	for i=5,5+nZaps do
-		zaps[i-4] = entity_getBoneByIdx(me, i)
-		bone_alpha(zaps[i-4], 0)
+	for i=5,5+v.nZaps do
+		v.zaps[i-4] = entity_getBoneByIdx(me, i)
+		bone_alpha(v.zaps[i-4], 0)
 	end
 	
-	for i=10,10+nZaps do
-		zapGlows[i-9] = entity_getBoneByIdx(me, i)
-		bone_alpha(zapGlows[i-10], 0)
+	for i=10,10+v.nZaps do
+		v.zapGlows[i-9] = entity_getBoneByIdx(me, i)
+		bone_alpha(v.zapGlows[i-10], 0)
 	end	
 	
 	--entity_initStrands(me, 32, 16, 256, 20, 0.8, 0.9, 1.0)
-	--bone_setPosition(core, 0, -40, 3, -1, 1, 1)
+	--bone_setPosition(v.core, 0, -40, 3, -1, 1, 1)
 	entity_setDeathScene(me, true)
 	
 	entity_setDamageTarget(me, DT_AVATAR_PET, false)
@@ -103,67 +106,67 @@ function postInit(me)
 	end
 end
 
-function activate(me)
+local function activate(me)
 	entity_setActivationType(me, AT_NONE)
 	entity_setState(me, STATE_READY)
 end
 
-function killJellies(me)
-	ent = getFirstEntity()
+local function killJellies(me)
+	local ent = getFirstEntity()
 	while ent ~= 0 do
-		if ent ~= me and entity_getEntityType(ent)==ET_ENEMY and entity_isEntityInRange(me, ent, farRange*2) and entity_isName(ent, "EvilJelly") then
+		if ent ~= me and entity_getEntityType(ent)==ET_ENEMY and entity_isEntityInRange(me, ent, v.farRange*2) and entity_isName(ent, "EvilJelly") then
 			entity_damage(ent, me, 1000)
 		end
 		ent = getNextEntity()
 	end
 end
 
-function toggleZaps(me, on)
-	zapsOn = on
+local function toggleZapGlow(me, on)
+	v.zapGlowOn = on
 	if on then
-		toggleZapGlow(me, false)
-		for i=1,nZaps do
-			bone_alpha(zaps[i], 1, 0.1)
-		end
-		for i=1,nZaps do
-			bone_setSegs(zaps[i], 2, 32, 0.8, 0.8, -0.1, 0, 50, 1)
-			bone_rotate(zaps[i], start+(i-1)*spread)
-			bone_rotate(zaps[i], start+dist+(i-1)*spread, zapTime/2, -1, 1, 1)
-		end		
-	else
-		toggleZapGlow(me, false)
-		for i=1,nZaps do
-			bone_alpha(zaps[i], 0, 0.1)
-		end
-	end
-end
-
-function toggleZapGlow(me, on)
-	zapGlowOn = on
-	if on then
-		start = math.random(360*2)-360
-		for i=1,nZaps do
+		v.start = math.random(360*2)-360
+		for i=1,v.nZaps do
 			--debugLog("setting alpha to 1")
-			bone_rotate(zapGlows[i], start+(i-1)*spread)
-			bone_alpha(zapGlows[i], 1, 0.2)
-			bone_scale(zapGlows[i], 1, 1)
-			bone_scale(zapGlows[i], 1.5, 1.5, 0.2, -1)
+			bone_rotate(v.zapGlows[i], v.start+(i-1)*v.spread)
+			bone_alpha(v.zapGlows[i], 1, 0.2)
+			bone_scale(v.zapGlows[i], 1, 1)
+			bone_scale(v.zapGlows[i], 1.5, 1.5, 0.2, -1)
 		end
 	else
-		for i=1,nZaps do
+		for i=1,v.nZaps do
 			--debugLog("setting alpha to 0")
-			bone_alpha(zapGlows[i], 0, 0.5)
+			bone_alpha(v.zapGlows[i], 0, 0.5)
 		end	
 	end
 end
 
-function zapCollision(me, dt)
-	if not zapsOn then return end
+local function toggleZaps(me, on)
+	v.zapsOn = on
+	if on then
+		toggleZapGlow(me, false)
+		for i=1,v.nZaps do
+			bone_alpha(v.zaps[i], 1, 0.1)
+		end
+		for i=1,v.nZaps do
+			bone_setSegs(v.zaps[i], 2, 32, 0.8, 0.8, -0.1, 0, 50, 1)
+			bone_rotate(v.zaps[i], v.start+(i-1)*v.spread)
+			bone_rotate(v.zaps[i], v.start+v.dist+(i-1)*v.spread, v.zapTime/2, -1, 1, 1)
+		end		
+	else
+		toggleZapGlow(me, false)
+		for i=1,v.nZaps do
+			bone_alpha(v.zaps[i], 0, 0.1)
+		end
+	end
+end
+
+local function zapCollision(me, dt)
+	if not v.zapsOn then return end
 	if avatar_isShieldActive() then return end
-	for i=1,nZaps do
-		rot = bone_getRotation(zaps[i])
-		if entity_collideCircleVsLineAngle(n, rot, 64, 900, 8, entity_getPosition(me)) then
-			entity_damage(n, me, 1)
+	for i=1,v.nZaps do
+		local rot = bone_getRotation(v.zaps[i])
+		if entity_collideCircleVsLineAngle(v.n, rot, 64, 900, 8, entity_getPosition(me)) then
+			entity_damage(v.n, me, 1)
 		end
 	end
 end
@@ -174,26 +177,26 @@ function update(me, dt)
 		activate(me)
 	end
 	if entity_getHealthPerc(me) < 0.75 then
-		hardLevel = 1
+		v.hardLevel = 1
 	elseif entity_getHealthPerc(me) < 0.90 then
-		hardLevel = 2
+		v.hardLevel = 2
 	end
-	if hardLevel == 2 then
+	if v.hardLevel == 2 then
 		dt = dt * 1.25
 	end
 	if not entity_isState(me, STATE_DEATHSCENE) then
 		entity_handleShotCollisionsSkeletal(me)
 		entity_handleShotCollisions(me)
 		
-		bone = entity_collideSkeletalVsCircle(me, n)
+		local bone = entity_collideSkeletalVsCircle(me, v.n)
 		if bone ~= 0 then
-			nx,ny = entity_getPosition(n)
-			cx,cy = entity_getPosition(me)
-			x = nx-cx
-			y = ny-cy
+			local nx,ny = entity_getPosition(v.n)
+			local cx,cy = entity_getPosition(me)
+			local x = nx-cx
+			local y = ny-cy
 			x,y = vector_setLength(x,y,2000)
-			entity_addVel(n, x, y)
-			entity_damage(n, me, 1)
+			entity_addVel(v.n, x, y)
+			entity_damage(v.n, me, 1)
 		end
 		entity_touchAvatarDamage(me, entity_getCollideRadius(me), 0, 2000)
 	else
@@ -201,31 +204,31 @@ function update(me, dt)
 	end
 	
 	if not entity_isState(me, STATE_IDLE) and not entity_isState(me, STATE_DEATHSCENE) then
-		if hardLevel > 0 then
-			zapTimer = zapTimer + dt
-			if zapTimer > zapGlowStart and zapTimer < zapStart and not zapGlowOn then
+		if v.hardLevel > 0 then
+			v.zapTimer = v.zapTimer + dt
+			if v.zapTimer > v.zapGlowStart and v.zapTimer < v.zapStart and not v.zapGlowOn then
 				toggleZapGlow(me, true)
 			end
-			if zapTimer > zapStart and not zapsOn then
+			if v.zapTimer > v.zapStart and not v.zapsOn then
 				toggleZaps(me, true)
-			elseif zapTimer > zapStart+zapTime and zapsOn then
+			elseif v.zapTimer > v.zapStart+v.zapTime and v.zapsOn then
 				toggleZaps(me, false)
-				zapTimer = 0
+				v.zapTimer = 0
 			end
 			zapCollision(me, dt)
 		end
-		ent = getFirstEntity()
+		local ent = getFirstEntity()
 		while ent ~= 0 do
-			if ent ~= me and (entity_getEntityType(ent)==ET_AVATAR or entity_isEntityInRange(me, ent, farRange)) then
-				if not entity_isEntityInRange(me, ent, closeRange) or entity_y(ent) > entity_y(me)+512 then
+			if ent ~= me and (entity_getEntityType(ent)==ET_AVATAR or entity_isEntityInRange(me, ent, v.farRange)) then
+				if not entity_isEntityInRange(me, ent, v.closeRange) or entity_y(ent) > entity_y(me)+512 then
 					if not entity_isState(me, STATE_DESCEND) or entity_y(ent) < entity_y(me) then
 						if entity_getEntityType(ent) == ET_AVATAR then
 							avatar_fallOffWall()
 						end
-						nx,ny = entity_getPosition(ent)
-						cx,cy = entity_getPosition(me)
-						x = nx-cx
-						y = ny-cy
+						local nx,ny = entity_getPosition(ent)
+						local cx,cy = entity_getPosition(me)
+						local x = nx-cx
+						local y = ny-cy
 						x,y = vector_setLength(x,y,-2000)
 						entity_clearVel(ent)
 						entity_addVel(ent, x, y)
@@ -237,17 +240,17 @@ function update(me, dt)
 		end
 		
 		if not entity_isState(me, STATE_DESCEND) then
-			spawnTimer = spawnTimer + dt
-			if spawnTimer > 10 then
-				for i=1,2+hardLevel do
+			v.spawnTimer = v.spawnTimer + dt
+			if v.spawnTimer > 10 then
+				for i=1,2+v.hardLevel do
 					createEntity("EvilJelly", "", entity_getPosition(me))
 				end
-				spawnTimer = 0
+				v.spawnTimer = 0
 			end
 		end
 	end
 	if entity_isState(me, STATE_READY) then
-		bone_rotate(ring, bone_getRotation(ring)+dt*20)
+		bone_rotate(v.ring, bone_getRotation(v.ring)+dt*20)
 	end
 end
 
@@ -255,31 +258,31 @@ end
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 	elseif entity_isState(me, STATE_READY) then
-		if not started then
+		if not v.started then
 			overrideZoom(0.5, 1)
 			playMusic("MiniBoss")
 			emote(EMOTE_NAIJAUGH)
-			started = true
+			v.started = true
 		end
-		for i=1,2+hardLevel do
+		for i=1,2+v.hardLevel do
 			createEntity("EvilJelly", "", entity_getPosition(me))
 		end			
 	elseif entity_isState(me, STATE_MOVECORE) then
-		bone_rotate(ring, math.random(360*2)+360*6, 4, 0, 0, 1)
+		bone_rotate(v.ring, math.random(360*2)+360*6, 4, 0, 0, 1)
 		entity_setStateTime(me, 4)
 	elseif entity_isState(me, STATE_DEAD) then
 		overrideZoom(0)
 	elseif entity_isState(me, STATE_DESCEND) then
-		node = getNode("KINGJELLYPOS")
+		local node = getNode("KINGJELLYPOS")
 		entity_setPosition(me, node_x(node), node_y(node), -200, 0, 0, 1)
 		--playMusic("inevitable")
 	elseif entity_isState(me, STATE_DEATHSCENE) then
 		setFlag(FLAG_MINIBOSS_KINGJELLY, 1)
 		fadeOutMusic(10)
 		entity_setStateTime(me, -1)
-		entity_idle(n)
-		entity_clearVel(n)
-		entity_flipTo(n, me)
+		entity_idle(v.n)
+		entity_clearVel(v.n)
+		entity_flipToEntity(v.n, me)
 		for i=1,10 do
 			killJellies(me)
 			watch(0.1)
@@ -300,11 +303,11 @@ end
 
 function exitState(me)
 	if entity_isState(me, STATE_MOVECORE) then
-		rot = bone_getRotation(ring)
+		local rot = bone_getRotation(v.ring)
 		while rot > 360 do
 			rot = rot - 360
 		end
-		bone_rotate(ring, rot)
+		bone_rotate(v.ring, rot)
 		entity_setState(me, STATE_READY)
 	end
 end
@@ -323,7 +326,7 @@ function damage(me, attacker, bone, damageType, dmg)
 	if entity_isState(me, STATE_DESCEND) then
 		return false
 	end
-	if bone == ring then
+	if bone == v.ring then
 		return false
 	end
 	if entity_isState(me, STATE_READY) then

@@ -17,24 +17,25 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-done = false
+v.n = 0
+v.done = false
+v.ent = 0
 
 function init(me)
-	ent = node_getNearestEntity(me, "FinalDoor")
-	n = getNaija()
+	v.ent = node_getNearestEntity(me, "FinalDoor")
+	v.n = getNaija()
 end
 
 function activate(me)
 end
 
 function update(me, dt)
-	if not done then
-		if node_isEntityIn(me, n) and not (entity_isState(ent, STATE_OPENED) or entity_isState(ent, STATE_OPEN)) then
-			entity_setState(ent, STATE_OPEN, -1, 1)
-			done = true
+	if not v.done then
+		if node_isEntityIn(me, v.n) and not (entity_isState(v.ent, STATE_OPENED) or entity_isState(v.ent, STATE_OPEN)) then
+			entity_setState(v.ent, STATE_OPEN, -1, 1)
+			v.done = true
 		end
 	end
 end

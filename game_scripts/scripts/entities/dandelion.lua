@@ -17,13 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-STATE_SHAKE = 1001
+local STATE_SHAKE = 1001
 
-bone_head = 0
+v.bone_head = 0
 
 function init(me)
 	setupEntity(me)
@@ -35,18 +35,18 @@ function init(me)
 	entity_generateCollisionMask(me)
 	
 	entity_setState(me, STATE_IDLE)
-	bone_head = entity_getBoneByName(me, "Head")
+	v.bone_head = entity_getBoneByName(me, "Head")
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 	if entity_isState(me, STATE_IDLE) then
 		--entity_handleShotCollisionsSkeletal(me)
-		bone = entity_collideSkeletalVsCircle(me, n)
+		local bone = entity_collideSkeletalVsCircle(me, v.n)
 		if bone ~= 0 and avatar_isBursting() then
 			-- shake!
 			entity_setState(me, STATE_SHAKE)
@@ -66,7 +66,7 @@ end
 function exitState(me)
 	if entity_isState(me, STATE_SHAKE) then
 		-- spawn spore seeds
-		x, y = bone_getWorldPosition(bone_head)
+		local x, y = bone_getWorldPosition(v.bone_head)
 		createEntity("SeedFlower", "", x, y)
 		entity_setState(me, STATE_IDLE)
 	end

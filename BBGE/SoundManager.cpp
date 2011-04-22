@@ -283,6 +283,8 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 	sfxVol = 1;
 	voiceFader = 1;
 
+	loadProgressCallback = NULL;
+
 #ifdef BBGE_BUILD_FMODEX
 
 	int channels	= 128;
@@ -336,7 +338,10 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 		if (checkError()) goto get_out;
     }
 
-	
+#ifdef BBGE_BUILD_FMOD_OPENAL_BRIDGE
+	SoundCore::system->getNumChannels(&channels);
+#endif
+
 	//FMOD::Debug_SetLevel(FMOD_DEBUG_LEVEL_ALL);
 
 	/*
@@ -499,7 +504,7 @@ void SoundManager::setOverrideVoiceFader(float v)
 void SoundManager::setMusicFader(float v, float t)
 {
 	// ignore fades if the music is already on its way to fading out to 0
-	if (v != 0 && musVol.target.y == 0 && musVol.y > 0)
+	if (v != 0 && musVol.data && musVol.data->target.y == 0 && musVol.y > 0)
 	{
 		return;
 	}
@@ -530,6 +535,20 @@ SoundManager::~SoundManager()
 {
 	// release
 	if (!enabled) return;
+
+	for (SoundMap::iterator i = soundMap.begin(); i != soundMap.end(); i++)
+	{
+		std::string snd = (*i).first;
+		debugLog("unloading sound [" + snd + "]");
+#ifndef BBGE_DISABLE_SOUND_CACHE
+		FMOD::Sound *samp = (FMOD::Sound*)((*i).second);
+		samp->release();
+#else
+		SoundInfo *info = (SoundInfo*)((*i).second);
+		delete info;
+#endif
+	}
+	soundMap.clear();
 
 #ifdef BBGE_BUILD_FMODEX
 	SoundCore::system->release();
@@ -655,7 +674,7 @@ void SoundManager::update(float dt)
 	{
 		// fader value
 		
-		result = musicChannel->setVolume(musVol.y*1.0);
+		result = musicChannel->setVolume(musVol.y*1.0f);
 		checkError();
 		
 
@@ -711,7 +730,6 @@ void SoundManager::update(float dt)
 			itr++;
 			FadeCh *f = &(*i);
 
-			float oldv = f->v;
 			f->v += dt*f->s * f->d;
 
 
@@ -1117,7 +1135,7 @@ void *SoundManager::playSfx(const PlaySfx &play)
 		FadeCh fade;
 		fade.c = channel;
 		fade.v = 0;
-		fade.s = 1.0/play.time;
+		fade.s = 1.0f/play.time;
 		fade.d = 1;
 		fade.to = play.vol;
 
@@ -1469,18 +1487,23 @@ void loadCacheSoundsCallback (const std::string &filename, intptr_t param)
 
 		debugLog("trying to load sound " + f);
 
-		Buffer b = sm->loadSoundIntoBank(f, "", "");
+		sm->loadSoundIntoBank(f, "", "");
 
 	}
 }
 
-void SoundManager::loadSoundCache(const std::string &path, const std::string &ftype)
+void SoundManager::loadSoundCache(const std::string &path, const std::string &ftype, void progressCallback())
 {
+	loadProgressCallback = progressCallback;
 	forEachFile(path, ftype, loadCacheSoundsCallback, (intptr_t)this);
+	loadProgressCallback = NULL;
 }
 
 Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::string &path, const std::string &format, SoundLoadType slt)
 {
+	if (loadProgressCallback)
+		loadProgressCallback();
+
 	std::string f = filename, name;
 
 	// WARNING: local sounds should go here!

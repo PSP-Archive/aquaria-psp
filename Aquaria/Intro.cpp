@@ -39,7 +39,7 @@ class Mappy : public RenderObject, public ActionMapper
 public:
 	Mappy() : RenderObject(), ActionMapper() {}
 	void render() {}
-	bool isOnScreen() { return false; }
+	//bool isOnScreen() { return false; }
 	void action(int id, int state)
 	{
 		ActionMapper::action(id, state);
@@ -75,7 +75,7 @@ void Intro::applyState()
 	//core->sound->streamOgg("sc/theme", 0);
 	StateObject::applyState();
 
-	core->sound->stopMusic();
+	core->sound->fadeMusic(SFT_OUT, 1);
 
 	dsq->user.load(true);
 
@@ -344,15 +344,22 @@ void Intro::update(float dt)
 		mc1->cull = false;
 		addRenderObject(mc1, LR_HUD2);
 
+		/*
+		// FIXME: In the original code, the addRenderObject() call below
+		// referenced mc1 instead of mc2, causing mc1 to get added to the
+		// RenderObject list twice (potentially resulting in a crash).
+		// Fixing the addRenderObject() call will naturally change the
+		// appearance of the intro, so I've left this disabled.  --achurch
 		Quad *mc2 = new Quad("intro/intro-big-cloud", Vector(500, 300));
 		mc2->scale = Vector(2, 2);
 		mc2->followCamera = 1;
 		mc2->alpha = 1;
 		mc2->alpha.interpolateTo(0.2, bt*2);
 		mc2->offset = Vector(-200, 0);
-		mc2->offset.interpolateTo(Vector(0,0), bt*1.5);
+		mc2->offset.interpolateTo(Vector(0,0), bt*1.5f);
 		mc2->cull = false;
-		addRenderObject(mc1, LR_HUD2);
+		addRenderObject(mc2, LR_HUD2);
+		*/
 
 		Quad *bbp = new Quad("intro/bbp", Vector(400,300));
 		bbp->alpha = 0;
@@ -360,14 +367,15 @@ void Intro::update(float dt)
 		bbp->followCamera = 1;
 		bbp->scale = Vector(0.5, 0.5);
 		bbp->scale.interpolateTo(Vector(0.8, 0.8), bt);
-		bbp->color.path.addPathNode(Vector(1,1,1), 0);
-		bbp->color.path.addPathNode(Vector(0.5,0.5,0.5), 0.1);
-		bbp->color.path.addPathNode(Vector(1,1,1), 0.2);
-		bbp->color.path.addPathNode(Vector(0.5,0.5,0.5), 0.9);
-		bbp->color.path.addPathNode(Vector(1,1,1), 0.95);
-		bbp->color.path.addPathNode(Vector(0.5,0.5,0.5), 1.0);
+		bbp->color.ensureData();
+		bbp->color.data->path.addPathNode(Vector(1,1,1), 0);
+		bbp->color.data->path.addPathNode(Vector(0.5,0.5,0.5), 0.1);
+		bbp->color.data->path.addPathNode(Vector(1,1,1), 0.2);
+		bbp->color.data->path.addPathNode(Vector(0.5,0.5,0.5), 0.9);
+		bbp->color.data->path.addPathNode(Vector(1,1,1), 0.95);
+		bbp->color.data->path.addPathNode(Vector(0.5,0.5,0.5), 1.0);
 		bbp->color.startPath(2.5);
-		bbp->color.loopType = -1;
+		bbp->color.data->loopType = -1;
 		addRenderObject(bbp, LR_HUD);
 
 
@@ -389,9 +397,9 @@ void Intro::update(float dt)
 		cloud_bg->scale.stop();
 		cloud_bg->scale = Vector(1,1);
 		mc1->alpha.stop();
-		mc2->alpha.stop();
+		//mc2->alpha.stop();
 		mc1->alpha = 0;
-		mc2->alpha = 0;
+		//mc2->alpha = 0;
 
 
 		// -- floating city in clouds
@@ -432,7 +440,7 @@ void Intro::update(float dt)
 			Bone *b = city->getBoneByIdx(i);
 			b->scale.interpolateTo(Vector(0.2, 1), 0.2, -1, 1);
 		}
-		city->alpha.interpolateTo(1.0, bt*0.75);
+		city->alpha.interpolateTo(1.0, bt*0.75f);
 		city->internalOffset = Vector(0, 50);
 		city->scale = Vector(0.6, 0.6);
 		city->scale.interpolateTo(Vector(0.75, 0.75), bt);
@@ -522,7 +530,7 @@ void Intro::update(float dt)
 		ericHandBrush->scale.interpolateTo(Vector(1.7,1.7), brusht, 0, 0, 1);
 		ericHandBrush->followCamera = 1;
 		ericHandBrush->rotation.interpolateTo(Vector(0,0,-20), brusht);
-		ericHandBrush->offset.interpolateTo(Vector(550, 550), brusht*0.75, 0, 0, 1);
+		ericHandBrush->offset.interpolateTo(Vector(550, 550), brusht*0.75f, 0, 0, 1);
 		addRenderObject(ericHandBrush, LR_HUD);
 
 
@@ -773,9 +781,6 @@ void Intro::update(float dt)
 		// -- drown
 
 
-		dsq->sound->fadeSfx(drone);
-		dsq->sound->fadeSfx(windLoop);
-
 		dsq->sound->playSfx("ericdrowns");
 
 		if (waitQuit(8)) return;
@@ -859,9 +864,6 @@ void Intro::update(float dt)
 		if (waitQuit(8)) return; // 11.5
 
 		// -- end
-		dsq->sound->stopSfx(drone);
-		dsq->sound->stopSfx(windLoop);
-		dsq->sound->stopSfx(bgLoop);
 
 		endIntro();
 	}

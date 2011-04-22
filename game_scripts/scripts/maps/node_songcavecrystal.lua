@@ -17,9 +17,7 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
-
-ghost = 0
+v = getVars()
 
 function init(me)
 --[[
@@ -31,13 +29,13 @@ function init(me)
 	]]--
 end
 	
-function runScene(me)
+local function runScene(me)
 	setCutscene(1, 1)
 	setFlag(FLAG_SONGCAVECRYSTAL, 1)
 	
-	ghost = node_getNearestEntity(me, "ErulianGhost")
+	local ghost = node_getNearestEntity(me, "ErulianGhost")
 
-	oldx, oldy = entity_getPosition(ghost)
+	local oldx, oldy = entity_getPosition(ghost)
 	
 	setCameraLerpDelay(1.0)
 	
@@ -61,7 +59,7 @@ function runScene(me)
 	
 	
 	
-	n = getNode("NAIJATOUCHCRYSTAL")
+	local n = getNode("NAIJATOUCHCRYSTAL")
 	
 	entity_animate(getNaija(), "pushForward")
 	watch(0.4)
@@ -75,7 +73,7 @@ function runScene(me)
 	end
 	entity_heal(getNaija(), 999)
 	watch(0.2)
-	crystalNode = me
+	local crystalNode = me
 	spawnParticleEffect("SongCrystalActivate", node_x(crystalNode), node_y(crystalNode))
 	playMusic("Mystery")
 	
@@ -97,7 +95,7 @@ function runScene(me)
 	watch(1)
 	cam_toNode(getNode("CRYSTALCAM2"))
 	
-	n = getNode("NAIJACRYSTAL")
+	local n = getNode("NAIJACRYSTAL")
 	entity_animate(getNaija(), "pushBack")
 	watch(0.2)	
 	entity_setPosition(getNaija(), node_x(n), node_y(n), 1.0, 0, 0, 1)

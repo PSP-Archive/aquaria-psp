@@ -17,23 +17,23 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- SONG SPORE
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-activeTimer = 0
-xdir = -1
-dirTimer = 0
-glow = 0
-shell = 0
-spd = 0
+v.activeTimer = 0
+v.xdir = -1
+v.dirTimer = 0
+v.glow = 0
+v.shell = 0
+v.spd = 0
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -64,17 +64,17 @@ function init(me)
 	entity_setState(me, STATE_IDLE)	
 	entity_scale(me, 0, 0)
 	entity_scale(me, 1, 1, 1)
-	glow = entity_getBoneByName(me, "Glow")
-	shell = entity_getBoneByName(me, "Shell")
+	v.glow = entity_getBoneByName(me, "Glow")
+	v.shell = entity_getBoneByName(me, "Shell")
 	
 	entity_setDeathSound(me, "")
 	
-	bone_setBlendType(glow, BLEND_ADD)
+	bone_setBlendType(v.glow, BLEND_ADD)
 	
 	if chance(50) then
-		xdir = 1
+		v.xdir = 1
 	else
-		xdir = -1
+		v.xdir = -1
 	end
 end
 
@@ -85,40 +85,40 @@ function songNote(me, note)
 	if entity_isState(me, STATE_IDLE) then
 		entity_setState(me, STATE_ACTIVE)
 	end
-	activeTimer = 3.5
-	transTime = 0.5
-	r,g,b = getNoteColor(note)
-	bone_setColor(glow, r,g,b, transTime)
+	v.activeTimer = 3.5
+	local transTime = 0.5
+	local r,g,b = getNoteColor(note)
+	bone_setColor(v.glow, r,g,b, transTime)
 	--[[
 	r = (r + 1.0)/2.0
 	g = (g + 1.0)/2.0
 	b = (b + 1.0)/2.0
 	]]--
-	bone_setColor(shell, r,g,b, transTime)
+	bone_setColor(v.shell, r,g,b, transTime)
 end
 
 function update(me, dt)
 	if entity_isState(me, STATE_ACTIVE) then
-		if activeTimer > 0 then
-			activeTimer = activeTimer - dt
-			if activeTimer <= 0 then
+		if v.activeTimer > 0 then
+			v.activeTimer = v.activeTimer - dt
+			if v.activeTimer <= 0 then
 				entity_setState(me, STATE_IDLE)
 			end
 		end
 	end
-	if spd < 100 then
-		spd = spd + 40.0*dt
+	if v.spd < 100 then
+		v.spd = v.spd + 40.0*dt
 	end
-	entity_addVel(me, spd*xdir, -100)
-	dirTimer = dirTimer + dt
-	if dirTimer > 1.2 then
-		dirTimer = 0
-		if xdir == 1 then
-			xdir = -1
+	entity_addVel(me, v.spd*v.xdir, -100)
+	v.dirTimer = v.dirTimer + dt
+	if v.dirTimer > 1.2 then
+		v.dirTimer = 0
+		if v.xdir == 1 then
+			v.xdir = -1
 		else
-			xdir = 1
+			v.xdir = 1
 		end
-		spd = 0
+		v.spd = 0
 	end
 	entity_updateMovement(me, dt)
 end
@@ -126,14 +126,14 @@ end
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_offset(me, 0, 0, 2)
-		if glow ~= 0 and shell ~= 0 then
-			bone_setColor(glow, 1, 1, 1, 2)
-			bone_setColor(shell, 1, 1, 1, 2)
-			bone_scale(glow, 1, 1, 0.5)
+		if v.glow ~= 0 and v.shell ~= 0 then
+			bone_setColor(v.glow, 1, 1, 1, 2)
+			bone_setColor(v.shell, 1, 1, 1, 2)
+			bone_scale(v.glow, 1, 1, 0.5)
 		end
 		entity_setMaxSpeed(me, 50)
 	elseif entity_isState(me, STATE_ACTIVE) then
-		bone_scale(glow, 1.25, 1.25, 0.5, -1, 1)
+		bone_scale(v.glow, 1.25, 1.25, 0.5, -1, 1)
 		entity_offset(me, -5, 0, 0.1, LOOP_INF, 1)
 		entity_setMaxSpeed(me, 100)
 	end

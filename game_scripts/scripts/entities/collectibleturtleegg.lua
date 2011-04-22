@@ -17,20 +17,22 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- song cave collectible
 
 dofile("scripts/include/collectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "Collectibles/turtle-egg", FLAG_COLLECTIBLE_TURTLEEGG)
+	v.commonInit(me, "Collectibles/turtle-egg", FLAG_COLLECTIBLE_TURTLEEGG)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		createEntity("SeaTurtleBaby", "", entity_x(me)-100, entity_y(me)-50)
 		createEntity("SeaTurtleBaby", "", entity_x(me)-50, entity_y(me)-100)
@@ -38,5 +40,5 @@ function enterState(me, state)
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

@@ -17,41 +17,41 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-started 		= false
-n 			= 0
-timer 			= 999
-thingsToSay		= 20
-thingSaying		= -1
-timeToSay		= 5
+v.started 		= false
+v.n 			= 0
+v.timer 			= 999
+v.thingsToSay		= 20
+v.thingSaying		= -1
+v.timeToSay		= 5
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 	node_setCursorActivation(me, true)
 end
 
-function sayNext()
-	if thingSaying == 0 then
+local function sayNext()
+	if v.thingSaying == 0 then
 		setControlHint("To enter Entity Edit Mode, press F6 in the level editor, or select it from the menu.", 0, 0, 0, 16)
-	elseif thingSaying == 1 then
-		setControlHint("You can move entities in the same way that you move tiles, buy dragging them with the Left Mouse Button.", 0, 0, 0, 16)
-	elseif thingSaying == 2 then
-		setControlHint("You can also rotate them by holding Shift and delete then with Delete or Backspace.", 0, 0, 0, 16)
-	elseif thingSaying == 3 then
+	elseif v.thingSaying == 1 then
+		setControlHint("You can move entities in the same way that you move tiles, by dragging them with the Left Mouse Button.", 0, 0, 0, 16)
+	elseif v.thingSaying == 2 then
+		setControlHint("You can also rotate them by holding Shift and delete them with Delete or Backspace.", 0, 0, 0, 16)
+	elseif v.thingSaying == 3 then
 		setControlHint("Try it on these fish!", 0, 0, 0, 16)
 	end
 end
 
 function update(me, dt)
 	if getStringFlag("editorhint") ~= node_getName(me) then
-		started = false
+		v.started = false
 		return
 	end
-	if started then
-		timer = timer + dt
-		if timer > timeToSay then
-			timer = 0
-			thingSaying = thingSaying + 1
+	if v.started then
+		v.timer = v.timer + dt
+		if v.timer > v.timeToSay then
+			v.timer = 0
+			v.thingSaying = v.thingSaying + 1
 			sayNext()
 		end
 	end
@@ -59,9 +59,9 @@ end
 
 function activate(me)
 	clearControlHint()
-	started = true
-	thingSaying = -1
-	timer = 999
+	v.started = true
+	v.thingSaying = -1
+	v.timer = 999
 	setStringFlag("editorhint", node_getName(me))
 end
 

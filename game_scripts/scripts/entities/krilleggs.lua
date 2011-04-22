@@ -17,12 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- KRILL EGG
 
-dofile("scripts/entities/entityinclude.lua")
-
-growTimer = 0
-scaling = false
+v.growTimer = 0
+v.scaling = false
 
 function init(me)
 	setupBasicEntity(
@@ -43,35 +43,35 @@ function init(me)
 	)
 	entity_setAllDamageTargets(me, false)
 	entity_setDamageTarget(me, DT_AVATAR_BITE, true)
-	growTimer = 6 + math.random(3)	
+	v.growTimer = 6 + math.random(3)	
 end
 
 function update(me, dt)
-	if not scaling and not entity_isNearObstruction(me, 1) then
+	if not v.scaling and not entity_isNearObstruction(me, 1) then
 		entity_addVel(me, 0, 98*dt)
 		entity_updateCurrents(me, dt)
 		entity_updateMovement(me, dt)
 	else
 		entity_rotateToSurfaceNormal(me)
 		if entity_isState(me, STATE_IDLE) then
-			growTimer = growTimer - dt
-			if growTimer < 2 and not scaling then
-				scaling = true
+			v.growTimer = v.growTimer - dt
+			if v.growTimer < 2 and not v.scaling then
+				v.scaling = true
 				--entity_setInternalOffset(me, 0, 0.5, 0.1, -1)
 				entity_scale(me, 1.2, 1, 0.2, -1, 1)
 				entity_alpha(me, 0.01, 1)
 				
-				ent = createEntity("Krill", "", entity_getPosition(me))
+				local ent = createEntity("Krill", "", entity_getPosition(me))
 				entity_rotate(ent, entity_getRotation(me))
 				entity_setState(ent, STATE_GROW)			
 			end
-			if growTimer < 0 then
+			if v.growTimer < 0 then
 				entity_delete(me)
-				growTimer = 999
+				v.growTimer = 999
 			end
 		end
 	end
-	if not scaling then
+	if not v.scaling then
 		entity_handleShotCollisions(me)
 	end
 end

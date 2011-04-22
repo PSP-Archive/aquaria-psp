@@ -32,18 +32,20 @@ namespace WorldMapRenderNamespace
 {
 	const float WORLDMAP_UNDERLAY_ALPHA = 0.8;
 
-	const int SUBDIV			= 64;
-
 	float baseMapSegAlpha		= 0.4;
 	float visibleMapSegAlpha	= 0.8;
 
 	const float blinkPeriod		= 0.2;
 
+	// Fraction of the screen width and height we consider "visited".
+	// (We don't mark the entire screen "visited" because the player may
+	// overlook things on the edge of the screen while moving.)
+	const float visitedFraction	= 0.8;
+
 	enum VisMethod
 	{
 		VIS_VERTEX		= 0,
-		VIS_PARTICLES	= 1,
-		VIS_COPY		= 2
+		VIS_WRITE		= 1
 	};
 
 	VisMethod visMethod = VIS_VERTEX;
@@ -55,6 +57,8 @@ namespace WorldMapRenderNamespace
 	Quad *activeQuad=0, *lastActiveQuad=0, *originalActiveQuad=0;
 	Quad *lastVisQuad=0, *visQuad=0;
 	WorldMapTile *lastVisTile=0;
+
+	float xMin, yMin, xMax, yMax;
 
 	float zoomMin = 0.2;
 	float zoomMax = 1;
@@ -116,7 +120,18 @@ protected:
 			wp.y = core->center.y + h2;
 
 		Vector move = wp - getWorldPosition();
-		position += move;
+		// FIXME: This is a quick HACK to get the current world map
+		// scale factor so we can set the position properly, without
+		// having to play with multiple levels of parent pointers or
+		// anything like that.  (If we don't scale the move vector
+		// properly, the dots overshoot at high zoom or don't go far
+		// enough at low zoom and we can end up with a weird "disco"
+		// effect -- see icculus bug 4542.)
+		const float x0 = getWorldPosition().x;
+		position.x += 1;
+		const float x1 = getWorldPosition().x;
+		position.x -= 1;
+		position += move / (x1-x0);
 	}
 };
 
@@ -210,16 +225,17 @@ protected:
 				float r = (rand()%100)/100.0f;
 				float radius = r * 2*PI;
 				float len = (rand()%lenRange);
-				int x = sin(radius)*len;
-				int y = cos(radius)*len;
+				int x = sinf(radius)*len;
+				int y = cosf(radius)*len;
 
 				//truePosition +
 				float t = 0.75;
 				WorldMapBoundQuad *q = new WorldMapBoundQuad(Vector(x, y, 0));
 				q->setTexture("particles/glow");
-				q->alpha.path.addPathNode(0.0, 0.0);
-				q->alpha.path.addPathNode(1.0, 0.5);
-				q->alpha.path.addPathNode(0.0, 1.0);
+				q->alpha.ensureData();
+				q->alpha.data->path.addPathNode(0.0, 0.0);
+				q->alpha.data->path.addPathNode(1.0, 0.5);
+				q->alpha.data->path.addPathNode(0.0, 1.0);
 				q->alpha.startPath(0.5);
 				q->alphaMod = 0.5;
 				q->color = color;
@@ -227,7 +243,7 @@ protected:
 				q->scale = Vector(pscale, pscale);
 				//q->fadeAlphaWithLife = 1;
 				q->setLife(1);
-				q->setDecayRate(1.0/t);
+				q->setDecayRate(1.0f/t);
 				
 				q->setBlendType(BLEND_ADD);
 				addChild(q, PM_POINTER);
@@ -354,10 +370,10 @@ protected:
 		if (sz.x > zoomMax)
 			sz.x = sz.y = zoomMax;
 		
-		if (sz.x > 1.0)
+		if (sz.x > 1.0f)
 		{
-			scale.x = (1.0/sz.x);
-			scale.y = (1.0/sz.y);
+			scale.x = (1.0f/sz.x);
+			scale.y = (1.0f/sz.y);
 		}
 		else
 		{
@@ -469,9 +485,123 @@ void WorldMapRender::setProperTileColor(WorldMapTile *tile)
 	}
 }
 
-void WorldMapRender::setVis(Quad *q)
+#ifdef AQUARIA_BUILD_MAPVIS
+
+static void tileDataToVis(WorldMapTile *tile, Vector **vis)
 {
-	if (!q) return;
+	const unsigned char *data = tile->getData();
+
+	if (data != 0)
+	{
+		const unsigned int rowSize = MAPVIS_SUBDIV/8;
+		for (unsigned int y = 0; y < MAPVIS_SUBDIV; y++, data += rowSize)
+		{
+			for (unsigned int x = 0; x < MAPVIS_SUBDIV; x += 8)
+			{
+				unsigned char dataByte = data[x/8];
+				for (unsigned int x2 = 0; x2 < 8; x2++)
+				{
+					vis[x+x2][y].z = (dataByte & (1 << x2)) ? visibleMapSegAlpha : baseMapSegAlpha;
+				}
+			}
+		}
+	}
+	else
+	{
+		for (int x = 0; x < MAPVIS_SUBDIV; x++)
+		{
+			for (int y = 0; y < MAPVIS_SUBDIV; y++)
+			{
+				vis[x][y].z = baseMapSegAlpha;
+			}
+		}
+		return;
+	}
+}
+
+// Returns a copy of the original texture data.
+static unsigned char *tileDataToAlpha(WorldMapTile *tile)
+{
+	const unsigned char *data = tile->getData();
+	const unsigned int ab = int(baseMapSegAlpha * (1<<8) + 0.5f);
+	const unsigned int av = int(visibleMapSegAlpha * (1<<8) + 0.5f);
+
+	const unsigned int texWidth = tile->q->texture->width;
+	const unsigned int texHeight = tile->q->texture->height;
+	if (texWidth % MAPVIS_SUBDIV != 0 || texHeight % MAPVIS_SUBDIV != 0)
+	{
+		std::ostringstream os;
+		os << "Texture size " << texWidth << "x" << texHeight
+		   << " not a multiple of MAPVIS_SUBDIV " << MAPVIS_SUBDIV
+		   << ", can't edit";
+		debugLog(os.str());
+		return 0;
+	}
+	const unsigned int scaleX = texWidth / MAPVIS_SUBDIV;
+	const unsigned int scaleY = texHeight / MAPVIS_SUBDIV;
+
+	unsigned char *savedTexData = new unsigned char[texWidth * texHeight * 4];
+	tile->q->texture->read(0, 0, texWidth, texHeight, savedTexData);
+
+	unsigned char *texData = new unsigned char[texWidth * texHeight * 4];
+	memcpy(texData, savedTexData, texWidth * texHeight * 4);
+
+	if (data != 0)
+	{
+		const unsigned int rowSize = MAPVIS_SUBDIV/8;
+		for (unsigned int y = 0; y < MAPVIS_SUBDIV; y++, data += rowSize)
+		{
+			unsigned char *texOut = &texData[(y*scaleY) * texWidth * 4];
+			for (unsigned int x = 0; x < MAPVIS_SUBDIV; x += 8)
+			{
+				unsigned char dataByte = data[x/8];
+				for (unsigned int x2 = 0; x2 < 8; x2++, texOut += scaleX*4)
+				{
+					const bool visited = (dataByte & (1 << x2)) != 0;
+					const unsigned int alphaMod = visited ? av : ab;
+					for (unsigned int pixelY = 0; pixelY < scaleY; pixelY++)
+					{
+						unsigned char *ptr = &texOut[pixelY * texWidth * 4];
+						for (unsigned int pixelX = 0; pixelX < scaleX; pixelX++, ptr += 4)
+						{
+							if (ptr[3] == 0)
+								continue;
+							ptr[3] = (ptr[3] * alphaMod + 128) >> 8;
+						}
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		unsigned char *texOut = texData;
+		for (unsigned int y = 0; y < texHeight; y++)
+		{
+			for (unsigned int x = 0; x < texWidth; x++, texOut += 4)
+			{
+				texOut[3] = (texOut[3] * ab + 128) >> 8;
+			}
+		}
+	}
+
+	tile->q->texture->write(0, 0, texWidth, texHeight, texData);
+	delete[] texData;
+
+	return savedTexData;
+}
+
+static void resetTileAlpha(WorldMapTile *tile, const unsigned char *savedTexData)
+{
+	tile->q->texture->write(0, 0, tile->q->texture->width, tile->q->texture->height, savedTexData);
+}
+
+#endif  // AQUARIA_BUILD_MAPVIS
+
+
+void WorldMapRender::setVis(WorldMapTile *tile)
+{
+	if (!tile) return;
 #ifdef AQUARIA_BUILD_MAPVIS
 	/*
 	if (lastVisQuad)
@@ -480,48 +610,46 @@ void WorldMapRender::setVis(Quad *q)
 		lastVisQuad->color = Vector(0.7, 0.8, 1);
 	}
 	*/
-	if (lastVisTile)
-	{
-		lastVisTile->vis = 0;
-	}
 
-	q->color = Vector(1,1,1);
-	q->alphaMod = 1;
+	tile->q->color = Vector(1,1,1);
+	tile->q->alphaMod = 1;
 	
-	WorldMapTile *tile=0;
-	int num = dsq->continuity.worldMap.getNumWorldMapTiles();
-	for (int i = 0; i < num; i++)
-	{
-		WorldMapTile *t = dsq->continuity.worldMap.getWorldMapTile(i);
-		if (t && t->q == q)
-		{
-			tile = t;
-			break;
-		}
-	}
-
-	if (tile == 0)	return;
-
 	if (visMethod == VIS_VERTEX)
 	{
-		q->setSegs(SUBDIV, SUBDIV, 0, 0, 0, 0, 2.0, 1);
-		tile->vis = q->getDrawGrid();
-		tile->visSize = SUBDIV;
-		tile->listToVis(baseMapSegAlpha, visibleMapSegAlpha);
+		tile->q->setSegs(MAPVIS_SUBDIV, MAPVIS_SUBDIV, 0, 0, 0, 0, 2.0, 1);
+		tileDataToVis(tile, tile->q->getDrawGrid());
 	}
-	else if (visMethod == VIS_PARTICLES)
+	else if (visMethod == VIS_WRITE)
 	{
-
-	}
-	else if (visMethod == VIS_COPY)
-	{
-
+		savedTexData = tileDataToAlpha(tile);
 	}
 
-	lastVisQuad = q;
+	lastVisQuad = tile->q;
 	lastVisTile = tile;
 #endif
 }
+
+void WorldMapRender::clearVis(WorldMapTile *tile)
+{
+	if (!tile) return;
+#ifdef AQUARIA_BUILD_MAPVIS
+	if (visMethod == VIS_VERTEX)
+	{
+		if (tile->q)
+			tile->q->deleteGrid();
+	}
+	else if (visMethod == VIS_WRITE)
+	{
+		if (savedTexData)
+		{
+			resetTileAlpha(tile, savedTexData);
+			delete[] savedTexData;
+			savedTexData = 0;
+		}
+	}
+#endif
+}
+
 
 WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 {
@@ -551,7 +679,11 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	activeTile = 0;
 	activeQuad = 0;
 
+	lastMousePosition = core->mouse.position;
+
 	bg = 0;
+
+	savedTexData = 0;
 
 	/*
 	bg = new Quad("", Vector(400,300));
@@ -603,17 +735,14 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 			setProperTileColor(tile);
 			
 			q->setWidthHeight(q->getWidth()*tile->scale, q->getHeight()*tile->scale);
-			q->scale = Vector(0.25*tile->scale2, 0.25*tile->scale2);
+			q->scale = Vector(0.25f*tile->scale2, 0.25f*tile->scale2);
 
 			if (tile == activeTile)
 				activeQuad = q;
 
-			tile->vis = 0;
-			
-
 			if (activeQuad == q)
 			{
-				setVis(q);
+				setVis(tile);
 			}
 		
 			addChild(q, PM_POINTER);
@@ -635,8 +764,9 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	tophud->alpha = 0;
 	dsq->game->addRenderObject(tophud, LR_WORLDMAPHUD);
 
-	int fontSize = 6, aly=26, aly2=18;
-	float sz=0.6;
+	//int fontSize = 6;
+	float aly = 26, aly2 = 18;
+	float sz = 0.6;
 
 	//hover
 	areaLabel = new BitmapText(&dsq->smallFont);
@@ -644,7 +774,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	//areaLabel->setFontSize(fontSize);
 	areaLabel->setAlign(ALIGN_CENTER);
 	areaLabel->followCamera = 1;
-	areaLabel->position = Vector(145,aly);
+	areaLabel->position = Vector(150,aly);
 	dsq->game->addRenderObject(areaLabel, LR_WORLDMAPHUD);
 	areaLabel->alpha = 0;
 
@@ -729,23 +859,11 @@ void WorldMapRender::bindInput()
 	dsq->user.control.actionSet.importAction(this, "SwimDown",			ACTION_SWIMDOWN);
 }
 
-void WorldMapRender::transferData()
-{
-#ifdef AQUARIA_BUILD_MAPVIS
-	for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
-	{
-		WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
-		if (tile)
-		{
-			tile->visToList();
-		}
-	}
-#endif
-}
-
 void WorldMapRender::destroy()
 {
+	clearVis(activeTile);
 	RenderObject::destroy();
+	delete[] savedTexData;
 }
 
 bool WorldMapRender::isCursorOffHud()
@@ -776,11 +894,13 @@ void WorldMapRender::onUpdate(float dt)
 	if (tophud)
 		tophud->alpha.x = this->alpha.x;
 
+	const float mmWidth  = game->miniMapRender->getMiniMapWidth();
+	const float mmHeight = game->miniMapRender->getMiniMapHeight();
 	if (addHintQuad1)
-		addHintQuad1->position = game->miniMapRender->position + Vector(-15, -64);
+		addHintQuad1->position = game->miniMapRender->position + Vector(-mmWidth*3/22, -mmHeight/2-10);
 
 	if (addHintQuad2)
-		addHintQuad2->position = game->miniMapRender->position + Vector(15, -64);
+		addHintQuad2->position = game->miniMapRender->position + Vector(mmWidth*3/22, -mmHeight/2-10);
 
 	int offset = 26;
 	if (helpButton)
@@ -853,11 +973,7 @@ void WorldMapRender::onUpdate(float dt)
 						{
 							if ((activeTile != selectedTile) && selectedTile->q)
 							{
-								transferData();
-
-								WorldMapTile *oldTile = activeTile;
-
-								activeTile->q->deleteGrid();
+								clearVis(activeTile);
 
 								activeTile = selectedTile;
 								activeQuad = activeTile->q;
@@ -877,7 +993,7 @@ void WorldMapRender::onUpdate(float dt)
 									setProperTileColor(tile);
 								}
 
-								setVis(selectedTile->q);
+								setVis(selectedTile);
 							}
 
 							mb = false;
@@ -904,7 +1020,13 @@ void WorldMapRender::onUpdate(float dt)
 
 		if (core->mouse.buttons.middle || core->mouse.buttons.right)
 		{
-			internalOffset += core->mouse.change;
+			// FIXME: For some reason, not all mouse movement events reach
+			// this handler (at least under Linux/SDL), so when moving the
+			// mouse quickly, the world map scrolling tends to lag behind.
+			// We work around this by keeping our own "last position" vector
+			// and calculating the mouse movement from that.  --achurch
+			Vector mouseChange = core->mouse.position - lastMousePosition;
+			internalOffset += mouseChange / scale.x;
 		}
 
 		
@@ -943,6 +1065,24 @@ void WorldMapRender::onUpdate(float dt)
 			}	
 		}
 
+		if (core->joystickEnabled)
+		{
+			if (isActing(ACTION_SECONDARY))
+			{
+				if (core->joystick.position.y >= 0.6f)
+					scale.interpolateTo(scale / 1.2f, 0.1f);
+				else if (core->joystick.position.y <= -0.6f)
+					scale.interpolateTo(scale * 1.2f, 0.1f);
+			}
+			else
+			{
+				// The negative multiplier is deliberate -- it makes the
+				// map scroll as though the joystick was controlling the
+				// cursor (which is fixed in the center of the screen).
+				internalOffset += core->joystick.position * (-400*dt / scale.x);
+			}
+		}
+
 		if (activeTile && activeTile->layer == 1)
 		{
 			zoomMax = interiorZoomMax;
@@ -955,7 +1095,15 @@ void WorldMapRender::onUpdate(float dt)
 		float scrollAmount = 0.2;//0.25;
 
 		if (core->mouse.scrollWheelChange)
-			scale.interpolateTo(scale + Vector(scrollAmount, scrollAmount)*core->mouse.scrollWheelChange, 0.1);
+		{
+			Vector target = scale;
+			int changeLeft = core->mouse.scrollWheelChange;
+			for (; changeLeft > 0; changeLeft--)
+				target *= 1 + scrollAmount;
+			for (; changeLeft < 0; changeLeft++)
+				target /= 1 + scrollAmount;
+			scale.interpolateTo(target, 0.1);
+		}
 
 		if (scale.x < zoomMin)
 		{
@@ -968,6 +1116,15 @@ void WorldMapRender::onUpdate(float dt)
 			scale.x = scale.y = zoomMax;
 		}
 
+		if (-internalOffset.x < xMin - 300/scale.x)
+			internalOffset.x = -(xMin - 300/scale.x);
+		else if (-internalOffset.x > xMax + 300/scale.x)
+			internalOffset.x = -(xMax + 300/scale.x);
+		if (-internalOffset.y < yMin - 225/scale.x)
+			internalOffset.y = -(yMin - 225/scale.x);
+		else if (-internalOffset.y > yMax + 150/scale.x)
+			internalOffset.y = -(yMax + 150/scale.x);
+
 		if (dsq->isDeveloperKeys() || dsq->mod.isActive())
 		{
 			if (editorActive)
@@ -975,7 +1132,7 @@ void WorldMapRender::onUpdate(float dt)
 				if (activeTile && activeQuad)
 				{
 					float amt = dt*4;
-					float a2 = dt*0.1;
+					float a2 = dt*0.1f;
 
 					if (core->getShiftState())
 					{
@@ -1006,7 +1163,7 @@ void WorldMapRender::onUpdate(float dt)
 					}
 
 					activeQuad->position = activeTile->gridPos;
-					activeQuad->scale = Vector(0.25*activeTile->scale2, 0.25*activeTile->scale2);
+					activeQuad->scale = Vector(0.25f*activeTile->scale2, 0.25f*activeTile->scale2);
 				}
 			}
 		}
@@ -1014,59 +1171,47 @@ void WorldMapRender::onUpdate(float dt)
 	else
 	{
 #ifdef AQUARIA_BUILD_MAPVIS
-		if (dsq->game->avatar)
+		if (!dsq->isInCutscene() && dsq->game->avatar && activeTile)
 		{
-			if (activeQuad && activeTile)
+			const float screenWidth  = core->getVirtualWidth()  * core->invGlobalScale;
+			const float screenHeight = core->getVirtualHeight() * core->invGlobalScale;
+			Vector camera = core->cameraPos;
+			camera.x += screenWidth/2;
+			camera.y += screenHeight/2;
+			const float visWidth  = screenWidth  * visitedFraction;
+			const float visHeight = screenHeight * visitedFraction;
+			Vector tl, br;
+			tl.x = (camera.x - visWidth/2 ) / dsq->game->cameraMax.x;
+			tl.y = (camera.y - visHeight/2) / dsq->game->cameraMax.y;
+			br.x = (camera.x + visWidth/2 ) / dsq->game->cameraMax.x;
+			br.y = (camera.y + visHeight/2) / dsq->game->cameraMax.y;
+			const int x0 = int(tl.x * MAPVIS_SUBDIV);
+			const int y0 = int(tl.y * MAPVIS_SUBDIV);
+			const int x1 = int(br.x * MAPVIS_SUBDIV);
+			const int y1 = int(br.y * MAPVIS_SUBDIV);
+			activeTile->markVisited(x0, y0, x1, y1);
+			if (activeQuad)
 			{
 				if (visMethod == VIS_VERTEX)
 				{
-					Vector p = dsq->game->avatar->position;
-					p.x = p.x / dsq->game->cameraMax.x;
-					p.y = p.y / dsq->game->cameraMax.y;
-					p.x = p.x * SUBDIV;
-					p.y = p.y * SUBDIV;
-					p.x = int(p.x);
-					p.y = int(p.y);
-					activeQuad->setDrawGridAlpha(p.x, p.y, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x-1, p.y, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x-1, p.y-1, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x-1, p.y+1, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x+1, p.y, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x+1, p.y-1, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x+1, p.y+1, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x, p.y-1, visibleMapSegAlpha);
-					activeQuad->setDrawGridAlpha(p.x, p.y+1, visibleMapSegAlpha);
-				}
-				else if (visMethod == VIS_PARTICLES)
-				{
-					this->getAvatarWorldMapPosition();
-				}
-				else if (visMethod == VIS_COPY)
-				{
-					Vector p = dsq->game->avatar->position;
-					p.x = p.x / dsq->game->cameraMax.x;
-					p.y = p.y / dsq->game->cameraMax.y;
-					//Vector p = getWorldToTile(activeTile, dsq->game->avatar->position, false, false);
-					unsigned char *pixels = (unsigned char*)malloc(sizeof(unsigned char)*32*32*4);
-					unsigned int c = 0;
-					for (int x = 0; x < 32; x++)
+					for (int x = x0; x <= x1; x++)
 					{
-						for (int y = 0; y < 32; y++)
+						for (int y = y0; y <= y1; y++)
 						{
-							pixels[c] = 1;
-							pixels[c+1] = 0;
-							pixels[c+2] = 1;
-							pixels[c+3] = 1;
-							c += 4;
+							activeQuad->setDrawGridAlpha(x, y, visibleMapSegAlpha);
 						}
 					}
-					activeQuad->texture->write(p.x, p.y, 32, 32, pixels);
-					free(pixels);
+				}
+				else if (visMethod == VIS_WRITE)
+				{
+					// Do nothing -- we regenerate the tile on opening the map.
 				}
 			}
 		}
 #endif
 	}
+
+	lastMousePosition = core->mouse.position;
 }
 
 Vector WorldMapRender::getAvatarWorldMapPosition()
@@ -1088,9 +1233,9 @@ Vector WorldMapRender::getWorldToTile(WorldMapTile *tile, Vector position, bool 
 {
 	Vector p;
 	p = (position/TILE_SIZE) / (256*tile->scale);
-	p *= 256*tile->scale*0.25*tile->scale2;
+	p *= 256*tile->scale*0.25f*tile->scale2;
 	if (fromCenter)
-		p -= Vector((128.0*tile->scale)*(0.25*tile->scale2), (128*tile->scale)*(0.25*tile->scale2));
+		p -= Vector((128*tile->scale)*(0.25f*tile->scale2), (128*tile->scale)*(0.25f*tile->scale2));
 	if (tilePos)
 		p += tile->gridPos;
 	return p;
@@ -1195,6 +1340,33 @@ void WorldMapRender::toggle(bool turnON)
 				scale = Vector(1.5,1.5);
 			else
 				scale = Vector(1,1);
+			if (visMethod == VIS_WRITE)
+			{
+				// Texture isn't updated while moving, so force an update here
+				clearVis(activeTile);
+				setVis(activeTile);
+			}
+		}
+
+		xMin = xMax = -internalOffset.x;
+		yMin = yMax = -internalOffset.y;
+		for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
+		{
+			WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
+			if (tile && (tile->revealed || tile->prerevealed) && tile->q)
+			{
+				Quad *q = tile->q;
+				const float width = q->getWidth() * q->scale.x;
+				const float height = q->getHeight() * q->scale.y;
+				if (xMin > tile->gridPos.x - width/2)
+					xMin = tile->gridPos.x - width/2;
+				if (xMax < tile->gridPos.x + width/2)
+					xMax = tile->gridPos.x + width/2;
+				if (yMin > tile->gridPos.y - height/2)
+					yMin = tile->gridPos.y - height/2;
+				if (yMax < tile->gridPos.y + height/2)
+					yMax = tile->gridPos.y + height/2;
+			}
 		}
 
 		if (bg)
@@ -1234,8 +1406,8 @@ void WorldMapRender::toggle(bool turnON)
 		{
 			if (activeTile != originalActiveTile)
 			{
-				activeTile->q->deleteGrid();
-				setVis(originalActiveTile->q);
+				clearVis(activeTile);
+				setVis(originalActiveTile);
 				activeTile = originalActiveTile;
 				activeQuad = activeTile->q;
 			}
@@ -1250,7 +1422,7 @@ void WorldMapRender::toggle(bool turnON)
 
 		// again to set the correct color
 		// lame, don't do that
-		//setVis(activeTile->q);
+		//setVis(activeTile);
 
 		// just set the color
 		if (activeTile)
@@ -1260,7 +1432,7 @@ void WorldMapRender::toggle(bool turnON)
 		}
 
 
-		//setVis(activeQuad);
+		//setVis(activeTile);
 		/*
 		for (int i = 0; i < LR_MENU; i++)
 		{

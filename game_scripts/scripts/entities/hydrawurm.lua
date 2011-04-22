@@ -17,21 +17,18 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- H Y D R A  W U R M
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
-
--- entity specific
-STATE_SOMETHING			= 1000
 
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
  
- chaseDelay = 0
+v.chaseDelay = 0
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -77,17 +74,17 @@ function update(me, dt)
 			entity_pushTarget(me, 400)
 		end
 	end
-	if chaseDelay > 0 then
-		chaseDelay = chaseDelay - dt
-		if chaseDelay < 0 then
-			chaseDelay = 0
+	if v.chaseDelay > 0 then
+		v.chaseDelay = v.chaseDelay - dt
+		if v.chaseDelay < 0 then
+			v.chaseDelay = 0
 		end
 	end
 	if entity_getState(me)==STATE_IDLE then
 		if not entity_hasTarget(me) then
 			entity_findTarget(me, 400)
 		else
-			--if chaseDelay==0 then
+			--if v.chaseDelay==0 then
 			if entity_isTargetInRange(me, 1000) then
 				if entity_getHealth(me) < 6 then
 					entity_setMaxSpeed(me, 450)

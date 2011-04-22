@@ -50,6 +50,12 @@ void TTFFont::load(const std::string &str, int sz)
 	font->FaceSize(sz);
 }
 
+void TTFFont::create(const unsigned char *data, unsigned long datalen, int sz)
+{
+	font = new FTGLTextureFont(data, datalen);
+	font->FaceSize(sz);
+}
+
 TTFText::TTFText(TTFFont *font) : RenderObject(), font(font)
 {
 	align = ALIGN_LEFT;
@@ -143,7 +149,6 @@ void TTFText::updateFormatting()
 			float llx, lly, llz, urx, ury, urz;
 			font->font->BBox(originalText.substr(start, i-start).c_str(), llx, lly, llz, urx, ury, urz);
 			int w = urx - llx;
-			int h = ury - ury;
 			if (width != 0 && w >= width)
 			{
 				if (lastSpace != -1) {
@@ -203,7 +208,7 @@ void TTFText::onRender()
 	{
 		if (shadow)
 		{
-			glColor4f(0,0,0,0.75*alpha.x*alphaMod);
+			glColor4f(0,0,0,0.75f*alpha.x*alphaMod);
 			glPushMatrix();
 			glScalef(1, -1, 0);
 			glTranslatef(1 -hw, -1 + (i*-lineHeight), 0);

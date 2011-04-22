@@ -17,14 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
 function init(me)
 end
 
 function update(me)
 --[[
-	ent = node_getNearestEntity(me)
+	local ent = node_getNearestEntity(me)
 	if ent ~=0 and entity_getEntityType(ent) ~= ET_AVATAR and node_isEntityIn(me, ent) then
 		entity_delete(ent)
 	end

@@ -17,11 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-anim = "idle"
+v.anim = "idle"
 
 function init(me)
 	setupEntity(me)
@@ -36,22 +36,22 @@ function init(me)
 end
 
 function postInit(me)
-	node = entity_getNearestNode(me, "SIT")
+	local node = entity_getNearestNode(me, "SIT")
 	if node ~= 0 and node_isEntityIn(node, me) then
-		anim = "sit"
+		v.anim = "sit"
 	end
 	
-	node = entity_getNearestNode(me, "PET")
+	local node = entity_getNearestNode(me, "PET")
 	if node ~= 0 and node_isEntityIn(node, me) then
-		anim = "pet"
+		v.anim = "pet"
 	end
 	
-	node = entity_getNearestNode(me, "FLIP")
+	local node = entity_getNearestNode(me, "FLIP")
 	if node ~= 0 and node_isEntityIn(node, me) then
 		entity_fh(me)
 	end
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -59,7 +59,7 @@ end
 
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
-		entity_animate(me, anim, -1)
+		entity_animate(me, v.anim, -1)
 	elseif entity_isState(me, STATE_DONE) then
 		spawnParticleEffect("TinyGreenExplode", entity_getPosition(me))
 		spawnParticleEffect("LeafExplode", entity_getPosition(me))

@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/include/nodecollectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "CollectibleWalkerBaby", FLAG_COLLECTIBLE_WALKERBABY)
+	v.commonInit(me, "CollectibleWalkerBaby", FLAG_COLLECTIBLE_WALKERBABY)
 end
 
 function update(me, dt)

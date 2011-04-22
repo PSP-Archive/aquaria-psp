@@ -17,30 +17,30 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-attackTimer = 0
-n=0
-mom = 0
-body = 0
+v.attackTimer = 0
+v.n = 0
+v.mom = 0
+v.body = 0
 
-started = false
-STATE_ATTACK1		= 1001
-STATE_ATTACK2		= 1002
-STATE_ATTACK3		= 1003
+v.started = false
+local STATE_ATTACK1		= 1001
+local STATE_ATTACK2		= 1002
+local STATE_ATTACK3		= 1003
 
-STATE_PREP1			= 1005
-STATE_PREP2			= 1006
-STATE_PREP3			= 1007
-enraged = false
-dadMax = 0
-dadMin = 0
-deathScene = false
+local STATE_PREP1		= 1005
+local STATE_PREP2		= 1006
+local STATE_PREP3		= 1007
+v.enraged = false
+v.dadMax = 0
+v.dadMin = 0
+v.deathScene = false
 
-lastPhase = false
-almostDone = false
+v.lastPhase = false
+v.almostDone = false
 
-hitDelay = 0
+v.hitDelay = 0
 
 function init(me)
 	setupEntity(me)
@@ -57,7 +57,7 @@ function init(me)
 	entity_setEntityType(me, ET_ENEMY)
 	
 	entity_generateCollisionMask(me)
-	n = getNaija()
+	v.n = getNaija()
 	--entity_setAllDamageTargets(me, false)
 	--[[
 	entity_setDamageTarget(me, DT_AVATAR_ENERGYBLAST, true)
@@ -70,7 +70,7 @@ function init(me)
 	entity_setEatType(me, EAT_NONE)
 	
 	entity_setTargetRange(me, 256)
-	body = entity_getBoneByName(me, "Body")
+	v.body = entity_getBoneByName(me, "Body")
 	
 	--[[
 	bone_alpha(entity_getBoneByName(me, "MomPosition"), 0.5)
@@ -94,7 +94,7 @@ function init(me)
 end
 
 function postInit(me)
-	mom = getEntity("SunkenMom")
+	v.mom = getEntity("SunkenMom")
 end
 
 function animationKey(me, key)
@@ -117,19 +117,19 @@ function animationKey(me, key)
 			playSfx("sunkendad-stomp")
 		end
 	end
-	dadMax = getNode("DADMAX")
-	dadMin = getNode("DADMIN")
+	v.dadMax = getNode("DADMAX")
+	v.dadMin = getNode("DADMIN")
 end
 
-inCut = false
-function cutScene(me)
-	if inCut then return end
-	inCut = true
-	dad = me
+v.inCut = false
+local function cutScene(me)
+	if v.inCut then return end
+	v.inCut = true
+	local dad = me
 	entity_stopInterpolating(me)
 	fadeOutMusic(4)
 	overrideZoom(0.5, 1)
-	entity_idle(n)
+	entity_idle(v.n)
 	cam_toEntity(me)
 	entity_stopInterpolating(me)
 	entity_setPosition(me, entity_x(me), entity_y(me), 10)
@@ -139,7 +139,7 @@ function cutScene(me)
 	
 	--setFlag(FLAG_PET_ACTIVE, 0)
 
-	e = getFirstEntity()
+	local e = getFirstEntity()
 	while e ~= 0 do
 		if entity_isName(e, "zygote") then
 			entity_delete(e)
@@ -150,30 +150,30 @@ function cutScene(me)
 
 	cam_toEntity(dad)
 	entity_alpha(dad, 0, 3)
-	entity_flipToEntity(n, dad)
+	entity_flipToEntity(v.n, dad)
 	
 	
 	debugLog("creating father")
 	
-	gdad = createEntity("cc_father", "", entity_x(me), entity_y(me))
+	local gdad = createEntity("cc_father", "", entity_x(me), entity_y(me))
 	entity_alpha(gdad, 0)
 	entity_alpha(gdad, 1, 2)
 	entity_setPosition(gdad, entity_x(gdad), entity_y(gdad)-50, 3, 0, 0, 1)
 	
 	watch(3)
 	
-	sx,sy = entity_getScale(gdad)
+	local sx, sy = entity_getScale(gdad)
 	entity_scale(gdad, sx*1.5, sy*1.5, 2)
 	entity_alpha(gdad, 0, 2)
 	
 	watch(2)
 	
-	cam_toEntity(mom)
-	entity_flipToEntity(n, mom)
-	gmom = createEntity("CC_Mother", "", entity_getPosition(mom))
+	cam_toEntity(v.mom)
+	entity_flipToEntity(v.n, v.mom)
+	local gmom = createEntity("CC_Mother", "", entity_getPosition(v.mom))
 	entity_alpha(gmom, 0)
 	entity_alpha(gmom, 1, 2)
-	entity_alpha(mom, 0, 4)
+	entity_alpha(v.mom, 0, 4)
 	entity_setPosition(gmom, entity_x(gmom), entity_y(gmom)-50, 3, 0, 0, 1)
 	watch(1)
 	voice("naija_likidnappedbefore")
@@ -183,20 +183,20 @@ function cutScene(me)
 	entity_alpha(gmom, 0, 2)
 	watch(2)
 	
-	entity_idle(n)
-	li = getLi()
+	entity_idle(v.n)
+	local li = getLi()
 	if li ~= 0 then	
 		--cam_toEntity(li)
 		
-		door = entity_getNearestEntity(me, "EnergyDoor")
+		local door = entity_getNearestEntity(me, "EnergyDoor")
 		if not entity_isState(door, STATE_OPENED) then
 			entity_setState(door, STATE_OPEN)
 		end
 		
 
 		--[[
-		node = getNode("CREATORSHADOW")
-		c = createEntity("CreatorShadow", "", node_x(node), node_y(node))
+		local node = getNode("CREATORSHADOW")
+		local c = createEntity("CreatorShadow", "", node_x(node), node_y(node))
 		entity_setPosition(c, entity_x(li), entity_y(li), -1000)
 		while entity_isInterpolating(c) do
 			watch(FRAME_TIME)
@@ -212,18 +212,18 @@ function cutScene(me)
 	
 		setOverrideVoiceFader(1.0)
 		
-		node = getNode("NAIJAPOS")
-		entity_setPosition(n, node_x(node), node_y(node))
+		local node = getNode("NAIJAPOS")
+		entity_setPosition(v.n, node_x(node), node_y(node))
 		
-		node = getNode("LIPOS")
+		local node = getNode("LIPOS")
 		entity_setPosition(li, node_x(node), node_y(node))
 		
-		node = getNode("CREATORSPAWN")
-		c = createEntity("CreatorSunkenCity", "", node_x(node), node_y(node))
+		local node = getNode("CREATORSPAWN")
+		local c = createEntity("CreatorSunkenCity", "", node_x(node), node_y(node))
 		entity_alpha(c, 0)
 		
-		entity_flipToEntity(c, n)
-		entity_flipToEntity(n, c)
+		entity_flipToEntity(c, v.n)
+		entity_flipToEntity(v.n, c)
 		entity_flipToEntity(li, c)
 		
 		fade(0, 1)
@@ -279,7 +279,7 @@ function cutScene(me)
 		
 		-- li!!
 		
-		entity_swimToNode(n, getNode("NAIJACONCERN"))
+		entity_swimToNode(v.n, getNode("NAIJACONCERN"))
 		
 		entity_alpha(c, 0, 1)
 		entity_alpha(li, 0, 1)
@@ -293,13 +293,13 @@ function cutScene(me)
 		entity_setPosition(c, 0, 0)
 		entity_setPosition(li, 0, 0)
 		
-		cam_toEntity(n)
+		cam_toEntity(v.n)
 		
 		--[[
-		node = getNode("CREATORSHADOWEXIT")
+		local node = getNode("CREATORSHADOWEXIT")
 		--entity_swimToNode(c, node, SPEED_VERYFAST)
 		entity_setPosition(c, node_x(node), node_y(node), -1000)
-		cam_toEntity(n)
+		cam_toEntity(v.n)
 		playMusic("SunkenCity")
 		while entity_isInterpolating(c) do
 			wait(FRAME_TIME)
@@ -319,33 +319,33 @@ function cutScene(me)
 		
 		
 	else
-		cam_toEntity(n)
+		cam_toEntity(v.n)
 	end
 	overrideZoom(0, 1)	
 end
 
 function update(me, dt)
-	if not started then
+	if not v.started then
 		return
 	end
 	entity_clearTargetPoints(me)
-	x,y = bone_getWorldPosition(body)
+	local x, y = bone_getWorldPosition(v.body)
 	entity_addTargetPoint(me, x, y)
-	if enraged then
+	if v.enraged then
 		dt = dt * 2
 	end
 	
-	if hitDelay > 0 then
-		hitDelay = hitDelay - dt
-		if hitDelay < 0 then
-			hitDelay = 0
+	if v.hitDelay > 0 then
+		v.hitDelay = v.hitDelay - dt
+		if v.hitDelay < 0 then
+			v.hitDelay = 0
 		end
 	end
 	
 	-- note also has to be set to the same value in sunkenmom
 	if entity_getHealth(me) < 220 and entity_getHealth(me) > 0 then
-		enraged = true
-		if almostDone then
+		v.enraged = true
+		if v.almostDone then
 			setSceneColor(1, 0.3, 0.3, 3)
 		else
 			setSceneColor(1, 0.7, 0.7, 3)
@@ -356,23 +356,23 @@ function update(me, dt)
 		entity_setState(me, STATE_IDLE)
 	end
 	if entity_isState(me, STATE_IDLE) then
-		attackTimer = attackTimer + dt
-		if (not enraged and attackTimer > 3) or (enraged and attackTimer > 2) then
+		v.attackTimer = v.attackTimer + dt
+		if (not v.enraged and v.attackTimer > 3) or (v.enraged and v.attackTimer > 2) then
 		
-			--hammerzone = entity_getNearestNode(n, "hammerzone")
-			dadjumpzone = entity_getNearestNode(me, "dadjumpzone")
+			--local hammerzone = entity_getNearestNode(v.n, "hammerzone")
+			local dadjumpzone = entity_getNearestNode(me, "dadjumpzone")
 			if node_isEntityIn(dadjumpzone, me) then
 				entity_setState(me, STATE_PREP2)
 			else
-				xdist = entity_x(n)-entity_x(me)
-				if math.abs(xdist)<500 and entity_y(n) > entity_y(me)-100 then
+				local xdist = entity_x(v.n)-entity_x(me)
+				if math.abs(xdist)<500 and entity_y(v.n) > entity_y(me)-100 then
 					if chance(50) then
 						entity_setState(me, STATE_PREP3)
 					else
 						entity_setState(me, STATE_ATTACK1)
 					end
 				else
-					if entity_y(n) > entity_y(me) - 400 then
+					if entity_y(v.n) > entity_y(me) - 400 then
 						if chance(40) then						
 							entity_setState(me, STATE_PREP2)
 						else
@@ -383,48 +383,48 @@ function update(me, dt)
 					end
 				end
 			end
-			attackTimer = 0
+			v.attackTimer = 0
 		end
 	end
 	if entity_isState(me, STATE_ATTACK3) and not entity_isInterpolating(me) then
 		entity_setState(me, STATE_IDLE)
 	end
 	
-	if entity_x(me) < node_x(dadMin) then
+	if entity_x(me) < node_x(v.dadMin) then
 		if entity_isState(me, STATE_ATTACK3) then
 			entity_setState(me, STATE_IDLE)
 		end
-		entity_setPositionX(me, node_x(dadMin))
+		entity_setPositionX(me, node_x(v.dadMin))
 	end
-	if entity_x(me) > node_x(dadMax) then
+	if entity_x(me) > node_x(v.dadMax) then
 		if entity_isState(me, STATE_ATTACK3) then
 			entity_setState(me, STATE_IDLE)
 		end
-		entity_setPositionX(me, node_x(dadMax))
+		entity_setPositionX(me, node_x(v.dadMax))
 	end
 	
 	--entity_updateSkeletal(me, dt)
 	
 	entity_handleShotCollisionsSkeletal(me)
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if bone ~= 0 then
 		avatar_fallOffWall()
 	
-		nx,ny = entity_getPosition(n)
-		cx,cy = entity_getPosition(me)
-		x = nx-cx
-		y = 0
+		local nx,ny = entity_getPosition(v.n)
+		local cx,cy = entity_getPosition(me)
+		local x = nx-cx
+		local y = 0
 		x,y = vector_setLength(x,y,2000)
-		entity_addVel(n, x, y)
-		dmg = 0.5
-		if enraged then
+		entity_addVel(v.n, x, y)
+		local dmg = 0.5
+		if v.enraged then
 			if entity_getHealth(me) < 220 then
 				dmg = 1.5
 			else
 				dmg = 1
 			end
 		end
-		entity_damage(n, me, dmg)
+		entity_damage(v.n, me, dmg)
 	end	
 end
 
@@ -434,27 +434,27 @@ end
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_animate(me, "idle", -1)
-		entity_flipToEntity(me, n)
+		entity_flipToEntity(me, v.n)
 	elseif entity_isState(me, STATE_PREP1) then
 		playSfx("sunkendad-roar")
 		entity_setStateTime(me, entity_animate(me, "prep1"))
 	elseif entity_isState(me, STATE_PREP2) then
 		playSfx("sunkendad-roar")
-		entity_flipToEntity(me, n)
+		entity_flipToEntity(me, v.n)
 		entity_setStateTime(me, entity_animate(me, "prep2"))
 	elseif entity_isState(me, STATE_PREP3) then
 		playSfx("sunkendad-roar")
 		entity_setStateTime(me, entity_animate(me, "prep3"))
-		entity_flipToEntity(me, n)
+		entity_flipToEntity(me, v.n)
 	elseif entity_isState(me, STATE_ATTACK1) then
-		entity_flipToEntity(me, n)
+		entity_flipToEntity(me, v.n)
 		entity_animate(me, "attack")
 	elseif entity_isState(me, STATE_ATTACK2) then
-		entity_flipToEntity(me, n)
+		entity_flipToEntity(me, v.n)
 		entity_animate(me, "attack2")
-		minJumpLen = 100
-		maxJumpLen = 600
-		dist = entity_x(n) - entity_x(me)
+		local minJumpLen = 100
+		local maxJumpLen = 600
+		local dist = entity_x(v.n) - entity_x(me)
 		if dist > maxJumpLen then
 			dist = maxJumpLen
 		end
@@ -467,14 +467,14 @@ function enterState(me)
 		if dist < -minJumpLen then
 			dist = -minJumpLen
 		end		
-		entity_setPosition(me, entity_x(n) + dist, entity_y(me), 1)
+		entity_setPosition(me, entity_x(v.n) + dist, entity_y(me), 1)
 		entity_offset(me, 0, -650, 0.5, 1, 1)
 	elseif entity_isState(me, STATE_ATTACK3) then
-		entity_flipToEntity(me, n)
+		entity_flipToEntity(me, v.n)
 		entity_animate(me, "attack3", -1)
-		chargeDist = 2000
-		spd = 1800
-		if entity_x(n) < entity_x(me) then
+		local chargeDist = 2000
+		local spd = 1800
+		if entity_x(v.n) < entity_x(me) then
 			entity_setPosition(me, entity_x(me) - chargeDist, entity_y(me), -1 * spd)
 		else
 			entity_setPosition(me, entity_x(me) + chargeDist, entity_y(me), -1 * spd)
@@ -486,22 +486,22 @@ function enterState(me)
 	elseif entity_isState(me, STATE_RAGE) then
 		entity_setStateTime(me, entity_animate(me, "rage"))
 		entity_color(me, 1, 0.5, 0.5, 3)
-		enraged = true
+		v.enraged = true
 		entity_setDamageTarget(me, DT_AVATAR_LIZAP, true)
 	elseif entity_isState(me, STATE_CALM) then
-		enraged = false
+		v.enraged = false
 		entity_setStateTime(me, entity_animate(me, "calm"))
 		entity_color(me, 1, 1, 1, 3)
 		entity_setDamageTarget(me, DT_AVATAR_LIZAP, false)
 	elseif entity_isState(me, STATE_DEATHSCENE) then
-		--entity_setStateTime(mom, 10)
+		--entity_setStateTime(v.mom, 10)
 		entity_setAllDamageTargets(me, false)
 		debugLog("DEATH SCENE!")
 		pickupGem("Boss-SunkenDad")
-		deathScene = true
+		v.deathScene = true
 		entity_animate(me, "die")
 		entity_setStateTime(me, -1)
-		entity_setState(mom, STATE_DEATHSCENE)
+		entity_setState(v.mom, STATE_DEATHSCENE)
 		entity_color(me, 1, 1, 1, 5)
 		entity_stopInterpolating(me)
 		entity_setPosition(me, entity_x(me), entity_y(me), 0.1)
@@ -509,19 +509,19 @@ function enterState(me)
 		toggleSteam(false)
 		
 	elseif entity_isState(me, STATE_START) then
-		started = true
+		v.started = true
 		entity_setStateTime(me, 0.1)
 	end
 end
 
 function exitState(me)
-	if entity_getEnqueuedState(me) == STATE_DEATHSCENE or entity_getEnqueuedState(me) == STATE_ENRAGED then
+	if entity_getEnqueuedState(me) == STATE_DEATHSCENE or entity_getEnqueuedState(me) == STATE_RAGE then
 		return
 	end
 	
 	if entity_isState(me, STATE_KISS) then
 		entity_setState(me, STATE_IDLE)
-		attackTimer = -1
+		v.attackTimer = -1
 	elseif entity_isState(me, STATE_RAGE) then
 		entity_setState(me, STATE_IDLE)
 	elseif entity_isState(me, STATE_PREP2) then
@@ -540,23 +540,23 @@ function damage(me, attacker, bone, damageType, dmg)
 	return true
 	]]--
 
-	if enraged then
-		if hitDelay == 0 then
+	if v.enraged then
+		if v.hitDelay == 0 then
 			playSfx("sunkendad-hit")
-			hitDelay = 0.5
+			v.hitDelay = 0.5
 		end
-		if ((entity_getHealth(me) - dmg) < 220) and not lastPhase then
-			lastPhase = true
+		if ((entity_getHealth(me) - dmg) < 220) and not v.lastPhase then
+			v.lastPhase = true
 			playMusic("mithalaanger")
 			fade2(1, 0, 1, 1, 1)
 			fade2(0, 0.5, 1, 1, 1)
 			
-			if entity_isState(mom, STATE_WEAK) then
-				entity_setStateTime(mom, 4)
+			if entity_isState(v.mom, STATE_WEAK) then
+				entity_setStateTime(v.mom, 4)
 			end
 		end
-		if ((entity_getHealth(me) - dmg) < 100) and not almostDone then
-			almostDone = true
+		if ((entity_getHealth(me) - dmg) < 100) and not v.almostDone then
+			v.almostDone = true
 			playMusic("mithalapeace")
 			fade2(1, 0, 1, 1, 1)
 			fade2(0, 0.5, 1, 1, 1)

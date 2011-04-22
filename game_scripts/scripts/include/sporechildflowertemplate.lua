@@ -17,11 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-openTimer = 8
+v.openTimer = 8
 
-function commonInit(me, gfx)
+function v.commonInit(me, gfx)
 	setupEntity(me)
 	entity_setEntityType(me, ET_ENEMY)
 	entity_setName(me, "SporeChildFlower")
@@ -37,29 +37,13 @@ end
 function postInit(me)
 end
 
-function commonUpdate(me, dt)
+function v.commonUpdate(me, dt)
 	if entity_isState(me, STATE_OPEN) and not entity_isAnimating(me) then
 		entity_setState(me, STATE_OPENED)
 	end
 	if entity_isState(me, STATE_CLOSE) and not entity_isAnimating(me) then
 		entity_setState(me, STATE_CLOSED)
 	end	
-	if entity_isState(me, STATE_IDLE) or entity_isState(me, STATE_CLOSED) then
-		iter = 0
-		ent = getEntity(iter)
-		while ent~=0 do
-			if entity_getAnimationName(ent)=="openFlower" then
-				if entity_isEntityInRange(me, ent, 128) then
-					openTimer = openTimer - dt
-				end
-			end
-			iter = iter + 1
-			ent = getEntity(iter)
-		end
-		if openTimer < 0 then
-			entity_setState(me, STATE_OPEN)
-		end
-	end
 end
 
 function songNote(me, note)
@@ -93,7 +77,7 @@ end
 function songNoteDone(me, note, len)
 end
 
-function commonEnterState(me, state)
+function v.commonEnterState(me, state)
 	if entity_isState(me, STATE_OPEN) then
 		playSfx("plant-open")
 		entity_animate(me, "open")

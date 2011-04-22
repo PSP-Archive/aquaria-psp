@@ -17,11 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- L A R G E   I C E   C H U N K
 -- ================================================================================================
 dofile("scripts/entities/icechunkcommon.lua")
 
 function init(me)
-	commonInit(me, 0)
+	v.commonInit(me, 0)
 end

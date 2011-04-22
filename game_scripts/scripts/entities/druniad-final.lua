@@ -17,9 +17,10 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/finalspiritcommon.lua")
 
 function init(me)
-	commonInit(me, "Druniad", 2, FLAG_SPIRIT_DRUNIAD, 0, 1, 0)
+	v.commonInit(me, "Druniad", 2, FLAG_SPIRIT_DRUNIAD, 0, 1, 0)
 end
-

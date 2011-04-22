@@ -17,16 +17,18 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- generic collectible costume
 
 dofile("scripts/include/collectibletemplate.lua")
 
-on = false
-cname = ""
+v.on = false
+v.cname = ""
 
-function commonInit2(me, gfx, flag, costumeName)
-	commonInit(me, gfx, flag, true)
-	cname = costumeName
+function v.commonInit2(me, gfx, flag, costumeName)
+	v.commonInit(me, gfx, flag, true)
+	v.cname = costumeName
 	entity_setEntityLayer(me, -1)
 	
 	-- cached now
@@ -35,25 +37,25 @@ function commonInit2(me, gfx, flag, costumeName)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
-		if getCostume() == cname then
-			if on then
+		if getCostume() == v.cname then
+			if v.on then
 				entity_alpha(me, 0.5)
-				on = false
+				v.on = false
 			end
 		else
-			if not on then
+			if not v.on then
 				entity_alpha(me, 1)
-				on = true
+				v.on = true
 			end
 		end
 	end
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		entity_setActivation(me, AT_CLICK, 32, 700)
 	end
@@ -66,7 +68,7 @@ function activate(me)
 		if not isForm(FORM_NORMAL) then
 			changeForm(FORM_NORMAL)
 		end
-		node = getNodeByName("CHANGE")
+		local node = getNode("CHANGE")
 		avatar_fallOffWall()
 		watch(0.5)
 		entity_swimToNode(getNaija(), node)
@@ -84,10 +86,10 @@ function activate(me)
 		
 		watch(0.6)
 		playSfx("ChangeClothes1")
-		if getCostume() == cname then
+		if getCostume() == v.cname then
 			setCostume("")
 		else
-			setCostume(cname)
+			setCostume(v.cname)
 		end	
 		while entity_isAnimating(getNaija()) do
 			watch(FRAME_TIME)
@@ -98,7 +100,7 @@ function activate(me)
 
 		--watch(0.5)
 		entity_setColor(getNaija(), 1, 1, 1, 0.5)
-		entity_swimToNode(getNaija(), getNodeByName("CHANGEEXIT"))
+		entity_swimToNode(getNaija(), getNode("CHANGEEXIT"))
 		entity_watchForPath(getNaija())	
 		if chance(50) then
 			emote(EMOTE_NAIJAGIGGLE)
@@ -107,5 +109,5 @@ function activate(me)
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

@@ -17,7 +17,7 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
 function init()
 	if isFlag(FLAG_SUNTEMPLE_WATERLEVEL, 0) then
@@ -29,11 +29,11 @@ function init()
 	end
 	debugLog(string.format("SunTemple: FLAG_SUNTEMPLE_WATERLEVEL was %d", getFlag(FLAG_SUNTEMPLE_WATERLEVEL)))
 	if isFlag(FLAG_SUNTEMPLE_LIGHTCRYSTAL, 1) then
-		node = entity_getNearestNode(getNaija(), "LIGHTCRYSTAL_SPAWN")
+		local node = entity_getNearestNode(getNaija(), "LIGHTCRYSTAL_SPAWN")
 		if node ~= 0 then
 			createEntity("LightCrystalCharged", "", node_x(node), node_y(node))
 		end
-		crystalHolder = getEntity("CrystalHolder")
+		local crystalHolder = getEntity("CrystalHolder")
 		if crystalHolder ~=0 then
 			entity_delete(crystalHolder)
 		end

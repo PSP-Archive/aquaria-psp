@@ -17,36 +17,36 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- M A U L
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-
 -- entity specific
-STATE_MAULATTACK 		= 1000
-STATE_PULLBACK 			= 1001
-STATE_ATTACKPREP		= 1002
+local STATE_MAULATTACK 		= 1000
+local STATE_PULLBACK 			= 1001
+local STATE_ATTACKPREP		= 1002
 
-n = 0
+v.n = 0
 
-add = math.random(50)
+v.minCap = 400
+v.maxCap = 700
+v.cap = v.minCap
 
-minCap = 400
-maxCap = 700
-cap = minCap
+v.deathtimer = 20
 
-deathtimer = 20
+v.cr = 8
 
-cr = 8
-
-lungeDelay = 2
+v.lungeDelay = 2
 
 -- ================================================================================================
 -- FUNCTIONS
 -- ================================================================================================
 
 function init(me)
+	v.add = math.random(50)
+
 	setupBasicEntity(
 	me,
 	"Maul",					-- texture
@@ -54,7 +54,7 @@ function init(me)
 	1,								-- manaballamount
 	1,								-- exp
 	1,								-- money
-	cr,								-- collideRadius 
+	v.cr,								-- collideRadius 
 	STATE_IDLE,						-- initState
 	128,							-- sprite width	
 	128,							-- sprite height
@@ -63,7 +63,7 @@ function init(me)
 	4000							-- updateCull -1: disabled, default: 4000
 	)
 	
-	deathtimer = deathtimer + math.random(20)
+	v.deathtimer = v.deathtimer + math.random(20)
 	entity_scale(me, 1.5, 1.5)
 	--entity_setDropChance(me, 50)
 	--entity_scale(me, 0.9, 0.9)	
@@ -78,42 +78,43 @@ function update(me, dt)
 	]]--
 	
 	if entity_getState(me) == STATE_IDLE then
-		cap = cap - dt*400
-		if cap < minCap then
-			cap = minCap
+		v.cap = v.cap - dt*400
+		if v.cap < v.minCap then
+			v.cap = v.minCap
 		end
+		local add = v.add
 		if isLeftMouse() then
-			cap = maxCap
+			v.cap = v.maxCap
 			add = 600
 		end
 		--entity_doCollisionAvoidance(me, dt, 4, 0.5)
 		entity_doEntityAvoidance(me, dt, 16, 0.5)
 
-		e = entity_getNearestEntity(me, "BigMaul", 1400)
+		local e = entity_getNearestEntity(me, "BigMaul", 1400)
 		
 		if e ~= 0 then
-			x = entity_x(e)
-			y = entity_y(e)
+			local x = entity_x(e)
+			local y = entity_y(e)
 			entity_moveTowards(me, x, y, dt, 800+add)
 		
-			vx = entity_velx(me)
-			vy = entity_vely(me)
+			local vx = entity_velx(me)
+			local vy = entity_vely(me)
 		
-			vx, vy = vector_cap(vx, vy, cap)
+			vx, vy = vector_cap(vx, vy, v.cap)
 			entity_clearVel(me)
 			entity_addVel(me, vx, vy)
 	
 			entity_setPosition(me, entity_x(me) + entity_velx(me)*dt, entity_y(me)+entity_vely(me)*dt)
 		else
-			deathtimer = deathtimer - dt*2
+			v.deathtimer = v.deathtimer - dt*2
 			entity_setPosition(me, entity_x(me) + entity_velx(me)*dt, entity_y(me)+entity_vely(me)*dt)
 		end
 
 		--entity_updateMovement(me, dt)
 		entity_rotateToVel(me)
 
-		if lungeDelay > 0 then
-			lungeDelay = lungeDelay - dt
+		if v.lungeDelay > 0 then
+			v.lungeDelay = v.lungeDelay - dt
 		else
 			if not entity_hasTarget(me) then
 				entity_findTarget(me, 800)
@@ -165,15 +166,15 @@ function update(me, dt)
 
 	
 	
-	deathtimer = deathtimer - dt
-	--debugLog(deathtimer)
-	if deathtimer < 1 then
+	v.deathtimer = v.deathtimer - dt
+	--debugLog(v.deathtimer)
+	if v.deathtimer < 1 then
 		entity_setState(me, STATE_DEAD)
 	end
 	
 	
 	entity_handleShotCollisions(me)
-	entity_touchAvatarDamage(me, cr, 0.5, 100)
+	entity_touchAvatarDamage(me, v.cr, 0.5, 100)
 end
 
 function enterState(me)
@@ -187,7 +188,7 @@ function enterState(me)
 	elseif entity_getState(me)==STATE_MAULATTACK then
 		entity_setMaxSpeed(me, 800)
 		entity_setMaxSpeedLerp(me, 1.1, 0)
-		lungeDelay = 1
+		v.lungeDelay = 1
 		entity_moveTowardsTarget(me, 1, 1000)
 	elseif entity_getState(me)==STATE_PULLBACK then
 		entity_setMaxSpeed(me, 550)

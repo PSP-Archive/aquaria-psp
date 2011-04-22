@@ -17,30 +17,30 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- R U K H
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 -- ================================================================================================
 -- S T A T E S
 -- ================================================================================================
 
-STATE_NESTING = 1001
-STATE_STARTLED = 1002
-STATE_HOVERING = 1003
-STATE_FLYING = 1004
+local STATE_NESTING = 1001
+local STATE_STARTLED = 1002
+local STATE_HOVERING = 1003
+local STATE_FLYING = 1004
 
 -- ================================================================================================
 -- L O C A L   V A R I A B L E S 
 -- ================================================================================================
 
-startX = 0
-startY = 0
-startRot = 0
+v.startX = 0
+v.startY = 0
+v.startRot = 0
 
-hitCount = 12
+v.hitCount = 12
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -70,29 +70,29 @@ function init(me)
 	entity_setDropChance(me, 100)
 	
 	entity_initSkeletal(me, "Rukh")
-	backLeg = entity_getBoneByName(me, "BackLeg")
-	backWing = entity_getBoneByName(me, "BackWing")
-	bone_body = entity_getBoneByName(me, "Body")
-	bone_neck = entity_getBoneByName(me, "Neck")
+	v.backLeg = entity_getBoneByName(me, "BackLeg")
+	v.backWing = entity_getBoneByName(me, "BackWing")
+	v.bone_body = entity_getBoneByName(me, "Body")
+	v.bone_neck = entity_getBoneByName(me, "Neck")
 	
-	cl = 0.56
-	bone_color(backLeg, cl, cl, cl)
-	bone_color(backWing, cl, cl, cl)
+	local cl = 0.56
+	bone_setColor(v.backLeg, cl, cl, cl)
+	bone_setColor(v.backWing, cl, cl, cl)
 	
 	entity_setCullRadius(me, 456)
 	
 	entity_setCanLeaveWater(me, true)
 	esetv(me, EV_COLLIDELEVEL, 1)
 	
-	startX, startY = entity_getPosition(me)
-	startRot = entity_getRotation(me)
+	v.startX, v.startY = entity_getPosition(me)
+	v.startRot = entity_getRotation(me)
 end
 
 function postInit(me)
 	entity_setState(me, STATE_NESTING)
 	
 	-- FLIP HORIZONTALLY IF THERE'S A FLIP NODE
-	node = entity_getNearestNode(me, "FLIP")
+	local node = entity_getNearestNode(me, "FLIP")
 	if node ~=0 then
 		if node_isEntityIn(node, me) then 
 			entity_fh(me)
@@ -130,7 +130,7 @@ function update(me, dt)
 		end
 		
 		-- FLY AWAY WHEN SHOT ENOUGH
-		if hitCount <= 0 then
+		if v.hitCount <= 0 then
 			entity_setState(me, STATE_FLYING)
 			spawnIngredient("RukhEgg", entity_x(me), entity_y(me))
 			spawnParticleEffect("RukhFeathers", entity_x(me), entity_y(me))
@@ -189,11 +189,11 @@ end
 function enterState(me)
 	if entity_getState(me) == STATE_NESTING then
 		entity_setHealth(me, 21)
-		hitCount = 12
+		v.hitCount = 12
 		entity_animate(me, "nesting", LOOP_INF)
 		entity_clearVel(me)
-		entity_setPosition(me, startX, startY, 2, 0, 0, 1)
-		entity_rotateTo(me, startRot, 2)
+		entity_setPosition(me, v.startX, v.startY, 2, 0, 0, 1)
+		entity_rotateTo(me, v.startRot, 2)
 		
 	elseif entity_getState(me) == STATE_STARTLED then
 		entity_setStateTime(me, entity_animate(me, "startled"))
@@ -230,9 +230,9 @@ function damage(me, attacker, bone, damageType, dmg, x, y)
 	if entity_getState(me) == STATE_NESTING then
 		entity_setState(me, STATE_STARTLED) 
 	else
-		hitCount = hitCount - 1
-		bone_damageFlash(bone_body)
-		bone_damageFlash(bone_neck)
+		v.hitCount = v.hitCount - 1
+		bone_damageFlash(v.bone_body)
+		bone_damageFlash(v.bone_neck)
 	end
 	
 	spawnParticleEffect("RukhFeathers", x, y)

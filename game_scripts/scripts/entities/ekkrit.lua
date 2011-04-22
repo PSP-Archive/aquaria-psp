@@ -17,34 +17,34 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- EEL
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 -- ================================================================================================
 -- FUNCTIONS
 -- ================================================================================================
 
-dir = 0
-switchDirDelay = 0
-wiggleTime = 0
-wiggleDir = 1
-interestTimer = 0
-colorRevertTimer = 0
+v.dir = 0
+v.switchDirDelay = 0
+v.wiggleTime = 0
+v.wiggleDir = 1
+v.interestTimer = 0
+v.colorRevertTimer = 0
 
-collisionSegs = 25
-avoidLerp = 0
-avoidDir = 1
-interest = false
-STATE_AROUND = 1001
-dir = 0
-idleDelay = 3
+v.collisionSegs = 25
+v.avoidLerp = 0
+v.avoidDir = 1
+v.interest = false
+local STATE_AROUND = 1001
+v.dir = 0
+v.idleDelay = 3
 
-n = 0
+v.n = 0
 
-bone_body = 0
+v.bone_body = 0
 
 -- initializes the entity
 function init(me)
@@ -68,8 +68,6 @@ function init(me)
 	
 	entity_setDropChance(me, 50)
 	
-	lungeDelay = 1.0				-- prevent the nautilus from attacking right away
-
 	entity_initHair(me, 64, 8, 64, "ekkrit/tail")
 	--[[
 	entity_initSegments(
@@ -86,16 +84,16 @@ function init(me)
 	]]--
 	
 	if chance(50) then
-		dir = 0
+		v.dir = 0
 	else
-		dir = 1
+		v.dir = 1
 	end
 	
 	if chance(50) then
-		interest = true
+		v.interest = true
 	end
-	switchDirDelay = math.random(800)/100.0
-	naija = getNaija()
+	v.switchDirDelay = math.random(800)/100.0
+	v.naija = getNaija()
 	
 	entity_addVel(me, math.random(1000)-500, math.random(1000)-500)
 	entity_setDeathParticleEffect(me, "Explode")
@@ -109,7 +107,7 @@ function init(me)
 	entity_setDamageTarget(me, DT_AVATAR_LIZAP, false)
 	entity_setDamageTarget(me, DT_AVATAR_PET, false)
 	
-	bone_body = entity_getBoneByName(me, "Body")
+	v.bone_body = entity_getBoneByName(me, "Body")
 	
 	loadSound("EkkritCall")
 	loadSound("EkkritHit")
@@ -117,30 +115,30 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
-lastRot = 0
-timer = 0
+v.lastRot = 0
+v.timer = 0
 -- the entity's main update function
 function update(me, dt)
-	idleDelay = idleDelay - dt
-	if idleDelay < 0 then
+	v.idleDelay = v.idleDelay - dt
+	if v.idleDelay < 0 then
 		entity_sound(me, "EkkritIdle", (math.random(300)+800)/1000.0)
-		idleDelay = math.random(3) + 3
+		v.idleDelay = math.random(3) + 3
 	end
 	if entity_isState(me, STATE_AROUND) then
 		dt = dt * 1.5
 	end
-	if colorRevertTimer > 0 then
-		colorRevertTimer = colorRevertTimer - dt
-		if colorRevertTimer < 0 then
+	if v.colorRevertTimer > 0 then
+		v.colorRevertTimer = v.colorRevertTimer - dt
+		if v.colorRevertTimer < 0 then
 			entity_setColor(me, 1, 1, 1, 3)
 		end
 	end
 	
 
-	--entity_handleShotCollisionsHair(me, collisionSegs)
+	--entity_handleShotCollisionsHair(me, v.collisionSegs)
 	-- in idle state only
 	if entity_getState(me)==STATE_IDLE then		
 		entity_doCollisionAvoidance(me, dt, 16, 0.05)
@@ -153,30 +151,30 @@ function update(me, dt)
 		-- has target
 		if entity_isState(me, STATE_IDLE) then
 			--debugLog(string.format("timer: %f", timer))
-			t = 6
-			if entity_getRotation(me) > lastRot then
-				timer = timer + dt 
-				if timer > t then
-					dir = 1
+			local t = 6
+			if entity_getRotation(me) > v.lastRot then
+				v.timer = v.timer + dt 
+				if v.timer > t then
+					v.dir = 1
 					entity_setState(me, STATE_AROUND)
-					timer = 0	
+					v.timer = 0	
 				end
-			elseif entity_getRotation(me) < lastRot then
-				timer = timer - dt
-				if timer < -t then
-					dir = 0
+			elseif entity_getRotation(me) < v.lastRot then
+				v.timer = v.timer - dt
+				if v.timer < -t then
+					v.dir = 0
 					entity_setState(me, STATE_AROUND)
-					timer = 0
+					v.timer = 0
 				end
 			end
-			lastRot = entity_getRotation(me)
+			v.lastRot = entity_getRotation(me)
 			if entity_isNearObstruction(entity_getTarget(me), 4) then
 				entity_moveTowardsTarget(me, dt, -100)
 			else
 				entity_moveTowardsTarget(me, dt, 500)
 			end
 		elseif entity_isState(me, STATE_AROUND) then
-			entity_moveAroundTarget(me, dt, 5000, dir)
+			entity_moveAroundTarget(me, dt, 5000, v.dir)
 			entity_doCollisionAvoidance(me, dt, 16, 0.5)
 			entity_doCollisionAvoidance(me, dt, 4, 1.0)
 		end
@@ -189,21 +187,21 @@ function update(me, dt)
 	entity_handleShotCollisionsSkeletal(me)
 	
 	--[[
-	if entity_collideHairVsCircle(me, naija, collisionSegs) then
+	if entity_collideHairVsCircle(me, v.naija, v.collisionSegs) then
 		entity_touchAvatarDamage(me, 0, 0, 500)
 	end
 	]]--
 
-	bone = entity_collideSkeletalVsCircle(me, naija)
+	local bone = entity_collideSkeletalVsCircle(me, v.naija)
 	if bone ~= 0 then
-		if avatar_isBursting() and bone == bone_body and entity_setBoneLock(n, me, bone) then
+		if avatar_isBursting() and bone == v.bone_body and entity_setBoneLock(v.n, me, bone) then
 		else
-			bx, by = bone_getWorldPosition(bone)
-			x, y = entity_getPosition(n)
+			local bx, by = bone_getWorldPosition(bone)
+			local x, y = entity_getPosition(v.n)
 			x = x - bx
 			y = y - by
 			x,y = vector_setLength(x, y, 800)
-			entity_addVel(n, x, y)
+			entity_addVel(v.n, x, y)
 		end
 	end
 end
@@ -245,7 +243,7 @@ function damage(me, attacker, bone, damageType, dmg)
 	entity_setMaxSpeedLerp(me, 1, 3)
 	entity_addVel(me, entity_velx(me)*2, entity_vely(me)*2)
 	entity_doSpellAvoidance(me, 1, 32, 1)
-	timer = 0
+	v.timer = 0
 	return true
 end
 

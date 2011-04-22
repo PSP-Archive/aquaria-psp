@@ -17,37 +17,37 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-didInit = false
-done = false
-door = 0
+v.didInit = false
+v.done = false
+v.door = 0
 
 function init(me)
-	door = node_getNearestEntity(me, "EnergyDoor")
+	v.door = node_getNearestEntity(me, "EnergyDoor")
 end
 
-function doInit(me)
+local function doInit(me)
 	debugLog("Setting door to opened")
-	--entity_setState(door, STATE_OPENED, -1, true)
-	entity_setState(door, STATE_OPENED)
+	--entity_setState(v.door, STATE_OPENED, -1, true)
+	entity_setState(v.door, STATE_OPENED)
 end
 
 function update(me, dt)
-	if not didInit then
+	if not v.didInit then
 		doInit(me)
-		didInit = true
+		v.didInit = true
 	end
 	
-	if not done then
+	if not v.done then
 		if getFlag(FLAG_SUNKENCITY_PUZZLE) < SUNKENCITY_BOSSDONE then
 			if node_isEntityIn(me, getNaija()) then
 				debugLog("closing door")
-				entity_setState(door, STATE_CLOSE, -1, true)
-				--if entity_isState(door, STATE_CLOSE) then
-					--done = true			
+				entity_setState(v.door, STATE_CLOSE, -1, true)
+				--if entity_isState(v.door, STATE_CLOSE) then
+					--v.done = true			
 				--end
-				done = true
+				v.done = true
 			end
 		end
 	end

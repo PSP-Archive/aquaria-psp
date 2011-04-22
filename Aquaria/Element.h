@@ -78,7 +78,8 @@ public:
 	//InteractionContainer interactions;
 	int templateIdx;
 	int bgLayer;
-	double getSortDepth();
+	Element *bgLayerNext;
+	float getSortDepth();
 	bool dontSave;
 	void render();
 	//Flags elementFlags;
@@ -108,7 +109,7 @@ class BoxElement : public Element
 {
 public:
 	BoxElement(int width, int height);
-	bool isOnScreen();
+	//bool isOnScreen();
 protected:
 	int ww,hh;
 };

@@ -17,10 +17,10 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-singDelay = 0
+v.n = 0
+v.singDelay = 0
 
 function init(me)
 	setupEntity(me)
@@ -41,14 +41,14 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
-	if not hasSong(SONG_DUALFORM) and entity_isEntityInRange(me, n, 600) then	
-		singDelay = singDelay - dt
-		if singDelay < 0 then
-			singDelay = 10
+	if not hasSong(SONG_DUALFORM) and entity_isEntityInRange(me, v.n, 600) then	
+		v.singDelay = v.singDelay - dt
+		if v.singDelay < 0 then
+			v.singDelay = 10
 			debugLog("singing")
 			playSfx("DualFormSong")
 		end
@@ -80,21 +80,21 @@ end
 function songNoteDone(me, note)
 end
 
-function freeLi(me)
+local function freeLi(me)
 --[[
-	entity_flipToEntity(n, li)
+	entity_flipToEntity(v.n, li)
 	if isFlag(FLAG_SPIRIT_ERULIAN, 1) and isFlag(FLAG_SPIRIT_KROTITE, 1) and isFlag(FLAG_SPIRIT_DRUNIAD, 1) and isFlag(FLAG_SPIRIT_DRASK, 1) then
 		debugLog("FREE LI!")
 		if not hasLi() then
 			li = entity_getNearestEntity(me, "Li")
-			if li ~= 0 and entity_isEntityInRange(n, li, 512) then
+			if li ~= 0 and entity_isEntityInRange(v.n, li, 512) then
 				cam_toEntity(li)
 				watch(2)
 				setFlag(FLAG_LI, 100)
 				entity_setState(li, STATE_IDLE)
 				setLi(li)
 				watch(2)
-				cam_toEntity(n)
+				cam_toEntity(v.n)
 				setFlag(FLAG_FINAL, FINAL_FREEDLI)
 				learnSong(SONG_DUALFORM)
 			end
@@ -110,19 +110,19 @@ function song(me, song)
 	end
 end
 --[[
-curNote = 0
+v.curNote = 0
 function songNoteDone(me, note)
-	if curNote == 0 and note == 1 then
-		curNote = 1
+	if v.curNote == 0 and note == 1 then
+		v.curNote = 1
 	elseif curNote == 1 and note == 3 then
-		curNote = 2
+		v.curNote = 2
 	elseif curNote == 2 and note == 4 then
-		curNote = 3
+		v.curNote = 3
 	elseif curNote == 3 and note == 5 then
-		curNote = 4
+		v.curNote = 4
 		freeLi(me)
 	else
-		curNote = 0
+		v.curNote = 0
 	end
 end
 ]]--

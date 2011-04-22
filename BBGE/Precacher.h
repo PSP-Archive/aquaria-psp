@@ -28,11 +28,12 @@ public:
 	Precacher();
 	~Precacher();
 	void precacheTex(const std::string &tex);
-	void precacheList(const std::string &list);
+	void precacheList(const std::string &list, void progressCallback() = NULL);
 	void clean();
 	void loadTextureRange(const std::string &file, const std::string &type, int start, int end);
 
 	std::vector<RenderObject*> renderObjects;
 private:
 	bool cleaned;
+	void (*loadProgressCallback)();
 };

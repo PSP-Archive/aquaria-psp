@@ -17,26 +17,26 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- WHELK
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
-hasShell = true
-pullTime = 0.4
-escapeTimer = 0
-escaping = false
-isShell = false
-dir = -1
-bone_shell = 0
-bone_body = 0
-moveTimer = 0
+v.hasShell = true
+v.pullTime = 0.4
+v.escapeTimer = 0
+v.escaping = false
+v.isShell = false
+v.bone_shell = 0
+v.bone_body = 0
+v.moveTimer = 0
 
  
-function commonInit(me, shell)
-	hasShell = shell
+function v.commonInit(me, shell)
+	v.hasShell = shell
 	
-	layer = 1
+	local layer = 1
 	if not shell then
 		layer = 0
 	end
@@ -62,19 +62,19 @@ function commonInit(me, shell)
 	entity_setMaxSpeed(me, 300)
 	entity_setEntityType(me, ET_ENEMY)
 	
-	bone_shell = entity_getBoneByName(me, "Shell")
-	bone_body = entity_getBoneByName(me, "Body")
+	v.bone_shell = entity_getBoneByName(me, "Shell")
+	v.bone_body = entity_getBoneByName(me, "Body")
 	
 	entity_setAllDamageTargets(me, false)
 	
-	bone_setSegs(bone_body)
+	bone_setSegs(v.bone_body)
 	
-	if hasShell then
+	if v.hasShell then
 		entity_setDamageTarget(me, DT_AVATAR_SHOCK, false)
 		entity_setProperty(me, EP_MOVABLE, true)
 	else
 		entity_setAllDamageTargets(me, true)
-		bone_alpha(bone_shell, 0, 0.1)
+		bone_alpha(v.bone_shell, 0, 0.1)
 		entity_setDeathSound(me, "squishy-die")
 	end
 	entity_setDeathParticleEffect(me, "tinyyellowexplode")
@@ -89,55 +89,55 @@ end
 function update(me, dt)
 	entity_handleShotCollisions(me)
 	
-	if isShell then
+	if v.isShell then
 		entity_setDamageTarget(me, DT_AVATAR_LIZAP, false)
 		entity_setDamageTarget(me, DT_AVATAR_PET, false)
 	end
 	
-	if not isShell then
-		if hasShell then
+	if not v.isShell then
+		if v.hasShell then
 			entity_moveAlongSurface(me, dt, 40, 6, 30)
 		else
 			entity_moveAlongSurface(me, dt, 120, 6, 30)
 		end
 		entity_rotateToSurfaceNormal(me, 0.2)
-		moveTimer = moveTimer + dt
-		if moveTimer > 10 then
+		v.moveTimer = v.moveTimer + dt
+		if v.moveTimer > 10 then
 			entity_switchSurfaceDirection(me)
-			moveTimer = 0
+			v.moveTimer = 0
 		end		
 	else
 		entity_updateMovement(me, dt)
 	end
 	
-	if hasShell then
+	if v.hasShell then
 		entity_touchAvatarDamage(me, 60, 1, 1200)
 	else
 		entity_touchAvatarDamage(me, 60, 0, 1200)
 	end
-	if hasShell then
+	if v.hasShell then
 		if entity_isBeingPulled(me) then
-			x, y = entity_getVectorToEntity(getNaija(), me)
-			--if not vector_isLength2DIn(x, y, 300) and not escaping then
+			local x, y = entity_getVectorToEntity(getNaija(), me)
+			--if not vector_isLength2DIn(x, y, 300) and not v.escaping then
 			if true then
 				entity_animate(me, "shellQuiver", LOOP_INF)
-				pullTime = pullTime - dt
-				if pullTime < 0 then
+				v.pullTime = v.pullTime - dt
+				if v.pullTime < 0 then
 					entity_animate(me, "idle", LOOP_INF)
 					entity_applySurfaceNormalForce(me, 800)
 					entity_adjustPositionBySurfaceNormal(me, 64)
-					hasShell = false
-					isShell = true
+					v.hasShell = false
+					v.isShell = true
 					
 					playSfx("popshell")
 					
 					avatar_setPullTarget(0)
 					--entity_setProperty(me, EP_MOVABLE, false)
 					
-					bone_alpha(bone_body, 0, 0.1)
+					bone_alpha(v.bone_body, 0, 0.1)
 					entity_setWeight(me, 300)
 
-				p = randRange(1, 100)
+				local p = randRange(1, 100)
 				if p >= 1 and p <= 2 then
 					spawnIngredient("LeechingPoultice", entity_x(me), entity_y(me))
 				elseif p >= 3 and p <= 4 then
@@ -154,7 +154,7 @@ function update(me, dt)
 				entity_animate(me, "idle", LOOP_INF)
 			end
 			--[[
-			if hasShell then
+			if v.hasShell then
 				if x ~= 0 or y ~= 0 then
 					x, y = vector_setLength(x, y, 2000*dt)
 					entity_addVel(getNaija(), x, y)
@@ -169,7 +169,7 @@ end
 
 function enterState(me)
 	if entity_getState(me) == STATE_IDLE then
-		bone_setSegs(bone_body, 4, 4, 0.54, 0.54, -0.022, 0, 4.3, 1)
+		bone_setSegs(v.bone_body, 4, 4, 0.54, 0.54, -0.022, 0, 4.3, 1)
 	end
 end
 
@@ -180,7 +180,7 @@ function hitSurface(me)
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if hasShell or isShell then
+	if v.hasShell or v.isShell then
 		return false
 	end
 	return true

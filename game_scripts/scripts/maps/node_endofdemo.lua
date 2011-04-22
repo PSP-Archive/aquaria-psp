@@ -17,20 +17,20 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-done = false
+v.n = 0
+v.done = false
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
-	if not done and node_isEntityIn(me, n) then
-		done = true
+	if not v.done and node_isEntityIn(me, v.n) then
+		v.done = true
 		if isDemo() then
-			entity_idle(n)
+			entity_idle(v.n)
 			setGameSpeed(0.5, 1)
 			watch(1)
 			centerText(getStringBank(850))

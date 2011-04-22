@@ -17,24 +17,24 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- S L I P P E R  L O B S T E R
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-speed = 150
-delay = 0.5
-rotate = 0
-moveaway = 0
+v.speed = 150
+v.delay = 0.5
+v.rotate = 0
+v.moveaway = 0
 
-STATE_ROTATE = 1000
-STATE_WALK = 1001
-STATE_MOVEAWAY = 1002
+local STATE_ROTATE = 1000
+local STATE_WALK = 1001
+local STATE_MOVEAWAY = 1002
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -67,8 +67,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	--entity_setTarget(me, n)
+	v.n = getNaija()
+	--entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -76,8 +76,8 @@ function update(me, dt)
 		entity_setState(me, STATE_WALK)
 	elseif entity_isState(me, STATE_ROTATE) then
 		entity_rotate(me, entity_getRotation(me)-90*dt)
-		rotate = rotate + dt
-		if rotate >= 1 then
+		v.rotate = v.rotate + dt
+		if v.rotate >= 1 then
 			debugLog(entity_getRotation(me))
 			if entity_getRotation(me) > 45 and entity_getRotation(me) < 135 then
 				entity_rotate(me, 90)
@@ -90,16 +90,16 @@ function update(me, dt)
 				debugLog("FUCK")
 			end
 
-			rotate = 0
+			v.rotate = 0
 
 			entity_setState(me, STATE_WALK)
 		end
 	elseif entity_isState(me, STATE_WALK) then
 
-		coll = 0
+		local coll = 0
 
 		-- WALL COLLISION CHECK
-		vx, vy = entity_getNormal(me)
+		local vx, vy = entity_getNormal(me)
 		vx, vy = vector_setLength(vx, vy, 2.5)
 
 		if isObstructedBlock(entity_x(me) + vx*65, entity_y(me) + vy*65, 2) then
@@ -108,14 +108,14 @@ function update(me, dt)
 		end
 
 		if coll == 0 then
-			vx, vy = vector_setLength(vx, vy, speed*dt)
+			vx, vy = vector_setLength(vx, vy, v.speed*dt)
 			entity_setPosition(me, entity_x(me) + vx, entity_y(me) + vy)
 		end
 
-		rangeNode = entity_getNearestNode(me, "KILLENTITY")
+		local rangeNode = entity_getNearestNode(me, "KILLENTITY")
 		if node_isPositionIn(rangeNode, entity_x(me), entity_y(me)) then
 			debugLog("DIEEE")
-			entity_setState(me, STATE_DIE)
+			entity_setState(me, STATE_DEAD)
 		end
 	else
 		entity_setState(me, STATE_IDLE)

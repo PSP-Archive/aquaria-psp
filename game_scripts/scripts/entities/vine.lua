@@ -17,13 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- SPORE SEED
 
-dofile("scripts/entities/entityinclude.lua")
-
-growEmitter = 0
-done = false
-lifeTime = 0
+v.growEmitter = 0
+v.done = false
+v.lifeTime = 0
 
 function init(me)
 	setupEntity(me)
@@ -34,13 +34,13 @@ function init(me)
 	]]--
 	entity_setEntityLayer(me, -1)
 	
-	entity_initEmitter(me, growEmitter, "SporeSeedGrow")
+	entity_initEmitter(me, v.growEmitter, "SporeSeedGrow")
 	
 	entity_setCollideRadius(me, 0)
 	entity_setState(me, STATE_IDLE)
 	entity_setInternalOffset(me, 0, -128)
 	
-	lifeTime = 5
+	v.lifeTime = 5
 	
 	entity_alpha(me, 0)
 	entity_alpha(me, 1, 0.1)
@@ -59,25 +59,24 @@ function songNote(me, note)
 end
 
 function update(me, dt)
-	if not done then
-		lifeTime = lifeTime - dt
-		if lifeTime < 0 then
+	if not v.done then
+		v.lifeTime = v.lifeTime - dt
+		if v.lifeTime < 0 then
 			entity_delete(me, 0.2)
-			done = true
+			v.done = true
 		end
 
-		sx, sy = entity_getScale(me)
-		len = 256*sy
-		x1,y1 = entity_getPosition(me)
-		fx, fy = entity_getNormal(me)
-		x2 = x1 + fx*len
-		y2 = y1 + fy*len
+		local sx, sy = entity_getScale(me)
+		local len = 256*sy
+		local x1, y1 = entity_getPosition(me)
+		local fx, fy = entity_getNormal(me)
+		local x2 = x1 + fx*len
+		local y2 = y1 + fy*len
 			
-		iter = 0
-		ent = getFirstEntity()
+		local ent = getFirstEntity()
 		while ent~=0 do
 			if entity_getEntityType(ent) ~= ET_NEUTRAL and ent ~= me and entity_isDamageTarget(ent, DT_AVATAR_VINE) then
-				dmg = 0.5
+				local dmg = 0.5
 				if entity_getEntityType(ent)==ET_AVATAR and isForm(FORM_NATURE) then
 					dmg = 0
 				end

@@ -17,19 +17,19 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- song cave collectible
 
-dofile("scripts/entities/entityinclude.lua")
+v.n = 0
 
-n = 0
+v.hatchMax = 5
+v.hatchTimer = v.hatchMax
 
-hatchMax = 5
-hatchTimer = hatchMax
+v.rollTimer = 0
+v.rollMax = 2
 
-rollTimer = 0
-rollMax = 2
-
-hint = false
+v.hint = false
 
 function init(me)
 	setupEntity(me, "Collectibles/egg-nautilus")
@@ -38,7 +38,7 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
@@ -46,33 +46,33 @@ function update(me, dt)
 		entity_alpha(me, 0)
 	end
 	
-	if isFlag(FLAG_PET_NAUTILUS, 0) and not hint and entity_isEntityInRange(me, n, 256) then
+	if isFlag(FLAG_PET_NAUTILUS, 0) and not v.hint and entity_isEntityInRange(me, v.n, 256) then
 		playSfx("secret")
 		setControlHint(getStringBank(33), 0, 0, 0, 6, "collectibles/egg-nautilus")
-		hint = true
+		v.hint = true
 	end
 	
 	if entity_getAlpha(me) == 1 and isFlag(FLAG_PET_NAUTILUS, 0) then
-		if entity_isEntityInRange(me, n, 300) then
+		if entity_isEntityInRange(me, v.n, 300) then
 			entity_offset(me, math.random(2)-1, 0)
-			hatchTimer = hatchTimer - dt
-			if hatchTimer < 0 then
+			v.hatchTimer = v.hatchTimer - dt
+			if v.hatchTimer < 0 then
 				
-				hatchTimer = 0
+				v.hatchTimer = 0
 				entity_setState(me, STATE_HATCH)
 			end
 		else
 			entity_offset(me, 0, 0)
-			hatchTimer = hatchTimer + dt*0.5
-			if hatchTimer > hatchMax then
-				hatchTimer = hatchMax
+			v.hatchTimer = v.hatchTimer + dt*0.5
+			if v.hatchTimer > v.hatchMax then
+				v.hatchTimer = v.hatchMax
 			end
 		end
 	end
 	
-	rollTimer = rollTimer + dt
-	if rollTimer >= rollMax then
-		rollTimer = 0
+	v.rollTimer = v.rollTimer + dt
+	if v.rollTimer >= v.rollMax then
+		v.rollTimer = 0
 		entity_rotate(me, 0)
 		if chance(50) then
 			entity_rotate(me, -30, 0.2, 3, 1, 1)
@@ -100,7 +100,7 @@ function exitState(me, state)
 		entity_soundFreq(me, "Nautilus", 2)
 		
 		setFlag(FLAG_PET_NAUTILUS, 1)
-		e = setActivePet(FLAG_PET_NAUTILUS)
+		local e = setActivePet(FLAG_PET_NAUTILUS)
 		
 		if e ~= 0 then
 			entity_setPosition(e, entity_x(me), entity_y(me))

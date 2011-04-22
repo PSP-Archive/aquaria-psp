@@ -17,28 +17,28 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-leave = true
+v.leave = true
 
 function init()
 	if isFlag(FLAG_ENDING, ENDING_NAIJACAVE) then		
-		e1 = getNode("end1")
-		e2 = getNode("end2")
-		e3 = getNode("end3")
-		e4 = getNode("end4")
-		e5 = getNode("end5")
+		local e1 = getNode("end1")
+		local e2 = getNode("end2")
+		local e3 = getNode("end3")
+		local e4 = getNode("end4")
+		local e5 = getNode("end5")
 		
-		sn = getNode("spirit")
+		local sn = getNode("spirit")
 		
 		overrideZoom(0.8)
 		
 		fade2(1, 0)
 		
-		spirit = createEntity("drask", "", node_x(sn), node_y(sn))
+		local spirit = createEntity("drask", "", node_x(sn), node_y(sn))
 		entity_animate(spirit, "sit", -1)
 		
-		cam = createEntity("empty", "", node_x(e1), node_y(e1))
+		local cam = createEntity("empty", "", node_x(e1), node_y(e1))
 		cam_toEntity(cam)
 		
 		watch(0.5)
@@ -72,7 +72,7 @@ function init()
 		
 		overrideZoom(0)
 		
-		if leave then
+		if v.leave then
 			loadMap("forest04")
 		else
 			watch(1)

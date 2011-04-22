@@ -17,11 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- S T A R M I E   2   (PURPLEISH)
 -- ================================================================================================
 dofile("scripts/entities/starmiecommon.lua")
 
 function init(me)
-	commonInit(me, 2)
+	v.commonInit(me, 2)
 end

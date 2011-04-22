@@ -17,20 +17,22 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- song cave collectible
 
 dofile("scripts/include/collectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "Collectibles/upsidedownseed", FLAG_COLLECTIBLE_UPSIDEDOWNSEED)
+	v.commonInit(me, "Collectibles/upsidedownseed", FLAG_COLLECTIBLE_UPSIDEDOWNSEED)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_COLLECTEDINHOUSE) then
 		createEntity("UpsideDownJelly", "", entity_x(me)-20, entity_y(me)-350)
 		createEntity("UpsideDownJelly", "", entity_x(me)+200, entity_y(me)+50)
@@ -38,5 +40,5 @@ function enterState(me, state)
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

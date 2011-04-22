@@ -26,11 +26,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 const int divs = 6;
 const int MAX_ZONES=1000;
 const int MAX_STEPS = 5000;
-const int cutOff = int((divs*divs)*0.75);
+const int cutOff = int((divs*divs)*0.75f);
 
 namespace PathFindingGlobals
 {
-	int zones[MAX_ZONES][MAX_ZONES];
+	// This isn't used by the current code, so I've commented it out to
+	// save 4MB of RAM.  --achurch
+	//int zones[MAX_ZONES][MAX_ZONES];
 
 	MapSearchNode node_goal;
 	MapSearchNode node_start;
@@ -373,14 +375,14 @@ void PathFinding::molestPath(VectorPath &path)
 		/*
 		float coverage = dsq->game->getCoverage(node, 100);
 		int sample = 10;
-		if (coverage > 0.4)
+		if (coverage > 0.4f)
 			sample = 5;
 		*/
 		int sample = 20;
 		float maxDist = sample * TILE_SIZE;
-		//sqrt(sqr(sample*TILE_SIZE)+sqr(sample*TILE_SIZE));
+		//sqrtf(sqr(sample*TILE_SIZE)+sqr(sample*TILE_SIZE));
 		
-		//if (coverage < 0.6)
+		//if (coverage < 0.6f)
 		{
 			Vector n = dsq->game->getWallNormal(node, sample, &dist);
 			if (dist != -1 && (n.x != 0 || n.y != 0))
@@ -388,7 +390,7 @@ void PathFinding::molestPath(VectorPath &path)
 				/*
 				if (dist > maxDist)
 					maxDist = dist;
-				n *= (maxDist-dist);//*(1.0-coverage);
+				n *= (maxDist-dist); // *(1.0f-coverage);
 				*/
 				n.setLength2D(200);
 				TileVector test(node + n);
@@ -430,7 +432,7 @@ void PathFinding::molestPath(VectorPath &path)
 		
 		Vector lastOne = normals[i-1];
 		Vector nextOne = normals[i+1];
-		newNormals[i] = (thisOne + lastOne + nextOne)/3.0;
+		newNormals[i] = (thisOne + lastOne + nextOne)/3.0f;
 		
 		//newNormals[i] = thisOne;
 	}
@@ -442,7 +444,7 @@ void PathFinding::molestPath(VectorPath &path)
 
 	// kill bowls
 	int start = 0;
-	int minDist = 150;
+	//int minDist = 150;
 	int runs=0;
 	bool hadSuccess = false;
 	int lastSuccessNode = 0;
@@ -565,9 +567,9 @@ loop:
 		//Vector prev = path.getPathNode(i-1)->value;
 		//Vector next = path.getPathNode(i+1)->value;
 
-		//node = (node + prev)/2.0;
+		//node = (node + prev)/2.0f;
 
-		normal = (normal + lastNormal)/2.0;
+		normal = (normal + lastNormal)/2.0f;
 		path.getPathNode(i)->value += normal;
 	}
 	*/
@@ -581,7 +583,7 @@ loop:
 		if (i < sz-1)
 		{
 			p += path.getPathNode(i+1)->value - path.getPathNode(i)->value;
-			p /= 2.0;
+			p /= 2.0f;
 		}
 		Vector pl = p.getPerpendicularLeft();
 		Vector pr = p.getPerpendicularRight();
@@ -629,9 +631,9 @@ loop:
 			//
 			
 
-			path.getPathNode(i)->value = (tr.worldVector() + tl.worldVector())/2.0;
+			path.getPathNode(i)->value = (tr.worldVector() + tl.worldVector())/2.0f;
 
-			//path.getPathNode(i)->value = tl.worldVector() + (tr.worldVector() - tl.worldVector())/2.0;//(node + pl) + (pr-pl)/2.0;
+			//path.getPathNode(i)->value = tl.worldVector() + (tr.worldVector() - tl.worldVector())/2.0f;//(node + pl) + (pr-pl)/2.0f;
 			path.getPathNode(i)->value.z = 0;
 		}
 	}
@@ -677,9 +679,9 @@ loop:
 			//
 			
 
-			path.getPathNode(i)->value = (tr.worldVector() + tl.worldVector())/2.0;
+			path.getPathNode(i)->value = (tr.worldVector() + tl.worldVector())/2.0f;
 
-			//path.getPathNode(i)->value = tl.worldVector() + (tr.worldVector() - tl.worldVector())/2.0;//(node + pl) + (pr-pl)/2.0;
+			//path.getPathNode(i)->value = tl.worldVector() + (tr.worldVector() - tl.worldVector())/2.0f;//(node + pl) + (pr-pl)/2.0f;
 			path.getPathNode(i)->value.z = 0;
 		}
 	}
@@ -708,7 +710,8 @@ void PathFinding::generatePath(RenderObject *ro, TileVector start, TileVector go
 	if (offy <= TILE_SIZE/2+1)
 		offy++;
 	*/
-	ro->position.path.clear();
+	ro->position.ensureData();
+	ro->position.data->path.clear();
 
 	PathFindingGlobals::render_object = ro;
 	AStarSearch astarsearch;
@@ -763,7 +766,7 @@ void PathFinding::generatePath(RenderObject *ro, TileVector start, TileVector go
 			int steps = 0;
 
 			//node->PrintNodeInfo();
-			ro->position.path.addPathNode(Vector((node->x*TILE_SIZE)+TILE_SIZE/2+offx, (node->y*TILE_SIZE)+TILE_SIZE/2)+offy, 0);
+			ro->position.data->path.addPathNode(Vector((node->x*TILE_SIZE)+TILE_SIZE/2+offx, (node->y*TILE_SIZE)+TILE_SIZE/2)+offy, 0);
 			for( ;; )
 			{
 				node = astarsearch.GetSolutionNext();
@@ -774,7 +777,7 @@ void PathFinding::generatePath(RenderObject *ro, TileVector start, TileVector go
 				}
 
 				//node->PrintNodeInfo();
-				ro->position.path.addPathNode(Vector((node->x*TILE_SIZE)+TILE_SIZE/2+offx, (node->y*TILE_SIZE)+TILE_SIZE/2)+offy, steps);
+				ro->position.data->path.addPathNode(Vector((node->x*TILE_SIZE)+TILE_SIZE/2+offx, (node->y*TILE_SIZE)+TILE_SIZE/2)+offy, steps);
 				steps ++;
 			};
 			//ro->position.path.addPathNode(Vector(goal.x*TILE_SIZE, goal.y*TILE_SIZE), steps);

@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/bloodcell-common.lua")
 
 function init(me)
-	commonInit(me, "bloodcell-red")
+	v.commonInit(me, "bloodcell-red")
 	
 	esetv(me, EV_TYPEID, EVT_CELLRED)
 
@@ -29,18 +31,18 @@ function init(me)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 	
-	if entity_isEntityInRange(me, n, 40) then 
+	if entity_isEntityInRange(me, v.n, 40) then 
 		if not avatar_isBursting() then
-			entity_setPosition(me, entity_x(n), entity_y(n), 0.1)
+			entity_setPosition(me, entity_x(v.n), entity_y(v.n), 0.1)
 		elseif avatar_isRolling() then
 			entity_moveTowardsTarget(me, dt, -800)
 		end
 	end
 
-	rangeNode = entity_getNearestNode(me, "KILLENTITY")
+	local rangeNode = entity_getNearestNode(me, "KILLENTITY")
 	if node_isPositionIn(rangeNode, entity_x(me), entity_y(me)) then
-		entity_setState(me, STATE_DIE)
+		entity_setState(me, STATE_DEAD)
 	end
 end

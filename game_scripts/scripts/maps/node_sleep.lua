@@ -17,13 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
 function init(me)
 	node_setCursorActivation(me, true)
 end
 	
-function visions(me)
+local function visions(me)
 	if isFlag(FLAG_VISION_ENERGYTEMPLE, 1) and isFlag(FLAG_ENERGYBOSSDEAD, 0) then
 		vision("EnergyTemple", 3)
 		playSfx("VisionWakeup")
@@ -33,7 +33,7 @@ function visions(me)
 end
 
 function activate(me)
-	n = getNaija()
+	local n = getNaija()
 	
 	avatar_fallOffWall()
 	--watch(0.2)
@@ -47,7 +47,7 @@ function activate(me)
 	
 	
 	
-	li = 0
+	local li = 0
 	if hasLi() then
 		li = getLi()
 		--entity_setState(li, STATE_IDLE, -1, 1)

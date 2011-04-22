@@ -17,29 +17,29 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-file = ""
+v.file = ""
 
-entToSpawn = ""
-ingToSpawn = ""
-amount = 0
+v.entToSpawn = ""
+v.ingToSpawn = ""
+v.amount = 0
 
-breakSound = ""
+v.breakSound = ""
 
-spawnTimes = 1
+v.spawnTimes = 1
 
-sfxVol = 1
+v.sfxVol = 1
 
-function commonInit(me, fle, cr, h, num, snd, ignoreSets, stimes, svol)
+function v.commonInit(me, fle, cr, h, num, snd, ignoreSets, stimes, svol)
 	if svol ~= 0 then
-		sfxVol = svol
+		v.sfxVol = svol
 	end
 	
 	setupEntity(me)
-	breakSound = snd
+	v.breakSound = snd
 	
 	entity_setTexture(me, fle)
 	entity_setEntityType(me, ET_ENEMY)
@@ -50,8 +50,8 @@ function commonInit(me, fle, cr, h, num, snd, ignoreSets, stimes, svol)
 	entity_setDeathScene(me, true)
 	entity_setDeathSound(me, "")
 	
-	file = fle
-	numSpawn = num
+	v.file = fle
+	v.numSpawn = num
 	
 	entity_setEatType(me, EAT_NONE)
 	
@@ -60,27 +60,27 @@ function commonInit(me, fle, cr, h, num, snd, ignoreSets, stimes, svol)
 	entity_setUpdateCull(me, 3000)
 	
 	if not ignoreSets then
-		n1 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETING)
+		local n1 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETING)
 		if n1 ~= 0 and node_isEntityIn(n1, me) then
-			ingToSpawn = node_getContent(n1)
-			amount = node_getAmount(n1)	if amount == 0 then amount = 1 end
+			v.ingToSpawn = node_getContent(n1)
+			v.amount = node_getAmount(n1)	if v.amount == 0 then v.amount = 1 end
 		else
-			n2 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETENT)
+			local n2 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETENT)
 			if n2 ~= 0 and node_isEntityIn(n2, me) then
-				entToSpawn = node_getContent(n2)
-				amount = node_getAmount(n2)	if amount == 0 then amount = 1 end
+				v.entToSpawn = node_getContent(n2)
+				v.amount = node_getAmount(n2)	if v.amount == 0 then v.amount = 1 end
 			end
 		end
 	end
 	
 	esetv(me, EV_TYPEID, EVT_CONTAINER)
 	
-	spawnTimes = stimes
+	v.spawnTimes = stimes
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -90,34 +90,34 @@ end
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 	elseif entity_isState(me, STATE_DEAD) then
-		if ingToSpawn ~= "" or entToSpawn ~= "" then
+		if v.ingToSpawn ~= "" or v.entToSpawn ~= "" then
 			playSfx("secret", 0, 0.7)
 		end
 	elseif entity_isState(me, STATE_DEATHSCENE) then
 		spawnParticleEffect("SmallBubbleExplosion", entity_getPosition(me))
-		for i=1,spawnTimes do
-			for i=1,numSpawn do
+		for i=1,v.spawnTimes do
+			for i=1,v.numSpawn do
 				debugLog("Spawning")
-				e = createEntity("BrokenPiece", "", entity_x(me), entity_y(me))
-				str = string.format("%s-000%d", file, i)
+				local e = createEntity("BrokenPiece", "", entity_x(me), entity_y(me))
+				local str = string.format("%s-000%d", v.file, i)
 				--debugLog(str)
 				entity_setTexture(e, str)
 			end
 		end
 		entity_setStateTime(me, 0.1)
-		if ingToSpawn ~= "" then
-			for i=1,amount do
-				spawnIngredient(ingToSpawn, entity_x(me), entity_y(me))
+		if v.ingToSpawn ~= "" then
+			for i=1,v.amount do
+				spawnIngredient(v.ingToSpawn, entity_x(me), entity_y(me))
 			end
-		elseif entToSpawn ~= "" then
+		elseif v.entToSpawn ~= "" then
 			
-			for i=1,amount do
-				createEntity(entToSpawn, "", entity_x(me), entity_y(me))
+			for i=1,v.amount do
+				createEntity(v.entToSpawn, "", entity_x(me), entity_y(me))
 			end
 		end
 		entity_alpha(me, 0, 0.1)
 		entity_setStateTime(me, 0.1)
-		playSfx(breakSound, 0, sfxVol)
+		playSfx(v.breakSound, 0, v.sfxVol)
 	end
 end
 

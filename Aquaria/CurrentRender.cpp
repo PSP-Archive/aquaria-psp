@@ -63,11 +63,10 @@ void CurrentRender::onRender()
 #ifdef BBGE_BUILD_OPENGL
 	// note: Leave cull_face disabled!?
 	glDisable(GL_CULL_FACE);
-	int qs = 0;
-	for (int i = 0; i < dsq->game->paths.size(); i++)
+	//int qs = 0;
+	for (Path *p = dsq->game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
 	{
-		Path *p = dsq->game->paths[i];
-		if (p->pathType == PATH_CURRENT && p->active)
+		if (p->active)
 		{
 
 			/*
@@ -93,7 +92,7 @@ void CurrentRender::onRender()
 					totalLength += (p->nodes[n+1].position - p->nodes[n].position).getLength2D();
 				}
 
-				double texScale = totalLength/256.0;
+				float texScale = totalLength/256.0f;
 
 				Vector p1, p2, diff, pl, pr;
 				for (int n = 0; n < sz; n++)
@@ -162,22 +161,22 @@ void CurrentRender::onRender()
 					Vector diff = p2-p1;
 					Vector d = diff;
 					d.setLength2D(p->rect.getWidth());
-					p1 -= d*0.75;
-					p2 += d*0.75;
+					p1 -= d*0.75f;
+					p2 += d*0.75f;
 					diff = p2 - p1;
 
-					bool edge = false;
+					//bool edge = false;
 
 					/*
 					if (n == 0)
 					{
-						p1 -= diff*0.25;
+						p1 -= diff*0.25f;
 						edge = true;
 					}
 
 					if (n == sz-1)
 					{
-						p2 += diff*0.25;
+						p2 += diff*0.25f;
 						edge = true;
 					}
 
@@ -191,8 +190,8 @@ void CurrentRender::onRender()
 						pl.setLength2D(w2);
 						pr.setLength2D(w2);
 
-						Vector p15 = p1 + diff * 0.25;
-						Vector p25 = p2 - diff * 0.25;
+						Vector p15 = p1 + diff * 0.25f;
+						Vector p25 = p2 - diff * 0.25f;
 						Vector r1 = p1+pl;
 						Vector r2 = p1+pr;
 						Vector r3 = p15+pl;
@@ -202,8 +201,8 @@ void CurrentRender::onRender()
 						Vector r7 = p2+pl;
 						Vector r8 = p2+pr;
 						float len = diff.getLength2D();
-						float texScale = len/float(256.0);
-						float texScale2 = texScale;
+						float texScale = len/256.0f;
+						//float texScale2 = texScale;
 
 						/*
 						if (edge)
@@ -215,7 +214,7 @@ void CurrentRender::onRender()
 							texScale2 *= 4;
 						*/
 
-						if (isTouchingLine(p1, p2, dsq->screenCenter, dsq->cullRadius+p->rect.getWidth()/2.0))
+						if (isTouchingLine(p1, p2, dsq->screenCenter, dsq->cullRadius+p->rect.getWidth()/2.0f))
 						{
 							//qs++;
 
@@ -228,17 +227,17 @@ void CurrentRender::onRender()
 								glVertex2f(r2.x, r2.y);
 
 								glColor4f(1,1,1,p->amount);
-								glTexCoord2f((0+0.25)*texScale+p->animOffset, 0);
+								glTexCoord2f((0+0.25f)*texScale+p->animOffset, 0);
 								glVertex2f(r3.x, r3.y);
 
-								glTexCoord2f((0+0.25)*texScale+p->animOffset, 1);
+								glTexCoord2f((0+0.25f)*texScale+p->animOffset, 1);
 								glVertex2f(r4.x, r4.y);
 
 								glColor4f(1,1,1,p->amount);
-								glTexCoord2f((1-0.25)*texScale+p->animOffset, 0);
+								glTexCoord2f((1-0.25f)*texScale+p->animOffset, 0);
 								glVertex2f(r5.x, r5.y);
 
-								glTexCoord2f((1-0.25)*texScale+p->animOffset, 1);
+								glTexCoord2f((1-0.25f)*texScale+p->animOffset, 1);
 								glVertex2f(r6.x, r6.y);
 
 								glColor4f(1,1,1,0);
@@ -271,7 +270,7 @@ void CurrentRender::onRender()
 					Vector r3 = p2+pr;
 					Vector r4 = p1+pr;
 					float len = diff.getLength2D();
-					float texScale = len/float(256.0);
+					float texScale = len/256.0f;
 
 					if (isTouchingLine(p1, p2, dsq->screenCenter, dsq->cullRadius))
 					{

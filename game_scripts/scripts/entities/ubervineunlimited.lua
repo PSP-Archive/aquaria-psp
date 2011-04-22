@@ -17,9 +17,10 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/ubervinecommon.lua")
 
 function init(me)
-	commonInit(me, false)
+	v.commonInit(me, false)
 end
-

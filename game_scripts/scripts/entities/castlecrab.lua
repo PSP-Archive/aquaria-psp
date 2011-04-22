@@ -17,18 +17,19 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-sx=0
-sy=0
-attackDelay = 1 + math.random(100)/100
-fireDelay = 0
+v.n = 0
+v.sx = 0
+v.sy = 0
+v.fireDelay = 0
 
-frontHand = 0
-backHand = 0
+v.frontHand = 0
+v.backHand = 0
 
 function init(me)
+	v.attackDelay = 1 + math.random(100)/100
+
 	setupEntity(me)
 	entity_setEntityLayer(me, -2)
 	entity_setEntityType(me, ET_ENEMY)
@@ -40,15 +41,15 @@ function init(me)
 	entity_setHealth(me, 6)
 	
 	--entity_scale(me, 1.5, 1.5)
-	sx,sy = entity_getScale(me)	
+	v.sx,v.sy = entity_getScale(me)	
 	--entity_setCullRadius(me, 1024)
 	--entity_setUpdateCull(me, 2000)
 	entity_setDeathScene(me, true)
 	
 	entity_setEatType(me, EAT_NONE)
 	
-	frontHand = entity_getBoneByName(me, "FrontHand")
-	backHand = entity_getBoneByName(me, "BackHand")
+	v.frontHand = entity_getBoneByName(me, "FrontHand")
+	v.backHand = entity_getBoneByName(me, "BackHand")
 	
 	entity_setCullRadius(me, 512)
 	
@@ -59,9 +60,9 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
-	node = entity_getNearestNode(me, "FLIP")
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
+	local node = entity_getNearestNode(me, "FLIP")
 	if node ~=0 then
 		if node_isEntityIn(node, me) then
 			entity_fh(me)
@@ -71,20 +72,20 @@ end
 
 function update(me, dt)
 	if entity_isState(me, STATE_IDLE) then
-		attackDelay = attackDelay - dt
-		if attackDelay < 0 then
-			if entity_isEntityInRange(me, n, 2800*sx)
+		v.attackDelay = v.attackDelay - dt
+		if v.attackDelay < 0 then
+			if entity_isEntityInRange(me, v.n, 2800*v.sx)
 			and not isForm(FORM_FISH) then
-				fireDelay = 1
+				v.fireDelay = 1
 				entity_setState(me, STATE_ATTACK)
 			end			
 		end
 	elseif entity_isState(me, STATE_ATTACK) then
 		--[[
-		fireDelay = fireDelay - dt
-		if fireDelay < 0 then
-			fireDelay = 1
-			s = createShot("Orbiter", me, entity_getTarget(me))
+		v.fireDelay = v.fireDelay - dt
+		if v.fireDelay < 0 then
+			v.fireDelay = 1
+			local s = createShot("Orbiter", me, entity_getTarget(me))
 			shot_setOut(s, 32)
 		end
 		]]--
@@ -108,7 +109,7 @@ end
 
 function exitState(me)
 	if entity_isState(me, STATE_ATTACK) then
-		attackDelay = 1+math.random(2)
+		v.attackDelay = 1+math.random(2)
 		entity_setState(me, STATE_IDLE)
 	end
 end
@@ -124,14 +125,14 @@ end
 function animationKey(me, key)
 	if entity_isState(me, STATE_ATTACK) then
 		if key == 4 or key == 13 then
-			bx=0
-			by=0
+			local bx = 0
+			local by = 0
 			if key == 4 then
-				bx, by = bone_getWorldPosition(frontHand)
+				bx, by = bone_getWorldPosition(v.frontHand)
 			else
-				bx, by = bone_getWorldPosition(backHand)
+				bx, by = bone_getWorldPosition(v.backHand)
 			end
-			s = createShot("smallrock", me, entity_getTarget(me), bx, by)
+			local s = createShot("smallrock", me, entity_getTarget(me), bx, by)
 			--shot_setOut(s, 32)
 		end
 	end
@@ -154,8 +155,8 @@ end
 
 function dieNormal(me)
 	--[[
-	x = entity_x(me)
-	y = entity_y(me)
+	local x = entity_x(me)
+	local y = entity_y(me)
 	
 	if isObstructedBlock(x, y, 2) then
 		x = entity_x(me)
@@ -168,9 +169,9 @@ function dieNormal(me)
 	end
 	]]--
 	
-	bx, by = bone_getWorldPosition(frontHand)
+	local bx, by = bone_getWorldPosition(v.frontHand)
 	
-	e = createEntity("Rock0006", "", bx, by)
+	local e = createEntity("Rock0006", "", bx, by)
 	entity_alpha(e, 0)
 	entity_alpha(e, 1, 1)
 end

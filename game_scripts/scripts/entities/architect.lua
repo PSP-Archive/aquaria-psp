@@ -17,9 +17,9 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
 function init(me)
 	setupEntity(me)
@@ -37,20 +37,20 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
-	w = entity_getNearestNode(me, "WORSHIP")
+	local w = entity_getNearestNode(me, "WORSHIP")
 	if w ~= 0 and node_isEntityIn(w, me) then
 		entity_animate(me, "worship", -1)
 	end
 	
-	f = entity_getNearestNode(me, "FLIP")
+	local f = entity_getNearestNode(me, "FLIP")
 	if f ~= 0 and node_isEntityIn(f, me) then
 		entity_fh(me)
 	end
 	
-	p = entity_getNearestNode(me, "PAIN")
+	local p = entity_getNearestNode(me, "PAIN")
 	if p ~= 0 and node_isEntityIn(p, me) then
 		entity_animate(me, "pain", -1)
 	end

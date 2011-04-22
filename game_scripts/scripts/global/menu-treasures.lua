@@ -17,12 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-function hitWatch(tlen)
-	h = entity_getHealth(getNaija())
+local function hitWatch(tlen)
+	local h = entity_getHealth(getNaija())
 	
-	t = 0
+	local t = 0
 	while t < tlen do
 		watch(FRAME_TIME)
 		t = t + FRAME_TIME
@@ -35,7 +35,7 @@ function hitWatch(tlen)
 	return false
 end
 
-function changeCostume(cost)
+local function changeCostume(cost)
 
 		setInvincibleOnNested(false)
 		

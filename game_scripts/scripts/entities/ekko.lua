@@ -17,31 +17,31 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- E C C O
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 -- ================================================================================================
 -- L O C A L   V A R I A B L E S
 -- ================================================================================================
 
-dir = 0
-switchDirDelay = 0
-wiggleTime = 0
-wiggleDir = 1
-interestTimer = 0
-colorRevertTimer = 0
+v.dir = 0
+v.switchDirDelay = 0
+v.wiggleTime = 0
+v.wiggleDir = 1
+v.interestTimer = 0
+v.colorRevertTimer = 0
 
-collisionSegs = 50
-avoidLerp = 0
-avoidDir = 1
-interest = false
+v.collisionSegs = 50
+v.avoidLerp = 0
+v.avoidDir = 1
+v.interest = false
 
-jumpDelay = 0
+v.jumpDelay = 0
 
-n = 0
+v.n = 0
 
 -- ================================================================================================
 -- F U N C T I O N S
@@ -67,25 +67,23 @@ function init(me)
 	
 	entity_setDropChance(me, 50)
 	
-	lungeDelay = 1.0				-- prevent the nautilus from attacking right away
-	
 	if chance(50) then
-		dir = 0
+		v.dir = 0
 	else
-		dir = 1
+		v.dir = 1
 	end
 	
 	if chance(50) then
-		interest = true
+		v.interest = true
 	end
-	switchDirDelay = math.random(800)/100.0
-	naija = getNaija()
+	v.switchDirDelay = math.random(800)/100.0
+	v.naija = getNaija()
 	
 	entity_addVel(me, math.random(1000)-500, math.random(1000)-500)
 	entity_setDeathParticleEffect(me, "TinyRedExplode")
 	
 	entity_initSkeletal(me, "ekko")
-	body = entity_getBoneByName(me, "Body")
+	local body = entity_getBoneByName(me, "Body")
 	bone_setSegs(body, 8, 8, 0.69, 0.23, 0, -0.03, 8, 0)
 	
 	entity_setCanLeaveWater(me, true)
@@ -100,7 +98,7 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 -- the entity's main update function
@@ -116,7 +114,7 @@ function update(me, dt)
 		-- has target
 		if entity_isUnderWater(me) then
 			if not entity_isNearObstruction(entity_getTarget(me), 5) then
-				if interest then
+				if v.interest then
 					entity_moveTowardsTarget(me, dt, 500)
 				end
 			end
@@ -128,22 +126,22 @@ function update(me, dt)
 	entity_updateMovement(me, dt)	
 	
 	if entity_isUnderWater(me) then
-		jumpDelay = jumpDelay - dt
-		if jumpDelay <= 0 then
-			jumpDelay = 0
+		v.jumpDelay = v.jumpDelay - dt
+		if v.jumpDelay <= 0 then
+			v.jumpDelay = 0
 			entity_setCanLeaveWater(me, true)
 			if entity_y(me) - getWaterLevel() < 400 then
 				entity_addVel(me, 0, -1000*dt)
 			end
 		end
-		interestTimer = interestTimer + dt
-		if interestTimer > 12 then
-			if interest then
-				interest = false
+		v.interestTimer = v.interestTimer + dt
+		if v.interestTimer > 12 then
+			if v.interest then
+				v.interest = false
 			else
-				interest = true
+				v.interest = true
 			end
-			interestTimer = math.random(3)
+			v.interestTimer = math.random(3)
 		end
 	end
 	if entity_checkSplash(me) then
@@ -156,7 +154,7 @@ function update(me, dt)
 				entity_addVel(me, 200, -456)
 			end
 			entity_setWeight(me, 888)
-			jumpDelay = 2+math.random(5)
+			v.jumpDelay = 2+math.random(5)
 		else
 			entity_setCanLeaveWater(me, false)
 			entity_setWeight(me, 0)
@@ -168,11 +166,11 @@ function update(me, dt)
 	
 	if entity_touchAvatarDamage(me, 64, 0) then
 		--[[
-		if avatar_isBursting() and entity_setBoneLock(n, me) then
+		if avatar_isBursting() and entity_setBoneLock(v.n, me) then
 		else
 		]]--
-			x, y = entity_getVectorToEntity(me, n, 420)
-			entity_addVel(n, x, y)
+			local x, y = entity_getVectorToEntity(me, v.n, 420)
+			entity_addVel(v.n, x, y)
 		--end
 	end
 end

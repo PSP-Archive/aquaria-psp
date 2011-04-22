@@ -17,24 +17,24 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-noteDown = -1
-note1 = -1
-note2 = -1
-note3 = -1
+v.n = 0
+v.noteDown = -1
+v.note1 = -1
+v.note2 = -1
+v.note3 = -1
 
-function commonInit(me, gfxNum, n1, n2, n3)
+function v.commonInit(me, gfxNum, n1, n2, n3)
 	setupEntity(me)
 	entity_setTexture(me, string.format("NudiBranch/NudiBranch%d", gfxNum))
 	entity_setEntityType(me, ET_ENEMY)
 	entity_setAllDamageTargets(me, false)
 	entity_setCollideRadius(me, 48)
 	
-	note1 = n1
-	note2 = n2
-	note3 = n3
+	v.note1 = n1
+	v.note2 = n2
+	v.note3 = n3
 	
 	entity_setState(me, STATE_IDLE)
 	
@@ -48,15 +48,15 @@ function commonInit(me, gfxNum, n1, n2, n3)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 
-	if noteDown ~= -1 and entity_isEntityInRange(me, n, 800) then
-		rotspd = 0.8
-		if noteDown == note2 then
+	if v.noteDown ~= -1 and entity_isEntityInRange(me, v.n, 800) then
+		local rotspd = 0.8
+		if v.noteDown == v.note2 then
 			entity_moveTowardsTarget(me, dt, 1000)
 			if entity_doEntityAvoidance(me, dt, 128, 1.0) then
 				entity_setMaxSpeedLerp(me, 0.2)
@@ -64,7 +64,7 @@ function update(me, dt)
 				entity_setMaxSpeedLerp(me, 2.0, 0.2)
 			end
 			entity_rotateToVel(me, rotspd)
-		elseif noteDown == note1 or noteDown == note3 then			
+		elseif v.noteDown == v.note1 or v.noteDown == v.note3 then			
 			entity_moveTowardsTarget(me, dt, 500)
 			if entity_doEntityAvoidance(me, dt, 128, 1.0) then
 				entity_setMaxSpeedLerp(me, 0.2)
@@ -75,7 +75,7 @@ function update(me, dt)
 		end			
 		
 	else
-		noteDown = -1
+		v.noteDown = -1
 		entity_rotate(me, 0, 0.5, 0, 0, 1)
 	end
 	
@@ -110,11 +110,11 @@ function hitSurface(me)
 end
 
 function songNote(me, note)
-	noteDown = note
+	v.noteDown = note
 end
 
 function songNoteDone(me, note)
-	noteDown = -1
+	v.noteDown = -1
 end
 
 function song(me, song)

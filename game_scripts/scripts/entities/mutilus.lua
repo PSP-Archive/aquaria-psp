@@ -17,15 +17,16 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- N A U T I L U S
 
-dofile("scripts/entities/entityinclude.lua")
 -- entity specific
-STATE_ATTACKPREP		= 1000
-STATE_ATTACK			= 1001
+local STATE_ATTACKPREP		= 1000
+local STATE_ATTACK			= 1001
 
-lungeDelay = 0					-- prevents the nautilus from lunging over and over
-dodgeTimer = 0
+v.lungeDelay = 0					-- prevents the nautilus from lunging over and over
+v.dodgeTimer = 0
 -- initializes the entity
 function init(me)
 	setupBasicEntity(
@@ -50,7 +51,7 @@ function init(me)
 	entity_setDropChance(me, 10, 1)
 	
 	entity_rotate(me, 360, 1, LOOP_INF)		-- make the nautilus spin 360 degrees endlessly over 1 second
-	lungeDelay = 1.0						-- prevent the nautilus from attacking right away
+	v.lungeDelay = 1.0						-- prevent the nautilus from attacking right away
 	
 	entity_setEatType(me, EAT_FILE, "SmallFood")
 	
@@ -63,12 +64,12 @@ function update(me, dt)
 	-- in any state: if we have a target and we're close enough, hurt the target and move back	
 	-- in idle state only
 	if entity_getState(me)==STATE_IDLE then
-		-- count down the lungeDelay timer to 0
-		if lungeDelay > 0 then lungeDelay = lungeDelay - dt if lungeDelay < 0 then lungeDelay = 0 end end
+		-- count down the v.lungeDelay timer to 0
+		if v.lungeDelay > 0 then v.lungeDelay = v.lungeDelay - dt if v.lungeDelay < 0 then v.lungeDelay = 0 end end
 		
-		dodgeTimer = dodgeTimer + dt
-		if dodgeTimer > 3 then
-			dodgeTimer = 0
+		v.dodgeTimer = v.dodgeTimer + dt
+		if v.dodgeTimer > 3 then
+			v.dodgeTimer = 0
 		end
 		-- if we don't have a target, find one
 		if not entity_hasTarget(me) then
@@ -84,13 +85,13 @@ function update(me, dt)
 			
 			-- 40% of the time when we're in range and not delaying, launch an attack
 			if entity_isTargetInRange(me, 300) then
-				if math.random(100) < 40 and lungeDelay == 0 then
+				if math.random(100) < 40 and v.lungeDelay == 0 then
 					entity_setState(me, STATE_ATTACKPREP, 0.5)
 				end
 			end
 			
 			entity_doEntityAvoidance(me, dt, 128, 0.5)
-			if dodgeTimer > 1.5 then
+			if v.dodgeTimer > 1.5 then
 				entity_doSpellAvoidance(me, dt, 256, 1)
 			end
 			entity_doCollisionAvoidance(me, dt, 4, 0.1)
@@ -116,7 +117,7 @@ function enterState(me)
 		entity_doGlint(me, "Glint", BLEND_ADD)
 	elseif entity_getState(me)==STATE_ATTACK then
 		entity_enableMotionBlur(me)
-		lungeDelay = 2.0
+		v.lungeDelay = 2.0
 		entity_setMaxSpeed(me, 1200)
 		entity_moveTowardsTarget(me, 1200, 1)
 	end

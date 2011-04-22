@@ -45,6 +45,8 @@ public:
 	bool isCursorIn();
 	void slide(int slid);
 	void toggle(int on);
+	float getMiniMapWidth() const;
+	float getMiniMapHeight() const;
 
 	bool isRadarHide() { return radarHide; }
 protected:
@@ -55,9 +57,9 @@ protected:
 	float doubleClickDelay;
 	bool isCursorInButtons();
 	bool _isCursorIn, lastCursorIn;
-	bool mb;
+	bool mouseDown;
 	bool doRender;
-	float a;
+	float lightLevel;
 	void onUpdate(float dt);
 	void onRender();
 
@@ -68,7 +70,6 @@ class WorldMapRender : public RenderObject, public ActionMapper
 {
 public:
 	WorldMapRender();
-	void transferData();
 	void destroy();
 	void toggle(bool on);
 	bool isOn();
@@ -92,12 +93,15 @@ protected:
 	float inputDelay;
 	BitmapText *areaLabel, *areaLabel2, *areaLabel3;
 	WorldMapTile *originalActiveTile;
-	void setVis(Quad *q);
+	void setVis(WorldMapTile *tile);
+	void clearVis(WorldMapTile *tile);
 	bool on;
 	void onUpdate(float dt);
 	void onRender();
 	Quad *bg;
+	unsigned char *savedTexData;
 	bool mb;
+	Vector lastMousePosition; // See FIXME in WorldMapRender.cpp  --achurch
 };
 
 class PathRender : public RenderObject

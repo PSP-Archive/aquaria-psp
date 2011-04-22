@@ -17,10 +17,10 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-myWeight = 432
-onSurface = 0
+v.myWeight = 432
+v.onSurface = 0
 
 function init(me)
 	setupBasicEntity(
@@ -39,7 +39,6 @@ function init(me)
 	2000							-- updateCull -1: disabled, default: 4000
 	)
 
-	entity_setAffectedBySpells(me, 1)
 	entity_setBounce(me, 0.2)	
 	entity_setCanLeaveWater(me, true)
 	
@@ -56,12 +55,12 @@ function update(me, dt)
 	end
 	if not entity_isUnderWater(me) then
 		if not entity_isBeingPulled(me) then
-			entity_setWeight(me, myWeight*2)
+			entity_setWeight(me, v.myWeight*2)
 			entity_setMaxSpeedLerp(me, 5, 0.1)
 		end
 	else
 		entity_setMaxSpeedLerp(me, 1, 0.1)
-		entity_setWeight(me, myWeight)
+		entity_setWeight(me, v.myWeight)
 	end
 	
 	if entity_getVelLen(me) > 76 then 
@@ -69,7 +68,7 @@ function update(me, dt)
 	end
 	
 	-- DESTROY IF ON SURFACE TOO LONG
-	if onSurface > 3 then
+	if v.onSurface > 3 then
 		entity_alpha(me, 0, 0.12)
 		entity_scale(me, 0, 0, 0.12)
 		entity_delete(me, 0.12)
@@ -84,5 +83,5 @@ function damage(me, attacker, bone, damageType, dmg)
 end
 
 function hitSurface(me)
-	onSurface = onSurface + 1
+	v.onSurface = v.onSurface + 1
 end

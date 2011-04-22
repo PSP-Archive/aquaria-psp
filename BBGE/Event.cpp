@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 EventPtr::EventPtr() : e(0)
 {
-	evm = EVM_NONE;
+	this->_evm = EVM_NONE;
 
 	this->actionMapperCallback = 0;
 	this->actionValue = 0;
@@ -39,7 +39,7 @@ void EventPtr::clean()
 {
 	// check to see if we have a pointer + want to clean up
 	// if so, do so!
-	if (e && evm==EVM_CLEANUP)
+	if (e && evm()==EVM_CLEANUP)
 	{
 		delete e;
 		e=0;
@@ -49,7 +49,7 @@ void EventPtr::clean()
 const EventPtr& EventPtr::operator= (const EventPtr &e)
 {
 	this->e = e.e;
-	this->evm = e.evm;
+	this->_evm = e._evm;
 
 	return *this;
 }
@@ -57,7 +57,7 @@ const EventPtr& EventPtr::operator= (const EventPtr &e)
 void EventPtr::call()
 {
 	if (e) e->act();
-	if (e && evm==EVM_CLEANUP)
+	if (e && evm()==EVM_CLEANUP)
 	{
 		delete e;
 		e=0;
@@ -71,7 +71,7 @@ void EventPtr::call()
 void EventPtr::set(Event *e, EventManage _evm)
 {
 	this->e = e;
-	evm = _evm;
+	this->_evm = _evm;
 }
 
 void EventPtr::setActionMapperCallback(ActionMapper *actionMapperCallback, int actionValue, int stateToCall)

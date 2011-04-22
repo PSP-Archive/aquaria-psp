@@ -17,13 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-boss = 0
+v.boss = 0
 
-function spawnItem(me)
+local function spawnItem(me)
 	debugLog("Spawning collectible dumbo egg")
-	node = getNodeByName("DUMBOEGGLOC")
+	local node = getNode("DUMBOEGGLOC")
 	if node == 0 then
 		debugLog("COULD NOT FIND NODE!")
 	end
@@ -33,20 +33,20 @@ end
 function init(me)
 	debugLog("INITTTT")
 	if isFlag(FLAG_MINIBOSS_OCTOMUN, 0) then
-		boss = getEntity("Octomun")
+		v.boss = getEntity("Octomun")
 	else
-		ent = getEntity("Octomun")
+		local ent = getEntity("Octomun")
 		entity_delete(ent)
 		spawnItem(me)
 	end
 end
 
 function update(me, dt)
-	if boss ~= 0 then
-		if entity_isState(boss, STATE_DEAD) then
+	if v.boss ~= 0 then
+		if entity_isState(v.boss, STATE_DEAD) then
 			setFlag(FLAG_MINIBOSS_OCTOMUN, 1)
 			spawnItem(me)
-			boss = 0
+			v.boss = 0
 		end
 	end
 end

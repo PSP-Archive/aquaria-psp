@@ -17,12 +17,26 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
 function init(me)
 	node_setCursorActivation(me, (not isDemo()))
+	node_setCatchActions(me, true)
 end
 	
+function action(me, action, state)
+	if isNestedMain() then return end
+	if getNodeToActivate() == me and state == 1 then
+		if action == ACTION_MENUDOWN then
+			local node = getNode("TITLE_CONTINUE")
+			setNodeToActivate(node)
+			setMousePos(toWindowFromWorld(node_x(node), node_y(node)-20))
+			return false
+		end
+	end
+	return true
+end
+
 function activate(me)
 	if isDemo() then return end
 	if isNestedMain() then return end
@@ -32,7 +46,12 @@ function activate(me)
 	watch(0.5)
 	
 	if confirm("", "replayintro") then
+		fade2(0, 0, 0, 0, 0)  -- Avoid a white flash when starting the intro.
 		jumpState("intro")
+	else
+		if getInputMode() ~= INPUT_MOUSE then
+			setMousePos(toWindowFromWorld(node_x(me), node_y(me)))
+		end
 	end
 end
 

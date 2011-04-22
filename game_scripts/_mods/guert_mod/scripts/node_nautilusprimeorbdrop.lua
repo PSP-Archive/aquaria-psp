@@ -17,29 +17,31 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- last known coordinates of Nautilus Prime
-lx = 0
-ly = 0
+v.lx = 0
+v.ly = 0
 
 -- start out not having spawned the orb
-spawned = false
+v.spawned = false
 
 function init(me)
 end
 
 function update(me, dt)
-	if not spawned then
-		naut = getEntityByName("nautilusprime")
+	if not v.spawned then
+		local naut = getEntity("nautilusprime")
 		
 		-- if nautilus prime exists...
 		if naut ~= 0 then
 			-- store her location for later
-			lx, ly = entity_getPosition(naut)
+			v.lx, v.ly = entity_getPosition(naut)
 		else
 			-- no nautilus prime! she must have died
 			
 			-- second parameter is a name override
-			orb = createEntity("EnergyOrb", "", lx, ly)
+			local orb = createEntity("EnergyOrb", "", v.lx, v.ly)
 			
 			-- do a fade-in effect
 			
@@ -50,7 +52,7 @@ function update(me, dt)
 			entity_alpha(orb, 1, 1)
 			
 			-- make sure we only spawn the orb once!
-			spawned = true
+			v.spawned = true
 		end
 	end	
 end

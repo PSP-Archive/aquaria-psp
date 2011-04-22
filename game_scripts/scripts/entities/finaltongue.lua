@@ -17,14 +17,16 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- energy door
 dofile("scripts/entities/doorcommon.lua")
 
---commonInit(me, "Final-Tongue", "TentacleDoor", 4.5, 0)
+--v.commonInit(me, "Final-Tongue", "TentacleDoor", 4.5, 0)
 
-ix = 0
-iy = 0
-dist = 4048
+v.ix = 0
+v.iy = 0
+v.dist = 4048
 
 function init(me)
 	setupEntity(me, "Final-Tongue", -2)
@@ -37,8 +39,8 @@ function init(me)
 end
 
 function postInit(me)
-	ix = entity_x(me)
-	iy = entity_y(me)
+	v.ix = entity_x(me)
+	v.iy = entity_y(me)
 	
 	if entity_isFlag(me, 1) then
 		entity_setState(me, STATE_OPENED)
@@ -59,9 +61,9 @@ function enterState(me, state)
 	if entity_isState(me, STATE_OPEN) then
 		playSfx("tentacledoor")
 		entity_alpha(me, 0, 6)
-		entity_setPosition(me, ix, iy + dist, 6, 0, 0, 1)
+		entity_setPosition(me, v.ix, v.iy + v.dist, 6, 0, 0, 1)
 	elseif entity_isState(me, STATE_OPENED) then
-		entity_setPosition(me, ix, iy + dist)
+		entity_setPosition(me, v.ix, v.iy + v.dist)
 		entity_alpha(me, 0)
 		reconstructEntityGrid()
 		entity_setFlag(me, 1)
@@ -73,6 +75,3 @@ function exitState(me, state)
 		entity_setState(me, STATE_OPENED)
 	end
 end
-
-
-

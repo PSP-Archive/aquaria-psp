@@ -349,6 +349,11 @@ void RecipeMenu::toggle(bool on, bool watch)
 
 		if (!dsq->game->isInGameMenu())
 		{
+			slide(scroll, 0, 0);
+			slide(scrollEnd, 0, 0);
+			slide(header, 0, 0);
+			slide(page, 0, 0);
+			toggling = false;
 			return;
 		}
 

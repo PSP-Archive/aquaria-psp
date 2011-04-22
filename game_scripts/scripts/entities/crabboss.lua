@@ -17,71 +17,68 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- BIG MAUL
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
+v.leftArmHealth = 16
+v.rightArmHealth = 16
 
-leftArmHealth = 16
-rightArmHealth = 16
+v.squidHealth = 16
 
-squidHealth = 16
+v.stunTime = 3
 
-stunTime = 3
+v.n = 0
 
-n = 0
+v.fireDelay = 4
 
-fireDelay = 4
+v.ahitsMax = 6
+v.ahits = v.ahitsMax
 
-ahitsMax = 6
-ahits = ahitsMax
+local LAYER_LEFTARM		= 1
+local LAYER_RIGHTARM	= 2
+local LAYER_LEGSANDBODY	= 3
 
-LAYER_LEFTARM		= 1
-LAYER_RIGHTARM		= 2
-LAYER_LEGS		= 3
+local STATE_BASIC		= 1000
+local STATE_STUNNED		= 1001
+local STATE_POWER		= 1002
+local STATE_LEFTCLAWSWIPE	= 1003
+local STATE_RIGHTCLAWSWIPE	= 1004
+local STATE_JUMP		= 1005
+local STATE_TEABAG		= 1006
+local STATE_WAITFORSTART	= 1007
+local STATE_JUMPPREP		= 1008
+local STATE_FIRING		= 1009
 
-STATE_BASIC			= 1000
-STATE_STUNNED			= 1001
-STATE_POWER			= 1002
-STATE_LEFTCLAWSWIPE		= 1003
-STATE_RIGHTCLAWSWIPE		= 1004
-STATE_JUMP			= 1005
-STATE_TEABAG			= 1006
-STATE_WAITFORSTART		= 1007
-STATE_JUMPPREP			= 1008
-STATE_FIRING			= 1009
+v.leftArmAlive = true
+v.rightArmAlive = true
 
-leftArmAlive = true
-rightArmAlive = true
+v.fireLoc = 0
 
-fireLoc = 0
+v.leftClawBone = 0
+v.rightClawBone = 0
+v.leftClawPincerBone = 0
+v.rightClawPincerBone = 0
 
-leftClawBone = 0
-rightClawBone = 0
-leftClawPincerBone = 0
-rightClawPincerBone = 0
+v.actionDelay = 0
+v.naija = 0
+v.moveTimer = 0
+v.movingRight = true
+v.leftNode = 0
+v.rightNode = 0
+v.jumpTimer = 0
 
-actionDelay = 0
-naija = 0
-moveTimer = 0
-movingRight = true
-leftNode = 0
-rightNode = 0
-jumpTimer = 0
-naija = 0
+v.bone_la = 0
+v.bone_ra = 0
+v.bone_lw = 0
+v.bone_rw = 0
+v.bone_squid = 0
 
-bone_la = 0
-bone_ra = 0
-bone_lw = 0
-bone_rw = 0
-bone_squid = 0
+v.inity = 0
 
-moveDir = 1
-
-inity = 0
-
-leave = 0
+v.leave = 0
 
 function init(me)	
 	setupBasicEntity(
@@ -107,8 +104,8 @@ function init(me)
 	entity_setState(me, STATE_WAITFORSTART)
 	entity_setCull(me, false)
 		
-	leftNode = getNode("CRABBOUNDLEFT")
-	rightNode = getNode("CRABBOUNDRIGHT")
+	v.leftNode = getNode("CRABBOUNDLEFT")
+	v.rightNode = getNode("CRABBOUNDRIGHT")
 		
 	--entity_setTouchDamage(me, 1)
 	--entity_setTouchPush(me, 1)
@@ -119,22 +116,22 @@ function init(me)
 	
 	entity_generateCollisionMask(me)
 	
-	leftClawBone = entity_getBoneByName(me, "LeftClaw")
-	rightClawBone = entity_getBoneByName(me, "RightClaw")
-	leftClawPincerBone = entity_getBoneByName(me, "LeftClawPincer")
-	rightClawPincerBone = entity_getBoneByName(me, "RightClawPincer")
+	v.leftClawBone = entity_getBoneByName(me, "LeftClaw")
+	v.rightClawBone = entity_getBoneByName(me, "RightClaw")
+	v.leftClawPincerBone = entity_getBoneByName(me, "LeftClawPincer")
+	v.rightClawPincerBone = entity_getBoneByName(me, "RightClawPincer")
 	
-	fireLoc = entity_getBoneByName(me, "FireLoc")
+	v.fireLoc = entity_getBoneByName(me, "FireLoc")
 	
-	naija = getEntity("Naija")
+	v.naija = getEntity("Naija")
 	
-	bone_la = entity_getBoneByName(me, "LeftAntenna")
-	bone_ra = entity_getBoneByName(me, "RightAntenna")
+	v.bone_la = entity_getBoneByName(me, "LeftAntenna")
+	v.bone_ra = entity_getBoneByName(me, "RightAntenna")
 	
-	bone_lw = entity_getBoneByName(me, "LeftArmWeakPoint")
-	bone_rw = entity_getBoneByName(me, "RightArmWeakPoint")
+	v.bone_lw = entity_getBoneByName(me, "LeftArmWeakPoint")
+	v.bone_rw = entity_getBoneByName(me, "RightArmWeakPoint")
 	
-	bone_squid = entity_getBoneByName(me, "Squid")
+	v.bone_squid = entity_getBoneByName(me, "Squid")
 	
 	esetv(me, EV_WALLOUT, 300)
 	esetv(me, EV_SWITCHCLAMP, 0)
@@ -151,39 +148,39 @@ function init(me)
 end
 
 function postInit(me)
-	inity = entity_y(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.inity = entity_y(me)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
-	leave = getNode("LEAVE")
+	v.leave = getNode("LEAVE")
 end
 
-wasMoving = false
+v.wasMoving = false
 function update(me, dt)
 	if entity_isState(me, STATE_WAITFORSTART) then
-		if entity_isEntityInRange(me, naija, 2000) then
+		if entity_isEntityInRange(me, v.naija, 2000) then
 			entity_setState(me, STATE_BASIC)
 			playMusic("MiniBoss")
 		end
 		return
 	end
 
-	if node_isEntityIn(leave, n) then
+	if node_isEntityIn(v.leave, v.n) then
 		updateMusic()
 		entity_setState(me, STATE_WAITFORSTART)
 	end
 	
 	overrideZoom(0.45)
-	if actionDelay > 0 then
-		actionDelay = actionDelay - dt
+	if v.actionDelay > 0 then
+		v.actionDelay = v.actionDelay - dt
 	end
 	
-	if jumpTimer > 0 then
-		jumpTimer = jumpTimer - dt
+	if v.jumpTimer > 0 then
+		v.jumpTimer = v.jumpTimer - dt
 	end
 	
 	if entity_isState(me, STATE_JUMP) then
-		if jumpTimer > 0 then
+		if v.jumpTimer > 0 then
 			entity_addVel(me,0,-1000)
 		end
 		entity_updateMovement(me, dt)
@@ -201,29 +198,30 @@ function update(me, dt)
 		entity_setState(me, STATE_BASIC)
 	end
 	
-	if naija ~= 0 then
+	if v.naija ~= 0 then
 		if entity_isState(me, STATE_BASIC) then
 			--entity_rotateToSurfaceNormal(me, 0.1, 20)
-			moving = false
-			if entity_x(naija) > entity_x(me) + 256 and entity_x(me) < node_x(rightNode) then
+			local moving = false
+			local moveDir
+			if entity_x(v.naija) > entity_x(me) + 256 and entity_x(me) < node_x(v.rightNode) then
 				moving = true
 				moveDir = 1
 				--entity_switchSurfaceDirection(me, 0)
 				--entity_rotateToSurfaceNormal(me, 1)
-			elseif entity_x(naija) < entity_x(me) - 256 and entity_x(me) > node_x(leftNode) then
+			elseif entity_x(v.naija) < entity_x(me) - 256 and entity_x(me) > node_x(v.leftNode) then
 				moving = true
 				moveDir = -1
 				--entity_switchSurfaceDirection(me, 1)
 				--entity_rotateToSurfaceNormal(me, 1)
 			end
 			if not moving then
-				if not leftArmAlive and not rightArmAlive then
-					if entity_x(naija) > entity_x(me)-256 and entity_x(naija) < entity_x(me)+256 then
-						if entity_y(naija) < entity_y(me)-512 then
+				if not v.leftArmAlive and not v.rightArmAlive then
+					if entity_x(v.naija) > entity_x(me)-256 and entity_x(v.naija) < entity_x(me)+256 then
+						if entity_y(v.naija) < entity_y(me)-512 then
 							entity_setState(me, STATE_JUMPPREP)
 						end
 						--[[
-						elseif entity_y(naija) > entity_y(me)-128 then
+						elseif entity_y(v.naija) > entity_y(me)-128 then
 							entity_setState(me, STATE_TEABAG)
 						end
 						]]--
@@ -235,44 +233,44 @@ function update(me, dt)
 				--entity_moveAlongSurface(me, dt, 300, 6, 200) --64 (32)
 				entity_setPosition(me, entity_x(me)+moveDir*300*dt, entity_y(me))
 			end
-			if moving and not wasMoving then
+			if moving and not v.wasMoving then
 				entity_animate(me, "walk", -1, LAYER_LEGSANDBODY)
-			elseif not moving and wasMoving then
+			elseif not moving and v.wasMoving then
 				entity_animate(me, "idle", -1, LAYER_LEGSANDBODY)
 			end
-			wasMoving = moving
+			v.wasMoving = moving
 			
-			fireDelay = fireDelay - dt
-			if fireDelay < 0 then
+			v.fireDelay = v.fireDelay - dt
+			if v.fireDelay < 0 then
 				entity_setState(me, STATE_FIRING)
 			end
 			-- dt, pixelsPerSecond, climbHeight, outfromwall		
 			--[[
-			moveTimer = moveTimer + dt
-			if moveTimer > 5 then
+			v.moveTimer = v.moveTimer + dt
+			if v.moveTimer > 5 then
 				entity_switchSurfaceDirection(me)
-				moveTimer = 0
+				v.moveTimer = 0
 			end
 			]]--
 		else
 			--[[
 			if not (entity_isState(me, STATE_LEFTCLAWSWIPE) or entity_isState(me, STATE_RIGHTCLAWSWIPE) or entity_isState(me, STATE_STUNNED)) then
 				entity_animate(me, "idle", -1, LAYER_LEGSANDBODY)
-				wasMoving = false
+				v.wasMoving = false
 			end
 			]]--
 		end
 		if entity_isState(me, STATE_BASIC) then
-			didArmAttack = false
+			local didArmAttack = false
 			
-			if leftArmHealth > 0 then
-				if entity_x(naija) < entity_x(me)-64 and entity_isEntityInRange(me, naija, 680) and entity_y(naija) > entity_y(me)-200 then
+			if v.leftArmHealth > 0 then
+				if entity_x(v.naija) < entity_x(me)-64 and entity_isEntityInRange(me, v.naija, 680) and entity_y(v.naija) > entity_y(me)-200 then
 					entity_setState(me, STATE_LEFTCLAWSWIPE)
 					didArmAttack = true
 				end
 			end
-			if not didArmAttack and rightArmHealth > 0 then
-				if entity_x(naija) > entity_x(me)+64 and entity_isEntityInRange(me, naija, 680) and entity_y(naija) > entity_y(me)-200 then
+			if not didArmAttack and v.rightArmHealth > 0 then
+				if entity_x(v.naija) > entity_x(me)+64 and entity_isEntityInRange(me, v.naija, 680) and entity_y(v.naija) > entity_y(me)-200 then
 					entity_setState(me, STATE_RIGHTCLAWSWIPE)
 					didArmAttack = true
 				end
@@ -282,42 +280,42 @@ function update(me, dt)
 	
 	
 	entity_handleShotCollisionsSkeletal(me)
-	bone = entity_collideSkeletalVsCircle(me, naija)
+	local bone = entity_collideSkeletalVsCircle(me, v.naija)
 	if bone ~= 0 then
 		avatar_fallOffWall()
-		if entity_x(naija) < entity_x(me) then
-			--entity_push(naija, -1200, -100, 0.5)
-			entity_addVel(naija, -1200, -100)
+		if entity_x(v.naija) < entity_x(me) then
+			--entity_push(v.naija, -1200, -100, 0.5)
+			entity_addVel(v.naija, -1200, -100)
 		else
-			entity_addVel(naija, 1200, -100)
-			--entity_push(naija, 1200, -100, 0.5)
+			entity_addVel(v.naija, 1200, -100)
+			--entity_push(v.naija, 1200, -100, 0.5)
 		end
-		entity_damage(naija, me, 1)
+		entity_damage(v.naija, me, 1)
 	end
 	
 	entity_clearTargetPoints(me)
 	if entity_isState(me, STATE_JUMP) then
-		vx = entity_velx(me)
-		vy = entity_vely(me)
+		local vx = entity_velx(me)
+		local vy = entity_vely(me)
 		if vx ~= 0 then
-			len = vector_getLength(vx, vy)
+			local len = vector_getLength(vx, vy)
 			vx, vy = vector_setLength(0, vy, len)
 			entity_clearVel(me)
 			entity_addVel(me, vx, vy)
 		end
-		entity_addTargetPoint(me, bone_getWorldPosition(bone_squid))
+		entity_addTargetPoint(me, bone_getWorldPosition(v.bone_squid))
 	elseif not entity_isState(me, STATE_STUNNED) then
-		entity_addTargetPoint(me, bone_getWorldPosition(bone_la))
-		entity_addTargetPoint(me, bone_getWorldPosition(bone_ra))
+		entity_addTargetPoint(me, bone_getWorldPosition(v.bone_la))
+		entity_addTargetPoint(me, bone_getWorldPosition(v.bone_ra))
 	else
-		entity_addTargetPoint(me, bone_getWorldPosition(bone_lw))
-		entity_addTargetPoint(me, bone_getWorldPosition(bone_rw))
+		entity_addTargetPoint(me, bone_getWorldPosition(v.bone_lw))
+		entity_addTargetPoint(me, bone_getWorldPosition(v.bone_rw))
 	end
 end
 
 --[[
-	rightClawHealth = rightClawHealth - dmg
-	if rightClawHealth < 0 then
+	v.rightClawHealth = v.rightClawHealth - dmg
+	if v.rightClawHealth < 0 then
 		entity_toggleBone(me, bone, 0)
 	end
 ]]--
@@ -328,25 +326,25 @@ function damage(me, attacker, bone, dtype, dmg)
 	if bone ~= 0 then
 		if bone_isName(bone, "LeftAntenna") or bone_isName(bone, "RightAntenna") then	
 			if not entity_isState(me, STATE_STUNNED) and not entity_isState(me, STATE_JUMP) 
-			and (leftArmHealth>0 or rightArmHealth>0) then
-				ahits = ahits - dmg
+			and (v.leftArmHealth>0 or v.rightArmHealth>0) then
+				v.ahits = v.ahits - dmg
 				bone_damageFlash(bone)
-				if ahits <= 0 then
+				if v.ahits <= 0 then
 					debugLog("state stunned")
-					entity_setState(me, STATE_STUNNED, stunTime)
+					entity_setState(me, STATE_STUNNED, v.stunTime)
 					
-					ahits = ahitsMax
+					v.ahits = v.ahitsMax
 				end
 			end
 		elseif bone_isName(bone, "RightArmWeakPoint") or bone_isName(bone, "LeftArmWeakPoint") then
 			if entity_isState(me, STATE_STUNNED) then
 				if bone_isName(bone, "LeftArmWeakPoint") then						
-					leftArmHealth = leftArmHealth - dmg
+					v.leftArmHealth = v.leftArmHealth - dmg
 					for i=30,33 do
 						bone_damageFlash(entity_getBoneByIdx(me, i))
 					end
-					if leftArmHealth <= 0 then
-						leftArmAlive = false
+					if v.leftArmHealth <= 0 then
+						v.leftArmAlive = false
 						-- [30 - 33]
 						for i=30,33 do
 							bone_setVisible(entity_getBoneByIdx(me, i), false)
@@ -354,13 +352,13 @@ function damage(me, attacker, bone, dtype, dmg)
 					end
 				end
 				if bone_isName(bone, "RightArmWeakPoint") then
-					rightArmHealth = rightArmHealth - dmg
+					v.rightArmHealth = v.rightArmHealth - dmg
 					for i=26,29 do
 						bone_damageFlash(entity_getBoneByIdx(me, i))
 					end
-					debugLog(string.format("rightArmHealth: %d", rightArmHealth))
-					if rightArmHealth <= 0 then
-						rightArmAlive = false
+					debugLog(string.format("rightArmHealth: %d", v.rightArmHealth))
+					if v.rightArmHealth <= 0 then
+						v.rightArmAlive = false
 						-- [26 - 29]
 						for i=26,29 do
 							bone_setVisible(entity_getBoneByIdx(me, i), false)
@@ -381,8 +379,8 @@ function damage(me, attacker, bone, dtype, dmg)
 			--[[
 			bone_damageFlash(bone)
 
-			squidHealth = squidHealth - dmg
-			if squidHealth <= 0 then
+			v.squidHealth = v.squidHealth - dmg
+			if v.squidHealth <= 0 then
 				msg ("Killed Squid")
 				
 			end
@@ -401,22 +399,22 @@ function enterState(me)
 	if entity_isState(me, STATE_BASIC) then
 		entity_setDamageTarget(me, DT_AVATAR_VINE, true)
 		entity_animate(me, "idle", LOOP_INF)
-		--bone_setTouchDamage(leftClawBone, 0)
-		--bone_setTouchDamage(rightClawBone, 0)
+		--bone_setTouchDamage(v.leftClawBone, 0)
+		--bone_setTouchDamage(v.rightClawBone, 0)
 	elseif entity_isState(me, STATE_STUNNED) then
 		entity_stopAllAnimations(me)
 		entity_animate(me, "stunned", LOOP_INF)
 	elseif entity_isState(me, STATE_LEFTCLAWSWIPE) then
 		entity_animate(me, "ArmSwipe", 0, LAYER_LEFTARM)
-		--bone_setTouchDamage(leftClawBone, 1)
+		--bone_setTouchDamage(v.leftClawBone, 1)
 	elseif entity_isState(me, STATE_RIGHTCLAWSWIPE) then
 		entity_animate(me, "ArmSwipe", 0, LAYER_RIGHTARM)
-		--bone_setTouchDamage(rightClawBone, 1)
+		--bone_setTouchDamage(v.rightClawBone, 1)
 	elseif entity_isState(me, STATE_JUMP) then
 		entity_setDamageTarget(me, DT_AVATAR_VINE, false)
 		--entity_applySurfaceNormalForce(me, 4)
 		entity_addVel(me,0,-2000)
-		jumpTimer = 0
+		v.jumpTimer = 0
 		entity_adjustPositionBySurfaceNormal(me, 8)
 		entity_rotate(me, 0, 0.5)
 	elseif entity_isState(me, STATE_TEABAG) then
@@ -431,8 +429,8 @@ function enterState(me)
 		entity_stopInterpolating(me)
 		entity_setStateTime(me, 99)
 		fadeOutMusic(6)
-		entity_idle(naija)
-		entity_setInvincible(naija, true)
+		entity_idle(v.naija)
+		entity_setInvincible(v.naija, true)
 		cam_toEntity(me)
 		entity_setInternalOffset(me, 0, 0)
 		entity_setInternalOffset(me, 10, 0, 0.1, -1, 1)
@@ -460,8 +458,8 @@ function enterState(me)
 		watch(1.2)
 		fade(0, 0.5, 1, 1, 1)
 		
-		cam_toEntity(naija)
-		entity_setInvincible(naija, false)
+		cam_toEntity(v.naija)
+		entity_setInvincible(v.naija, false)
 		pickupGem("Boss-RockCrab")
 		overrideZoom(0, 1)
 		entity_setStateTime(me, 0.1)
@@ -476,10 +474,10 @@ function exitState(me)
 		entity_setState(me, STATE_JUMP)
 	elseif entity_isState(me, STATE_BASIC) then
 		entity_animate(me, "idle", -1, LAYER_LEGSANDBODY)
-		wasMoving = false
+		v.wasMoving = false
 	elseif entity_isState(me, STATE_FIRING) then
 		entity_setState(me, STATE_BASIC, -1)
-		fireDelay = math.random(3) + 2
+		v.fireDelay = math.random(3) + 2
 	end
 end
 
@@ -489,13 +487,13 @@ end
 function animationKey(me, key)
 	if entity_isState(me, STATE_FIRING) then
 		if key == 2 or key == 4 or key == 6 then
-			x, y = entity_getPosition(n)
-			bx, by = bone_getWorldPosition(fireLoc)
+			local x, y = entity_getPosition(v.n)
+			local bx, by = bone_getWorldPosition(v.fireLoc)
 			x = x - bx
 			y = y - by
 			x, y = vector_setLength(x, y, 100)
 			
-			s = createShot("CrabBoss", me, entity_getTarget(me), bx, by)
+			local s = createShot("CrabBoss", me, entity_getTarget(me), bx, by)
 			if key == 2 then
 				shot_setAimVector(s, -50*0.5 + x*0.5, -100*0.5 + y*0.5)
 			elseif key == 4 then
@@ -508,8 +506,8 @@ function animationKey(me, key)
 end
 
 function hitSurface(me)
-	if entity_y(me) >= inity then
-		entity_setPosition(me, entity_x(me), inity)
+	if entity_y(me) >= v.inity then
+		entity_setPosition(me, entity_x(me), v.inity)
 		entity_setState(me, STATE_TEABAG)
 	end
 --[[

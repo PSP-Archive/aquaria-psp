@@ -17,9 +17,9 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-function foundSecrets()
+local function foundSecrets()
 	--return true
 	if not isFlag(FLAG_SKIPSECRETCHECK, 0) then
 		return false
@@ -38,14 +38,14 @@ function init()
 	
 	setOverrideMusic("")
 	
-	n = getNaija()
-	mia = 0
-	thir = 0
+	local n = getNaija()
+	local mia = 0
+	local thir = 0
 	
 	stopMusic()
 	
 	if foundSecrets() then
-		li = getLi()
+		local li = getLi()
 		if li ~= 0 then
 			entity_delete(li)
 		end
@@ -58,11 +58,11 @@ function init()
 		
 		overrideZoom(1)
 		
-		bg = getEntityByName("falsebg")
+		local bg = getEntity("falsebg")
 		
 		n = getNaija()
 		
-		nd = getNode("START")
+		local nd = getNode("START")
 		entity_setPosition(n, node_x(nd), node_y(nd))
 		
 		
@@ -132,7 +132,7 @@ function init()
 		
 		
 		if isFlag(FLAG_SKIPSECRETCHECK, 0) then
-			playVoice("naija_endingpart2")
+			voice("naija_endingpart2")
 			watchForVoice()
 		end
 		

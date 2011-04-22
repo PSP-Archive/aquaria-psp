@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#include "Game.h"
 	#include "Avatar.h"
 #else
-	#include "tinyxml.h"
+	#include "../ExternalLibs/tinyxml.h"
 #endif
 
 #ifdef BBGE_BUILD_WINDOWS
@@ -33,33 +33,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#include <windows.h>
 #endif
 
-
-void UserSettings::fixShittyVista()
-{
-	// load
-	load(false);
-
-	// check version #, is it equal to ours?
-	if (version.settingsVersion != VERSION_USERSETTINGS)
-	{
-#ifdef BBGE_BUILD_WINDOWS
-		//debugLog("User settings out of date, overwriting with defaults...");
-		MessageBox(0, "User settings out of date, overwriting with defaults...", "Aquaria", MB_OK);
-#endif
-		//errorLog("User settings out of date, updating...");
-
-		// if not, load the default settings for this version #
-		loadDefaults(false);
-
-		// then save over top of "usersettings.xml"
-		save();
-
-		/*
-		// then reload
-		load(false);
-		*/
-	}
-}
 
 void UserSettings::save()
 {
@@ -94,9 +67,9 @@ void UserSettings::save()
 
 			TiXmlElement xml_volume("Volume");
 			{
-				xml_volume.SetDoubleAttribute("sfx", audio.sfxvol);
-				xml_volume.SetDoubleAttribute("vox", audio.voxvol);
-				xml_volume.SetDoubleAttribute("mus", audio.musvol);
+				xml_volume.SetDoubleAttribute("sfx", double(audio.sfxvol));
+				xml_volume.SetDoubleAttribute("vox", double(audio.voxvol));
+				xml_volume.SetDoubleAttribute("mus", double(audio.musvol));
 				xml_volume.SetAttribute("subs", audio.subtitles);
 			}
 			xml_audio.InsertEndChild(xml_volume);
@@ -156,6 +129,7 @@ void UserSettings::save()
 				xml_screenMode.SetAttribute("vsync",			video.vsync);
 				xml_screenMode.SetAttribute("darkfbuffer",		video.darkfbuffer);
 				xml_screenMode.SetAttribute("darkbuffersize",	video.darkbuffersize);
+				xml_screenMode.SetAttribute("displaylists",		video.displaylists);
 			}
 			xml_video.InsertEndChild(xml_screenMode);
 
@@ -196,7 +170,7 @@ void UserSettings::save()
 
 			TiXmlElement xml_joyCursorSpeed("JoyCursorSpeed");
 			{
-				xml_joyCursorSpeed.SetDoubleAttribute("v", control.joyCursorSpeed);
+				xml_joyCursorSpeed.SetDoubleAttribute("v", double(control.joyCursorSpeed));
 			}
 			xml_control.InsertEndChild(xml_joyCursorSpeed);
 
@@ -206,8 +180,8 @@ void UserSettings::save()
 				xml_joyAxes.SetAttribute("s1ay", control.s1ay);
 				xml_joyAxes.SetAttribute("s2ax", control.s2ax);
 				xml_joyAxes.SetAttribute("s2ay", control.s2ay);
-				xml_joyAxes.SetDoubleAttribute("s1dead", control.s1dead);
-				xml_joyAxes.SetDoubleAttribute("s2dead", control.s2dead);
+				xml_joyAxes.SetDoubleAttribute("s1dead", double(control.s1dead));
+				xml_joyAxes.SetDoubleAttribute("s2dead", double(control.s2dead));
 			}
 			xml_control.InsertEndChild(xml_joyAxes);
 			
@@ -252,6 +226,7 @@ void UserSettings::save()
 		TiXmlElement xml_data("Data");
 		{
 			xml_data.SetAttribute("savePage",			data.savePage);
+			xml_data.SetAttribute("saveSlot",			data.saveSlot);
 			xml_data.SetAttribute("lastSelectedMod",	data.lastSelectedMod);
 		}
 		doc.InsertEndChild(xml_data);
@@ -273,10 +248,13 @@ void readInt(TiXmlElement *xml, const std::string &elem, std::string att, int *t
 		TiXmlElement *xml2 = xml->FirstChildElement(elem);
 		if (xml2)
 		{
-			const char *c = xml2->Attribute(att)->c_str();
-			if (c)
-			{
-				*toChange = atoi(c);
+			const std::string *s = xml2->Attribute(att);
+			if (s) {
+				const char *c = s->c_str();
+				if (c)
+				{
+					*toChange = atoi(c);
+				}
 			}
 		}
 	}
@@ -286,10 +264,13 @@ void readIntAtt(TiXmlElement *xml, std::string att, int *toChange)
 {
 	if (xml)
 	{
-		const char *c = xml->Attribute(att)->c_str();
-		if (c)
-		{
-			*toChange = atoi(c);
+		const std::string *s = xml->Attribute(att);
+		if (s) {
+			const char *c = s->c_str();
+			if (c)
+			{
+				*toChange = atoi(c);
+			}
 		}
 	}
 }
@@ -298,7 +279,19 @@ void UserSettings::loadDefaults(bool doApply)
 {
 	std::ostringstream os;
 	os << "default-" << VERSION_USERSETTINGS << ".xml";
-	load(doApply, os.str());
+	if (exists(os.str()))
+	{
+		load(doApply, os.str());
+		return;
+	}
+
+	if (exists("default_usersettings.xml"))
+	{
+		load(doApply, "default_usersettings.xml");
+		return;
+	}
+
+	errorLog("No default user settings file found! Controls may be broken.");
 }
 
 void UserSettings::load(bool doApply, const std::string &overrideFile)
@@ -325,6 +318,27 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	control.actionSet.clearActions();
 	//initInputCodeMap();
 
+	control.actionSet.addActionInput("lmb");
+	control.actionSet.addActionInput("rmb");
+	control.actionSet.addActionInput("PrimaryAction");
+	control.actionSet.addActionInput("SecondaryAction");
+	control.actionSet.addActionInput("SwimUp");
+	control.actionSet.addActionInput("SwimDown");
+	control.actionSet.addActionInput("SwimLeft");
+	control.actionSet.addActionInput("SwimRight");
+	control.actionSet.addActionInput("Roll");
+	control.actionSet.addActionInput("Revert");
+	control.actionSet.addActionInput("WorldMap");
+	control.actionSet.addActionInput("Escape");
+	control.actionSet.addActionInput("PrevPage");
+	control.actionSet.addActionInput("NextPage");
+	control.actionSet.addActionInput("CookFood");
+	control.actionSet.addActionInput("FoodLeft");
+	control.actionSet.addActionInput("FoodRight");
+	control.actionSet.addActionInput("FoodDrop");
+	control.actionSet.addActionInput("Look");
+	control.actionSet.addActionInput("ToggleHelp");
+
 	TiXmlElement *xml_system = doc.FirstChildElement("System");
 	if (xml_system)
 	{
@@ -348,9 +362,10 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		TiXmlElement *xml_volume = xml_audio->FirstChildElement("Volume");
 		if (xml_volume)
 		{
-			xml_volume->Attribute("sfx", &audio.sfxvol);
-			xml_volume->Attribute("vox", &audio.voxvol);
-			xml_volume->Attribute("mus", &audio.musvol);
+			double d;
+			xml_volume->Attribute("sfx", &d), audio.sfxvol = d;
+			xml_volume->Attribute("vox", &d), audio.voxvol = d;
+			xml_volume->Attribute("mus", &d), audio.musvol = d;
 			xml_volume->Attribute("subs", &audio.subtitles);
 		}
 
@@ -397,6 +412,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 			readIntAtt(xml_screenMode, "vsync",				&video.vsync);
 			readIntAtt(xml_screenMode, "darkfbuffer",		&video.darkfbuffer);
 			readIntAtt(xml_screenMode, "darkbuffersize",	&video.darkbuffersize);
+			readIntAtt(xml_screenMode, "displaylists",		&video.displaylists);
 		}
 
 		readInt(xml_video, "SaveSlotScreens", "on", &video.saveSlotScreens);
@@ -414,8 +430,9 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		TiXmlElement *xml_joyCursorSpeed = xml_control->FirstChildElement("JoyCursorSpeed");
 		if (xml_joyCursorSpeed)
 		{
+			double d;
 			if (xml_joyCursorSpeed->Attribute("v"))
-				xml_joyCursorSpeed->Attribute("v", &control.joyCursorSpeed);
+				xml_joyCursorSpeed->Attribute("v", &d), control.joyCursorSpeed = d;
 		}
 
 		TiXmlElement *xml_joyAxes = xml_control->FirstChildElement("JoyAxes");
@@ -425,8 +442,9 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 			xml_joyAxes->Attribute("s1ay", &control.s1ay);
 			xml_joyAxes->Attribute("s2ax", &control.s2ax);
 			xml_joyAxes->Attribute("s2ay", &control.s2ay);
-			xml_joyAxes->Attribute("s1dead", &control.s1dead);
-			xml_joyAxes->Attribute("s2dead", &control.s2dead);
+			double d;
+			xml_joyAxes->Attribute("s1dead", &d), control.s1dead = d;
+			xml_joyAxes->Attribute("s2dead", &d), control.s2dead = d;
 		}
 
 		TiXmlElement *xml_actionSet = xml_control->FirstChildElement("ActionSet");
@@ -463,11 +481,8 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	if (xml_data)
 	{
 		readIntAtt(xml_data, "savePage", &data.savePage);
+		readIntAtt(xml_data, "saveSlot", &data.saveSlot);
 		readIntAtt(xml_data, "lastSelectedMod", &data.lastSelectedMod);
-		/*
-		data.savePage = atoi(xml_data->Attribute("savePage"));
-		data.lastSelectedMod = atoi(xml_data->Attribute("lastSelectedMod"));
-		*/
 	}
 
 	//clearInputCodeMap();

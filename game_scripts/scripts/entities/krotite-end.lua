@@ -17,9 +17,9 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
 function init(me)
 	setupEntity(me)
@@ -31,16 +31,16 @@ function init(me)
 	entity_setState(me, STATE_IDLE)
 	
 		
-	glow = entity_getBoneByName(me, "Glow")
-	noteBone = entity_getBoneByName(me, "Note")
+	local glow = entity_getBoneByName(me, "Glow")
+	local noteBone = entity_getBoneByName(me, "Note")
 	
 	bone_setVisible(glow, 0)
 	bone_setVisible(noteBone, 0)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)

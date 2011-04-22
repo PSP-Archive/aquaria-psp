@@ -17,11 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-spawnedEnemies = false
-killNode = 0
+v.n = 0
+v.spawnedEnemies = false
+v.killNode = 0
 
 function init(me)
 	setupEntity(me)
@@ -31,15 +31,15 @@ function init(me)
 	entity_scale(me, 0.6, 0.6)
 end
 
-function spawnEnemies(me)
-	if spawnedEnemies then return end
-	spawnedEnemies = true
+local function spawnEnemies(me)
+	if v.spawnedEnemies then return end
+	v.spawnedEnemies = true
 	
-	entity_idle(n)
+	entity_idle(v.n)
 	debugLog("SPAWNENEMIES: START")
 
-	ent = getFirstEntity()
-	anEnt = 0
+	local ent = getFirstEntity()
+	local anEnt = 0
 	while ent~=0 do
 		if entity_getEntityType(ent) == ET_NEUTRAL and entity_isName(ent, "CC_Kid") then
 			anEnt = ent
@@ -53,7 +53,6 @@ function spawnEnemies(me)
 		watch(FRAME_TIME)
 	end
 	
-	iter = 0
 	ent = getFirstEntity()
 	while ent~=0 do
 		if entity_getEntityType(ent) == ET_NEUTRAL and entity_isName(ent, "CC_Kid") then
@@ -64,37 +63,37 @@ function spawnEnemies(me)
 		ent = getNextEntity()
 	end
 	
-	cam_toEntity(n)
+	cam_toEntity(v.n)
 	
 	debugLog("SPAWNENEMIES: END")
 	setFlag(FLAG_SUNKENCITY_PUZZLE, 5)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
 	if isFlag(FLAG_SUNKENCITY_PUZZLE, 5) then
 		spawnEnemies(me)
 	elseif isFlag(FLAG_SUNKENCITY_PUZZLE, 6) then
-		spawnedEnemies = true
+		v.spawnedEnemies = true
 	end
 	
-	killNode = getNode("KILL")
+	v.killNode = getNode("KILL")
 end
 
 function update(me, dt)
 	if entity_isState(me, STATE_IDLE) then
 		if isFlag(FLAG_SUNKENCITY_PUZZLE, 5) then
-			num = node_getNumEntitiesIn(killNode, "Scavenger")
+			local num = node_getNumEntitiesIn(v.killNode, "Scavenger")
 			
 			if num < 1 then
 				setFlag(FLAG_SUNKENCITY_PUZZLE, 6)
 				debugLog(msg("You beat the enemies!!!"))
 			end
 		else
-			if not spawnedEnemies then
-				if entity_isEntityInRange(me, n, 128) then
+			if not v.spawnedEnemies then
+				if entity_isEntityInRange(me, v.n, 128) then
 					spawnEnemies(me)
 				end
 			end

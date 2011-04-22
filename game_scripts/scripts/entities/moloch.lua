@@ -17,21 +17,21 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
--- MOLOCH
+v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
+-- MOLOCH
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-fireDelay = 2
-moveTimer = 0
-charge = 0
+v.fireDelay = 2
+v.moveTimer = 0
+v.charge = 0
 
-STATE_CHARGE = 1000
-STATE_DELAY = 1001
-inited = false
+local STATE_CHARGE = 1000
+local STATE_DELAY = 1001
+v.inited = false
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -58,10 +58,10 @@ function init(me)
 	entity_clampToSurface(me)
 	entity_setDeathParticleEffect(me, "PurpleExplode")
 	entity_initSkeletal(me, "Moloch")
-	charge = entity_getBoneByName(me, "Charge")
-	bone_alpha(charge, 0)
+	v.charge = entity_getBoneByName(me, "Charge")
+	bone_alpha(v.charge, 0)
 	entity_animate(me, "idle")
-	inited = true
+	v.inited = true
 	
 	entity_setEatType(me, EAT_FILE, "HotEnergy")
 end
@@ -75,18 +75,18 @@ function update(me, dt)
 		entity_rotateToSurfaceNormal(me, 0.1)
 
 		-- entity_rotateToSurfaceNormal(0.1)
-		moveTimer = moveTimer + dt
-		if moveTimer > 4 then
+		v.moveTimer = v.moveTimer + dt
+		if v.moveTimer > 4 then
 			entity_switchSurfaceDirection(me)
-			moveTimer = 0
+			v.moveTimer = 0
 		end	
 		if not(entity_hasTarget(me)) then
 			entity_findTarget(me, 1200)
 		else
-			if fireDelay > 0 then
-				fireDelay = fireDelay - dt
-				if fireDelay < 0 then
-					fireDelay = 3
+			if v.fireDelay > 0 then
+				v.fireDelay = v.fireDelay - dt
+				if v.fireDelay < 0 then
+					v.fireDelay = 3
 					entity_setState(me, STATE_CHARGE)
 				end
 			end
@@ -103,19 +103,19 @@ end
 
 function enterState(me)
 	if entity_getState(me)==STATE_IDLE then
-		if inited then
+		if v.inited then
 			bone_setSegs(entity_getBoneByName(me, "Body"), 2, 16, 0.3, 0.3, -0.028, 0, 6, 1)
 		end
 	elseif entity_isState(me, STATE_CHARGE) then
-		t = 3
+		local t = 3
 		entity_setStateTime(me, t)
-		bone_scale(charge)
-		bone_scale(charge, 1.5, 1.5, t)
+		bone_scale(v.charge)
+		bone_scale(v.charge, 1.5, 1.5, t)
 		--[[
-		bone_offset(charge, -5)
-		bone_offset(charge, 5, 0, 0.5, -1)
+		bone_offset(v.charge, -5)
+		bone_offset(v.charge, 5, 0, 0.5, -1)
 		]]--
-		bone_alpha(charge, 1, 0.5)
+		bone_alpha(v.charge, 1, 0.5)
 		bone_setSegs(entity_getBoneByName(me, "Body"), 2, 16, 0.3, 0.3, -0.058, 0, 12, 1)
 	elseif entity_isState(me, STATE_DELAY) then
 		entity_setStateTime(me, 1)
@@ -124,13 +124,13 @@ end
 
 function exitState(me)
 	if entity_isState(me, STATE_CHARGE) then
-		sx,sy= bone_getScale(charge)
+		local sx, sy = bone_getScale(v.charge)
 		if sx > 1.2 then
-			bone_alpha(charge, 0, 0.2)
+			bone_alpha(v.charge, 0, 0.2)
 			--entity_doGlint(me, "Particles/PurpleFlare")
-			--s = entity_fireAtTarget(me, "", 1.5, 700, 500, 3, 64)
+			--local s = entity_fireAtTarget(me, "", 1.5, 700, 500, 3, 64)
 			--shot_setNice(s, "Shots/HotEnergy", "HeatTrail", "HeatHit")
-			s = createShot("HotEnergy", me, entity_getTarget(me), bone_getWorldPosition(charge))
+			local s = createShot("HotEnergy", me, entity_getTarget(me), bone_getWorldPosition(v.charge))
 		end
 		entity_setState(me, STATE_DELAY)
 	elseif entity_isState(me, STATE_DELAY) then

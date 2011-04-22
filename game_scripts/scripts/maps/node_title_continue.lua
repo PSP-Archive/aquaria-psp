@@ -17,7 +17,7 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
 function init(me)
 	node_setCursorActivation(me, true)
@@ -28,12 +28,17 @@ function action(me, action, state)
 	if isNestedMain() then return end
 	if getNodeToActivate() == me and state == 1 then
 		if action == ACTION_MENULEFT then
-			node = getNode("TITLE_NEWGAME")
+			local node = getNode("TITLE_NEWGAME")
 			setNodeToActivate(node)
 			setMousePos(toWindowFromWorld(node_x(node), node_y(node)-20))
 			return false
 		elseif action == ACTION_MENURIGHT then
-			node = getNode("TITLE_QUIT")
+			local node = getNode("TITLE_QUIT")
+			setNodeToActivate(node)
+			setMousePos(toWindowFromWorld(node_x(node), node_y(node)-20))
+			return false
+		elseif action == ACTION_MENUUP and not isDemo() then
+			local node = getNode("TITLE_REPLAYINTRO")
 			setNodeToActivate(node)
 			setMousePos(toWindowFromWorld(node_x(node), node_y(node)-20))
 			return false
@@ -51,13 +56,16 @@ function activate(me)
 	
 	--[[
 	setNodeToActivate(0)
-	stopCursorGlow()
 	]]--
 	setActivation(false)
 
 	doLoadMenu()	
 	
 	setActivation(true)
+	
+	if getInputMode() ~= INPUT_MOUSE then
+		setMousePos(toWindowFromWorld(node_x(me), node_y(me)))
+	end
 end
 
 function update(me, dt)

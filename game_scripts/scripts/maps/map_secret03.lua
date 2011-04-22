@@ -17,23 +17,20 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
 --function ASDFASFD end end end end
 
-naija = 0
-li = 0
-
 function init()	
-	n = getNaija()
-	node = getNode("INSIDE")
+	local n = getNaija()
+	local node = getNode("INSIDE")
 	entity_setPosition(n, node_x(node), node_y(node))
 	overrideZoom(0.9)
 	
 	fade(0, 0)
 	
-	start = getNode("SKY1")
-	camDummy = createEntity("Empty")
+	local start = getNode("SKY1")
+	local camDummy = createEntity("Empty")
 	cam_toEntity(camDummy)
 	entity_setPosition(camDummy, node_x(start), node_y(start)-400)
 	entity_setPosition(camDummy, node_x(start), node_y(start), 7, 0, 0, 1)
@@ -51,10 +48,10 @@ function init()
 	fade2(0, 1, 1, 1, 1)
 	--watch(0.5)
 
-	li = getEntity("YoungLi")
-	naija = getEntity("NaijaChild")
+	local li = getEntity("YoungLi")
+	local naija = getEntity("NaijaChild")
 	
-	sx,sy = entity_getPosition(li)
+	local sx, sy = entity_getPosition(li)
 	
 	entity_setPosition(li, entity_x(li)-1024, entity_y(li), -100, 0, 0, 1)
 	fadeIn(1)
@@ -72,7 +69,7 @@ function init()
 	watch(1)
 	
 	--entity_swimToNode(naija, getNode("NAIJATO"))
-	node = getNode("NAIJATO")
+	local node = getNode("NAIJATO")
 	
 	entity_animate(naija, "swim", -1)
 	entity_setPosition(naija, node_x(node), node_y(node), 6, 0, 0, 1)

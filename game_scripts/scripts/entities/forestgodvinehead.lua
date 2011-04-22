@@ -17,20 +17,20 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-timer 			= 0
-growTime 		= 0.1
-size			= 32
-life			= 10
-moveTowards		= 400
+v.timer			= 0
+v.growTime		= 0.1
+v.size			= 32
+v.life			= 10
+v.moveTowards	= 400
 
 function init(me)
 	setupEntity(me)
 	entity_setEntityType(me, ET_ENEMY)
 	entity_setTexture(me, "ForestGod/Vine-Head")
 	
-	entity_setCollideRadius(me, size)
+	entity_setCollideRadius(me, v.size)
 	entity_setState(me, STATE_IDLE)
 	
 	entity_setCanLeaveWater(me, true)
@@ -50,38 +50,38 @@ function init(me)
 	entity_setDamageTarget(me, DT_AVATAR_PET, false)
 	entity_setDamageTarget(me, DT_AVATAR_BITE, false)
 	
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
 	esetv(me, EV_TYPEID, EVT_FORESTGODVINE)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function songNote(me, note)
 end
 
 function update(me, dt)
-	if life < 0 then return end
-	if timer ~= -1 then
-		timer = timer + dt
-		if timer > growTime then
-			timer = 0
-			e = createEntity("ForestGodVine", "", entity_x(me), entity_y(me))
+	if v.life < 0 then return end
+	if v.timer ~= -1 then
+		v.timer = v.timer + dt
+		if v.timer > v.growTime then
+			v.timer = 0
+			local e = createEntity("ForestGodVine", "", entity_x(me), entity_y(me))
 			entity_rotate(e, entity_getRotation(me))
 		end
 	end
-	moveTowards = moveTowards + dt*100
-	entity_moveTowardsTarget(me, dt, moveTowards)
+	v.moveTowards = v.moveTowards + dt*100
+	entity_moveTowardsTarget(me, dt, v.moveTowards)
 	entity_updateMovement(me, dt)
 	entity_handleShotCollisions(me)
 	entity_rotateToVel(me)
 	
 	if entity_getAlpha(me) > 0.6 then
-		entity_touchAvatarDamage(me, size, 1, 500)
+		entity_touchAvatarDamage(me, v.size, 1, 500)
 	end
 end
 
@@ -90,7 +90,7 @@ end
 
 function enterState(me)
 	if entity_isState(me, STATE_OFF) then
-		life = 0
+		v.life = 0
 		entity_delete(me, 0.5)
 		entity_alpha(me, 0, 0.5)
 	end

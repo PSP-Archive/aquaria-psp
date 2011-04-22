@@ -17,10 +17,12 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 --SeaHorse
 
 dofile("scripts/entities/seahorsecommon.lua")
 
 function init(me)
-	commonInit(me, "Seahorse/Seahorse-0001", 0)
+	v.commonInit(me, "Seahorse/Seahorse-0001", 0)
 end

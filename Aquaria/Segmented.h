@@ -33,6 +33,7 @@ public:
 protected:
 
 	float minDist, maxDist;
+	float sqrMinDist, sqrMaxDist;
 	void initSegments(const Vector &position);
 	void updateSegments(const Vector &position, bool reverse=false);
 	void updateSegment(int i, const Vector &diff);

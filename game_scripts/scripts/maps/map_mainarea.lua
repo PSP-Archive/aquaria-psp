@@ -17,7 +17,7 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
 function init()
 --[[
@@ -34,12 +34,12 @@ function init()
 		overrideZoom(0.6, 15)
 		
 		
-		dummy = createEntity("Empty")
+		local dummy = createEntity("Empty")
 		
-		na1 = getNode("endpana1")
-		nb1 = getNode("endpanb1")
-		na2 = getNode("endpana2")
-		nb2 = getNode("endpanb2")
+		local na1 = getNode("endpana1")
+		local nb1 = getNode("endpanb1")
+		local na2 = getNode("endpana2")
+		local nb2 = getNode("endpanb2")
 		
 		setCameraLerpDelay(0)
 		cam_toEntity(dummy)
@@ -52,7 +52,7 @@ function init()
 		fadeIn(1)
 		watch(1)
 		
-		playVoice("naija_endingpart1b")
+		voice("naija_endingpart1b")
 		
 		watch(7)
 		
@@ -73,7 +73,7 @@ function init()
 		fade2(0, 1, 1, 1, 1)
 		watch(2)
 		
-		playVoice("naija_endingpart1c")
+		voice("naija_endingpart1c")
 		
 		watchForVoice()
 		

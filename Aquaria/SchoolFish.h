@@ -25,15 +25,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 class SchoolFish : public FlockEntity
 {
 public:
-	SchoolFish();
+	SchoolFish(const std::string &texname = "flock-0001");
 	int range;
 	std::string swimSound;
-	void activate();
 	void applyLayer(int layer);
 protected:
 	float burstDelay;
 	float soundDelay, flipDelay, dodgeAbility, respawnTimer, rippleTimer;
 	int oldFlockID;
+	float lastSpeed;
+
 	void avoid(Vector &accumulator, Vector pos, bool inv=false);
 	void applySeparation(Vector &accumulator);
 	void applyCohesion(Vector &accumulator);

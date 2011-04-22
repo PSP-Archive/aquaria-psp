@@ -17,30 +17,30 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- SPORE SEED
 
-dofile("scripts/entities/entityinclude.lua")
+v.growEmitter = 0
+v.done = false
+v.weight = 400
 
-growEmitter = 0
-done = false
-weight = 400
+v.SEED_FLOWER		= 0
+v.SEED_VINE			= 1
+v.SEED_UBERVINE		= 2
 
-SEED_FLOWER			= 0
-SEED_VINE			= 1
-SEED_UBERVINE		= 2
+v.seedType = 0
 
-seedType = 0
-
-function commonInit(me, st)
+function v.commonInit(me, st)
 	setupEntity(me)
 	entity_setTexture(me, "Naija/Seedling")
 	entity_setEntityLayer(me, 1)
 	
-	entity_initEmitter(me, growEmitter, "SporeSeedGrow")
+	entity_initEmitter(me, v.growEmitter, "SporeSeedGrow")
 	
 	entity_setHealth(me, 1)
 	entity_setCollideRadius(me, 2)
-	entity_setWeight(me, weight)
+	entity_setWeight(me, v.weight)
 	entity_setState(me, STATE_IDLE)
 	entity_setMaxSpeed(me, 800)
 	
@@ -51,11 +51,11 @@ function commonInit(me, st)
 	entity_setAllDamageTargets(me, false)
 	entity_setDamageTarget(me, DT_AVATAR_BITE, true)
 	
-	seedType = st
+	v.seedType = st
 	
-	if seedType == SEED_FLOWER then
+	if v.seedType == v.SEED_FLOWER then
 		entity_setTexture(me, "Naija/Seed")
-	elseif seedType == SEED_UBERVINE then
+	elseif v.seedType == v.SEED_UBERVINE then
 		entity_setTexture(me, "Naija/Uberseed")
 	end
 end
@@ -64,23 +64,23 @@ function postInit(me)
 	entity_ensureLimit(me, 3, STATE_DONE)
 end
 
-function terminate(me)
-	if not done then
+local function terminate(me)
+	if not v.done then
 		
-		if seedType == SEED_VINE then
+		if v.seedType == v.SEED_VINE then
 			registerSporeDrop(entity_x(me), entity_y(me),1)
-			createEntity("Vine", "", entity_getPosition(me))			
-		elseif seedType == SEED_UBERVINE then
+			createEntity("Vine", "", entity_getPosition(me))
+		elseif v.seedType == v.SEED_UBERVINE then
 			registerSporeDrop(entity_x(me), entity_y(me),2)
-			createEntity("UberVine", "", entity_getPosition(me))			
+			createEntity("UberVine", "", entity_getPosition(me))
 		else
 			registerSporeDrop(entity_x(me), entity_y(me),0)
-			createEntity("NatureFormFlowers", "", entity_getPosition(me))			
+			createEntity("NatureFormFlowers", "", entity_getPosition(me))
 		end
 		
 		entity_delete(me)
 		
-		done = true
+		v.done = true
 	end
 end
 
@@ -88,14 +88,14 @@ function songNote(me, note)
 end
 
 function update(me, dt)
-	if not done then
+	if not v.done then
 		if entity_updateCurrents(me, dt) then
 			entity_setWeight(me, 1)
 		else
 			if entity_isUnderWater(me) then
-				entity_setWeight(me, weight)
+				entity_setWeight(me, v.weight)
 			else
-				entity_setWeight(me, weight*2)
+				entity_setWeight(me, v.weight*2)
 			end
 		end
 		entity_updateMovement(me, dt)

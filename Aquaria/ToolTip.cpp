@@ -62,7 +62,7 @@ void ToolTip::setText(const std::string &t, const Vector &center, int width)
 
 	back->setWidthHeight(width, height);
 
-	text->position = center - Vector(width,height)*0.5 + Vector(5, 5);	
+	text->position = center - Vector(width,height)*0.5f + Vector(5, 5);	
 }
 
 void ToolTip::setArea(const Vector &p1, const Vector &p2)
@@ -76,7 +76,7 @@ void ToolTip::setArea(const Vector &p1, const Vector &p2)
 void ToolTip::setAreaFromCenter(const Vector &center, int width, int height)
 {
 	areaType = 0;
-	areaCenter = center - Vector(width*0.5, height*0.5);
+	areaCenter = center - Vector(width*0.5f, height*0.5f);
 	areaWidth = width;
 	areaHeight = height;
 }
@@ -85,7 +85,7 @@ void ToolTip::setCircularAreaFromCenter(const Vector &center, int diameter)
 {
 	areaType = 1;
 	areaCenter = center;
-	areaWidth = diameter*0.5;
+	areaWidth = diameter*0.5f;
 }
 
 void ToolTip::onUpdate(float dt)

@@ -17,14 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-attackDelay = 0
-dir = 1
-n = getNaija()
-jaw = 0
+v.attackDelay = 0
+v.dir = 1
+v.jaw = 0
 
-go = false
+v.go = false
 
 function init(me)
 	setupBasicEntity(
@@ -52,8 +51,8 @@ function init(me)
 	entity_setState(me, STATE_IDLE)
 	entity_setCullRadius(me, 1024)
 	
-	n = getNaija()
-	jaw = entity_getBoneByName(me, "Jaw")
+	v.n = getNaija()
+	v.jaw = entity_getBoneByName(me, "Jaw")
 end
 
 function update(me, dt)
@@ -62,36 +61,36 @@ function update(me, dt)
 	end
 	
 	if entity_isState(me, STATE_IDLE) then
-		inRange = false
-		x,y = bone_getWorldPosition(jaw)
-		if entity_isPositionInRange(n, x, y, 550) then
+		local inRange = false
+		local x, y = bone_getWorldPosition(v.jaw)
+		if entity_isPositionInRange(v.n, x, y, 550) then
 			inRange = true
 		end
-		if dir < 0 then
-			if entity_x(n) > entity_x(me) then
+		if v.dir < 0 then
+			if entity_x(v.n) > entity_x(me) then
 				inRange = false
 			end
 		else
-			if entity_x(n) < entity_x(me) then
+			if entity_x(v.n) < entity_x(me) then
 				inRange = false
 			end
 		end
 		if inRange then
-			attackDelay = attackDelay + dt
-			if attackDelay > 1 then
+			v.attackDelay = v.attackDelay + dt
+			if v.attackDelay > 1 then
 				entity_setState(me, STATE_ATTACK)
-				attackDelay = 0
+				v.attackDelay = 0
 			end
 		end
 	end
 	
-	entity_addVel(me, 500*dir, 0)
+	entity_addVel(me, 500*v.dir, 0)
 	
-	if entity_isEntityInRange(me, n, 900) then
-		entity_moveTowards(me, entity_x(n), entity_y(n), 1, 250)
+	if entity_isEntityInRange(me, v.n, 900) then
+		entity_moveTowards(me, entity_x(v.n), entity_y(v.n), 1, 250)
 	end
 	
-	if go then
+	if v.go then
 		entity_moveTowardsTarget(me, 1, 1000)
 	end
 	
@@ -102,25 +101,25 @@ function update(me, dt)
 		entity_flipToVel(me)
 	end
 	
-	if isObstructed(entity_x(me) + 300*dir, entity_y(me)) then
-		dir = -dir
+	if isObstructed(entity_x(me) + 300*v.dir, entity_y(me)) then
+		v.dir = -v.dir
 	end
 	
 	entity_handleShotCollisionsSkeletal(me)
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if bone ~= 0 then
 		if avatar_isTouchHit() then
 			if entity_isState(me, STATE_ATTACK) then
-				entity_damage(n, me, 2)
+				entity_damage(v.n, me, 2)
 			else
-				entity_damage(n, me, 1)
+				entity_damage(v.n, me, 1)
 			end
 		end
 	end
 end
 
 function hitSurface(me)
-	dir = -dir
+	v.dir = -v.dir
 end
 
 function enterState(me)
@@ -136,12 +135,12 @@ function animationKey(me, key)
 		if key == 2 then
 			entity_setMaxSpeedLerp(me, 2)
 			entity_moveTowardsTarget(me, 1, 1000)
-			go = true
+			v.go = true
 		elseif key == 3 then
 			playSfx("bite", 0.2)
 		elseif key == 5 then
 			entity_setMaxSpeedLerp(me, 1, 0.5)
-			go = false
+			v.go = false
 		end
 		--entity_moveTowardsTarget(me, 1, 50000)
 	end
@@ -157,10 +156,10 @@ function dieNormal(me)
 end
 
 function damage(me)
-	if entity_x(n) > entity_x(me) then
-		dir = 1
+	if entity_x(v.n) > entity_x(me) then
+		v.dir = 1
 	else
-		dir = -1
+		v.dir = -1
 	end
 	entity_moveTowardsTarget(me, 1, 1000)
 	return true

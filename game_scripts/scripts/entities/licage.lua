@@ -17,21 +17,21 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-notes = { 1, 3, 4, 5 }
-numNotes = 4
-curNote = 1
+local notes = { 1, 3, 4, 5 }
+local numNotes = 4
+v.curNote = 1
 
-g1 = 0
-g2 = 0
-g3 = 0
+v.g1 = 0
+v.g2 = 0
+v.g3 = 0
 
-singing = false
+v.singing = false
 
-seen = false
+v.seen = false
 
 function init(me)
 	setupEntity(me)
@@ -39,17 +39,17 @@ function init(me)
 	
 	entity_setEntityLayer(me, 1)
 	
-	g1 = entity_getBoneByName(me, "Glass1")
-	g2 = entity_getBoneByName(me, "Glass2")
-	g3 = entity_getBoneByName(me, "Glass3")
+	v.g1 = entity_getBoneByName(me, "Glass1")
+	v.g2 = entity_getBoneByName(me, "Glass2")
+	v.g3 = entity_getBoneByName(me, "Glass3")
 	
 	entity_scale(me, 2, 2)
 	
 	entity_setState(me, STATE_IDLE)
 	
 	if isFlag(FLAG_FINAL, FINAL_FREEDLI) then
-		bone_setVisible(g1, false)
-		seen = true
+		bone_setVisible(v.g1, false)
+		v.seen = true
 	end
 	entity_setCullRadius(me, 1024)
 	
@@ -68,12 +68,12 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
-	c = 0
+	local c = 0
 	if isFlag(FLAG_SPIRIT_DRASK, 1) then
 		c = c + 1
 	elseif isFlag(FLAG_SPIRIT_KROTITE, 1) then
@@ -83,25 +83,25 @@ function update(me, dt)
 	elseif isFlag(FLAG_SPIRIT_ERULIAN, 1) then
 		c = c + 1
 	end
-	if singing then
-		x = math.random(10)-5
-		y = math.random(10)-5
+	if v.singing then
+		local x = math.random(10)-5
+		local y = math.random(10)-5
 		x = x * 0.5
 		y = y * 0.5
 		x = x * c
 		y = y * c
 		--[[
-		bone_setOffset(g1, x, y)
-		bone_setOffset(g2, x, y)
-		bone_setOffset(g3, x, y)
+		bone_setOffset(v.g1, x, y)
+		bone_setOffset(v.g2, x, y)
+		bone_setOffset(v.g3, x, y)
 		]]--
 		entity_offset(me, x, y)
 	else
 		entity_offset(me, 0, 0)
 		--[[
-		bone_setOffset(g1, 0, 0)
-		bone_setOffset(g2, 0, 0)
-		bone_setOffset(g3, 0, 0)
+		bone_setOffset(v.g1, 0, 0)
+		bone_setOffset(v.g2, 0, 0)
+		bone_setOffset(v.g3, 0, 0)
 		]]--
 	end
 	
@@ -111,14 +111,14 @@ function update(me, dt)
 	end
 	
 	if not isFlag(FLAG_FINAL, FINAL_FREEDLI) then
-		if not seen and entity_isEntityInRange(me, n, 600) then
-			entity_flipToEntity(n, me)
-			entity_idle(n)
+		if not v.seen and entity_isEntityInRange(me, v.n, 600) then
+			entity_flipToEntity(v.n, me)
+			entity_idle(v.n)
 			emote(EMOTE_NAIJALI)
-			seen = true
+			v.seen = true
 			cam_toEntity(me)
 			watch(1)
-			cam_toEntity(n)
+			cam_toEntity(v.n)
 		end
 	end
 end
@@ -127,26 +127,26 @@ function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_OPEN) then
-		entity_idle(n)
-		li = getLi()
+		entity_idle(v.n)
+		local li = getLi()
 		learnSong(SONG_DUALFORM)
-		ent = entity_getNearestEntity(me, "CC_Final")
+		local ent = entity_getNearestEntity(me, "CC_Final")
 		if ent ~= 0 then
 			entity_alpha(ent, 0, 2)
 		end
-		naijapos = getNode("naijapos")
-		entity_setPosition(n, node_x(naijapos), node_y(naijapos))
-		entity_flipToEntity(n, li)
+		local naijapos = getNode("naijapos")
+		entity_setPosition(v.n, node_x(naijapos), node_y(naijapos))
+		entity_flipToEntity(v.n, li)
 		cam_toEntity(me)
-		singing = true
+		v.singing = true
 		overrideZoom(0.7, 0.001)
 		
 		fadeOutMusic(8)
 		
 		watch(2)
 		fade(1, 0.2, 1, 1, 1) watch(0.2)
-		bone_setVisible(g1, false)
-		bone_setVisible(g2, true)
+		bone_setVisible(v.g1, false)
+		bone_setVisible(v.g2, true)
 		playSfx("LiCage-Crack1")
 		
 		
@@ -154,19 +154,19 @@ function enterState(me)
 		fade(0, 0.5, 1, 1, 1) watch(0.5)
 		watch(1)
 		fade(1, 0.2, 1, 1, 1) watch(0.2)
-		bone_setVisible(g2, false)
-		bone_setVisible(g3, true)
+		bone_setVisible(v.g2, false)
+		bone_setVisible(v.g3, true)
 		playSfx("LiCage-Crack2")
 		fade(0, 0.5, 1, 1, 1) watch(0.5)
 		watch(0.5)
 		fade(1, 0.2, 1, 1, 1) watch(0.2)
-		bone_setVisible(g3, false)
+		bone_setVisible(v.g3, false)
 		playSfx("LiCage-Shatter")
 		fade(0, 0.5, 1, 1, 1) watch(0.5)
 		watch(1)
-		singing = false
+		v.singing = false
 		
-		entity_flipToEntity(n, li)
+		entity_flipToEntity(v.n, li)
 		
 		debugLog("FREE LI!")
 
@@ -176,13 +176,13 @@ function enterState(me)
 		setFlag(FLAG_LI, 100)
 		entity_setState(li, STATE_IDLE)
 		setLi(li)
-		entity_flipToEntity(n, li)
+		entity_flipToEntity(v.n, li)
 		watch(3)
-		entity_flipToEntity(n, li)
-		entity_flipToEntity(li, n)
+		entity_flipToEntity(v.n, li)
+		entity_flipToEntity(li, v.n)
 		emote(EMOTE_NAIJASIGH)
 		entity_msg(li, "forcehug")
-		cam_toEntity(n)
+		cam_toEntity(v.n)
 		
 		overrideZoom(1, 14)
 		watch(3)
@@ -200,8 +200,8 @@ function enterState(me)
 		
 		playSfx("mia-appear")
 		
-		x = (entity_x(n) + entity_x(li))/2
-		spawnParticleEffect("dualformstart", x, entity_y(n))
+		local x = (entity_x(v.n) + entity_x(li))/2
+		spawnParticleEffect("dualformstart", x, entity_y(v.n))
 		
 		fadeOutMusic(4)
 		
@@ -251,21 +251,23 @@ function hitSurface(me)
 end
 
 function songNote(me, note)
-	singing = true
+	v.singing = true
 end
 
 function songNoteDone(me, note)
-	singing = false
+	v.singing = false
 	if isFlag(FLAG_FINAL, FINAL_FREEDLI) then return end
 	if isFlag(FLAG_SPIRIT_ERULIAN, 1) and isFlag(FLAG_SPIRIT_KROTITE, 1) and isFlag(FLAG_SPIRIT_DRUNIAD, 1) and isFlag(FLAG_SPIRIT_DRASK, 1) then
 		if entity_isState(me, STATE_IDLE) then
-			--debugLog(string.format("curNote: %d", curNote))
-			if notes[curNote] == note then
-				curNote = curNote + 1
+			--debugLog(string.format("curNote: %d", v.curNote))
+			if notes[v.curNote] == note then
+				v.curNote = v.curNote + 1
+			elseif notes[1] == note then
+				v.curNote = 2
 			else
-				curNote = 1
+				v.curNote = 1
 			end
-			if curNote > numNotes then
+			if v.curNote > numNotes then
 				entity_setState(me, STATE_OPEN)
 			end
 		end

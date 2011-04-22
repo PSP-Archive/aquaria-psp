@@ -823,13 +823,10 @@ enum FollowCameraLock
 	FCL_VERT		= 2
 };
 
-//RenderObject Layer Type
-enum RLType
-{
-	RLT_DYNAMIC		= 0,
-	RLT_FIXED		= 1,
-	RLT_MAP			= 2
-};
+//RenderObject Layer Type (enable only one)
+//#define RLT_DYNAMIC		// Dynamic list
+#define RLT_FIXED		// Static array
+//#define RLT_MAP		// Mapping
 
 typedef std::vector <RenderObject*> RenderObjects;
 typedef std::list <RenderObject*> RenderObjectList;
@@ -839,23 +836,84 @@ class RenderObjectLayer
 {
 public:
 	RenderObjectLayer();
-	void setSize(int sz);
-	void setType(RLType type);
+	~RenderObjectLayer();
 	void add(RenderObject* r);
 	void remove(RenderObject* r);
 	void moveToFront(RenderObject *r);
 	void moveToBack(RenderObject *r);
-	void findNextFreeIdx();
-	void setCull(bool c);
-	bool empty();
+	void setCull(bool cull);
+	void setOptimizeStatic(bool opt);
 	void sort();
-	RenderObject *getFirst();
-	RenderObject *getNext();
+	void renderPass(int pass);
+	void reloadDevice();
 
-	int freeIdx;
-	int index;
+	inline bool empty()
+	{
+	#ifdef RLT_FIXED
+		return objectCount == 0;
+	#endif
+	#ifdef RLT_DYNAMIC
+		return renderObjectList.empty();
+	#endif
+		return false;
+	}
+
+	inline RenderObject *getFirst()
+	{
+	#ifdef RLT_DYNAMIC
+		if (renderObjectList.empty()) return 0;
+		iter = renderObjectList.begin();
+		return *iter;
+	#endif
+	#ifdef RLT_MAP
+		if (renderObjectMap.empty()) return 0;
+		iter = renderObjectMap.begin();
+		return (*iter).second;
+	#endif
+	#ifdef RLT_FIXED
+		iter = 0;
+		return getNext();
+	#endif
+	}
+
+	RenderObject *getNext()
+	{
+	#ifdef RLT_DYNAMIC
+		if (iter == renderObjectList.end()) return 0;
+		iter++;
+		if (iter == renderObjectList.end()) return 0;
+		return *iter;
+	#endif
+	#ifdef RLT_MAP
+		if (iter == renderObjectMap.end()) return 0;
+		iter++;
+		if (iter == renderObjectMap.end()) return 0;
+		return (*iter).second;
+	#endif
+	#ifdef RLT_FIXED
+		const int size = renderObjects.size();
+		int i;
+		for (i = iter; i < size; i++)
+		{
+			if (renderObjects[i] != 0)
+				break;
+		}
+		if (i < size)
+		{
+			iter = i+1;
+			return renderObjects[i];
+		}
+		else
+		{
+			iter = i;
+			return 0;
+		}
+	#endif
+		return 0;
+	}
+
 	//inclusive
-	int startPass, endPass, currentPass;
+	int startPass, endPass;
 	bool visible;
 	float followCamera;
 
@@ -866,20 +924,40 @@ public:
 	int mode;
 
 	Vector color;
-	
-	bool quickQuad;
-	bool fastCull;
-	int fastCullDist;
+
 protected:
-	
-	RLType rlType;
-	RenderObjects renderObjects;
+
+	void clearDisplayList();
+	void generateDisplayList();
+	inline void renderOneObject(RenderObject *robj);
+
+	bool optimizeStatic;
+	bool displayListValid;
+	int displayListGeneration;
+	struct DisplayListElement {
+		DisplayListElement() {isList = false; u.robj = 0;}
+		bool isList;  // True if this is a GL display list
+		union {
+			RenderObject *robj;
+			GLuint listID;
+		} u;
+	};
+	std::vector<DisplayListElement> displayList;
+
+#ifdef RLT_DYNAMIC
 	RenderObjectList renderObjectList;
+	RenderObjectList::iterator iter;
+#endif
+#ifdef RLT_MAP
 	RenderObjectMap renderObjectMap;
-	RenderObjectList::iterator dynamic_iter;
-	RenderObjectMap::iterator map_iter;
-	unsigned int fixed_iter;
-	unsigned int currentSize;
+	RenderObjectMap::iterator iter;
+#endif
+#ifdef RLT_FIXED
+	RenderObjects renderObjects;
+	int objectCount;
+	int firstFreeIdx;
+	int iter;
+#endif
 };
 
 class Core : public ActionMapper, public StateManager
@@ -983,7 +1061,7 @@ public:
 
 	void updateCursorFromJoystick(float dt, int spd);
 
-	Uint32 getTicks();
+	uint32 getTicks();
 
 	float stopWatch(int d);
 
@@ -1094,6 +1172,8 @@ public:
 		return virtualHeight;
 	}
 
+	unsigned char *grabScreenshot(int x, int y, int w, int h);
+	unsigned char *grabCenteredScreenshot(int w, int h);
 	int saveScreenshotTGA(const std::string &filename);
 	void save64x64ScreenshotTGA(const std::string &filename);
 	void saveSizedScreenshotTGA(const std::string &filename, int sz, int crop34);
@@ -1104,10 +1184,11 @@ public:
 	bool minimized;
 	std::string getEnqueuedJumpState();
 	int cullRadius;
+	float cullRadiusSqr;
 	Vector cullCenter;
 	int screenCullX1, screenCullY1, screenCullX2, screenCullY2;
 	unsigned int renderObjectCount, processedRenderObjectCount, totalRenderObjectCount;
-	float invGlobalScale;
+	float invGlobalScale, invGlobalScaleSqr;
 
 	void screenshot();
 
@@ -1180,7 +1261,7 @@ public:
 	int flipMouseButtons;
 	void initFrameBuffer();
 	FrameBuffer frameBuffer;
-	void updateRenderObjects(double dt);
+	void updateRenderObjects(float dt);
 	bool joystickAsMouse;
 	virtual void prepScreen(bool t){}
 
@@ -1284,7 +1365,7 @@ protected:
 	std::vector<float> avgFPS;
 	float sortTimer;
 	bool sortFlag;
-	virtual void modifyDt(double &dt){}
+	virtual void modifyDt(float &dt){}
 	void setPixelScale(int pixelScaleX, int pixelScaleY);
 	
 
@@ -1312,11 +1393,13 @@ protected:
 
 	
 	int tgaSaveSeries(char	*filename,  short int width, short int height, unsigned char pixelDepth, unsigned char *imageData);
-	int tgaSave(char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
+	int tgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
 	virtual void onUpdate(float dt);
 	virtual void onRender(){}
 };
 
 extern Core *core;
+
+#include "RenderObject_inline.h"
 
 #endif

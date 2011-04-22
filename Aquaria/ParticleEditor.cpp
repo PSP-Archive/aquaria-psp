@@ -25,6 +25,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Hair.h"
 #include "Game.h"
 
+
+#ifdef AQUARIA_BUILD_SCENEEDITOR  // Through end of file
+
+
 ParticleEditor *pe = 0;
 
 
@@ -112,7 +116,7 @@ void ParticleEditor::update(float dt)
 
 	if (test)
 	{
-		test->offset.rotate2DRad(3.14f*dt);
+		test->offset.rotate2DRad(PI*dt);
 	}
 }
 
@@ -153,3 +157,5 @@ void ParticleEditor::stop()
 	emitter->stop();
 }
 
+
+#endif  // AQUARIA_BUILD_SCENEEDITOR

@@ -17,17 +17,17 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- SPORE SEED
 
-dofile("scripts/entities/entityinclude.lua")
+v.growEmitter = 0
+v.done = false
+v.lifeTime = 0
+v.n = 0
+v.limited = false
 
-growEmitter = 0
-done = false
-lifeTime = 0
-n = 0
-limited = false
-
-function commonInit(me, lim)
+function v.commonInit(me, lim)
 	setupEntity(me)
 	entity_initSkeletal(me, "UberVine")
 	entity_setEntityLayer(me, -1)
@@ -39,7 +39,7 @@ function commonInit(me, lim)
 	
 	entity_setDamageTarget(me, DT_AVATAR_VINE, false)
 	
-	lifeTime = 15
+	v.lifeTime = 15
 	
 	entity_alpha(me, 0)
 	entity_alpha(me, 1, 0.3)
@@ -66,15 +66,15 @@ function commonInit(me, lim)
 	
 	entity_sound(me, "UberVineGrow")
 	
-	limited = lim
+	v.limited = lim
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 	entity_clampToSurface(me)
 	entity_rotateToSurfaceNormal(me)
 	
-	if limited then
+	if v.limited then
 		entity_ensureLimit(me, 3, STATE_DONE)
 	end
 end
@@ -84,18 +84,18 @@ end
 
 function shotHitEntity(me, ent, shot)
 	--debugLog("shot hit entity!")
-	sx, sy = entity_getScale(me)
-	sx2, sy2 = bone_getScale(entity_getBoneByIdx(me, 0))
-	len = 400*sy*sy2
-	x1,y1 = entity_getPosition(me)
-	fx, fy = entity_getNormal(me)
-	x2 = x1 + fx*len
-	y2 = y1 + fy*len
+	local sx, sy = entity_getScale(me)
+	local sx2, sy2 = bone_getScale(entity_getBoneByIdx(me, 0))
+	local len = 400*sy*sy2
+	local x1, y1 = entity_getPosition(me)
+	local fx, fy = entity_getNormal(me)
+	local x2 = x1 + fx*len
+	local y2 = y1 + fy*len
 	
-	doFall = false
+	local doFall = false
 	if entity_getEntityType(ent) ~= ET_NEUTRAL and ent ~= me and entity_isDamageTarget(ent, DT_AVATAR_VINE) and eisv(ent, EV_VINEPUSH, 1) then
-		doIt = true
-		dmg = 1
+		local doIt = true
+		local dmg = 1
 		if entity_getEntityType(ent) == ET_AVATAR then
 			if isForm(FORM_NATURE) then
 				dmg = 0
@@ -112,9 +112,9 @@ function shotHitEntity(me, ent, shot)
 					avatar_fallOffWall()
 				end
 				
-				cx, cy = getLastCollidePosition()
-				dx = entity_x(ent) - cx
-				dy = entity_y(ent) - cy
+				local cx, cy = getLastCollidePosition()
+				local dx = entity_x(ent) - cx
+				local dy = entity_y(ent) - cy
 				if dx ~= 0 or dy ~= 0 then
 					dx, dy = vector_setLength(dx, dy, 500)
 					--entity_push(ent, dx, dy, 0.1)
@@ -122,8 +122,8 @@ function shotHitEntity(me, ent, shot)
 				end
 			end
 			]]--
-			dx = 0
-			dy = 0
+			local dx = 0
+			local dy = 0
 			if entity_isAnimating(me) then
 				dx = entity_x(ent) - entity_x(me)
 				dy = entity_y(ent) - entity_y(me)
@@ -132,7 +132,7 @@ function shotHitEntity(me, ent, shot)
 					avatar_fallOffWall()
 				end
 			else
-				cx, cy = shot_getPosition(shot)
+				local cx, cy = shot_getPosition(shot)
 				dx = entity_x(ent) - cx
 				dy = entity_y(ent) - cy
 			end
@@ -148,93 +148,93 @@ function shotHitEntity(me, ent, shot)
 	end
 end
 
-spawnDelay = 0
+v.spawnDelay = 0
 
-function spawnShots(me)
-	if spawnDelay == 0 then
-		sx, sy = entity_getScale(me)
-		sx2, sy2 = bone_getScale(entity_getBoneByIdx(me, 0))
-		len = 400*sy*sy2
-		x1,y1 = entity_getPosition(me)
-		fx, fy = entity_getNormal(me)
-		x2 = x1 + fx*len
-		y2 = y1 + fy*len
+local function spawnShots(me)
+	if v.spawnDelay == 0 then
+		local sx, sy = entity_getScale(me)
+		local sx2, sy2 = bone_getScale(entity_getBoneByIdx(me, 0))
+		local len = 400*sy*sy2
+		local x1, y1 = entity_getPosition(me)
+		local fx, fy = entity_getNormal(me)
+		local x2 = x1 + fx*len
+		local y2 = y1 + fy*len
 		
-		bit = len/4
-		totlen = 0
+		local bit = len/4
+		local totlen = 0
 		while totlen < len do
-			px = x1 + fx*totlen
-			py = y1 + fy*totlen
+			local px = x1 + fx*totlen
+			local py = y1 + fy*totlen
 			
-			s = createShot("Vine", me, 0, px, py)
+			local s = createShot("Vine", me, 0, px, py)
 			
 			totlen = totlen + bit
 		end
 		
-		spawnDelay = 0.5
+		v.spawnDelay = 0.5
 	end
 end
 
 function update(me, dt)
-	if not entity_isAnimating(me) and limited and isFlag(FLAG_NAIJA_FIRSTVINE, 0) and entity_isEntityInRange(me, n, 600) then
+	if not entity_isAnimating(me) and v.limited and isFlag(FLAG_NAIJA_FIRSTVINE, 0) and entity_isEntityInRange(me, v.n, 600) then
 		emote(EMOTE_NAIJALAUGH)
 		setFlag(FLAG_NAIJA_FIRSTVINE, 1)
 	end
-	if spawnDelay > 0 then
-		spawnDelay = spawnDelay - dt
-		if spawnDelay < 0 then
-			spawnDelay = 0
+	if v.spawnDelay > 0 then
+		v.spawnDelay = v.spawnDelay - dt
+		if v.spawnDelay < 0 then
+			v.spawnDelay = 0
 		end
 	end
-	if done and not entity_isAnimating(me) then
+	if v.done and not entity_isAnimating(me) then
 		entity_scale(me, 1, 0, 0.2)
 		entity_delete(me, 0.2)
 		
 	end
-	if not done then
+	if not v.done then
 		entity_handleShotCollisionsSkeletal(me)
-		lifeTime = lifeTime - dt
-		if lifeTime < 0 then
+		v.lifeTime = v.lifeTime - dt
+		if v.lifeTime < 0 then
 			--entity_delete(me, 0.2)
 			entity_animate(me, "shrink")
-			done = true
+			v.done = true
 			entity_sound(me, "UberVineShrink")
 		end
 		
 		spawnShots(me)
 		
 		--if isForm(FORM_NATURE) then
-		bone = entity_collideSkeletalVsCircle(me, n)
+		local bone = entity_collideSkeletalVsCircle(me, v.n)
 		
 		--[[
 		if bone ~= 0 then
 			debugLog(string.format("collided with bone named [%s] idx[%d]", bone_getName(bone), bone_getIndex(bone)))
 		end
 		]]--
-		if isForm(FORM_NATURE) and avatar_isLockable() and bone ~=0 and bone_getIndex(bone) == 0 and entity_setBoneLock(n, me, bone) then
+		if isForm(FORM_NATURE) and avatar_isLockable() and bone ~= 0 and bone_getIndex(bone) == 0 and entity_setBoneLock(v.n, me, bone) then
 		else
 			---entity_touchAvatarDamage(me, entity_getCollideRadius(me), 0, 1000)
 			if bone ~= 0 then
 				if entity_isAnimating(me) then
-					entity_moveTowards(n, entity_x(me), entity_y(me), 1, -1000)
+					entity_moveTowards(v.n, entity_x(me), entity_y(me), 1, -1000)
 					avatar_fallOffWall()
 				else
-					bx, by = bone_getWorldPosition(bone)
-					entity_moveTowards(n, bx, by, 1, -1000)
+					local bx, by = bone_getWorldPosition(bone)
+					entity_moveTowards(v.n, bx, by, 1, -1000)
 					
 					if not isForm(FORM_NATURE) then
-						entity_damage(n, me, 0.25, DT_AVATAR_VINE)
+						entity_damage(v.n, me, 0.25, DT_AVATAR_VINE)
 					end
 				end
-				--entity_doCollisionAvoidance(n, 1, 5, 1)
+				--entity_doCollisionAvoidance(v.n, 1, 5, 1)
 			--[[
-				cx, cy = getLastCollidePosition()
-				dx = entity_x(n) - cx
-				dy = entity_y(n) - cy
+				local cx, cy = getLastCollidePosition()
+				local dx = entity_x(v.n) - cx
+				local dy = entity_y(v.n) - cy
 				if dx ~= 0 or dy ~= 0 then
 					dx, dy = vector_setLength(dx, dy, 500)
 					--entity_push(ent, dx, dy, 0.1)
-					entity_addVel(n, dx, dy)
+					entity_addVel(v.n, dx, dy)
 				end
 				]]--
 			end
@@ -242,20 +242,20 @@ function update(me, dt)
 
 		--[[
 		if true then
-			sx, sy = entity_getScale(me)
-			sx2, sy2 = bone_getScale(entity_getBoneByIdx(me, 0))
-			len = 400*sy*sy2
-			x1,y1 = entity_getPosition(me)
-			fx, fy = entity_getNormal(me)
-			x2 = x1 + fx*len
-			y2 = y1 + fy*len
+			local sx, sy = entity_getScale(me)
+			local sx2, sy2 = bone_getScale(entity_getBoneByIdx(me, 0))
+			local len = 400*sy*sy2
+			local x1, y1 = entity_getPosition(me)
+			local fx, fy = entity_getNormal(me)
+			local x2 = x1 + fx*len
+			local y2 = y1 + fy*len
 			
-			doFall = false
-			ent = getFirstEntity()
+			local doFall = false
+			local ent = getFirstEntity()
 			while ent~=0 do
 				if entity_getEntityType(ent) ~= ET_NEUTRAL and ent ~= me and entity_isDamageTarget(ent, DT_AVATAR_VINE) then
-					doIt = true
-					dmg = 1
+					local doIt = true
+					local dmg = 1
 					if entity_getEntityType(ent) == ET_AVATAR then
 						if isForm(FORM_NATURE) then
 							dmg = 0
@@ -274,9 +274,9 @@ function update(me, dt)
 								entity_damage(ent, me, dmg, DT_AVATAR_VINE)
 							end
 							
-							cx, cy = getLastCollidePosition()
-							dx = entity_x(ent) - cx
-							dy = entity_y(ent) - cy
+							local cx, cy = getLastCollidePosition()
+							local dx = entity_x(ent) - cx
+							local dy = entity_y(ent) - cy
 							if dx ~= 0 or dy ~= 0 then
 								dx, dy = vector_setLength(dx, dy, 500)
 								--entity_push(ent, dx, dy, 0.1)
@@ -292,7 +292,7 @@ function update(me, dt)
 		]]--
 		--[[
 		if not entity_isNearObstruction(me, 3) then		
-			done = true
+			v.done = true
 		end
 		]]--
 	end
@@ -304,7 +304,7 @@ end
 function enterState(me)
 	if entity_isState(me, STATE_DONE) then
 		debugLog("VINE DONE")
-		done = true
+		v.done = true
 		entity_scale(me, 1, 0, 0.2)
 		entity_delete(me, 0.2)
 		entity_sound(me, "UberVineShrink")

@@ -17,24 +17,24 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- Duoeye
 
-
-dofile("scripts/entities/entityinclude.lua")
 
 -- L O C A L  V A R I A B L E S 
 
 
-orient = ORIENT_LEFT
-orientTimer = 0
+v.orient = ORIENT_LEFT
+v.orientTimer = 0
 
-swimTime = 0.75
-swimTimer = swimTime - swimTime/4
+v.swimTime = 0.75
+v.swimTimer = v.swimTime - v.swimTime/4
 
-node_mist = 0
-eMate = 0
-matingTimer = 0
-mateCheckDelay = 4
+v.node_mist = 0
+v.eMate = 0
+v.matingTimer = 0
+v.mateCheckDelay = 4
  
 -- F U N C T I O N S
 
@@ -75,8 +75,8 @@ function init(me)
 	1,
 	0)
 	
-	entity_partRotate(me, "FlipperLeft", -20, swimTime/2, -1, 1, 1)
-	entity_partRotate(me, "FlipperRight", 20, swimTime/2, -1, 1, 1)
+	entity_partRotate(me, "FlipperLeft", -20, v.swimTime/2, -1, 1, 1)
+	entity_partRotate(me, "FlipperRight", 20, v.swimTime/2, -1, 1, 1)
 
 	entity_scale(me)
 	entity_scale(me, 0.6, 0.6, 0.5)
@@ -91,98 +91,98 @@ function init(me)
 end
 
 function postInit(me)
-	node_mist = entity_getNearestNode(me, "MIST")
+	v.node_mist = entity_getNearestNode(me, "MIST")
 end
 
 -- warning: only called if EV_ENTITYDIED set to 1!
 function entityDied(me, ent)
-	if eMate == ent then
-		eMate = 0
+	if v.eMate == ent then
+		v.eMate = 0
 		entity_setState(me, STATE_IDLE)
 	end
 end
 
-function msg(me, msg, v)
+function msg(me, msg, val)
 	if msg == "mate" then
 		--debugLog("mate msg")
-		eMate = v
+		v.eMate = val
 		entity_setState(me, STATE_MATING)
 	end
 end
 
 function update(me, dt)
-	amt = 400
+	local amt = 400
 	
 	if entity_isState(me, STATE_MATING) then
-		--debugLog(string.format("matingTimer: %d", matingTimer))
+		--debugLog(string.format("matingTimer: %d", v.matingTimer))
 		
-		if entity_isEntityInRange(me, eMate, 64) then
+		if entity_isEntityInRange(me, v.eMate, 64) then
 			--debugLog("in range")
-			matingTimer = matingTimer + dt
-			if matingTimer > 2 then
+			v.matingTimer = v.matingTimer + dt
+			if v.matingTimer > 2 then
 				--debugLog("MATED!")
 				entity_delete(me)
-				entity_delete(eMate)
-				ent = createEntity("MoneyeBreeder", "", entity_getPosition(me))
+				entity_delete(v.eMate)
+				local ent = createEntity("MoneyeBreeder", "", entity_getPosition(me))
 				entity_setState(ent, STATE_GROW)
 
-				eMate = 0
+				v.eMate = 0
 			end
 		else
 			--debugLog("not in range")
 		end
 		
-		if eMate ~= 0 then
-			entity_moveTowards(me, entity_x(eMate), entity_y(eMate), dt, 800)
+		if v.eMate ~= 0 then
+			entity_moveTowards(me, entity_x(v.eMate), entity_y(v.eMate), dt, 800)
 		end
 	else
-		if node_mist ~= 0 then
-			if node_isEntityIn(node_mist, me) then
-				mateCheckDelay = mateCheckDelay - dt
-				if mateCheckDelay < 0 then
-					eMate = entity_getNearestEntity(me, "Duoeye", 256)
-					if eMate ~= 0 and entity_isState(eMate, STATE_IDLE) then
-						entity_msg(eMate, "mate", me)
+		if v.node_mist ~= 0 then
+			if node_isEntityIn(v.node_mist, me) then
+				v.mateCheckDelay = v.mateCheckDelay - dt
+				if v.mateCheckDelay < 0 then
+					v.eMate = entity_getNearestEntity(me, "Duoeye", 256)
+					if v.eMate ~= 0 and entity_isState(v.eMate, STATE_IDLE) then
+						entity_msg(v.eMate, "mate", me)
 						entity_setState(me, STATE_MATING, 4)					
 					end
-					mateCheckDelay = 2
+					v.mateCheckDelay = 2
 				end
 			end
 		end
 		if not entity_hasTarget(me) then
 			entity_findTarget(me, 500)
-			swimTimer = swimTimer + dt
-			if swimTimer > swimTime then	
-				swimTimer = swimTimer - swimTime
-				if orient == ORIENT_LEFT then
+			v.swimTimer = v.swimTimer + dt
+			if v.swimTimer > v.swimTime then	
+				v.swimTimer = v.swimTimer - v.swimTime
+				if v.orient == ORIENT_LEFT then
 					entity_addVel(me, -amt, 0)
-					orient = ORIENT_UP
-				elseif orient == ORIENT_UP then
+					v.orient = ORIENT_UP
+				elseif v.orient == ORIENT_UP then
 					entity_addVel(me, 0, -amt)
-					orient = ORIENT_RIGHT
-				elseif orient == ORIENT_RIGHT then
+					v.orient = ORIENT_RIGHT
+				elseif v.orient == ORIENT_RIGHT then
 					entity_addVel(me, amt, 0)
-					orient = ORIENT_DOWN
-				elseif orient == ORIENT_DOWN then
+					v.orient = ORIENT_DOWN
+				elseif v.orient == ORIENT_DOWN then
 					entity_addVel(me, 0, amt)
-					orient = ORIENT_LEFT
+					v.orient = ORIENT_LEFT
 				end			
 				entity_rotateToVel(me, 0.2)
-				orientTimer = orientTimer + dt
+				v.orientTimer = v.orientTimer + dt
 				entity_doEntityAvoidance(me, 1, 256, 0.2)
 			end
 			entity_doCollisionAvoidance(me, dt, 6, 0.5)
 		else
 			
-			swimTimer = swimTimer + dt
-			if swimTimer > swimTime then			
+			v.swimTimer = v.swimTimer + dt
+			if v.swimTimer > v.swimTime then
 				entity_moveTowardsTarget(me, 1, amt)
 				if not entity_isNearObstruction(getNaija(), 8) then
 					entity_doCollisionAvoidance(me, 1, 6, 0.5)
 				end
 				entity_doEntityAvoidance(me, 1, 256, 0.2)
 				entity_rotateToVel(me, 0.2)
-				swimTimer = swimTimer - swimTime
+				v.swimTimer = v.swimTimer - v.swimTime
 			else
 				entity_moveTowardsTarget(me, dt, 100)
 				entity_doEntityAvoidance(me, dt, 64, 0.1)
@@ -202,8 +202,8 @@ end
 
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
-		mateCheckDelay = 3
-		matingTimer = 0
+		v.mateCheckDelay = 3
+		v.matingTimer = 0
 		entity_setMaxSpeed(me, 600)
 	elseif entity_isState(me, STATE_MATING) then
 		entity_offset(me)
@@ -215,5 +215,5 @@ function exitState(me)
 end
 
 function hitSurface(me)
-	orient = orient + 1
+	v.orient = v.orient + 1
 end

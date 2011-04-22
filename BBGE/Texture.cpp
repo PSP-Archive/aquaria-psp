@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Texture.h"
 #include "Core.h"
-#include "glpng.h"
+#include "../ExternalLibs/glpng.h"
 
 #include <assert.h>
 
@@ -71,7 +71,7 @@ Texture::Texture() : Resource()
 	imageData = 0;
 	layer = 0;
 
-	ow=oh=-1;
+	ow = oh = -1;
 }
 
 Texture::~Texture()
@@ -81,27 +81,38 @@ Texture::~Texture()
 
 void Texture::read(int tx, int ty, int w, int h, unsigned char *pixels)
 {
-
+#ifdef BBGE_BUILD_OPENGL
+	if (tx == 0 && ty == 0 && w == this->width && h == this->height)
+	{
+		glBindTexture(GL_TEXTURE_2D, textures[0]);
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+	else
+	{
+		std::ostringstream os;
+		os << "Unable to read a texture subimage (size = "
+		   << this->width << "x" << this->height << ", requested = "
+		   << tx << "," << ty << "+" << w << "x" << h << ")";
+		debugLog(os.str());
+	}
+#endif
 }
 
-void Texture::write(int tx, int ty, int w, int h, unsigned char *pixels)
+void Texture::write(int tx, int ty, int w, int h, const unsigned char *pixels)
 {
 #ifdef BBGE_BUILD_OPENGL
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
 
-	int levels = 99;
-	for (int i = 0; i < levels; i++)
-	{
-		glTexSubImage2D(GL_TEXTURE_2D, 0,
-						tx,
-						ty,
-						w,
-						h,
-						GL_RGBA,
-						GL_UNSIGNED_BYTE,
-						pixels
-						);
-	}
+	glTexSubImage2D(GL_TEXTURE_2D, 0,
+					tx,
+					ty,
+					w,
+					h,
+					GL_RGBA,
+					GL_UNSIGNED_BYTE,
+					pixels
+					);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	/*
@@ -559,9 +570,9 @@ void Texture::loadTGA(const std::string &file)
 	*/
 
 #ifdef BBGE_BUILD_SDL
-	ImageTGA *imageTGA=0;
+	ImageTGA *imageTGA;
 
-	if (imageTGA = TGAload(file.c_str()))
+	if ((imageTGA = TGAload(file.c_str())) != 0)
 	{
 		glGenTextures(1, &textures[0]);
 		glBindTexture(GL_TEXTURE_2D, textures[0]);
@@ -629,33 +640,15 @@ typedef uint16_t WORD;
 
 static int fread_int(FILE *file, int size)
 {
-	int buffer = 0;
+	int buffer;
 	
 	//input.read((char *)&buffer, 4);
-	fread(&buffer, size, 1, file);
+	if (fread(&buffer, size, 1, file) != 1)
+		return 0;
 #ifdef BBGE_BUILD_SDL
 	return SDL_SwapLE32(buffer);
 #else
 	return buffer;
-#endif
-}
-
-static float fread_float(FILE *file)
-{
-	union
-	{
-		int i;
-		float f; 
-	} buffer;
-	
-	//input.read((char *)&buffer.i, 4);
-	fread(&buffer, 4, 1, file);
-
-#ifdef BBGE_BUILD_SDL
-	buffer.i = SDL_SwapLE32(buffer.i);
-	return buffer.f;
-#else
-	return buffer.f;
 #endif
 }
 
@@ -756,7 +749,8 @@ ImageTGA *Texture::TGAload(const char *filename)
 				unsigned char *pLine = &(pImageData->data[stride * y]);
 
 				// Read in the current line of pixels
-				fread(pLine, stride, 1, pFile);
+				if (fread(pLine, stride, 1, pFile) != 1)
+					break;
 
 				// Go through all of the pixels and swap the B and R values since TGA
 				// files are stored as BGR instead of RGB (or use GL_BGR_EXT verses GL_RGB)
@@ -784,7 +778,8 @@ ImageTGA *Texture::TGAload(const char *filename)
 			for(int i = 0; i < width*height; i++)
 			{
 				// Read in the current pixel
-				fread(&pixels, sizeof(unsigned short), 1, pFile);
+				if (fread(&pixels, sizeof(unsigned short), 1, pFile) != 1)
+					break;
 
 				// To convert a 16-bit pixel into an R, G, B, we need to
 				// do some masking and such to isolate each color value.
@@ -841,7 +836,8 @@ ImageTGA *Texture::TGAload(const char *filename)
 		while(i < width*height)
 		{
 			// Read in the current color count + 1
-			fread(&rleID, sizeof(byte), 1, pFile);
+			if (fread(&rleID, sizeof(byte), 1, pFile) != 1)
+				break;
 
 			// Check if we don't have an encoded string of colors
 			if(rleID < 128)
@@ -853,7 +849,8 @@ ImageTGA *Texture::TGAload(const char *filename)
 				while(rleID)
 				{
 					// Read in the current color
-					fread(pColors, sizeof(byte) * channels, 1, pFile);
+					if (fread(pColors, sizeof(byte) * channels, 1, pFile) != 1)
+						break;
 
 					// Store the current pixel in our image array
 					pImageData->data[colorsRead + 0] = pColors[2];
@@ -878,7 +875,8 @@ ImageTGA *Texture::TGAload(const char *filename)
 				rleID -= 127;
 
 				// Read in the current color, which is the same for a while
-				fread(pColors, sizeof(byte) * channels, 1, pFile);
+				if (fread(pColors, sizeof(byte) * channels, 1, pFile) != 1)
+					break;
 
 				// Go and read as many pixels as are the same
 				while(rleID)

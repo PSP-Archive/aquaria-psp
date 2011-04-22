@@ -17,10 +17,10 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-life = -1
+v.n = 0
+v.life = -1
 
 function init(me)
 	setupEntity(me)
@@ -44,30 +44,29 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
-	vx = entity_velx(me)
-	
-	if avatar_isRolling() and entity_isEntityInRange(me, n, 256) then
-		vx, vy = entity_getPosition(n) - entity_getPosition(me)
+	if avatar_isRolling() and entity_isEntityInRange(me, v.n, 256) then
+		local vx, vy = entity_getPosition(v.n) - entity_getPosition(me)
 		vx, vy = vector_setLength(vx, vy, 1000*dt)
 		entity_addVel(me, vx, vy)
 	end
 	
-	if entity_isEntityInRange(me, n, 40) then
-		entity_addVel(me, entity_velx(n)*0.75, entity_vely(n)*0.75)
+	if entity_isEntityInRange(me, v.n, 40) then
+		entity_addVel(me, entity_velx(v.n)*0.75, entity_vely(v.n)*0.75)
 	end
 	
+	local vx = entity_velx(me)
 	entity_rotate(me, entity_getRotation(me)+dt*vx)	
 	
 	entity_updateMovement(me, dt)
 	
-	if life > -1 then
-		life = life - dt
-		if life < 0 then
+	if v.life > -1 then
+		v.life = v.life - dt
+		if v.life < 0 then
 			entity_setHealth(me, 0)
 			entity_setState(me, STATE_DEAD)
 		end

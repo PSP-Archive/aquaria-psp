@@ -17,11 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-glow = 0
+v.glow = 0
 
 function init(me)
 	setupEntity(me)
@@ -34,20 +34,20 @@ function init(me)
 	entity_setEntityLayer(me, 1)
 	entity_setCollideRadius(me, 32)	
 	
-	glow = createQuad("Naija/LightFormGlow", 13)
+	v.glow = createQuad("Naija/LightFormGlow", 13)
 	
-	boneGlow = entity_getBoneByName(me, "Glow")
+	local boneGlow = entity_getBoneByName(me, "Glow")
 	bone_alpha(boneGlow, 0.5)
 	bone_alpha(boneGlow, 1, 0.5, -1, 1, 1)
 	bone_setSegs(entity_getBoneByName(me, "Body"), 2, 16, 0.6, 0.6, -0.058, 0, 6, 1)
 	
 	entity_setState(me, STATE_IDLE)
 	
-	diff = math.random(2500)/10000.0
-	sz = 1-diff
+	local diff = math.random(2500)/10000.0
+	local sz = 1-diff
 	entity_scale(me, sz, sz)
 	
-	quad_scale(glow, 3*sz, 3*sz)
+	quad_scale(v.glow, 3*sz, 3*sz)
 	
 	entity_setDeathParticleEffect(me, "TinyBlueExplode")
 	
@@ -60,8 +60,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 	
 	entity_update(me, math.random(1000)/1000.0)
 end
@@ -69,7 +69,7 @@ end
 function update(me, dt)
 	entity_handleShotCollisions(me)
 	if entity_touchAvatarDamage(me, entity_getCollideRadius(me), 0, 100) and avatar_isBursting() then
-		x, y = entity_getVectorToEntity(n, me)
+		local x, y = entity_getVectorToEntity(v.n, me)
 		x, y = vector_setLength(x,y,500)
 		entity_addVel(me, x, y)
 		entity_doCollisionAvoidance(me, dt, 8, 0.5)
@@ -78,15 +78,15 @@ function update(me, dt)
 	entity_doCollisionAvoidance(me, dt, 2, 1)	
 	entity_doFriction(me, dt, 200)
 	entity_updateMovement(me, dt)
-	quad_setPosition(glow, entity_getPosition(me))
+	quad_setPosition(v.glow, entity_getPosition(me))
 end
 
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_DEAD) then
-		quad_delete(glow, 1)
-		l = createQuad("Naija/LightFormGlow", 13)
+		quad_delete(v.glow, 1)
+		local l = createQuad("Naija/LightFormGlow", 13)
 		quad_setPosition(l, entity_getPosition(me))
 		quad_color(l, 0.7, 0.5, 1)
 		quad_scale(l)

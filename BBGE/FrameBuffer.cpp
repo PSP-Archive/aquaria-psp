@@ -280,9 +280,10 @@ void FrameBuffer::unloadDevice()
 	debugLog("done");
 }
 
+#if defined(BBGE_BUILD_SDL)
 void FrameBuffer::resetOpenGL()
 {
-#if defined(BBGE_BUILD_SDL) && defined(BBGE_BUILD_FRAMEBUFFER)
+#if defined(BBGE_BUILD_FRAMEBUFFER)
 	// set these back to NULL and reload them upon reinit, otherwise they
 	//  might point to a bogus address when the shared library is reloaded.
 	glIsRenderbufferEXT = NULL;
@@ -304,6 +305,7 @@ void FrameBuffer::resetOpenGL()
 	glGenerateMipmapEXT = NULL;
 #endif
 }
+#endif
 
 void FrameBuffer::reloadDevice()
 {

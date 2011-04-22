@@ -31,16 +31,18 @@ PathRender::PathRender() : RenderObject()
 void PathRender::onRender()
 {	
 #ifdef BBGE_BUILD_OPENGL
-	const int pathcount = dsq->game->paths.size();
+	const int pathcount = dsq->game->getNumPaths();
 	if (pathcount <= 0)
 		return;
 
 	for (int i = 0; i < pathcount; i++)
 	{
-		Path *p = dsq->game->paths[i];
+		Path *p = dsq->game->getPath(i);
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 		if (dsq->game->sceneEditor.selectedIdx == i)
 			glColor4f(1, 1, 1, 0.75);
 		else
+#endif
 			glColor4f(1, 0.5, 0.5, 0.75);
 
 		glBegin(GL_LINES);
@@ -85,7 +87,7 @@ void PathRender::onRender()
 				{
 					glColor4f(0.5, 0.5, 1, 0.5);
 					glTranslatef(nd->position.x, nd->position.y, 0);
-					drawCircle(p->rect.getWidth()*0.5, 16);
+					drawCircle(p->rect.getWidth()*0.5f, 16);
 					glTranslatef(-nd->position.x, -nd->position.y, 0);
 				}
 			}
@@ -94,9 +96,11 @@ void PathRender::onRender()
 			if (!p->active)
 				a = 0.3;
 
+#ifdef AQUARIA_BUILD_SCENEEDITOR
 			if (dsq->game->sceneEditor.selectedIdx == i)
 				glColor4f(1, 1, 1, a);
 			else
+#endif
 				glColor4f(1, 0.5, 0.5, a);
 
 			glPushMatrix();

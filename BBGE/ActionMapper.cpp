@@ -316,7 +316,7 @@ bool ActionMapper::getKeyState(int k)
 	{
 		keyState = (core->mouse.buttons.middle == DOWN);
 	}			
-	else if (k >= JOY1_BUTTON_0 && k <= JOY1_BUTTON_12)
+	else if (k >= JOY1_BUTTON_0 && k <= JOY1_BUTTON_16)
 	{
 		int v = k - JOY1_BUTTON_0;
 		
@@ -325,19 +325,19 @@ bool ActionMapper::getKeyState(int k)
 	}
 	else if (k == JOY1_STICK_LEFT)
 	{
-		keyState = core->joystick.position.x < -0.6;
+		keyState = core->joystick.position.x < -0.6f;
 	}
 	else if (k == JOY1_STICK_RIGHT)
 	{
-		keyState = core->joystick.position.x > 0.6;
+		keyState = core->joystick.position.x > 0.6f;
 	}
 	else if (k == JOY1_STICK_UP)
 	{
-		keyState = core->joystick.position.y < -0.6;
+		keyState = core->joystick.position.y < -0.6f;
 	}
 	else if (k == JOY1_STICK_DOWN)
 	{
-		keyState = core->joystick.position.y > 0.6;
+		keyState = core->joystick.position.y > 0.6f;
 	}
 	else if (k == X360_BTN_START)
 	{
@@ -347,19 +347,19 @@ bool ActionMapper::getKeyState(int k)
 	{
 		keyState = core->joystick.btnSelect;
 	}
-	else if (k == X360_DPAD_LEFT)
+	else if (k == JOY1_DPAD_LEFT)
 	{
 		keyState = core->joystick.dpadLeft;
 	}
-	else if (k == X360_DPAD_RIGHT)
+	else if (k == JOY1_DPAD_RIGHT)
 	{
 		keyState = core->joystick.dpadRight;
 	}
-	else if (k == X360_DPAD_UP)
+	else if (k == JOY1_DPAD_UP)
 	{
 		keyState = core->joystick.dpadUp;
 	}
-	else if (k == X360_DPAD_DOWN)
+	else if (k == JOY1_DPAD_DOWN)
 	{
 		keyState = core->joystick.dpadDown;
 	}
@@ -377,7 +377,7 @@ void ActionMapper::onUpdate (float dt)
 	*/
 	if (cleared) cleared = false;
 	ActionDataSet::iterator i;
-	KeyDownMap deferedKeyDownMap = keyDownMap;
+	KeyDownMap oldKeyDownMap = keyDownMap;
 	for (i = actionData.begin(); i != actionData.end(); ++i)
 	{
 		ButtonList::iterator j;
@@ -390,9 +390,9 @@ void ActionMapper::onUpdate (float dt)
 
 			keyState = getKeyState(k);
 
-			if (keyState != keyDownMap[k])
+			if (keyState != oldKeyDownMap[k])
 			{				
-				deferedKeyDownMap[k] = keyState;
+				keyDownMap[k] = keyState;
 				if (inputEnabled)
 				{
 					ActionData *ad = &(*i);
@@ -401,44 +401,17 @@ void ActionMapper::onUpdate (float dt)
 						if (ad->state==-1 || keyState == ad->state)
 						{
 							ad->event->act();
-							// NOTE: see below (about multiple actions per key)
 						}
 					}
 					else
 					{
 						action(ad->id, keyState);
-						if (core->loopDone) goto out;
-						// note: this will allow multiple actions per key
-						// it runs through the actions' buttons to see if another action has the same button
-						// NOTE: This needs to be added to work for events as well, at some point
-						ActionDataSet::iterator u;
-						for (u = actionData.begin(); u != actionData.end(); ++u)
-						{
-							if (u != i)
-							{
-								ButtonList::iterator l;
-								l = u->buttonList.begin();
-								for (; l != u->buttonList.end(); l++)
-								{
-									int key = (*l);
-									if (key == k)
-									{
-										action(u->id, u->state);
-										if (core->loopDone)
-										{
-											goto out;
-										}
-									}
-								}
-							}
-						}
 					}
+					if (core->loopDone) goto out;
 				}
-				if (cleared) { cleared = false; goto out; }
 			}
 		}
 	}
-	keyDownMap = deferedKeyDownMap;
 
 out:
 	inUpdate = false;

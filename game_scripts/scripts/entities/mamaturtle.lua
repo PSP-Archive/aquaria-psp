@@ -17,17 +17,17 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- M A M A  T U R T L E
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-STATE_SCREECH			= 1000
+local STATE_SCREECH			= 1000
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -94,7 +94,7 @@ function enterState(me)
 	elseif entity_isState(me, STATE_SCREECH) then
 		entity_animate(me, "screech")
 	elseif entity_isState(me, STATE_OPEN) then
-		nd = 0
+		local nd = 0
 		if isFlag(FLAG_MAMATURTLE_RESCUE3, 1) then
 			nd = getNode("P3")
 		elseif isFlag(FLAG_MAMATURTLE_RESCUE2, 1) then
@@ -104,13 +104,10 @@ function enterState(me)
 		end
 		cam_toNode(nd)
 		watch(1)
-		plant = node_getNearestEntity(nd, "ancient-plant")
+		local plant = node_getNearestEntity(nd, "ancient-plant")
 		entity_setState(plant, STATE_OPEN)
 		watch(1)
 	end
-end
-
-function hit(me, attacker, bone, spellType, dmg)
 end
 
 function exitState(me)

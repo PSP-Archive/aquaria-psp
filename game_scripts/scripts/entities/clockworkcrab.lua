@@ -17,28 +17,28 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- K I N G   C R A B
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-fireDelay = 3
-moveTimer = 0
+v.fireDelay = 3
+v.moveTimer = 0
 
-STATE_FIRING = 1001
-STATE_CLAW	 = 1002
+local STATE_FIRING = 1001
+local STATE_CLAW = 1002
 
-leftArm = 0
-claw = 0
+v.leftArm = 0
+v.claw = 0
 
-cannon = 0
-n=0
+v.cannon = 0
+v.n = 0
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -65,25 +65,25 @@ function init(me)
 	entity_setDeathParticleEffect(me, "TinyRedExplode")
 	entity_clampToSurface(me)
 	
-	cannon = entity_getBoneByName(me, "Cannon")
-	leftArm = entity_getBoneByName(me, "LeftArm")
-	claw = entity_getBoneByName(me, "Claw")
+	v.cannon = entity_getBoneByName(me, "Cannon")
+	v.leftArm = entity_getBoneByName(me, "LeftArm")
+	v.claw = entity_getBoneByName(me, "Claw")
 	
 	entity_setState(me, STATE_IDLE)	
-	n = getNaija()
+	v.n = getNaija()
 	entity_setCullRadius(me, 1024)
 	
 	entity_setDamageTarget(me, DT_AVATAR_BITE, false)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function animationKey(me, key)
 	if entity_isState(me, STATE_FIRING) and key == 1 then
-		x, y = bone_getWorldPosition(cannon)
-		nx, ny = getWallNormal(entity_getPosition(me))
+		local x, y = bone_getWorldPosition(v.cannon)
+		local nx, ny = getWallNormal(entity_getPosition(me))
 		if entity_hasTarget(me) then
 			createShot("ClockworkCrab", me, entity_getTarget(me), x, y)			
 		end
@@ -99,16 +99,16 @@ function update(me, dt)
 	if entity_isState(me, STATE_IDLE) then
 		entity_moveAlongSurface(me, dt, 200, 6, 10)
 		entity_rotateToSurfaceNormal(me, 0.1)
-		moveTimer = moveTimer + dt
-		if moveTimer > 30 then
+		v.moveTimer = v.moveTimer + dt
+		if v.moveTimer > 30 then
 			entity_switchSurfaceDirection(me)
-			moveTimer = 0
+			v.moveTimer = 0
 		end
 	elseif entity_isState(me, STATE_CLAW) then
-		x1,y1 = bone_getWorldPosition(leftArm)
-		x2,y2 = bone_getWorldPosition(claw)
-		if entity_collideCircleVsLine(n, x1, y1, x2, y2, 8) then
-			entity_damage(n, me, 1)
+		local x1,y1 = bone_getWorldPosition(v.leftArm)
+		local x2,y2 = bone_getWorldPosition(v.claw)
+		if entity_collideCircleVsLine(v.n, x1, y1, x2, y2, 8) then
+			entity_damage(v.n, me, 1)
 		end
 	end
 	
@@ -117,13 +117,13 @@ function update(me, dt)
 		entity_findTarget(me, 1200)
 	else
 		if entity_isState(me, STATE_IDLE) then
-			if fireDelay > 0 then
-				fireDelay = fireDelay - dt
-				if fireDelay < 0 then
+			if v.fireDelay > 0 then
+				v.fireDelay = v.fireDelay - dt
+				if v.fireDelay < 0 then
 					-- dmg, mxspd, homing, numsegs, out
 					--entity_fireAtTarget(me, "BlasterFire", 1, 400, 200, 3, 64)
-					--s = createShot("ClockworkCrab", me, entity_getTarget(me), bone_getPosition(cannon))					
-					fireDelay = 4
+					--local s = createShot("ClockworkCrab", me, entity_getTarget(me), bone_getPosition(cannon))					
+					v.fireDelay = 4
 					if chance(50) then
 						entity_setState(me, STATE_FIRING)
 					else

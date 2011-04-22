@@ -27,7 +27,7 @@ struct lua_State;
 class ScriptedEntity : public CollideEntity, public Segmented
 {
 public:
-	ScriptedEntity(const std::string &script, Vector position, EntityType et = ET_ENEMY, BehaviorType bt = BT_NORMAL);
+	ScriptedEntity(const std::string &scriptName, Vector position, EntityType et = ET_ENEMY, BehaviorType bt = BT_NORMAL);
 	void init();
 	void postInit();
 	void destroy();
@@ -36,7 +36,6 @@ public:
 	void setEntityLayer(int layer);
 	void setupEntity(const std::string &tex, int layer=0);
 	void setupBasicEntity(std::string texture, int health, int manaBall, int exp, int money, int collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer);
-	void setupConversationEntity(std::string name, std::string texture);
 	void initHair(int numSegments, int segmentLength, int width, const std::string &tex);
 	void initSegments(int numSegments, int minDist, int maxDist, std::string bodyTex, std::string tailTex, int w, int h, float taper, bool reverseSegments);
 	void registerNewPart(RenderObject *r, const std::string &name);
@@ -49,6 +48,7 @@ public:
 	void lightFlare();
 	void entityDied(Entity *e);
 	void message(const std::string &msg, int v);
+	void message(const std::string &msg, void *v);
 	
 	static bool runningActivation;
 
@@ -113,7 +113,7 @@ protected:
 	void onHitWall();
 	bool reverseSegments;
 	int moneyAmount, expType;
-	lua_State *L;
+	Script *script;
 	void onUpdate(float dt);
 	void onEnterState(int action);
 	void onExitState(int action);

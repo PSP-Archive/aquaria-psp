@@ -17,25 +17,26 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- Rood Shrimp
 -- ================================================================================================
 
-dofile("scripts/entities/entityinclude.lua")
 -- specific
-STATE_JUMP				= 1000
-STATE_TRANSITION		= 1001
-STATE_RETURNTOWALL		= 1002
-STATE_SURFACE			= 1003
+local STATE_JUMP			= 1000
+local STATE_TRANSITION		= 1001
+local STATE_RETURNTOWALL	= 1002
+local STATE_SURFACE			= 1003
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-moveTimer = 0
-moveDir = 0
-avoidCollisionsTimer = 0
-glow = 0
+v.moveTimer = 0
+v.moveDir = 0
+v.avoidCollisionsTimer = 0
+v.glow = 0
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -66,9 +67,9 @@ function init(me)
 	
 	entity_setDeathParticleEffect(me, "PurpleExplode")
 	
-	glow = createQuad("Naija/LightFormGlow", 13)
-	quad_scale(glow, 1, 1)
-	quad_scale(glow, 1.2, 1.2, 0.5, -1, 1, 1)	
+	v.glow = createQuad("Naija/LightFormGlow", 13)
+	quad_scale(v.glow, 1, 1)
+	quad_scale(v.glow, 1.2, 1.2, 0.5, -1, 1, 1)	
 
 	
 	entity_offset(me, 0, -40, 1, -1, 1)
@@ -80,42 +81,42 @@ function update(me, dt)
 	entity_handleShotCollisions(me)	
 	
 	if entity_isState(me, STATE_IDLE) then
-		avoidCollisionsTimer = avoidCollisionsTimer + dt
-		if avoidCollisionsTimer > 5 then
-			avoidCollisionsTimer = 0
+		v.avoidCollisionsTimer = v.avoidCollisionsTimer + dt
+		if v.avoidCollisionsTimer > 5 then
+			v.avoidCollisionsTimer = 0
 		end
-		moveTimer = moveTimer + dt
-		if moveTimer < 1.5 then
+		v.moveTimer = v.moveTimer + dt
+		if v.moveTimer < 1.5 then
 			-- move
-			amount = 2000*dt
-			if moveDir == 0 then
+			local amount = 2000*dt
+			if v.moveDir == 0 then
 				entity_addVel(me, -amount, 0)
 				if entity_isFlippedHorizontal(me) then
 					entity_flipHorizontal(me)
 				end
-			elseif moveDir == 1 then
+			elseif v.moveDir == 1 then
 				entity_addVel(me, 0, amount)
-			elseif moveDir == 2 then
+			elseif v.moveDir == 2 then
 				entity_addVel(me, amount, 0)
 				if not entity_isFlippedHorizontal(me) then
 					entity_flipHorizontal(me)
 				end			
-			elseif moveDir == 3 then
+			elseif v.moveDir == 3 then
 				entity_addVel(me, 0, amount)
 			end		
-		elseif moveTimer > 3 then
+		elseif v.moveTimer > 3 then
 			-- stop 
 			--entity_clearVel(me)
-			moveTimer = 0
-			moveDir = moveDir +1 
-			if moveDir >= 4 then
-				moveDir = 0
+			v.moveTimer = 0
+			v.moveDir = v.moveDir + 1
+			if v.moveDir >= 4 then
+				v.moveDir = 0
 			end
-		elseif moveTimer > 2.5 then
-			factor = 5*dt
+		elseif v.moveTimer > 2.5 then
+			local factor = 5*dt
 			entity_addVel(me, -entity_velx(me)*factor, -entity_vely(me)*factor)
 		end
-		if avoidCollisionsTimer < 4 then
+		if v.avoidCollisionsTimer < 4 then
 			entity_doCollisionAvoidance(me, dt, 4, 1.0)
 		end
 		entity_updateMovement(me, dt)		
@@ -128,8 +129,8 @@ function update(me, dt)
 		--entity_rotateToVel(me, 0.1)
 	end
 	
-	x, y = entity_getPosition(me)
-	quad_setPosition(glow, x, y, 0.05)
+	local x, y = entity_getPosition(me)
+	quad_setPosition(v.glow, x, y, 0.05)
 	
 end
 
@@ -140,7 +141,7 @@ end
 
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
-		avoidCollisionsTimer = 0
+		v.avoidCollisionsTimer = 0
 	elseif entity_isState(me, STATE_SURFACE) then
 		entity_clearVel(me)
 		if chance(50) then
@@ -155,8 +156,8 @@ function enterState(me)
 			end
 		end		
 	elseif entity_isState(me, STATE_DEAD) then
-		if glow ~= 0 then
-			quad_delete(glow)
+		if v.glow ~= 0 then
+			quad_delete(v.glow)
 		end
 	end
 end

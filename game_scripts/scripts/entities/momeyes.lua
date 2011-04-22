@@ -17,17 +17,17 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-beam = 0
-timer = 0
+v.n = 0
+v.beam = 0
+v.timer = 0
 
-delayTimeMin = 1
-delayTimeMax = 0.25
-delay = delayTimeMin
-delayTime = delayTimeMin
-delayTimeBit = 0.05
+v.delayTimeMin = 1
+v.delayTimeMax = 0.25
+v.delay = v.delayTimeMin
+v.delayTime = v.delayTimeMin
+v.delayTimeBit = 0.05
 
 function init(me)
 	setupEntity(me)
@@ -43,24 +43,24 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
-	if timer == -1 then return end
+	if v.timer == -1 then return end
 
-	sx,sy = entity_getScale(me)
+	local sx, sy = entity_getScale(me)
 	if sy == 1 then
-		delay = delay - dt
-		if delay < 0 then
-			delay = delayTime
+		v.delay = v.delay - dt
+		if v.delay < 0 then
+			v.delay = v.delayTime
 			
-			s = createShot("MomVision", me, n, entity_x(me), entity_y(me)+16)
+			local s = createShot("MomVision", me, v.n, entity_x(me), entity_y(me)+16)
 			shot_setAimVector(s, randVector(1))
 			
-			if delayTime > delayTimeMax then
-				delayTime = delayTime - delayTimeBit
+			if v.delayTime > v.delayTimeMax then
+				v.delayTime = v.delayTime - v.delayTimeBit
 			end
 		end
 	end
@@ -70,9 +70,9 @@ function enterState(me)
 	if entity_isState(me, STATE_DONE) then
 		entity_scale(me, 1, 0.1, 0.2)
 		entity_delete(me, 0.2)		
-		timer = -1
-		if beam ~= 0 then
-			beam_delete(beam)
+		v.timer = -1
+		if v.beam ~= 0 then
+			beam_delete(v.beam)
 		end
 	end
 end

@@ -17,48 +17,49 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 --SeaHorse
 
-dofile("scripts/entities/entityinclude.lua")
 -- specific
-STATE_JUMP				= 1000
-STATE_TRANSITION		= 1001
-STATE_RETURNTOWALL		= 1002
-STATE_SURFACE			= 1003
+local STATE_JUMP			= 1000
+local STATE_TRANSITION		= 1001
+local STATE_RETURNTOWALL	= 1002
+local STATE_SURFACE			= 1003
 
-moveTimer = 0
-moveDir = 0
-avoidCollisionsTimer = 0
-riding = false
+v.moveTimer = 0
+v.moveDir = 0
+v.avoidCollisionsTimer = 0
+v.riding = false
 
-noteDown = -1
-dirx = 0
-diry = 0
-wasUnderWater = true
+v.noteDown = -1
+v.dirx = 0
+v.diry = 0
+v.wasUnderWater = true
 
-racePath = 0
-curNode = 0
+v.racePath = 0
+v.curNode = 0
 
-startx=0
-starty=0
+v.startx = 0
+v.starty = 0
 
-wasInCurrent = false
+v.wasInCurrent = false
 
-n = 0
+v.n = 0
 
-naijaRideAnim = -1
+v.naijaRideAnim = -1
 
-RIDEANIM_NORMAL 		= 0
-RIDEANIM_SLOW 			= 1
-RIDEANIM_OUTOFWATER		= 2
+local RIDEANIM_NORMAL 		= 0
+local RIDEANIM_SLOW 			= 1
+local RIDEANIM_OUTOFWATER		= 2
 
-waiting = false
+v.waiting = false
 
-incut = false
+v.incut = false
 
-seahorseCostume = false
+v.seahorseCostume = false
 
-function commonInit(me, tex, sz)
+function v.commonInit(me, tex, sz)
 	if sz == 0 then
 		sz = 50
 	end
@@ -100,81 +101,81 @@ function commonInit(me, tex, sz)
 end
 
 function postInit(me)
-	n = getNaija()
-	startx = entity_x(me)
-	starty = entity_y(me)
+	v.n = getNaija()
+	v.startx = entity_x(me)
+	v.starty = entity_y(me)
 	entity_update(me, math.random(100)/100.0)
 end
 
-function setRideSpeed(me)
+local function setRideSpeed(me)
 	if not entity_isUnderWater(me) then
 		entity_setMaxSpeedLerp(me, 8)
 	elseif entity_isState(me, STATE_RACE) then
 		entity_setMaxSpeedLerp(me, 3.4, 1)
 	else
 		if getCostume() == "seahorse" then
-			seahorseCostume = true
+			v.seahorseCostume = true
 			entity_setMaxSpeedLerp(me, 5.5, 1)
 		else
-			seahorseCostume = false
+			v.seahorseCostume = false
 			entity_setMaxSpeedLerp(me, 3.5, 1)
 		end
 	end
 end
 
-function updateRideAnim(me, num)
-	if naijaRideAnim ~= num then
+local function updateRideAnim(me, num)
+	if v.naijaRideAnim ~= num then
 		if num == RIDEANIM_NORMAL then
-			entity_animate(n, "rideSeaHorse", LOOP_INF, LAYER_OVERRIDE)
+			entity_animate(v.n, "rideSeaHorse", LOOP_INF, LAYER_OVERRIDE)
 		elseif num == RIDEANIM_SLOW then
-			entity_animate(n, "rideSeaHorse2", LOOP_INF, LAYER_OVERRIDE)
+			entity_animate(v.n, "rideSeaHorse2", LOOP_INF, LAYER_OVERRIDE)
 		elseif num == RIDEANIM_OUTOFWATER then
-			entity_animate(n, "rideSeaHorse3", LOOP_INF, LAYER_OVERRIDE)
+			entity_animate(v.n, "rideSeaHorse3", LOOP_INF, LAYER_OVERRIDE)
 		end
-		naijaRideAnim = num
+		v.naijaRideAnim = num
 	end
 end
 
-function getRidePosition(me)
-	x,y = entity_getPosition(me)
-	ox, oy = entity_getOffset(me)
+local function getRidePosition(me)
+	local x, y = entity_getPosition(me)
+	local ox, oy = entity_getOffset(me)
 	x = x + ox
 	y = y + oy
-	offx = 32
+	local offx = 32
 	if entity_isFlippedHorizontal(me) then
 		-- facing right
 		offx = -offx
 	end
 	x = x+offx
-	y =	y-10
+	y = y-10
 	return x, y
 end
 
-function startRide(me)
-	incut = true
+local function startRide(me)
+	v.incut = true
 	debugLog("start ride")
 	setRideSpeed(me)
 
 	entity_setInvincible(me, true)
-	entity_setInvincible(n, true)
+	entity_setInvincible(v.n, true)
 	entity_clearVel(me)
-	entity_clearVel(n)
+	entity_clearVel(v.n)
 	
 	
-	waiting = true
+	v.waiting = true
 	
-	entity_idle(n)
-	entity_animate(n, "pushForward")
-	entity_flipToEntity(n, me)
+	entity_idle(v.n)
+	entity_animate(v.n, "pushForward")
+	entity_flipToEntity(v.n, me)
 	watch(0.2)
-	entity_clearVel(n)
-	x, y = getRidePosition(me)
-	entity_setPosition(n, x, y, 1, 0, 0, 0)
+	entity_clearVel(v.n)
+	local x, y = getRidePosition(me)
+	entity_setPosition(v.n, x, y, 1, 0, 0, 0)
 	watch(1)
 
-	riding = true
-	--entity_animate(n, "rideSeaHorse", LOOP_INF, LAYER_OVERRIDE)
-	naijaRideAnim = -1
+	v.riding = true
+	--entity_animate(v.n, "rideSeaHorse", LOOP_INF, LAYER_OVERRIDE)
+	v.naijaRideAnim = -1
 	updateRideAnim(me, RIDEANIM_NORMAL)
 	
 	-- zoomsurface
@@ -182,13 +183,13 @@ function startRide(me)
 	entity_setRiding(getNaija(), me)
 	
 	
-	x, y = getRidePosition(me)
+	local x, y = getRidePosition(me)
 	entity_setRidingData(me, x, y, entity_getRotation(me), entity_isfh(me))
 	
 	entity_setInvincible(me, false)
-	entity_setInvincible(n, false)
+	entity_setInvincible(v.n, false)
 	
-	waiting = false
+	v.waiting = false
 	
 	entity_sound(me, "SeahorseWhinny")
 	
@@ -196,24 +197,24 @@ function startRide(me)
 	
 	cam_toEntity(me)
 	
-	incut = false
+	v.incut = false
 end
 
-function stopRide(me)
+local function stopRide(me)
 	debugLog("stop ride")
-	if riding then
+	if v.riding then
 		entity_sound(me, "SeahorseWhinny")
 	
 		--if entity_isUnderWater(me) then
 			overrideZoom(0)
-			riding = false
-			entity_stopAllAnimations(n)
-			entity_idle(n)
+			v.riding = false
+			entity_stopAllAnimations(v.n)
+			entity_idle(v.n)
 			--setCanWarp(true)
-			entity_setRiding(n, 0)
-			entity_addVel(n, entity_velx(me), entity_vely(me))
-			if not entity_isUnderWater(n) then
-				entity_animate(n, "burst")
+			entity_setRiding(v.n, 0)
+			entity_addVel(v.n, entity_velx(me), entity_vely(me))
+			if not entity_isUnderWater(v.n) then
+				entity_animate(v.n, "burst")
 			else
 				entity_setMaxSpeedLerp(me, 1, 1)
 			end
@@ -226,10 +227,10 @@ function stopRide(me)
 end
 
 function activate(me)
-	if incut then return end
+	if v.incut then return end
 	--debugLog("activate")
 	if avatar_isOnWall() then return end
-	if riding then
+	if v.riding then
 		stopRide(me)
 	else
 		startRide(me)
@@ -241,24 +242,24 @@ function update(me, dt)
 		entity_setActivation(me, AT_CLICK, 64, 512)
 	else
 		entity_setActivation(me, AT_NONE)
-		if riding then
+		if v.riding then
 			stopRide(me)
 		end
 	end
 
 
 	--if not entity_isNearObstruction(me, 3) then
-	inCurrent = false
-	if riding then
+	local inCurrent = false
+	if v.riding then
 		inCurrent = entity_updateCurrents(me, dt)
-		if (inCurrent and not wasInCurrent) then
+		if (inCurrent and not v.wasInCurrent) then
 			-- start boost anim
-		elseif (not inCurrent and wasInCurrent) then
+		elseif (not inCurrent and v.wasInCurrent) then
 			-- end boost anim
 		end
 	end
 	
-	if not seahorseCostume then
+	if not v.seahorseCostume then
 		if inCurrent then
 			entity_setMaxSpeed(me, 150)
 		else
@@ -268,9 +269,9 @@ function update(me, dt)
 		entity_setMaxSpeed(me, 200)
 	end
 	
-	wasInCurrent = inCurrent
+	v.wasInCurrent = inCurrent
 	
-	if riding then
+	if v.riding then
 		if entity_getRiding(getNaija())==0 then
 			stopRide(me)
 		else
@@ -281,18 +282,16 @@ function update(me, dt)
 		esetv(me, EV_LOOKAT, 1)
 	end
 	
-	if riding == true or entity_isState(me, STATE_RACE) then
-		iter = 0
-		e = getFirstEntity()
+	if v.riding == true or entity_isState(me, STATE_RACE) then
+		local e = getFirstEntity()
 		while e~=0 do
 			if e~=me and entity_isName(e, "Seahorse") then
 				if entity_isEntityInRange(me, e, 64) then
-					dx, dy = entity_getVectorToEntity(me, e)
+					local dx, dy = entity_getVectorToEntity(me, e)
 					dx, dy = vector_setLength(dx, dy, 1000)
 					entity_addVel(e, dx, dy)
 				end
 			end
-			iter = iter + 1
 			e = getNextEntity()
 		end
 	end
@@ -304,27 +303,19 @@ function update(me, dt)
 			setRideSpeed(me)
 			--end
 			--entity_addVel(me, 0, -2000)
-			vx = entity_velx(me)
-			vy = entity_vely(me)
-			entity_clearVel(me)
-			entity_addVel(me, vx*4, vy*4)
-			
-			vx = entity_velx(me)
-			vy = entity_vely(me)
-			
+			local vx = entity_velx(me)
+			local vy = entity_vely(me)
+			vx, vy = vx*4, vy*4
 			vx, vy = vector_cap(vx, vy, 1100)
 			entity_clearVel(me)
 			entity_addVel(me, vx, vy)
 			
 			entity_setWeight(me, 800)
-			dirx = 0
-			diry = 0
-			noteDown = -1			
 			--entity_sound(me, "splash-outof")
 		else
 			setRideSpeed(me)
 			--entity_setMaxSpeedLerp(me, 1, 0.8)
-			if not riding then
+			if not v.riding then
 				entity_setMaxSpeedLerp(me, 1, 1)
 			else			
 				setRideSpeed(me)
@@ -334,8 +325,8 @@ function update(me, dt)
 		end
 	end
 	--[[
-	if entity_isUnderWater(me) ~= wasUnderWater then
-		wasUnderWater = entity_isUnderWater(me)
+	if entity_isUnderWater(me) ~= v.wasUnderWater then
+		v.wasUnderWater = entity_isUnderWater(me)
 		
 		spawnParticleEffect("Splash", entity_x(me), entity_y(me))
 		if not entity_isUnderWater(me) then
@@ -352,63 +343,64 @@ function update(me, dt)
 	end	
 	]]--
 	if entity_isState(me, STATE_IDLE) then
-		if not riding then
-			avoidCollisionsTimer = avoidCollisionsTimer + dt
-			if avoidCollisionsTimer > 5 then
-				avoidCollisionsTimer = 0
+		if not v.riding then
+			v.avoidCollisionsTimer = v.avoidCollisionsTimer + dt
+			if v.avoidCollisionsTimer > 5 then
+				v.avoidCollisionsTimer = 0
 			end
-			moveTimer = moveTimer + dt
-			if moveTimer < 1.5 then
+			v.moveTimer = v.moveTimer + dt
+			if v.moveTimer < 1.5 then
 				-- move
-				amount = 2000*dt
-				if moveDir == 0 then
+				local amount = 2000*dt
+				if v.moveDir == 0 then
 					entity_addVel(me, -amount, 0)
 					if entity_isFlippedHorizontal(me) then
 						entity_flipHorizontal(me)
 					end
-				elseif moveDir == 1 then
+				elseif v.moveDir == 1 then
 					entity_addVel(me, 0, amount)
-				elseif moveDir == 2 then
+				elseif v.moveDir == 2 then
 					entity_addVel(me, amount, 0)
 					if not entity_isFlippedHorizontal(me) then
 						entity_flipHorizontal(me)
 					end			
-				elseif moveDir == 3 then
+				elseif v.moveDir == 3 then
 					entity_addVel(me, 0, amount)
 				end		
-			elseif moveTimer > 3 then
+			elseif v.moveTimer > 3 then
 				-- stop 
 				--entity_clearVel(me)
-				moveTimer = 0
-				moveDir = moveDir +1 
-				if moveDir >= 4 then
-					moveDir = 0
+				v.moveTimer = 0
+				v.moveDir = v.moveDir +1 
+				if v.moveDir >= 4 then
+					v.moveDir = 0
 				end
-			elseif moveTimer > 2.5 then
-				factor = 5*dt
+			elseif v.moveTimer > 2.5 then
+				local factor = 5*dt
 				entity_addVel(me, -entity_velx(me)*factor, -entity_vely(me)*factor)
 			end
-			if avoidCollisionsTimer < 4 then
+			if v.avoidCollisionsTimer < 4 then
 				entity_doCollisionAvoidance(me, dt, 4, 1.0)
 			end
 		else
-			if noteDown ~= -1 then
+			if v.noteDown ~= -1 and entity_isUnderWater(me) then
+				local amt
 				if getCostume() == "seahorse" then
 					amt = 8000*dt
 				else
 					amt = 2000*dt
 				end
-				entity_addVel(me, dirx*amt, diry*amt)
+				entity_addVel(me, v.dirx*amt, v.diry*amt)
 			end
 			if entity_getHealth(getNaija()) < 1 then
 				stopRide(me)
 			end
 			--entity_doCollisionAvoidance(me, dt, 8, 0.1)
-			if dirx < 0 and entity_velx(me) < -100 then
+			if v.dirx < 0 and entity_velx(me) < -100 then
 				if entity_isFlippedHorizontal(me) then
 					entity_flipHorizontal(me)
 				end
-			elseif dirx > 0 and entity_velx(me) > 100 then
+			elseif v.dirx > 0 and entity_velx(me) > 100 then
 				if not entity_isFlippedHorizontal(me) then
 					entity_flipHorizontal(me)
 				end
@@ -418,7 +410,7 @@ function update(me, dt)
 		end
 		
 		entity_setTarget(me, getNaija())
-		if riding then
+		if v.riding then
 			if entity_isUnderWater(me) then
 				entity_doCollisionAvoidance(me, dt, 4, 0.6)
 				--entity_doCollisionAvoidance(me, dt, 3, 0.5)
@@ -433,17 +425,17 @@ function update(me, dt)
 		entity_updateMovement(me, dt)
 		--entity_rotateToVel(me, 0.1)
 	elseif entity_isState(me, STATE_RACE) then
-		x, y = node_getPathPosition(racePath, curNode)
+		local x, y = node_getPathPosition(v.racePath, v.curNode)
 		if x == 0 and y == 0 then
 			--entity_setState(me, STATE_RESTART)
-			curNode = 0
+			v.curNode = 0
 		else
 			if entity_isPositionInRange(me, x, y, 64) then
-				curNode = curNode + 1
+				v.curNode = v.curNode + 1
 			end
-			x1, y1 = entity_getPosition(me)
-			vx = x - x1
-			vy = y - y1
+			local x1, y1 = entity_getPosition(me)
+			local vx = x - x1
+			local vy = y - y1
 			vector_setLength(vx, vy, 500*dt)
 			entity_addVel(me, vx, vy)
 			entity_flipToVel(me)
@@ -453,22 +445,22 @@ function update(me, dt)
 		end
 	end
 	
-	if waiting then
+	if v.waiting then
 		entity_clearVel(me)
 	end
 	
-	if riding then
+	if v.riding then
 		entity_updateLocalWarpAreas(me, true)
-		entity_clearVel(n)
-		x, y = getRidePosition(me)
+		entity_clearVel(v.n)
+		local x, y = getRidePosition(me)
 		entity_setRidingData(me, x, y, entity_getRotation(me), entity_isfh(me))
 		--entity_setRidingRotation(me, entity_getRotation(me))
-		--entity_rotate(n, entity_getRotation(me))
+		--entity_rotate(v.n, entity_getRotation(me))
 		--[[
-		if entity_isFlippedHorizontal(me) and not entity_isFlippedHorizontal(n) then
-			entity_flipHorizontal(n)
-		elseif not entity_isFlippedHorizontal(me) and entity_isFlippedHorizontal(n) then
-			entity_flipHorizontal(n)
+		if entity_isFlippedHorizontal(me) and not entity_isFlippedHorizontal(v.n) then
+			entity_flipHorizontal(v.n)
+		elseif not entity_isFlippedHorizontal(me) and entity_isFlippedHorizontal(v.n) then
+			entity_flipHorizontal(v.n)
 		end
 		]]--
 		--avatar_updatePosition()
@@ -481,7 +473,7 @@ function update(me, dt)
 			updateRideAnim(me, RIDEANIM_NORMAL)
 		end
 		
-		if noteDown == -1 then
+		if v.noteDown == -1 then
 			if entity_isUnderWater(me) then
 				entity_doFriction(me, dt, 450)
 			end
@@ -489,8 +481,8 @@ function update(me, dt)
 		
 		--updateRideAnim(me, RIDEANIM_NORMAL)
 		--[[
-		entity_clearVel(n)
-		entity_addVel(n, entity_velx(me), entity_vely(me))
+		entity_clearVel(v.n)
+		entity_addVel(v.n, entity_velx(me), entity_vely(me))
 		]]--
 		
 	end
@@ -502,19 +494,19 @@ end
 
 function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
-		if not riding then
+		if not v.riding then
 			entity_setMaxSpeedLerp(me, 1, 1)
 		end
-		avoidCollisionsTimer = 0
+		v.avoidCollisionsTimer = 0
 	elseif entity_isState(me, STATE_DEAD) then
 		stopRide(me)
 	elseif entity_isState(me, STATE_RACE) then
-		curNode = 0
+		v.curNode = 0
 		setRideSpeed(me)
-		racePath = entity_getNearestNode(me, "RACE")
+		v.racePath = entity_getNearestNode(me, "RACE")
 	elseif entity_isState(me, STATE_RESTART) then
 		entity_clearVel(me)
-		entity_setPosition(me, startx, starty)
+		entity_setPosition(me, v.startx, v.starty)
 		entity_setStateTime(me, 0.1)
 	end
 end
@@ -524,62 +516,42 @@ function damage(me, attacker, bone, damageType, dmg)
 end
 
 function songNote(me, note)
-	if riding then
+	if v.riding then
 		--debugLog("noteUp!")
-		noteDown = note
-		amt = 1
-		amt2 = 0.5
-		dirx = 0
-		diry = 0
+		v.noteDown = note
+		local amt = 0.6
 		if note == 0 then
-			--entity_addVel(me, 0, amt)
-			dirx = 0
-			diry = amt
+			v.dirx, v.diry =  0, 1
 		elseif note == 1 then
-			--entity_addVel(me, amt2, amt2)
-			dirx = amt2
-			diry = amt2
+			v.dirx, v.diry =  1, 1
 		elseif note == 2 then
-			--entity_addVel(me, amt, 0)
-			dirx = amt
-			diry = 0
+			v.dirx, v.diry =  1, 0
 		elseif note == 3 then
-			--entity_addVel(me, amt2, -amt2)
-			dirx = amt2
-			diry = -amt2
+			v.dirx, v.diry =  1,-1
 		elseif note == 4 then
-			--entity_addVel(me, 0, -amt2)
-			dirx = 0
-			diry = -amt2
+			v.dirx, v.diry =  0,-1
 		elseif note == 5 then
-			--entity_addVel(me, -amt2, -amt2)
-			dirx = -amt2
-			diry = -amt2
+			v.dirx, v.diry = -1,-1
 		elseif note == 6 then
-			--entity_addVel(me, -amt2, 0)
-			dirx = -amt2
-			diry = 0
+			v.dirx, v.diry = -1, 0
 		elseif note == 7 then
-			--entity_addVel(me, -amt2, amt2)
-			dirx = -amt2
-			diry = amt2
+			v.dirx, v.diry = -1, 1
+		else
+			debugLog("Sour note! (impossible)")
+			v.dirx, v.diry =  0, 0
+			return
 		end
-		if not entity_isUnderWater(me) then
-			if diry < 0 then
-				diry = 0
-			end
-			diry = diry + amt2*0.5
-		end
+		v.dirx, v.diry = vector_setLength(v.dirx, v.diry, amt)
 	end
 end
 
 function songNoteDone(me, note)
 	--debugLog("songNoteDone function")
-	if note == noteDown then
+	if note == v.noteDown then
 		--debugLog("noteDone!")
-		dirx = 0
-		diry = 0
-		noteDown = -1
+		v.dirx = 0
+		v.diry = 0
+		v.noteDown = -1
 	end
 end
 

@@ -17,32 +17,32 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- EEL
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 -- ================================================================================================
 -- FUNCTIONS
 -- ================================================================================================
 
-dir = 0
-switchDirDelay = 0
-wiggleTime = 0
-wiggleDir = 1
-interestTimer = 0
-colorRevertTimer = 0
+v.dir = 0
+v.switchDirDelay = 0
+v.wiggleTime = 0
+v.wiggleDir = 1
+v.interestTimer = 0
+v.colorRevertTimer = 0
 
-collisionSegs = 50
-avoidLerp = 0
-avoidDir = 1
-interest = false
+v.collisionSegs = 50
+v.avoidLerp = 0
+v.avoidDir = 1
+v.interest = false
 
-paraHits = 3
+v.paraHits = 3
 
-openTimer = 0
-parasite = true
+v.openTimer = 0
+v.parasite = true
 
 -- initializes the entity
 function init(me)
@@ -66,13 +66,13 @@ function init(me)
 	
 	entity_setDropChance(me, 50)
 	
-	lungeDelay = 1.0				-- prevent the nautilus from attacking right away
+	v.lungeDelay = 1.0				-- prevent the nautilus from attacking right away
 
 	--entity_initHair(me, 80, 4, 32, "eel-0001")
 	entity_initSkeletal(me, "BigMouth")
 	
-	switchDirDelay = math.random(800)/100.0
-	naija = getNaija()
+	v.switchDirDelay = math.random(800)/100.0
+	v.naija = getNaija()
 	
 	
 	entity_setDeathParticleEffect(me, "TinyBlueExplode")
@@ -82,16 +82,8 @@ function init(me)
 	entity_setCullRadius(me, 256)
 end
 
-function activate(me)
-	if parasite then
-		entity_say(me, "Get it out!")
-	else
-		entity_say(me, "Thank you...")
-	end
-end
-
-function lunge(me)
-	lungeDelay = 0
+local function lunge(me)
+	v.lungeDelay = 0
 	
 	entity_setMaxSpeedLerp(me, 1.5)
 	entity_setMaxSpeedLerp(me, 1, 1)
@@ -107,14 +99,14 @@ function update(me, dt)
 	
 	entity_handleShotCollisionsSkeletal(me)	
 	if entity_getState(me)==STATE_IDLE then		
-		lungeDelay = lungeDelay + dt
-		if lungeDelay > 3 then
+		v.lungeDelay = v.lungeDelay + dt
+		if v.lungeDelay > 3 then
 			lunge(me)			
 		end
 		if not entity_hasTarget(me) then
 			entity_findTarget(me, 1000)
 		else
-			openTimer = openTimer + dt
+			v.openTimer = v.openTimer + dt
 			
 			entity_doEntityAvoidance(me, dt, 32, 0.1)
 			entity_doCollisionAvoidance(me, dt, 8, 1.0)
@@ -122,11 +114,11 @@ function update(me, dt)
 			
 			entity_findTarget(me, 1200)
 			
-			if openTimer > 5 then
-				if parasite then
+			if v.openTimer > 5 then
+				if v.parasite then
 					entity_setState(me, STATE_OPEN)
 				end
-				openTimer = 0 + math.random(3)
+				v.openTimer = 0 + math.random(3)
 			end
 		end
 		entity_touchAvatarDamage(me, 64, 0, 800)
@@ -138,7 +130,7 @@ function update(me, dt)
 			entity_touchAvatarDamage(me, 64, 0.5, 800)
 			entity_pullEntities(me, entity_x(me), entity_y(me), 1000, 1700, dt)
 
-			e = getFirstEntity()
+			local e = getFirstEntity()
 			while e ~= 0 do
 				if entity_getEntityType(e)==ET_ENEMY and e ~= me then
 					if entity_isEntityInRange(me, e, 64 + entity_getCollideRadius(e)) then
@@ -164,9 +156,9 @@ function enterState(me)
 		entity_setMaxSpeedLerp(me, 0.2, 0.1)
 		entity_setStateTime(me, 5)
 	elseif entity_isState(me, STATE_DEAD) then
-		if parasite then
-			e = createEntity("BigMouthParasite", "", entity_getPosition(me))
-			entity_setHealth(e, paraHits*2)
+		if v.parasite then
+			local e = createEntity("BigMouthParasite", "", entity_getPosition(me))
+			entity_setHealth(e, v.paraHits*2)
 		end				
 	end
 end
@@ -181,12 +173,12 @@ function hitSurface(me)
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if parasite and bone_isName(bone,"Parasite") then
+	if v.parasite and bone_isName(bone,"Parasite") then
 		bone_damageFlash(bone)
-		paraHits = paraHits - dmg
-		if paraHits <= 0 then
+		v.paraHits = v.paraHits - dmg
+		if v.paraHits <= 0 then
 			bone_alpha(bone, 0)
-			parasite = false
+			v.parasite = false
 			-- die and kill parasite
 			--entity_changeHealth(me, 0)
 			--createEntity("BigMouthParasite", "", bone_getWorldPosition(bone))

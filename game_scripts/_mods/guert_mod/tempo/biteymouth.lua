@@ -17,23 +17,23 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- B I T E Y   M O U T H
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 -- ================================================================================================
 -- S T A T E S 
 -- ================================================================================================
 
-STATE_BITE = 1001
+local STATE_BITE = 1001
 
 -- ================================================================================================
 -- L O C A L   V A R I A B L E S
 -- ================================================================================================
  
- biteDelay = 0
+v.biteDelay = 0
  
 -- ================================================================================================
 -- F U N C T I O N S
@@ -72,9 +72,9 @@ function update(me, dt)
 
 	-- BITE WHEN NAIJA IS NEAR
 	if entity_getState(me) == STATE_IDLE then
-		if biteDelay > 0 then biteDelay = biteDelay - dt
-		elseif biteDelay <= 0 then
-			biteDelay = 0
+		if v.biteDelay > 0 then v.biteDelay = v.biteDelay - dt
+		elseif v.biteDelay <= 0 then
+			v.biteDelay = 0
 			
 			entity_findTarget(me, 321)
 			
@@ -94,7 +94,7 @@ function enterState(me)
 	
 	-- ...OPEN UP...
 	elseif entity_getState(me) == STATE_OPEN then
-		appearSpeed = entity_animate(me, "open")
+		local appearSpeed = entity_animate(me, "open")
 		entity_setStateTime(me, appearSpeed)
 		entity_scale(me, 1.4, 1.4, appearSpeed) --scale to normal size
 		entity_color(me, 1, 1, 1, appearSpeed)	--set to normal colour
@@ -115,7 +115,7 @@ function exitState(me)
 		
 	elseif entity_getState(me) == STATE_BITE then
 		entity_setState(me, STATE_IDLE)
-		biteDelay = 2.1 + (math.random(210) * 0.01)
+		v.biteDelay = 2.1 + (math.random(210) * 0.01)
 		entity_offset(me, 0, 0)
 	end
 end

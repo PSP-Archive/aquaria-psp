@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/BitmapFont.h"
 #include "../BBGE/Quad.h"
 #include "../BBGE/ActionMapper.h"
-#include "../BBGE/tinyxml.h"
+#include "../ExternalLibs/tinyxml.h"
 #include "../BBGE/Slider.h"
 #include "../BBGE/DebugFont.h"
 #include "../BBGE/TTFFont.h"
@@ -106,6 +106,9 @@ public:
 	bool isGuiVisible();
 
 	bool mbDown;
+
+	static std::string getSaveDescription(const TiXmlDocument &doc);
+
 protected:
 	void onUpdate(float dt);
 	bool selected;
@@ -128,8 +131,13 @@ public:
 
 	Vector getGuiPosition();
 	bool isGuiVisible();
+	bool hadInput() {bool ret = _hadInput; _hadInput = false; return ret;}
 protected:
 	void onUpdate(float dt);
+	bool doSliderInput(float dt);  // Returns whether input was detected
+
+	float inputTimer, inputDelay;
+	bool _hadInput;
 };
 
 class AquariaCheckBox : public CheckBox, public AquariaGuiElement

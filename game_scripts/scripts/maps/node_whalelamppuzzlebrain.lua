@@ -17,27 +17,26 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-curNote = 0
-n = 0
-door = 0
+v.n = 0
+v.door = 0
 
-numNotes = 4
-curNote = 1
+v.numNotes = 4
+v.curNote = 1
 
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 	
-	l1 = getEntityByName("SongLamp3")
-	l2 = getEntityByName("SongLamp2")
-	l3 = getEntityByName("SongLamp7")
-	l4 = getEntityByName("SongLamp1")
+	v.l1 = getEntity("SongLamp3")
+	v.l2 = getEntity("SongLamp2")
+	v.l3 = getEntity("SongLamp7")
+	v.l4 = getEntity("SongLamp1")
 	
-	door = node_getNearestEntity(me, "EnergyDoor")
+	v.door = node_getNearestEntity(me, "EnergyDoor")
 	
 	if isFlag(FLAG_WHALELAMPPUZZLE, 1) then
-		entity_setState(door, STATE_OPENED)
+		entity_setState(v.door, STATE_OPENED)
 	end
 end
 	
@@ -47,25 +46,25 @@ end
 			end
 	]]--
 function activate(me, ent)
-	if curNote == 1 and ent == l1 then
-		curNote = curNote + 1
-	elseif curNote == 2 and ent == l2 then
-		curNote = curNote + 1
-	elseif curNote == 3 and ent == l3 then
-		curNote = curNote + 1
-	elseif curNote == 4 and ent == l4 then
-		curNote = curNote + 1
+	if v.curNote == 1 and ent == v.l1 then
+		v.curNote = v.curNote + 1
+	elseif v.curNote == 2 and ent == v.l2 then
+		v.curNote = v.curNote + 1
+	elseif v.curNote == 3 and ent == v.l3 then
+		v.curNote = v.curNote + 1
+	elseif v.curNote == 4 and ent == v.l4 then
+		v.curNote = v.curNote + 1
 	else
-		curNote = 1
+		v.curNote = 1
 	end
 	
-	if curNote > 4 then
+	if v.curNote > 4 then
 		playSfx("Collectible")
 		debugLog("DONE")
 		setFlag(FLAG_WHALELAMPPUZZLE, 1)
-		entity_setState(door, STATE_OPEN)
+		entity_setState(v.door, STATE_OPEN)
 		
-		curNote = 1
+		v.curNote = 1
 	end
 end
 
@@ -73,6 +72,6 @@ function update(me, dt)
 
 end
 
-function entityNumber(me, ent, num)
+local function entityNumber(me, ent, num)
 	if isFlag(FLAG_WHALELAMPPUZZLE, 1) then return end
 end

@@ -17,21 +17,19 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- T R I L L I O U S
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
-
-STATE_SOMETHING			= 1000
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-swimTime = 1.25
-swimTimer = swimTime - swimTime/4
-gasTimer = 1
+v.swimTime = 1.25
+v.swimTimer = v.swimTime - v.swimTime/4
+v.gasTimer = 1
  
 -- ================================================================================================
 -- FUNCTIONS
@@ -73,23 +71,23 @@ function init(me)
 	1,
 	0)
 	
-	entity_partRotate(me, "FlipperLeft", 45, swimTime/2, -1, 1, 1)
-	entity_partRotate(me, "FlipperRight", -45, swimTime/2, -1, 1, 1)
+	entity_partRotate(me, "FlipperLeft", 45, v.swimTime/2, -1, 1, 1)
+	entity_partRotate(me, "FlipperRight", -45, v.swimTime/2, -1, 1, 1)
 	
 	entity_setDeathParticleEffect(me, "PurpleExplode")
 
-	entity_applyRandomForce(me, 500)
+	entity_addRandomVel(me, 500)
 	-- entity_scale(0.8, 0.8)
 end
 
 function update(me, dt)
 	entity_handleShotCollisions(me)
-	if gasTimer > 0 then
-		gasTimer = gasTimer - dt
-		if gasTimer < 0 then
-			gasTimer = 8
+	if v.gasTimer > 0 then
+		v.gasTimer = v.gasTimer - dt
+		if v.gasTimer < 0 then
+			v.gasTimer = 8
 			entity_fireGas(me, 40, 4, 0.25, "Gas", 0, 0.8, 0.6, 0, 0, 2)
-			entity_applyRandomForce(me, 1000)
+			entity_addRandomVel(me, 1000)
 			spawnParticleEffect("tinygreenexplode", entity_x(me), entity_y(me))
 			entity_sound(me, "boil")
 		end

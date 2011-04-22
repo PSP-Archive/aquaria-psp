@@ -17,11 +17,11 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- A N E M O N E
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -54,7 +54,7 @@ end
 
 function update(me, dt)
 	entity_handleShotCollisions(me)
-	dmg = 0.5
+	local dmg = 0.5
 	if isForm(FORM_NATURE) then
 		dmg = 0
 	end
@@ -63,12 +63,12 @@ function update(me, dt)
 	elseif entity_touchAvatarDamage(me, 48, dmg, 1200, 0, 0, -40) then
 	elseif entity_touchAvatarDamage(me, 48, dmg, 1200, 0, 0, -80) then
 	end
-	range = 1024
-	size = 1.0
+	local range = 1024
+	local size = 1.0
 	if entity_isEntityInRange(me, getNaija(), range) then
-		dist = entity_getDistanceToEntity(me, getNaija())
+		local dist = entity_getDistanceToEntity(me, getNaija())
 		dist = size - (dist/range)*size
-		sz = 1 + dist
+		local sz = 1 + dist
 		entity_scale(me, 1, sz)
 	end
 end

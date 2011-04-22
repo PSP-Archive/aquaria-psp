@@ -17,15 +17,15 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 function init(me)
-	n = getNaija()
+	v.n = getNaija()
 end
 
 function update(me, dt)
-	if isFlag(FLAG_ENTER_ENERGYTEMPLE, 0) and node_isEntityIn(me, n) then
+	if isFlag(FLAG_ENTER_ENERGYTEMPLE, 0) and node_isEntityIn(me, v.n) then
 		setFlag(FLAG_ENTER_ENERGYTEMPLE, 1)
 		centerText(getStringBank(1004))
 	end

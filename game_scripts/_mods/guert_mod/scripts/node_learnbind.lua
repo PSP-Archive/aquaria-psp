@@ -17,24 +17,26 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
 
-n= 0
-islearned=false
+
+v.n = 0
+v.islearned = false
 
 
 function init(me)
-	n = getNaija()     
+	v.n = getNaija()     
 end
 
 
 function update(me, dt)
 
- if islearned==false then
+ if v.islearned == false then
 
-  if node_isEntityIn(me, n) then
-    setControlHint("You've found a new song! You can now use BIND song!", 0, 0, 0, 16)
+  if node_isEntityIn(me, v.n) then
+    setControlHint("You've found a new song! You can now use the BIND song!", 0, 0, 0, 16)
     learnSong(4)
-    islearned=True
+    v.islearned = true
   end
  end
 

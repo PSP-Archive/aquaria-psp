@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "AutoMap.h"
 #include "GridRender.h"
 
-#include "../BBGE/tinyxml.h"
+#include "../ExternalLibs/tinyxml.h"
 
 #define MAX_EATS			8
 
@@ -489,7 +489,7 @@ std::string Continuity::getIEString(IngredientData *data, int i)
 			std::ostringstream os;
 			os << dsq->continuity.stringBank.get(200) << " ";
 			os << dsq->continuity.stringBank.get(101) << " ";
-			os << fabs(fx.magnitude);
+			os << fabsf(fx.magnitude);
 			return os.str();
 		}
 	break;
@@ -611,10 +611,11 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 				core->sound->playSfx("CollectMana");
 
 				dsq->overlay2->color = Vector(0.5, 0.5, 1);
-				dsq->overlay2->alpha.path.clear();
-				dsq->overlay2->alpha.path.addPathNode(0, 0);
-				dsq->overlay2->alpha.path.addPathNode(0.5, 0.5);
-				dsq->overlay2->alpha.path.addPathNode(0, 1);
+				dsq->overlay2->alpha.ensureData();
+				dsq->overlay2->alpha.data->path.clear();
+				dsq->overlay2->alpha.data->path.addPathNode(0, 0);
+				dsq->overlay2->alpha.data->path.addPathNode(0.5, 0.5);
+				dsq->overlay2->alpha.data->path.addPathNode(0, 1);
 				dsq->overlay2->alpha.startPath(1);
 			}
 			else
@@ -632,10 +633,11 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 			core->sound->playSfx("CollectMana");
 
 			dsq->overlay2->color = Vector(0.5, 0.5, 1);
-			dsq->overlay2->alpha.path.clear();
-			dsq->overlay2->alpha.path.addPathNode(0, 0);
-			dsq->overlay2->alpha.path.addPathNode(0.5, 0.5);
-			dsq->overlay2->alpha.path.addPathNode(0, 1);
+			dsq->overlay2->alpha.ensureData();
+			dsq->overlay2->alpha.data->path.clear();
+			dsq->overlay2->alpha.data->path.addPathNode(0, 0);
+			dsq->overlay2->alpha.data->path.addPathNode(0.5, 0.5);
+			dsq->overlay2->alpha.data->path.addPathNode(0, 1);
 			dsq->overlay2->alpha.startPath(2);
 
 			dsq->centerMessage(getIEString(data, i), y);
@@ -663,7 +665,7 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 		case IET_SPEED:
 		{
 			
-			dsq->continuity.setSpeedMultiplier(1.0 + fx.magnitude*0.5, speedTime);
+			dsq->continuity.setSpeedMultiplier(1.0f + fx.magnitude*0.5f, speedTime);
 			debugLog("ingredient effect: speed");
 
 			dsq->centerMessage(getIEString(data, i), y);
@@ -707,7 +709,7 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 		break;
 		case IET_BITE:
 		{
-			dsq->continuity.setBiteMultiplier(1.0 + fx.magnitude, biteTime);
+			dsq->continuity.setBiteMultiplier(1.0f + fx.magnitude, biteTime);
 			debugLog("ingredient effect: bite");
 
 			dsq->centerMessage(getIEString(data, i), y);
@@ -717,7 +719,7 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 		break;
 		case IET_FISHPOISON:
 		{
-			dsq->continuity.setFishPoison(1.0 * fx.magnitude, fishPoisonTime);
+			dsq->continuity.setFishPoison(1.0f * fx.magnitude, fishPoisonTime);
 			debugLog("ingredient effect: fishPoison");
 
 			dsq->centerMessage(getIEString(data, i), y);
@@ -898,8 +900,6 @@ void Continuity::loadIngredientData()
 
 	std::ifstream in("data/ingredients.txt");
 
-	int c = 0;
-
 	bool recipes = false;
 	while (std::getline(in, line))
 	{
@@ -1025,7 +1025,7 @@ void Continuity::loadIngredientData()
 						else if (bit[c] == '-')
 							fx.magnitude -= 1;
 						else if (bit[c] == '~')
-							fx.magnitude += 0.1;
+							fx.magnitude += 0.1f;
 						c++;
 					}
 					data.effects.push_back(fx);
@@ -1344,13 +1344,14 @@ void Continuity::castSong(int num)
 	effect->position = selected->position + selected->offset;
 	effect->scale.interpolateTo(Vector(3,3), et);
 	//effect->setBlendType(RenderObject::BLEND_ADD);
-	effect->alpha.path.addPathNode(0, 0);
-	effect->alpha.path.addPathNode(0.5, 0.1);
-	effect->alpha.path.addPathNode(1, 0.5);
-	effect->alpha.path.addPathNode(0, 0.9);
-	effect->alpha.path.addPathNode(0, 1);
+	effect->alpha.ensureData();
+	effect->alpha.data->path.addPathNode(0, 0);
+	effect->alpha.data->path.addPathNode(0.5, 0.1);
+	effect->alpha.data->path.addPathNode(1, 0.5);
+	effect->alpha.data->path.addPathNode(0, 0.9);
+	effect->alpha.data->path.addPathNode(0, 1);
 	effect->alpha.startPath(et);
-	effect->setLife(et+0.1);
+	effect->setLife(et+0.1f);
 	effect->setDecayRate(1);
 	effect->setPositionSnapTo(&dsq->game->avatar->position);
 	dsq->game->addRenderObject(effect, LR_PARTICLES);
@@ -1428,11 +1429,12 @@ void Continuity::castSong(int num)
 		case SONG_TIME:
 		{
 			float v = 0.3;
-			dsq->gameSpeed.path.clear();
-			dsq->gameSpeed.path.addPathNode(0,0);
-			dsq->gameSpeed.path.addPathNode(v,0.05);
-			dsq->gameSpeed.path.addPathNode(v,0.95);
-			dsq->gameSpeed.path.addPathNode(1,1.0);
+			dsq->gameSpeed.ensureData();
+			dsq->gameSpeed.data->path.clear();
+			dsq->gameSpeed.data->path.addPathNode(0,0);
+			dsq->gameSpeed.data->path.addPathNode(v,0.05);
+			dsq->gameSpeed.data->path.addPathNode(v,0.95);
+			dsq->gameSpeed.data->path.addPathNode(1,1.0);
 			dsq->gameSpeed.startPath(10);
 		}
 		break;
@@ -1493,7 +1495,22 @@ void Continuity::castSong(int num)
 		case SONG_SPIRITFORM:
 			if (dsq->game->avatar->isUnderWater())
 			{
-				dsq->game->avatar->changeForm(FORM_SPIRIT);
+				// Don't try to enter spirit form while warping,
+				// or we'll get stuck in the spirit world afterward.
+				bool inWarp = false;
+				const Vector avatarPosition(dsq->game->avatar->position);
+				for (Path *p = dsq->game->getFirstPathOfType(PATH_WARP); p; p = p->nextOfType)
+				{
+					if (p->isCoordinateInside(avatarPosition))
+					{
+						inWarp = true;
+						break;
+					}
+				}
+				if (inWarp)
+					core->sound->playSfx("SongFail");
+				else
+					dsq->game->avatar->changeForm(FORM_SPIRIT);
 			}
 			else
 			{
@@ -1529,10 +1546,9 @@ void Continuity::castSong(int num)
 			e->song((SongType)num);
 		}
 	}
-	for (int i = 0; i < dsq->game->paths.size(); i++)
+	for (int i = 0; i < dsq->game->getNumPaths(); i++)
 	{
-		//Entity *e = dsq->entities[i];
-		Path *p = dsq->game->paths[i];
+		Path *p = dsq->game->getPath(i);
 		if (p && !p->nodes.empty())
 		{
 			PathNode *n = &p->nodes[0];
@@ -1816,7 +1832,7 @@ void Continuity::update(float dt)
 						core->sound->playSfx("poison");
 
 						DamageData d;
-						d.damage = poison * 0.2;
+						d.damage = poison * 0.2f;
 						d.useTimer = 0;
 						d.damageType = DT_ENEMY_ACTIVEPOISON;
 						dsq->game->avatar->damage(d);
@@ -1886,7 +1902,7 @@ void Continuity::update(float dt)
 				Avatar *a = dsq->game->avatar;
 				if (a)
 				{
-					a->heal(dt*0.5);
+					a->heal(dt*0.5f);
 				}
 				//regenBit = 0;
 			}
@@ -2187,17 +2203,17 @@ PetData *Continuity::getPetData(int idx)
 	return &petData[idx];
 }
 
-bool Continuity::isStory(double v)
+bool Continuity::isStory(float v)
 {
 	return (story == v);
 }
 
-double Continuity::getStory()
+float Continuity::getStory()
 {
 	return story;
 }
 
-void Continuity::setStory(double v)
+void Continuity::setStory(float v)
 {
 	story = v;
 }
@@ -2231,7 +2247,7 @@ void Continuity::upgradeHealth()
 	a->heal(maxHealth - a->health);
 }
 
-void Continuity::saveFile(int slot, Vector position)
+void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData, int scrShotWidth, int scrShotHeight)
 {
 	if (position.isZero())
 	{
@@ -2315,20 +2331,13 @@ void Continuity::saveFile(int slot, Vector position)
 #ifdef AQUARIA_BUILD_MAPVIS
 		if (dsq->game->worldMapRender)
 		{
-			dsq->game->worldMapRender->transferData();
-
 			std::ostringstream os;
 			for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
 			{
 				WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
 				os << tile->index << " ";
-				os << tile->visSize << " ";
-				os << tile->list.size() << " ";
-
-				for (int i = 0; i < tile->list.size(); i++)
-				{
-					os << tile->list[i].x << " " << tile->list[i].y << " ";
-				}
+				tile->dataToString(os);
+				os << " ";
 			}
 			worldMap.SetAttribute("va", os.str());
 		}
@@ -2465,12 +2474,9 @@ std::string Continuity::getSaveFileName(int slot, const std::string &pfix)
 	return os.str();
 }
 
-void Continuity::loadFile(int slot)
+void Continuity::loadFileData(int slot, TiXmlDocument &doc)
 {
-	dsq->user.save();
-	this->reset();
-
-	bool tmp=false;
+	bool tmp = false;
 
 	std::string teh_file = dsq->continuity.getSaveFileName(slot, "aqs");
 
@@ -2500,16 +2506,20 @@ void Continuity::loadFile(int slot)
 		tmp = true;
 	}
 
-	TiXmlDocument doc;
-
 	doc.LoadFile(teh_file);
 
 	if (tmp)
-	{
 		remove(teh_file.c_str());
-	
-	}
-	
+}
+
+void Continuity::loadFile(int slot)
+{
+	dsq->user.save();
+	this->reset();
+
+	TiXmlDocument doc;
+	loadFileData(slot, doc);
+
 	int versionMajor=-1, versionMinor=-1, versionRevision=-1;
 	TiXmlElement *xmlVersion = doc.FirstChildElement("Version");
 	if (xmlVersion)
@@ -2526,7 +2536,6 @@ void Continuity::loadFile(int slot)
 		e = e->NextSiblingElement("Flag");
 	}
 
-	/*
 	/*
 	if (debugEntityflags)
 	{
@@ -2714,7 +2723,7 @@ void Continuity::loadFile(int slot)
 
 			WorldMapTile dummy;
 
-			int idx, size;
+			int idx;
 
 			//worldMapTiles.clear();
 
@@ -2728,36 +2737,7 @@ void Continuity::loadFile(int slot)
 					tile = &dummy;
 				}
 
-				tile->clearList();
-
-				is >> tile->visSize; 
-				is >> size;
-
-				for (int i = 0; i < size; i++)
-				{
-					int x,y;
-					is >> x >> y;
-					tile->list.push_back(IntPair(x, y));
-				}
-				
-			/*
-			dsq->game->worldMapRender->transferData();
-
-			std::ostringstream os;
-			for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
-			{
-				WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
-				os << tile->index << " ";
-				os << tile->visSize << " ";
-				os << tile->list.size() << " ";
-
-				for (int i = 0; i < tile->list.size(); i++)
-				{
-					os << tile->list[i].x << " " << tile->list[i].y << " ";
-				}
-			}
-			worldMap.SetAttribute("va", os.str());
-			*/
+				tile->stringToData(is);
 			}
 		}
 #endif
@@ -3026,16 +3006,17 @@ public:
 		followCamera = 1;
 
 		scale = Vector(0, 0);
-		scale.path.addPathNode(Vector(0,0), 0);
-		scale.path.addPathNode(Vector(1,1), 0.3);
-		scale.path.addPathNode(Vector(1,1), 0.6);
-		scale.path.addPathNode(Vector(0.5,0.5), 0.9);
-		scale.path.addPathNode(Vector(0.1,0.1), 1);
+		scale.ensureData();
+		scale.data->path.addPathNode(Vector(0,0), 0);
+		scale.data->path.addPathNode(Vector(1,1), 0.3);
+		scale.data->path.addPathNode(Vector(1,1), 0.6);
+		scale.data->path.addPathNode(Vector(0.5,0.5), 0.9);
+		scale.data->path.addPathNode(Vector(0.1,0.1), 1);
 		scale.startPath(timeScale);
 
 		position = Vector(400,400);
 
-		setLife(timeScale+0.1);
+		setLife(timeScale+0.1f);
 		setDecayRate(1);
 
 		/*
@@ -3053,7 +3034,7 @@ protected:
 		Quad::onUpdate(dt);
 
 		timer += dt;
-		if (timer > 0.6*timeScale)
+		if (timer > 0.6f*timeScale)
 		{
 			if (startPos.isZero())
 			{
@@ -3061,7 +3042,7 @@ protected:
 			}
 			else
 			{
-				float p = (timer - (0.6*timeScale)) / (0.4*timeScale);
+				float p = (timer - (0.6f*timeScale)) / (0.4f*timeScale);
 				position = ((dsq->game->miniMapRender->position + dsq->game->miniMapRender->offset) - startPos)*p + startPos;
 			}
 		}
@@ -3187,6 +3168,9 @@ void Continuity::reset()
 	
 	if (dsq->game)
 	{
+		dsq->game->currentMenuPage = MENUPAGE_NONE;
+		dsq->game->currentFoodPage = 0;
+		dsq->game->currentTreasurePage = 0;
 		dsq->game->recipeMenu.currentPage = 0;
 	}
 

@@ -17,19 +17,19 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
 function init(me)
 	node_setCursorActivation(me, true)
-	n = getNaija()
+	v.n = getNaija()
 end
 	
 function activate(me)
-	n = getNaija()
-	node = entity_getNearestNode(n, "avatar_nosave")
-	if not node_isEntityIn(node, n) then
+	v.n = getNaija()
+	local node = entity_getNearestNode(v.n, "avatar_nosave")
+	if not node_isEntityIn(node, v.n) then
 		savePoint(me)
 	else
 		playSfx("denied")
@@ -37,7 +37,7 @@ function activate(me)
 end
 
 function update(me, dt)
-	if node_isEntityIn(me, n) then
+	if node_isEntityIn(me, v.n) then
 		if node_isFlag(me, 0) then
 			pickupGem("savepoint")
 			node_setFlag(me, 1)

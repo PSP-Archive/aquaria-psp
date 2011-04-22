@@ -17,6 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- NUDI  NO SHELL
 -- ================================================================================================
@@ -25,5 +27,5 @@ dofile("scripts/entities/nudicommon.lua")
 
 function init(me)
 	-- init without shell
-	commonInit(me, false)
+	v.commonInit(me, false)
 end

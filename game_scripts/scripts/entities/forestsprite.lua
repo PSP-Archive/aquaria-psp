@@ -17,13 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
 
-STATE_SLEEP				= 1000
-STATE_DANCE				= 1001
+local STATE_SLEEP			= 1000
+local STATE_DANCE			= 1001
 
 function init(me)
 	setupEntity(me)
@@ -41,7 +41,7 @@ function init(me)
 end
 
 function postInit(me)
-	node = entity_getNearestNode(me, "DANCE")
+	local node = entity_getNearestNode(me, "DANCE")
 	if node ~= 0 and node_isEntityIn(node, me) then
 		entity_setState(me, STATE_DANCE, -1, 1)
 	else
@@ -50,11 +50,11 @@ function postInit(me)
 			entity_setState(me, STATE_SLEEP, -1, 1)
 		end
 	end
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
-seen = false
+v.seen = false
 
 function update(me, dt)
 	if entity_isState(me, STATE_IDLE) then
@@ -63,8 +63,8 @@ function update(me, dt)
 		entity_flipToVel(me)
 	end
 	
-	if entity_isState(me, STATE_SLEEP) and entity_isEntityInRange(me, n, 700) and not seen then
-		seen = true
+	if entity_isState(me, STATE_SLEEP) and entity_isEntityInRange(me, v.n, 700) and not v.seen then
+		v.seen = true
 		emote(EMOTE_NAIJAGIGGLE)
 	end
 end

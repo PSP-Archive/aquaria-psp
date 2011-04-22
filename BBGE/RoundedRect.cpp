@@ -113,8 +113,8 @@ void RoundedRect::onRender()
 	{
 		// top right
 		{
-			float x1 = sin(angle)*radius, y1 = -cos(angle)*radius;
-			float x2 = sin(angle+iter)*radius, y2 = -cos(angle+iter)*radius;
+			float x1 = sinf(angle)*radius, y1 = -cosf(angle)*radius;
+			float x2 = sinf(angle+iter)*radius, y2 = -cosf(angle+iter)*radius;
 			glVertex3f(w2 + x1, -h2 + y1, 0);
 			glVertex3f(w2 + x2, -h2 + y2, 0);
 			glVertex3f(w2 + x2, -h2 + 0, 0);
@@ -122,24 +122,24 @@ void RoundedRect::onRender()
 		}
 		// top left
 		{
-			float x1 = -sin(angle)*radius, y1 = -cos(angle)*radius;
-			float x2 = -sin(angle+iter)*radius, y2 = -cos(angle+iter)*radius;
+			float x1 = -sinf(angle)*radius, y1 = -cosf(angle)*radius;
+			float x2 = -sinf(angle+iter)*radius, y2 = -cosf(angle+iter)*radius;
 			glVertex3f(-w2 + x1, -h2 + y1, 0);
 			glVertex3f(-w2 + x2, -h2 + y2, 0);
 			glVertex3f(-w2 + x2, -h2 + 0, 0);
 			glVertex3f(-w2 + x1, -h2 + 0, 0);
 		}
 		{
-			float x1 = sin(angle)*radius, y1 = cos(angle)*radius;
-			float x2 = sin(angle+iter)*radius, y2 = cos(angle+iter)*radius;
+			float x1 = sinf(angle)*radius, y1 = cosf(angle)*radius;
+			float x2 = sinf(angle+iter)*radius, y2 = cosf(angle+iter)*radius;
 			glVertex3f(w2 + x1, h2 + y1, 0);
 			glVertex3f(w2 + x2, h2 + y2, 0);
 			glVertex3f(w2 + x2, h2 + 0, 0);
 			glVertex3f(w2 + x1, h2 + 0, 0);
 		}
 		{
-			float x1 = -sin(angle)*radius, y1 = cos(angle)*radius;
-			float x2 = -sin(angle+iter)*radius, y2 = cos(angle+iter)*radius;
+			float x1 = -sinf(angle)*radius, y1 = cosf(angle)*radius;
+			float x2 = -sinf(angle+iter)*radius, y2 = cosf(angle+iter)*radius;
 			glVertex3f(-w2 + x1, h2 + y1, 0);
 			glVertex3f(-w2 + x2, h2 + y2, 0);
 			glVertex3f(-w2 + x2, h2 + 0, 0);

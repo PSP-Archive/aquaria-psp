@@ -17,19 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
 function init(me)
 	if (isFlag(FLAG_LI, 0) and isMapName("VEIL01"))
 	or (isFlag(FLAG_LI, 1) and isMapName("LICAVE")) then
 		createEntity("Li", "", node_x(me), node_y(me))
 	end
-	if isFlag(FLAG_LI, 101) and isMapName("LICAVE") then
-		createEntity("Li", "", node_x(me), node_y(me))
-	end
-	if isFlag(FLAG_LI, 102) and isMapName("VEDHACAVE") then
-		createEntity("Li", "", node_x(me), node_y(me))
-	end	
 end
 
 function update(me, dt)

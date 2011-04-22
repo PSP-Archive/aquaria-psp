@@ -17,69 +17,75 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/entities/pullplantcommon.lua")
 
 function init(me)
-	n1 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETING)
+	local n1 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETING)
 	if n1 ~= 0 and node_isEntityIn(n1, me) then
-		commonInit(me, "", node_getContent(n1), node_getAmount(n1))
+		v.commonInit(me, "", node_getContent(n1), node_getAmount(n1))
 	else
-		n2 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETENT)
+		local n2 = getNearestNodeByType(entity_x(me), entity_y(me), PATH_SETENT)
 		if n2 ~= 0 and node_isEntityIn(n2, me) then
-			commonInit(me, node_getContent(n2), "", node_getAmount(n2))		
+			v.commonInit(me, node_getContent(n2), "", node_getAmount(n2))		
 		else
-			d = false
+			local d = false
 
 			if not d then
-				s = randRange(1,100)
+				local s = randRange(1,100)
 				if s == 1 then
-					commonInit(me, "", "HealingPoultice")
+					v.commonInit(me, "", "HealingPoultice")
 				elseif s < 7 then
-					commonInit(me, "", "LeafPoultice")
+					v.commonInit(me, "", "LeafPoultice")
 				else
 
-				r = randRange(1, 7)
+				local r = randRange(1, 7)
 				if r == 1 then
 					if isMapName("forest04") then
-						t = randRange(1,8)
+						local t = randRange(1,8)
 						if t == 1 then
-							commonInit(me, "", "RainbowMushroom")
+							v.commonInit(me, "", "RainbowMushroom")
 						else
-							commonInit(me, "", "Mushroom")
+							v.commonInit(me, "", "Mushroom")
 						end
 					else
-						commonInit(me, "", "PlantBulb")
+						v.commonInit(me, "", "PlantBulb")
 					end
 				elseif r == 2 then
 					if isMapName("forest02")
 					or isMapName("forest03") 
 					or isMapName("forest04")
 					or isMapName("forest01") then
-						commonInit(me, "Wisker", "")
+						v.commonInit(me, "Wisker", "")
 						
 					elseif isMapName("openwater02")
 						or isMapName("openwater03") then
-						commonInit(me, "Nautilus", "")
+						v.commonInit(me, "Nautilus", "")
 						
 					elseif isMapName("openwater04") 
 						or isMapName("openwater05") then
-						commonInit(me, "OriginalRaspberry", "")
+						v.commonInit(me, "OriginalRaspberry", "")
 						
 					elseif isMapName("veil03") then
-						commonInit(me, "horseshoe", "")
+						v.commonInit(me, "horseshoe", "")
+						
+					elseif isMapName("vedhacave")
+						or isMapName("forestspritecave") then
+						v.commonInit(me, "", "PlantLeaf")
 						
 					else
-						commonInit(me, "Raspberry", "")
+						v.commonInit(me, "Raspberry", "")
 						
 					end
 				elseif r == 3 then
-					commonInit(me, "", "PlantLeaf")
+					v.commonInit(me, "", "PlantLeaf")
 				elseif r == 4 then
-					commonInit(me, "", "RedBerry")
+					v.commonInit(me, "", "RedBerry")
 				elseif r == 5 then
-					commonInit(me, "", "SmallBone")
+					v.commonInit(me, "", "SmallBone")
 				else
-					commonInit(me, "", "PlantLeaf")
+					v.commonInit(me, "", "PlantLeaf")
 				end
 
 				end

@@ -17,10 +17,10 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
 
-dofile("scripts/entities/entityinclude.lua")
 
-n = 0
+v.n = 0
 
 function init(me)
 	setupEntity(me)
@@ -49,8 +49,8 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
@@ -67,7 +67,7 @@ function enterState(me)
 	if entity_isState(me, STATE_IDLE) then
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_CHARGE1) then
-		sx, sy = entity_getScale(me)
+		local sx, sy = entity_getScale(me)
 		entity_scale(me)
 		entity_scale(me, sx, sy, 1.5, 0, 0)
 		entity_setStateTime(me, 1.5)
@@ -93,19 +93,19 @@ end
 function animationKey(me, key)
 end
 
-lastx =0
-lasty=0
+v.lastx = 0
+v.lasty = 0
 function hitSurface(me)	
 	entity_scale(me, 1, 0.75)
 	entity_scale(me, 1, 1, 0.5)
 	entity_sound(me, "SpikyBounce")
-	if entity_x(me) == lastx and entity_y(me) == lasty then
+	if entity_x(me) == v.lastx and entity_y(me) == v.lasty then
 		entity_clearVel(me)
 		--entity_applySurfaceNormalForce(me, 800)
 		entity_adjustPositionBySurfaceNormal(me, 16)
 	end
-	lastx = entity_x(me)
-	lasty = entity_y(me)
+	v.lastx = entity_x(me)
+	v.lasty = entity_y(me)
 end
 
 function songNote(me, note)

@@ -17,13 +17,13 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-warpBone = 0
-coreRots = 0
-open = false
-doorsDown = 0
+v.n = 0
+v.warpBone = 0
+v.coreRots = 0
+v.open = false
+v.doorsDown = 0
 
 function init(me)
 	setupEntity(me)
@@ -33,8 +33,8 @@ function init(me)
 	
 	entity_generateCollisionMask(me)
 
-	warpBone = entity_getBoneByName(me, "WarpBone")	
-	bone_alpha(warpBone, 0)
+	v.warpBone = entity_getBoneByName(me, "WarpBone")	
+	bone_alpha(v.warpBone, 0)
 	
 	entity_setState(me, STATE_IDLE)
 	
@@ -46,16 +46,16 @@ end
 function msg(me, msg)
 	if msg == "DoorDownPre" or msg=="DoorDown" then
 		
-		doorsDown = doorsDown + 1
-		if doorsDown >= 3 then
-			open = true
+		v.doorsDown = v.doorsDown + 1
+		if v.doorsDown >= 3 then
+			v.open = true
 			voiceOnce("Naija_MithalasDarkness")
 		end
-		if doorsDown >=1 and doorsDown <=3 then
-			tbone = entity_getBoneByIdx(me, doorsDown)
+		if v.doorsDown >= 1 and v.doorsDown <= 3 then
+			local tbone = entity_getBoneByIdx(me, v.doorsDown)
 			if msg=="DoorDown" then
 				--setCameraLerpDelay(0.5)				
-				entity_setInvincible(n, true)
+				entity_setInvincible(v.n, true)
 				cam_toEntity(me)
 				watch(1)
 				clearShots()
@@ -65,12 +65,12 @@ function msg(me, msg)
 				bone_alpha(tbone, 0)
 				watch(0.5)
 				setCameraLerpDelay(0)
-				cam_toEntity(n)
+				cam_toEntity(v.n)
 				clearShots()
-				entity_setInvincible(n, false)
+				entity_setInvincible(v.n, false)
 			else
-				for i=1,doorsDown do
-					tbone = entity_getBoneByIdx(me, i)
+				for i=1,v.doorsDown do
+					local tbone = entity_getBoneByIdx(me, i)
 					bone_alpha(tbone, 0)
 				end
 			end
@@ -79,24 +79,24 @@ function msg(me, msg)
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
 	entity_handleShotCollisionsSkeletal(me)
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	if bone ~= 0 then
-		nx,ny = entity_getPosition(n)
-		cx,cy = entity_getPosition(me)
-		x = nx-cx
-		y = 0
+		local nx,ny = entity_getPosition(v.n)
+		local cx,cy = entity_getPosition(me)
+		local x = nx-cx
+		local y = 0
 		x,y = vector_setLength(x,y,2000)
-		entity_addVel(n, x, y)
+		entity_addVel(v.n, x, y)
 	end
-	if open then
-		bx,by = bone_getWorldPosition(warpBone)
-		if entity_isPositionInRange(n, bx, by, 200) then
+	if v.open then
+		local bx,by = bone_getWorldPosition(v.warpBone)
+		if entity_isPositionInRange(v.n, bx, by, 200) then
 			warpNaijaToSceneNode("Cathedral03", "DOORENTER")
 		end
 	end

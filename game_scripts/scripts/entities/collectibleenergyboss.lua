@@ -17,22 +17,24 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- song cave collectible
 
 dofile("scripts/include/collectibletemplate.lua")
 
 function init(me)
-	commonInit(me, "Collectibles/EnergyBoss", FLAG_COLLECTIBLE_ENERGYBOSS)
+	v.commonInit(me, "Collectibles/EnergyBoss", FLAG_COLLECTIBLE_ENERGYBOSS)
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 end
 
 function exitState(me, state)
-	commonExitState(me, state)
+	v.commonExitState(me, state)
 end

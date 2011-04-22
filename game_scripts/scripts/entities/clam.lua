@@ -17,14 +17,14 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
+v.n = 0
 
-sleepLoc = 0
-held = 0
-held2 = 0
-seen = false
+v.sleepLoc = 0
+v.held = 0
+v.held2 = 0
+v.seen = false
 
 function init(me)
 	setupEntity(me)
@@ -38,25 +38,25 @@ function init(me)
 	
 	entity_setActivation(me, AT_CLICK, 128, 512)
 	
-	sleepLoc = entity_getBoneByName(me, "SleepLoc")
-	bone_alpha(sleepLoc)
+	v.sleepLoc = entity_getBoneByName(me, "SleepLoc")
+	bone_alpha(v.sleepLoc)
 	
 	loadSound("clam-open")
 end
 
 function postInit(me)
-	n = getNaija()
-	entity_setTarget(me, n)
+	v.n = getNaija()
+	entity_setTarget(me, v.n)
 end
 
 function update(me, dt)
-	if not seen and entity_isEntityInRange(me, n, 700) then
+	if not v.seen and entity_isEntityInRange(me, v.n, 700) then
 		if chance(50) then
 			emote(EMOTE_NAIJAGIGGLE)
 		else
 			emote(EMOTE_NAIJAWOW)
 		end
-		seen = true
+		v.seen = true
 	end
 	if isForm(FORM_BEAST) then
 		entity_setActivationType(me, AT_CLICK)
@@ -66,21 +66,21 @@ function update(me, dt)
 	
 	--[[
 	entity_handleShotCollisionsSkeletal(me)
-	bone = entity_collideSkeletalVsCircle(me, n)
+	local bone = entity_collideSkeletalVsCircle(me, v.n)
 	entity_updateMovement(me, dt)
 	]]--
 	
-	if held ~= 0 then
-		entity_setPosition(held, bone_getWorldPosition(sleepLoc))
-		entity_rotate(held, bone_getWorldRotation(sleepLoc))
-		entity_clearVel(held)
+	if v.held ~= 0 then
+		entity_setPosition(v.held, bone_getWorldPosition(v.sleepLoc))
+		entity_rotate(v.held, bone_getWorldRotation(v.sleepLoc))
+		entity_clearVel(v.held)
 	end
 	
-	if held2 ~= 0 then
-		bx, by = bone_getWorldPosition(sleepLoc)
-		entity_setPosition(held2, bx-20, by-20)
-		entity_rotate(held2, bone_getWorldRotation(sleepLoc))
-		entity_clearVel(held2)
+	if v.held2 ~= 0 then
+		local bx, by = bone_getWorldPosition(v.sleepLoc)
+		entity_setPosition(v.held2, bx-20, by-20)
+		entity_rotate(v.held2, bone_getWorldRotation(v.sleepLoc))
+		entity_clearVel(v.held2)
 	end
 end
 
@@ -123,15 +123,15 @@ end
 function activate(me)
 	-- sleep
 	
-	n = getNaija()
-	l = 0
+	v.n = getNaija()
+	local l = 0
 	if hasLi() then
 		l = getLi()
 	end
 	
-	esetv(n, EV_LOOKAT, 0)
+	esetv(v.n, EV_LOOKAT, 0)
 	
-	saveCombat = getFlag(FLAG_LICOMBAT)
+	local saveCombat = getFlag(FLAG_LICOMBAT)
 	if l ~= 0 then
 		fade2(1, 0.5, 1, 1, 1)
 		watch(0.5)
@@ -140,23 +140,23 @@ function activate(me)
 		
 		entity_setState(l, STATE_PUPPET)
 		
-		entity_setPosition(l, entity_x(n), entity_y(n))
+		entity_setPosition(l, entity_x(v.n), entity_y(v.n))
 		
 		fade2(0, 0.5, 1, 1, 1)
 	end
 		
 		
 	
-	entity_idle(n)
-	if entity_isfh(me) and entity_isfh(n) then
-		entity_fh(n)
-	elseif not entity_isfh(me) and not entity_isfh(n) then
-		entity_fh(n)
+	entity_idle(v.n)
+	if entity_isfh(me) and entity_isfh(v.n) then
+		entity_fh(v.n)
+	elseif not entity_isfh(me) and not entity_isfh(v.n) then
+		entity_fh(v.n)
 	end
-	entity_clearVel(n)
+	entity_clearVel(v.n)
 	watch(0.1)
-	x, y = bone_getWorldPosition(sleepLoc)
-	entity_setPosition(n, x, y, 1)
+	local x, y = bone_getWorldPosition(v.sleepLoc)
+	entity_setPosition(v.n, x, y, 1)
 	watch(1)
 	
 	if l ~= 0 then
@@ -164,23 +164,23 @@ function activate(me)
 		entity_setPosition(l, x, y, 1)
 	end
 	
-	held = n
-	entity_clearVel(n)
-	--entity_rotate(held, bone_getWorldRotation(sleepLoc), 1)
+	v.held = v.n
+	entity_clearVel(v.n)
+	--entity_rotate(held, bone_getWorldRotation(v.sleepLoc), 1)
 	emote(EMOTE_NAIJASIGH)
-	entity_animate(n, "sleep", -1, LAYER_OVERRIDE)
+	entity_animate(v.n, "sleep", -1, LAYER_OVERRIDE)
 	watch(1)
 	
 	if l ~= 0 then
-		if entity_fh(n) and entity_fh(l) then
+		if entity_fh(v.n) and entity_fh(l) then
 			entity_fh(l)
-		elseif entity_fh(n) and not entity_fh(l) then
+		elseif entity_fh(v.n) and not entity_fh(l) then
 			entity_fh(l)
 		end
 		
 		entity_clearVel(l)
-		held2 = l
-		--entity_rotate(l, bone_getWorldRotation(sleepLoc), 1)
+		v.held2 = l
+		--entity_rotate(l, bone_getWorldRotation(v.sleepLoc), 1)
 		entity_animate(l, "sleep", -1)
 		watch(1)
 	end
@@ -190,49 +190,49 @@ function activate(me)
 	musicVolume(0.25, 1)
 	fade(1, 1)
 	watch(1)
-	nd = entity_getNearestNode(me, "CLAMCAM")
+	local nd = entity_getNearestNode(me, "CLAMCAM")
 	if nd ~= 0 then
 		cam_toNode(nd)
 	end
 	watch(1)
 	fade(0.5, 1)
 	watch(1)
-	--entity_heal(n, 20)
+	--entity_heal(v.n, 20)
 	-- do sleep wait for input thing
 	while (not isLeftMouse()) and (not isRightMouse()) do		
 		watch(FRAME_TIME)
-		entity_heal(n, FRAME_TIME)
+		entity_heal(v.n, FRAME_TIME)
 	end
 	
 	musicVolume(1, 1)
 	fade(0, 2)
 	entity_setState(me, STATE_OPEN)
 	watch(0.5)
-	cam_toEntity(n)
-	entity_idle(n)
-	entity_animate(n, "slowWakeUp")
-	while entity_isAnimating(n) do
+	cam_toEntity(v.n)
+	entity_idle(v.n)
+	entity_animate(v.n, "slowWakeUp")
+	while entity_isAnimating(v.n) do
 		watch(FRAME_TIME)
 	end	
-	nx, ny = entity_getNormal(me)
+	local nx, ny = entity_getNormal(me)
 	nx,ny = vector_setLength(nx, ny, 200)
-	entity_idle(n)
-	entity_addVel(n, nx, ny)
-	entity_rotateToVel(n)
-	entity_animate(n, "burst")
+	entity_idle(v.n)
+	entity_addVel(v.n, nx, ny)
+	entity_rotateToVel(v.n)
+	entity_animate(v.n, "burst")
 	
 	if l ~= 0 then
 		entity_setState(l, STATE_IDLE)
 		setFlag(FLAG_LICOMBAT, saveCombat)
 	end
 	
-	esetv(n, EV_LOOKAT, 1)
+	esetv(v.n, EV_LOOKAT, 1)
 	entity_setInternalOffset(l, 0, 0, 0.5)
 	
 	
-	--entity_animate(n, "wakeUp")
+	--entity_animate(v.n, "wakeUp")
 	--watch(1)
-	held = 0
-	held2 = 0
+	v.held = 0
+	v.held2 = 0
 	
 end

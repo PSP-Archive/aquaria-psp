@@ -17,17 +17,18 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- N A U T I L U S
 
-dofile("scripts/entities/entityinclude.lua")
 -- entity specific
-STATE_CIRCLE			= 1000
-STATE_WANDER			= 1001		--Assumes bevy has no target
-STATE_SEEKTARGET		= 1002		--Everything is just dandy, following stuff
-STATE_SEEKBEVY			= 1003		--No bevy in range, find a bevy!
+local STATE_CIRCLE			= 1000
+local STATE_WANDER			= 1001		--Assumes bevy has no target
+local STATE_SEEKTARGET		= 1002		--Everything is just dandy, following stuff
+local STATE_SEEKBEVY		= 1003		--No bevy in range, find a bevy!
 
-targetDelay = 0.5					-- Time between checking targets
-wanderDelay = 2						-- Amount of time to wander in a given direction
+v.targetDelay = 0.5					-- Time between checking targets
+v.wanderDelay = 2					-- Amount of time to wander in a given direction
 -- initializes the entity
 function init(me)
 	setupBasicEntity(
@@ -53,7 +54,7 @@ function init(me)
 	entity_setMaxSpeed(me, 400)
 	entity_setDropChance(me, 10, 1)
 	
-	scale_random = math.random(40) * 0.01
+	local scale_random = math.random(40) * 0.01
 	entity_scale(me, 0.6 + scale_random, 0.6 + scale_random)
 	esetv(me, EV_ENTITYDIED, 1)
 end
@@ -67,11 +68,11 @@ end
 -- the entity's main update function
 function update(me, dt)	
 	--Timer for checking state and target
-	if targetDelay > 0 then targetDelay = targetDelay - dt if targetDelay < 0 then targetDelay = 0 end end
+	if v.targetDelay > 0 then v.targetDelay = v.targetDelay - dt if v.targetDelay < 0 then v.targetDelay = 0 end end
 	
 	--Update State/Target
-	if targetDelay == 0 then
-		target = entity_getNearestEntity(me, "Bevy")
+	if v.targetDelay == 0 then
+		local target = entity_getNearestEntity(me, "Bevy")
 		if target == 0 then	--No Bevys at all!
 			if not entity_isState(me, STATE_WANDER) then entity_setState(me, STATE_WANDER) end
 		else
@@ -82,15 +83,15 @@ function update(me, dt)
 				entity_setState(me, STATE_SEEKTARGET)
 			end
 		end
-		targetDelay = 0.5
+		v.targetDelay = 0.5
 	end
 	
 	--Perform actions based on state
 	if entity_isState(me, STATE_WANDER) then
-		if wanderDelay > 0 then wanderDelay = wanderDelay - dt if wanderDelay < 0 then wanderDelay = 0 end end
-		if wanderDelay == 0 then
+		if v.wanderDelay > 0 then v.wanderDelay = v.wanderDelay - dt if v.wanderDelay < 0 then v.wanderDelay = 0 end end
+		if v.wanderDelay == 0 then
 			entity_addVel(me, math.random(50) - 100, math.random(50) - 100)
-			wanderDelay = 1.5
+			v.wanderDelay = 1.5
 		end
 	elseif entity_hasTarget(me) then
 		if entity_isState(me, STATE_SEEKBEVY) then

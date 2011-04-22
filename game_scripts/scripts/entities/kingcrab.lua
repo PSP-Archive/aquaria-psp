@@ -17,20 +17,20 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 -- ================================================================================================
 -- K I N G   C R A B
 -- ================================================================================================
-
-dofile("scripts/entities/entityinclude.lua")
 
 
 -- ================================================================================================
 -- L O C A L  V A R I A B L E S 
 -- ================================================================================================
 
-fireDelay = 2
-moveTimer = 0
-clampTimer = 0
+v.fireDelay = 2
+v.moveTimer = 0
+v.clampTimer = 0
 
 -- ================================================================================================
 -- FUNCTIONS
@@ -91,15 +91,15 @@ function init(me)
 	
 	esetv(me, EV_WALLOUT, 12)
 	esetvf(me, EV_CLAMPTRANSF, 1)
-	clampTimer = 999
+	v.clampTimer = 999
 end
 
 function update(me, dt)
 	--[[
-	clampTimer = clampTimer + dt
-	if clampTimer > 6 then
+	v.clampTimer = v.clampTimer + dt
+	if v.clampTimer > 6 then
 		entity_clampToSurface(me)
-		clampTimer = 0
+		v.clampTimer = 0
 	end
 	]]--
 
@@ -110,20 +110,20 @@ function update(me, dt)
 	entity_moveAlongSurface(me, dt, 120, 6, 40) --64 -- 54
 	
 	-- entity_rotateToSurfaceNormal(0)
-	moveTimer = moveTimer + dt
-	if moveTimer > 30 then
+	v.moveTimer = v.moveTimer + dt
+	if v.moveTimer > 30 then
 		entity_switchSurfaceDirection(me)
-		moveTimer = 0
+		v.moveTimer = 0
 	end
 	if not(entity_hasTarget(me)) then
 		entity_findTarget(me, 1200)
 	else
-		if fireDelay > 0 then
-			fireDelay = fireDelay - dt
-			if fireDelay < 0 then
+		if v.fireDelay > 0 then
+			v.fireDelay = v.fireDelay - dt
+			if v.fireDelay < 0 then
 				-- dmg, mxspd, homing, numsegs, out
 				--entity_fireAtTarget(me, "BlasterFire", 1, 400, 200, 3, 64)
-				fireDelay = 5
+				v.fireDelay = 5
 			end
 		end
 	end

@@ -17,18 +17,20 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+v = getVars()
+
 dofile("scripts/include/sporechildflowertemplate.lua")
 
 function init(me)
-	commonInit(me, "SporeChildFlowerRed")
+	v.commonInit(me, "SporeChildFlowerRed")
 end
 
 function update(me, dt)
-	commonUpdate(me, dt)
+	v.commonUpdate(me, dt)
 end
 
 function enterState(me, state)
-	commonEnterState(me, state)
+	v.commonEnterState(me, state)
 	if entity_isState(me, STATE_OPENED) then
 		-- do effect
 		msg("EFFECT!")

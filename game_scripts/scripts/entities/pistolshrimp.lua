@@ -17,16 +17,16 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-dofile("scripts/entities/entityinclude.lua")
+v = getVars()
 
-n = 0
-dir = 0
-fireDelay = 2 + math.random(2)
+v.n = 0
+v.dir = 0
 
-
-STATE_FLYBACK = 1000
+local STATE_FLYBACK = 1000
 
 function init(me)
+	v.fireDelay = 2 + math.random(2)
+
 	setupEntity(me)
 	entity_setEntityType(me, ET_ENEMY)
 	entity_initSkeletal(me, "pistolshrimp")	
@@ -38,10 +38,10 @@ function init(me)
 	entity_setHealth(me, 9)
 	entity_setUpdateCull(me, 3000)
 	entity_setDeathParticleEffect(me, "tinyyellowexplode")
-	dir = math.random(2)-1
+	v.dir = math.random(2)-1
 	
 	--[[
-	if dir == 0 then
+	if v.dir == 0 then
 		entity_rotateOffset(me, 90)
 		--entity_rotateOffset(me, 80)
 		--entity_rotateOffset(me, 110, 1, -1)
@@ -61,7 +61,7 @@ function init(me)
 end
 
 function postInit(me)
-	n = getNaija()
+	v.n = getNaija()
 	
 end
 
@@ -75,12 +75,12 @@ function update(me, dt)
 				end
 				
 				entity_setMaxSpeedLerp(me, 2, 0.5)
-				entity_moveAroundTarget(me, dt, 3000, dir)
-				fireDelay = fireDelay - dt*1.5
+				entity_moveAroundTarget(me, dt, 3000, v.dir)
+				v.fireDelay = v.fireDelay - dt*1.5
 				entity_doEntityAvoidance(me, dt, 8, 0.5)
 				
 			else
-				fireDelay = fireDelay - dt
+				v.fireDelay = v.fireDelay - dt
 				entity_doEntityAvoidance(me, dt, 16, 1)
 				entity_doEntityAvoidance(me, dt, 32, 0.6)
 				
@@ -91,14 +91,14 @@ function update(me, dt)
 			entity_rotate(me, 0, 0.5)
 		elseif entity_isState(me, STATE_FLYBACK) then
 		end
-		if fireDelay < 0 then
-			if entity_isEntityInRange(me, n, 900) then
-				fireDelay = 1 + math.random(2)
-				s = createShot("pistolshrimp", me, n)
+		if v.fireDelay < 0 then
+			if entity_isEntityInRange(me, v.n, 900) then
+				v.fireDelay = 1 + math.random(2)
+				local s = createShot("pistolshrimp", me, v.n)
 				shot_setOut(s, 32)
 				entity_setMaxSpeedLerp(me, 4)
 				entity_setMaxSpeedLerp(me, 1, 3)
-				entity_moveTowards(me, entity_x(n), entity_y(n), 1, -4000)
+				entity_moveTowards(me, entity_x(v.n), entity_y(v.n), 1, -4000)
 				entity_rotateToVel(me, 0.1, -90)--, 80)
 				entity_setState(me, STATE_FLYBACK, 1)
 			end

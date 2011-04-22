@@ -51,7 +51,7 @@ AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 	this->yDivs = yDivs;
 	//cameraPointer = nCameraPointer;
 
-	//Asssuming the resolutions values are > 512 and < 2048
+	//Asssuming the resolutions values are > 256 and < 2048
 	//Set the texture heights and widths
 	if (core->frameBuffer.isInited())
 	{
@@ -60,11 +60,15 @@ AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 	}
 	else
 	{
-		if (screenWidth <= 1024)
+		if (screenWidth <= 512)
+			textureWidth = 512;
+		else if (screenWidth <= 1024)
 			textureWidth = 1024;
 		else
 			textureWidth = 2048;
-		if (screenHeight <= 1024)
+		if (screenHeight <= 512)
+			textureHeight = 512;
+		else if (screenHeight <= 1024)
 			textureHeight = 1024;
 		else
 			textureHeight = 2048;
@@ -228,7 +232,7 @@ void AfterEffectManager::render()
 		glScalef(core->invGlobalScale, core->invGlobalScale,0);
 		/*
 		static float angle=0;
-		angle += 0.03;
+		angle += 0.03f;
 		*/
 		//glRotatef(angle, 0, 0, 1);
 		//glColor4f(1,1,1,0.75);
@@ -255,7 +259,7 @@ void AfterEffectManager::render()
 		glScalef(core->invGlobalScale, core->invGlobalScale,0);
 		/*
 		static float angle;
-		angle += 0.03;
+		angle += 0.03f;
 		*/
 		//glRotatef(angle, 0, 0, 1);
 		//glColor4f(1,1,1,0.75);
@@ -502,9 +506,9 @@ void AfterEffectManager::addEffect(Effect *e)
 		effects.push_back(e);
 	}
 	numEffects++;
-	float lowest = 9999;
+	//float lowest = 9999;
 	Vector base(0,0,0);
-	Vector *newPos = &base;
+	//Vector *newPos = &base;
 	//Vector *v;
 	e->position.x /= screenWidth;
 	//e->position.x *= xDivs;
@@ -595,7 +599,7 @@ void ShockEffect::update(float dt, Vector ** drawGrid, int xDivs, int yDivs)
 			{
 				//drawGrid[i][j].x += rand()%50;
 				//drawGrid[i][j].y += rand()%50;
-				drawGrid[i][j].x += adjAmplitude*sinf(-tDist/adjWaveLength+currentDistance)*.75;
+				drawGrid[i][j].x += adjAmplitude*sinf(-tDist/adjWaveLength+currentDistance)*.75f;
 				drawGrid[i][j].y += adjAmplitude*cosf(-tDist/adjWaveLength+currentDistance);
 			}
 		}
@@ -620,11 +624,11 @@ void RippleEffect::update(float dt, Vector ** drawGrid, int xDivs, int yDivs)
 		{
 			float offset = +i/float(xDivs) +j/float(xDivs);
 			//drawGrid[i][j].x += sinf(time+offset)*amp;
-			drawGrid[i][j].y += cosf((time+offset)*2.5)*amp;
+			drawGrid[i][j].y += cosf((time+offset)*2.5f)*amp;
 		}
 	}
 	*/
-	time += dt*0.5;
+	time += dt*0.5f;
 	float amp = 0.002;
 	for (int i = 0; i < (xDivs-1); i++)
 	{
@@ -632,8 +636,8 @@ void RippleEffect::update(float dt, Vector ** drawGrid, int xDivs, int yDivs)
 		{
 			float offset = i/float(xDivs) + (core->screenCenter.x/float(core->width)/2) +j/float(xDivs) + (core->screenCenter.y/float(core->height)/2);
 			//drawGrid[i][j].x += sinf(time+offset)*amp;
-			drawGrid[i][j].x += sinf((time+offset)*7.5)*(amp*0.5);
-			drawGrid[i][j].y += cosf((time+offset)*7.5)*amp;
+			drawGrid[i][j].x += sinf((time+offset)*7.5f)*(amp*0.5f);
+			drawGrid[i][j].y += cosf((time+offset)*7.5f)*amp;
 		}
 	}
 }
