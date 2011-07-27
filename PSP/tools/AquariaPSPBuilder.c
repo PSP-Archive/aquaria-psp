@@ -343,7 +343,7 @@ static void ui_init_connect_callback(
         }
     }
 
-    DMSG("WARNING: Handler %s for signal %s not found!\n",
+    DMSG("WARNING: Handler %s for signal %s not found!",
          handler_name, signal_name);
 }
 

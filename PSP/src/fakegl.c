@@ -955,7 +955,7 @@ void glBlendFunc(GLenum sfactor, GLenum dfactor)
         ge_sfactor = GE_BLEND_ONE_MINUS_DST_ALPHA;
         break;
       default:
-        DMSG("Source function 0x%X not supported\n", (int)sfactor);
+        DMSG("Source function 0x%X not supported", (int)sfactor);
         SET_ERROR(GL_INVALID_ENUM);
         return;
     }
@@ -988,7 +988,7 @@ void glBlendFunc(GLenum sfactor, GLenum dfactor)
         ge_dfactor = GE_BLEND_ONE_MINUS_DST_ALPHA;
         break;
       default:
-        DMSG("Destination function 0x%X not supported\n", (int)dfactor);
+        DMSG("Destination function 0x%X not supported", (int)dfactor);
         SET_ERROR(GL_INVALID_ENUM);
         return;
     }
