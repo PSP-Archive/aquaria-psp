@@ -28,6 +28,12 @@ unnoticeable on a PC can cause the PSP to crash after playing for a
 while.  It may help to periodically exit the game (to the PSP's menu)
 after saving, then restart and reload your game.
 
+At some point prior to build 672, a bug crept in which caused new
+installs to display only the upper-left corner of the screen.  This bug
+is fixed in build 678, but if you ran one of the buggy versions, you may
+still see the same problem.  In this case, go into the PSP's save data
+utility and delete the "Aquaria System Data" file.
+
 If you have played an earlier build of the PSP port than build 369, you
 will not be able to use the "L + analog pad" combination to look around
 the nearby area or "R + analog pad" to aim energy shots unless you first
