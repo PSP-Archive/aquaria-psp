@@ -1025,6 +1025,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 
 	//core->messageBox("info", "loading user settings");
+	user.loadDefaults(false);
 	user.load(false);
 	
 	particleManager->setSize(user.video.numParticles);
