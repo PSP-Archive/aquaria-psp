@@ -229,8 +229,8 @@ void RenderObjectLayer::moveToFront(RenderObject *r)
 		renderObjects[curIdx] = 0;
 		renderObjects[newIdx] = r;
 		r->setIdx(newIdx);
-		if (firstFreeIdx == newIdx)
-			firstFreeIdx++;
+		if (firstFreeIdx > curIdx)
+			firstFreeIdx = curIdx;
 	}
 	else if (objectCount == size)
 	{
@@ -242,7 +242,7 @@ void RenderObjectLayer::moveToFront(RenderObject *r)
 		r->setIdx(size);
 		for (int i = size+1; i < newSize; i++)
 			renderObjects[i] = 0;
-		firstFreeIdx = size+1;
+		firstFreeIdx = curIdx;
 	}
 	else
 	{
@@ -254,17 +254,16 @@ void RenderObjectLayer::moveToFront(RenderObject *r)
 			if (!renderObjects[lastFree])
 				break;
 		}
-
 		for (int i = lastFree + 1; i <= lastUsed; i++)
 		{
 			renderObjects[i-1] = renderObjects[i];
-			renderObjects[i-1]->setIdx(i-1);
+			renderObjects[i-1]->setIdx(i-1);  // Known to be non-NULL.
 		}
-
 		renderObjects[lastUsed] = r;
 		r->setIdx(lastUsed);
-		if (firstFreeIdx == lastFree)
-			firstFreeIdx = lastUsed + 1;
+		firstFreeIdx = curIdx;
+		while (renderObjects[firstFreeIdx])
+			firstFreeIdx++;
 	}
 #endif  // RLT_FIXED
 #ifdef RLT_DYNAMIC
@@ -297,7 +296,9 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
 		renderObjects[curIdx] = 0;
 		renderObjects[newIdx] = r;
 		r->setIdx(newIdx);
-		if (firstFreeIdx == newIdx)
+		// firstFreeIdx must be 0 here; if we filled slot 0, then
+		// scan forward for the next empty element.
+		while (!renderObjects[firstFreeIdx])
 			firstFreeIdx++;
 	}
 	else if (objectCount == size)
@@ -311,7 +312,7 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
 		for (int i = newSize - 1; i >= sizeDiff; i--)
 		{
 			renderObjects[i] = renderObjects[i - sizeDiff];
-			renderObjects[i]->setIdx(i);
+			renderObjects[i]->setIdx(i);  // Known to be non-NULL.
 		}
 		for (int i = 0; i < newIdx; i++)
 			renderObjects[i] = 0;
@@ -327,7 +328,7 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
 		for (int i = firstFreeIdx; i > 0; i--)
 		{
 			renderObjects[i] = renderObjects[i-1];
-			renderObjects[i]->setIdx(i);
+			renderObjects[i]->setIdx(i);  // Known to be non-NULL.
 		}
 		renderObjects[0] = r;
 		r->setIdx(0);
