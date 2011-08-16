@@ -2419,15 +2419,19 @@ void SceneEditor::moveElementToLayer(Element *e, int bgLayer)
 		{
 			Element *e = selectedElements[i];
 			core->removeRenderObject(e, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-			core->addRenderObject(e, LR_ELEMENTS1+bgLayer);
+			dsq->removeElement(e);
 			e->bgLayer = bgLayer;
+			dsq->addElement(e);
+			core->addRenderObject(e, LR_ELEMENTS1+bgLayer);
 		}
 	}
 	else if (e)
 	{
 		core->removeRenderObject(e, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-		core->addRenderObject(e, LR_ELEMENTS1+bgLayer);
+		dsq->removeElement(e);
 		e->bgLayer = bgLayer;
+		dsq->addElement(e);
+		core->addRenderObject(e, LR_ELEMENTS1+bgLayer);
 	}
 }
 
