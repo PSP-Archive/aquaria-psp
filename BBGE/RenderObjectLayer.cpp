@@ -298,7 +298,7 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
 		r->setIdx(newIdx);
 		// firstFreeIdx must be 0 here; if we filled slot 0, then
 		// scan forward for the next empty element.
-		while (!renderObjects[firstFreeIdx])
+		while (renderObjects[firstFreeIdx])
 			firstFreeIdx++;
 	}
 	else if (objectCount == size)
