@@ -312,6 +312,7 @@ void UserSettings::loadDefaults(bool doApply)
 	video.fbuffer = 0;
 	video.darkfbuffer = 0;
 	video.darkbuffersize = 128;
+	video.displaylists = 1;
 	audio.subtitles = 1;
 	control.joystickEnabled = 1;
 	control.s1ax = 0;

@@ -17,7 +17,7 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
 
 -- emotes
 EMOTE_NAIJAEVILLAUGH	= 0
@@ -60,7 +60,6 @@ BEACON_SONGCAVE			= 7
 PLAT_WIN				= 0
 PLAT_MAC				= 1
 PLAT_LNX				= 2
-PLAT_PSP				= 1000  -- Avoid conflicting with official port IDs
 
 -- ingredient effect types
 IET_NONE		= -1
