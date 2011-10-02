@@ -132,7 +132,7 @@ function update(me, dt)
 	elseif entity_isState(me, STATE_IN) then
 		if v.grabDelay > 0 then v.grabDelay = v.grabDelay - dt
 		elseif v.grabDelay <= 0 then
-			grabRange = 128
+			local grabRange = 128
 			if entity_isEntityInRange(me, v.n, grabRange) then
 				entity_setState(me, STATE_OUT)
 			end

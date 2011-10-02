@@ -120,7 +120,7 @@ function update(me, dt)
 			e = getNextEntity()
 		end
 		if c < toomany then
-			e = createEntity("final-mutant", "", entity_x(me), entity_y(me))
+			local e = createEntity("final-mutant", "", entity_x(me), entity_y(me))
 			spawnParticleEffect("tinyredexplode", entity_x(e), entity_y(e))
 			entity_alpha(e, 0)
 			entity_alpha(e, 1, 0.5)
