@@ -23,6 +23,7 @@
 #include <lame/lame.h>
 
 #define PNG_USER_MEM_SUPPORTED
+#include <zlib.h>
 #include <png.h>
 static jmp_buf png_jmpbuf;
 
@@ -526,6 +527,11 @@ static void uicb_button_pspout(void)
 
     while (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK) {
         char *path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        if (!path) {
+            ui_show_error("Internal error: no filename returned!\n"
+                          "Make sure \"Recently Used\" is not selected.");
+            continue;
+        }
         char buf[10000];
         if (strlen(path+8) >= sizeof(buf)) {
             ui_show_error("Internal error: pathname too long!\n"
@@ -589,6 +595,11 @@ static void uicb_button_gameout(void)
 
     while (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK) {
         char *path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        if (!path) {
+            ui_show_error("Internal error: no filename returned!\n"
+                          "Make sure \"Recently Used\" is not selected.");
+            continue;
+        }
         char buf[10000];
         if (strlen(path+8) >= sizeof(buf)) {
             ui_show_error("Internal error: pathname too long!\n"
@@ -890,7 +901,7 @@ static void create_icon0(const char *in_path, const char *out_path)
                              1, TCV_ZOOM_CUBIC_KEYS4);
     if (!zi) {
         fprintf(stderr, "zoom_init() failed\n");
-        ui_oom();
+       ui_oom();
     }
     zoom_process(zi, texture->pixels, tempbuf);
     zoom_free(zi);
@@ -900,7 +911,7 @@ static void create_icon0(const char *in_path, const char *out_path)
     texture->stride = new_stride;
     memcpy(texture->pixels, tempbuf, new_stride * new_height * 4);
     free(tempbuf);
-    
+
     /* Write out the icon as a PNG file. */
 
     if (!create_png(texture, &pngdata, &pngsize)) {
@@ -1042,6 +1053,7 @@ static void generate_data(const char *in_path, const char *out_path,
                 build_report_error(path, 0,
                                    &((GError){.message = "Failed to convert PNG image to PSP texture"}));
             }
+            /* Write out a dummy .png file so BBGE can find the texture. */
             build_write_file(out_path, path, "", 0);
             char *texpath = strdup(path);
             if (!texpath) {
@@ -1067,6 +1079,7 @@ static void generate_data(const char *in_path, const char *out_path,
                 build_report_error(path, 0,
                                    &((GError){.message = "Failed to convert Ogg audio to MP3"}));
             }
+            /* Write out a dummy .ogg file so BBGE can find the sound. */
             build_write_file(out_path, path, "", 0);
             char *mp3path = strdup(path);
             if (!mp3path) {
