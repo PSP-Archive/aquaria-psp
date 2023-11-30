@@ -17,7 +17,7 @@
 # cross-compilation for the PSP.  This should contain "include/stdio.h"
 # and "lib/libc.a", for example.
 
-PSPROOT = /usr/psp
+PSPROOT = $(shell psp-config --psp-prefix)
 
 #-------------------------------------
 
