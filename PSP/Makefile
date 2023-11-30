@@ -131,9 +131,9 @@ DISABLE_SOUND_CACHE = 1
 
 CC       = psp-gcc
 CXX      = psp-g++
-CFLAGS   = -pipe -g -O3 -G0 -I$(PSPSDK)/include \
+CFLAGS   = -pipe -g -O3 -G0 -I$(PSPSDK)/include -DIN_TOOL \
            -Wall -Wstrict-prototypes -Wmissing-prototypes $(-Werror)
-CXXFLAGS = -pipe -g -O3 -G0 -I$(PSPSDK)/include -fsigned-char -Wall $(-Werror)
+CXXFLAGS = -pipe -g -O3 -G0 -I$(PSPSDK)/include -fsigned-char -Wall $(-Werror) -DIN_TOOL
 LDFLAGS  = -specs=$(PSPSDK)/lib/prxspecs -Wl,-q,-T$(PSPSDK)/lib/linkfile.prx \
            -L$(PSPSDK)/lib
 LIBS     = $(-llua) $(-lfreetype) $(-lvorbisfile) $(-lvorbis) $(-logg) \
